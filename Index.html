@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glory Regin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link href="style.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+
+<!-- ═══════════ LOGIN PAGE ═══════════ -->
+<div id="login-page" style="display:none;">
+  <div class="login-wrapper">
+    <div class="login-left">
+      <div class="login-logo-wrap">🏫</div>
+      <h1>Glory Regin Preparatory School</h1>
+      <p>A world-class school management system for modern educational institutions</p>
+      <div class="stats-mini">
+        <div class="stat-mini"><div class="num">842</div><div class="lbl">Students</div></div>
+        <div class="stat-mini"><div class="num">64</div><div class="lbl">Teachers</div></div>
+        <div class="stat-mini"><div class="num">98%</div><div class="lbl">Pass Rate</div></div>
+      </div>
+    </div>
+    <div class="login-right">
+      <h2>Welcome Back</h2>
+      <p class="sub">Sign in to access your dashboard</p>
+      <div class="role-grid" id="role-grid">
+        <div class="role-btn active" onclick="setRole(this,'Admin')"><span class="ri">🛡️</span><span class="rl">Admin</span></div>
+        <div class="role-btn" onclick="setRole(this,'Teacher')"><span class="ri">👨‍🏫</span><span class="rl">Teacher</span></div>
+        <div class="role-btn" onclick="setRole(this,'Student')"><span class="ri">🎓</span><span class="rl">Student</span></div>
+        <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri">👨‍👩‍👧</span><span class="rl">Parent</span></div>
+        <div class="role-btn" onclick="setRole(this,'Accountant')"><span class="ri">💼</span><span class="rl">Accountant</span></div>
+        <div class="role-btn" onclick="setRole(this,'Alumni')"><span class="ri">🎖️</span><span class="rl">Alumni</span></div>
+        <div class="role-btn" onclick="setRole(this,'Visitor')"><span class="ri">🏷️</span><span class="rl">Visitor</span></div>
+        <div class="role-btn" onclick="setRole(this,'Admin')" style="opacity:0;pointer-events:none"></div>
+      </div>
+      <div class="form-field">
+        <label>Email / Username</label>
+        <input type="email" id="l-email" value="admin@excellence.edu.gh" placeholder="Enter your email">
+      </div>
+      <div class="form-field">
+        <label>Password</label>
+        <input type="password" id="l-pass" value="••••••••" placeholder="Enter password">
+      </div>
+      <button class="login-btn" onclick="doLogin()">Sign In to Dashboard →</button>
+      <div class="login-links">
+        <a>Forgot Password?</a>
+        <a onclick="setRole(document.querySelector('.role-btn'),this,'Visitor');doLogin()">Browse as Visitor</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ APP SHELL ═══════════ -->
+<div id="app-shell" class="active">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">🏫</div>
+      <div>
+        <div class="brand-name">Glory Regin Preparatory School</div>
+        <div class="brand-tag">School management System</div>
+      </div>
+    </div>
+    <div class="topbar-search">
+      <span style="font-size:14px;color:var(--gray-400)">🔍</span>
+      <input placeholder="Search students, classes, reports...">
+    </div>
+    <div class="topbar-right">
+      <div class="tb-btn" onclick="toggleDark()" title="Toggle Dark Mode">🌓</div>
+      <div class="tb-btn" title="Calendar">📅</div>
+      <div class="tb-btn" title="Notifications" style="position:relative">
+        🔔<div class="notif-dot"></div>
+      </div>
+      <div class="role-chip" id="top-role">ADMIN</div>
+      <div class="tb-avatar" id="top-av">AD</div>
+      <div class="tb-btn" onclick="logout()" title="Logout" style="color:var(--danger)">⏻</div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-wrap" id="main-content"></main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span class="footer-text">© 2025 Glory Regin Preparatory school · All rights reserved</span>
+    <div class="footer-links">
+      <a>Privacy Policy</a><a>Terms of Use</a><a>Help & Support</a><a>v3.0.0</a>
+    </div>
+  </footer>
+</div>
+
+<!-- ROLE FAB -->
+<button class="role-fab" id="role-fab" onclick="toggleRS()">👤</button>
+<div class="role-switcher" id="role-switcher">
+  <div class="rs-title">Switch Role</div>
+  <div class="rs-item" onclick="switchRole('Admin')"><div class="rs-dot" style="background:#1a56db"></div>Admin</div>
+  <div class="rs-item" onclick="switchRole('Teacher')"><div class="rs-dot" style="background:#10b981"></div>Teacher</div>
+  <div class="rs-item" onclick="switchRole('Student')"><div class="rs-dot" style="background:#8b5cf6"></div>Student</div>
+  <div class="rs-item" onclick="switchRole('Parent')"><div class="rs-dot" style="background:#f59e0b"></div>Parent</div>
+  <div class="rs-item" onclick="switchRole('Accountant')"><div class="rs-dot" style="background:#ef4444"></div>Accountant</div>
+  <div class="rs-item" onclick="switchRole('Alumni')"><div class="rs-dot" style="background:#06b6d4"></div>Alumni</div>
+  <div class="rs-item" onclick="switchRole('Visitor')"><div class="rs-dot" style="background:#6b7280"></div>Visitor</div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
