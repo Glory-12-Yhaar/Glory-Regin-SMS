@@ -30,7 +30,7 @@
         <div class="role-btn active" onclick="setRole(this,'Admin')"><span class="ri"><i class="fas fa-shield"></i></span><span class="rl">Admin</span></div>
         <div class="role-btn" onclick="setRole(this,'Teacher')"><span class="ri"><i class="fas fa-chalkboard-user"></i></span><span class="rl">Teacher</span></div>
         <div class="role-btn" onclick="setRole(this,'Student')"><span class="ri"><i class="fas fa-graduation-cap"></i></span><span class="rl">Student</span></div>
-        <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri"><i class="fas fa-people"></i></span><span class="rl">Parent</span></div>
+        <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri"><i class="fa-solid fa-hands-holding-child"></i></span><span class="rl">Parent</span></div>
         <div class="role-btn" onclick="setRole(this,'Accountant')"><span class="ri"><i class="fas fa-briefcase"></i></span><span class="rl">Accountant</span></div>
         <div class="role-btn" onclick="setRole(this,'Alumni')"><span class="ri"><i class="fas fa-medal"></i></span><span class="rl">Alumni</span></div>
         <div class="role-btn" onclick="setRole(this,'Visitor')"><span class="ri"><i class="fas fa-tag"></i></span><span class="rl">Visitor</span></div>
@@ -70,8 +70,8 @@
     </div>
     <div class="topbar-right">
       <div class="tb-btn" onclick="toggleDark()" title="Toggle Dark Mode"><i class="fas fa-moon"></i></div>
-      <div class="tb-btn" title="Calendar"><i class="fas fa-calendar"></i></div>
-      <div class="tb-btn" title="Notifications" style="position:relative">
+      <div class="tb-btn" onclick="navTo('events')" title="Calendar" style="cursor:pointer"><i class="fas fa-calendar"></i></div>
+      <div class="tb-btn" onclick="showNotifications()" title="Notifications" style="position:relative;cursor:pointer">
         <i class="fas fa-bell"></i><div class="notif-dot"></div>
       </div>
       <div class="role-chip" id="top-role">ADMIN</div>
