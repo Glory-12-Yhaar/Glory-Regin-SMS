@@ -482,149 +482,149 @@ function createStyledDropdownButton(selectElement, label = '▼ Select'){
 const MENUS={
   Admin:[
     {g:'Main',items:[
-      {id:'dashboard',ic:'📊',lbl:'Dashboard Overview'},
-      {id:'admissions',ic:'📝',lbl:'Admissions',badge:'12'},
-      {id:'students',ic:'🎓',lbl:'Students',badge:'842'},
-      {id:'teachers',ic:'👨‍🏫',lbl:'Teachers'},
-      {id:'parents',ic:'👨‍👩‍👧',lbl:'Parents'},
+      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
+      {id:'admissions',ic:'<i class="fas fa-file-alt"></i>',lbl:'Admissions',badge:'12'},
+      {id:'students',ic:'<i class="fas fa-graduation-cap"></i>',lbl:'Students',badge:'842'},
+      {id:'teachers',ic:'<i class="fas fa-chalkboard-user"></i>',lbl:'Teachers'},
+      {id:'parents',ic:'<i class="fas fa-people"></i>',lbl:'Parents'},
     ]},
     {g:'Academic',items:[
-      {id:'classes',ic:'🏛️',lbl:'Classes'},
-      {id:'subjects',ic:'📚',lbl:'Subjects'},
-      {id:'timetable',ic:'🗓️',lbl:'Timetable'},
-      {id:'attendance',ic:'✅',lbl:'Attendance'},
-      {id:'exams',ic:'📝',lbl:'Exams & Reports'},
-      {id:'assignments',ic:'📋',lbl:'Assignments'},
+      {id:'classes',ic:'<i class="fas fa-building"></i>',lbl:'Classes'},
+      {id:'subjects',ic:'<i class="fas fa-book"></i>',lbl:'Subjects'},
+      {id:'timetable',ic:'<i class="fas fa-calendar"></i>',lbl:'Timetable'},
+      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
+      {id:'exams',ic:'<i class="fas fa-file-alt"></i>',lbl:'Exams & Reports'},
+      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
     ]},
     {g:'Finance',items:[
-      {id:'fees',ic:'💰',lbl:'Fees / Payments'},
+      {id:'fees',ic:'<i class="fas fa-money-bill"></i>',lbl:'Fees / Payments'},
     ]},
     {g:'Communication',items:[
-      {id:'events',ic:'📅',lbl:'Events / Calendar'},
-      {id:'notices',ic:'📢',lbl:'Notices',badge:'5'},
-      {id:'news',ic:'📰',lbl:'News & Blog'},
-      {id:'messaging',ic:'💬',lbl:'Messaging'},
-      {id:'contact_messages',ic:'✉️',lbl:'Contact Messages',badge:()=>contactMessages.filter(m=>!m.read).length||0},
+      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events / Calendar'},
+      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices',badge:'5'},
+      {id:'news',ic:'<i class="fas fa-newspaper"></i>',lbl:'News & Blog'},
+      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messaging'},
+      {id:'contact_messages',ic:'<i class="fas fa-envelope"></i>',lbl:'Contact Messages',badge:()=>contactMessages.filter(m=>!m.read).length||0},
     ]},
     {g:'Administration',items:[
-      {id:'staff',ic:'👥',lbl:'Staff Management'},
-      {id:'users',ic:'🔑',lbl:'User Accounts'},
-      {id:'roles',ic:'🛡️',lbl:'Roles & Permissions'},
-      {id:'reports',ic:'📈',lbl:'Reports & Analytics'},
-      {id:'alumni',ic:'🎖️',lbl:'Alumni Module'},
-      {id:'visitor_mgmt',ic:'🏷️',lbl:'Visitor Management'},
-      {id:'backup',ic:'💾',lbl:'Backup & Logs'},
-      {id:'settings',ic:'⚙️',lbl:'Settings'},
+      {id:'staff',ic:'<i class="fas fa-users"></i>',lbl:'Staff Management'},
+      {id:'users',ic:'<i class="fas fa-key"></i>',lbl:'User Accounts'},
+      {id:'roles',ic:'<i class="fas fa-shield"></i>',lbl:'Roles & Permissions'},
+      {id:'reports',ic:'<i class="fas fa-chart-line"></i>',lbl:'Reports & Analytics'},
+      {id:'alumni',ic:'<i class="fas fa-medal"></i>',lbl:'Alumni Module'},
+      {id:'visitor_mgmt',ic:'<i class="fas fa-tag"></i>',lbl:'Visitor Management'},
+      {id:'backup',ic:'<i class="fas fa-hard-drive"></i>',lbl:'Backup & Logs'},
+      {id:'settings',ic:'<i class="fas fa-cog"></i>',lbl:'Settings'},
     ]},
   ],
   Teacher:[
     {g:'Main',items:[
-      {id:'dashboard',ic:'📊',lbl:'Dashboard Overview'},
-      {id:'classes',ic:'🏛️',lbl:'My Classes'},
-      {id:'students',ic:'🎓',lbl:'Students List'},
+      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
+      {id:'classes',ic:'<i class="fas fa-building"></i>',lbl:'My Classes'},
+      {id:'students',ic:'<i class="fas fa-graduation-cap"></i>',lbl:'Students List'},
     ]},
     {g:'Academic',items:[
-      {id:'attendance',ic:'✅',lbl:'Attendance'},
-      {id:'assignments',ic:'📋',lbl:'Assignments'},
-      {id:'grades',ic:'📝',lbl:'Enter Grades'},
-      {id:'exams',ic:'📊',lbl:'Exams & Grading'},
-      {id:'reportcards',ic:'📜',lbl:'Report Cards'},
-      {id:'lessonnotes',ic:'📄',lbl:'Lesson Notes'},
-      {id:'timetable',ic:'🗓️',lbl:'Timetable'},
+      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
+      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
+      {id:'grades',ic:'<i class="fas fa-file-alt"></i>',lbl:'Enter Grades'},
+      {id:'exams',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Exams & Grading'},
+      {id:'reportcards',ic:'<i class="fas fa-certificate"></i>',lbl:'Report Cards'},
+      {id:'lessonnotes',ic:'<i class="fas fa-file"></i>',lbl:'Lesson Notes'},
+      {id:'timetable',ic:'<i class="fas fa-calendar"></i>',lbl:'Timetable'},
     ]},
     {g:'Communication',items:[
-      {id:'notices',ic:'📢',lbl:'Notices'},
-      {id:'messaging',ic:'💬',lbl:'Messaging / Chat'},
-      {id:'events',ic:'📅',lbl:'Events / Calendar'},
+      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
+      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messaging / Chat'},
+      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events / Calendar'},
     ]},
-    {g:'Account',items:[{id:'profile',ic:'👤',lbl:'Profile Settings'}]},
+    {g:'Account',items:[{id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Profile Settings'}]},
   ],
   Student:[
     {g:'Main',items:[
-      {id:'dashboard',ic:'📊',lbl:'Dashboard Overview'},
-      {id:'subjects',ic:'📚',lbl:'My Subjects'},
-      {id:'teachers',ic:'👨‍🏫',lbl:'My Teachers'},
-      {id:'timetable',ic:'🗓️',lbl:'Timetable'},
+      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
+      {id:'subjects',ic:'<i class="fas fa-book"></i>',lbl:'My Subjects'},
+      {id:'teachers',ic:'<i class="fas fa-chalkboard-user"></i>',lbl:'My Teachers'},
+      {id:'timetable',ic:'<i class="fas fa-calendar"></i>',lbl:'Timetable'},
     ]},
     {g:'Academic',items:[
-      {id:'attendance',ic:'✅',lbl:'Attendance'},
-      {id:'assignments',ic:'📋',lbl:'Assignments'},
-      {id:'exams',ic:'📝',lbl:'Exam Results'},
-      {id:'reportcards',ic:'📜',lbl:'Report Card'},
+      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
+      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
+      {id:'exams',ic:'<i class="fas fa-file-alt"></i>',lbl:'Exam Results'},
+      {id:'reportcards',ic:'<i class="fas fa-certificate"></i>',lbl:'Report Card'},
     ]},
     {g:'Finance & Info',items:[
-      {id:'fees',ic:'💰',lbl:'Fees Status'},
-      {id:'notices',ic:'📢',lbl:'Notices'},
-      {id:'messaging',ic:'💬',lbl:'Messages'},
-      {id:'events',ic:'📅',lbl:'Events'},
+      {id:'fees',ic:'<i class="fas fa-money-bill"></i>',lbl:'Fees Status'},
+      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
+      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messages'},
+      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events'},
     ]},
-    {g:'Account',items:[{id:'profile',ic:'👤',lbl:'Profile'}]},
+    {g:'Account',items:[{id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Profile'}]},
   ],
   Parent:[
     {g:'Main',items:[
-      {id:'dashboard',ic:'📊',lbl:'Dashboard Overview'},
-      {id:'children',ic:'👶',lbl:'My Children'},
-      {id:'attendance',ic:'✅',lbl:'Attendance'},
+      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
+      {id:'children',ic:'<i class="fas fa-baby"></i>',lbl:'My Children'},
+      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
     ]},
     {g:'Academic',items:[
-      {id:'reportcards',ic:'📜',lbl:'Report Cards'},
-      {id:'assignments',ic:'📋',lbl:'Assignments'},
+      {id:'reportcards',ic:'<i class="fas fa-certificate"></i>',lbl:'Report Cards'},
+      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
     ]},
     {g:'Finance & Info',items:[
-      {id:'fees',ic:'💰',lbl:'Fees / Payments'},
-      {id:'messaging',ic:'💬',lbl:'Messages'},
-      {id:'notices',ic:'📢',lbl:'Notices'},
-      {id:'events',ic:'📅',lbl:'Events'},
-      {id:'teachers',ic:'👨‍🏫',lbl:'Teacher Communication'},
+      {id:'fees',ic:'<i class="fas fa-money-bill"></i>',lbl:'Fees / Payments'},
+      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messages'},
+      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
+      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events'},
+      {id:'teachers',ic:'<i class="fas fa-chalkboard-user"></i>',lbl:'Teacher Communication'},
     ]},
-    {g:'Account',items:[{id:'profile',ic:'👤',lbl:'Profile'}]},
+    {g:'Account',items:[{id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Profile'}]},
   ],
   Accountant:[
     {g:'Main',items:[
-      {id:'dashboard',ic:'📊',lbl:'Dashboard Overview'},
-      {id:'fees',ic:'💳',lbl:'Student Fees'},
-      {id:'payments',ic:'💵',lbl:'Payments (Cash)'},
-      {id:'expenses',ic:'📉',lbl:'Expenses'},
+      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
+      {id:'fees',ic:'<i class="fas fa-credit-card"></i>',lbl:'Student Fees'},
+      {id:'payments',ic:'<i class="fas fa-money-bill-wave"></i>',lbl:'Payments (Cash)'},
+      {id:'expenses',ic:'<i class="fas fa-chart-line"></i>',lbl:'Expenses'},
     ]},
     {g:'Payroll & Structure',items:[
-      {id:'salary',ic:'💼',lbl:'Salary / Payroll'},
-      {id:'feestructure',ic:'🏗️',lbl:'Fee Structure'},
-      {id:'receipts',ic:'🧾',lbl:'Receipts'},
+      {id:'salary',ic:'<i class="fas fa-briefcase"></i>',lbl:'Salary / Payroll'},
+      {id:'feestructure',ic:'<i class="fas fa-hammer"></i>',lbl:'Fee Structure'},
+      {id:'receipts',ic:'<i class="fas fa-receipt"></i>',lbl:'Receipts'},
     ]},
     {g:'Reports',items:[
-      {id:'reports',ic:'📈',lbl:'Financial Reports'},
-      {id:'balance',ic:'⚖️',lbl:'Balance Sheet'},
+      {id:'reports',ic:'<i class="fas fa-chart-line"></i>',lbl:'Financial Reports'},
+      {id:'balance',ic:'<i class="fas fa-balance-scale"></i>',lbl:'Balance Sheet'},
     ]},
     {g:'System',items:[
-      {id:'notices',ic:'🔔',lbl:'Notifications'},
-      {id:'settings',ic:'⚙️',lbl:'Settings'},
+      {id:'notices',ic:'<i class="fas fa-bell"></i>',lbl:'Notifications'},
+      {id:'settings',ic:'<i class="fas fa-cog"></i>',lbl:'Settings'},
     ]},
   ],
   Alumni:[
     {g:'Main',items:[
-      {id:'dashboard',ic:'📊',lbl:'Dashboard Overview'},
-      {id:'profile',ic:'👤',lbl:'Alumni Profile'},
-      {id:'directory',ic:'📒',lbl:'Alumni Directory'},
+      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
+      {id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Alumni Profile'},
+      {id:'directory',ic:'<i class="fas fa-address-book"></i>',lbl:'Alumni Directory'},
     ]},
     {g:'Community',items:[
-      {id:'events',ic:'📅',lbl:'Events / Reunions'},
-      {id:'donations',ic:'🤝',lbl:'Donations'},
-      {id:'messaging',ic:'💬',lbl:'Messages'},
-      {id:'notices',ic:'📢',lbl:'Notices'},
-      {id:'jobs',ic:'💼',lbl:'Job Board'},
-      {id:'certificates',ic:'📜',lbl:'Certificates Request'},
+      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events / Reunions'},
+      {id:'donations',ic:'<i class="fas fa-handshake"></i>',lbl:'Donations'},
+      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messages'},
+      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
+      {id:'jobs',ic:'<i class="fas fa-briefcase"></i>',lbl:'Job Board'},
+      {id:'certificates',ic:'<i class="fas fa-certificate"></i>',lbl:'Certificates Request'},
     ]},
   ],
   Visitor:[
     {g:'Public Pages',items:[
-      {id:'dashboard',ic:'🏠',lbl:'Home Page'},
-      {id:'about',ic:'ℹ️',lbl:'About School'},
-      {id:'admission',ic:'📝',lbl:'Admission Info'},
-      {id:'news',ic:'📰',lbl:'News / Blog'},
-      {id:'events',ic:'📅',lbl:'Events'},
-      {id:'contact',ic:'📞',lbl:'Contact Page'},
-      {id:'gallery',ic:'🖼️',lbl:'Gallery'},
-      {id:'alumni_pub',ic:'🎖️',lbl:'Alumni Page'},
+      {id:'dashboard',ic:'<i class="fas fa-home"></i>',lbl:'Home Page'},
+      {id:'about',ic:'<i class="fas fa-info-circle"></i>',lbl:'About School'},
+      {id:'admission',ic:'<i class="fas fa-file-alt"></i>',lbl:'Admission Info'},
+      {id:'news',ic:'<i class="fas fa-newspaper"></i>',lbl:'News / Blog'},
+      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events'},
+      {id:'contact',ic:'<i class="fas fa-phone"></i>',lbl:'Contact Page'},
+      {id:'gallery',ic:'<i class="fas fa-image"></i>',lbl:'Gallery'},
+      {id:'alumni_pub',ic:'<i class="fas fa-medal"></i>',lbl:'Alumni Page'},
     ]},
   ],
 };
@@ -752,22 +752,22 @@ function renderPublicNavbar(){
   navbar.innerHTML = `
     <div class="public-nav-container">
       <div class="public-brand">
-        <div class="brand-mark">🏫</div>
+        <div class="brand-mark"><i class="fas fa-school"></i></div>
         <div class="brand-info">
           <div class="brand-name">Glory Regin Preparatory school</div>
           <div class="brand-tag">School Portal</div>
         </div>
       </div>
       <div class="public-nav-links">
-        <a class="nav-link${currentMod==='dashboard'?' active':''}" onclick="navTo('dashboard')">🏠 Home</a>
-        <a class="nav-link${currentMod==='about'?' active':''}" onclick="navTo('about')">ℹ️ About</a>
-        <a class="nav-link${currentMod==='admission'?' active':''}" onclick="navTo('admission')">📝 Admissions</a>
-        <a class="nav-link${currentMod==='gallery'?' active':''}" onclick="navTo('gallery')">🖼️ Gallery</a>
-        <a class="nav-link${currentMod==='news'?' active':''}" onclick="navTo('news')">📰 News</a>
-        <a class="nav-link${currentMod==='contact'?' active':''}" onclick="navTo('contact')">📞 Contact</a>
+        <a class="nav-link${currentMod==='dashboard'?' active':''}" onclick="navTo('dashboard')"><i class="fas fa-home"></i> Home</a>
+        <a class="nav-link${currentMod==='about'?' active':''}" onclick="navTo('about')"><i class="fas fa-info-circle"></i> About</a>
+        <a class="nav-link${currentMod==='admission'?' active':''}" onclick="navTo('admission')"><i class="fas fa-file-alt"></i> Admissions</a>
+        <a class="nav-link${currentMod==='gallery'?' active':''}" onclick="navTo('gallery')"><i class="fas fa-image"></i> Gallery</a>
+        <a class="nav-link${currentMod==='news'?' active':''}" onclick="navTo('news')"><i class="fas fa-newspaper"></i> News</a>
+        <a class="nav-link${currentMod==='contact'?' active':''}" onclick="navTo('contact')"><i class="fas fa-phone"></i> Contact</a>
       </div>
       <div class="public-nav-right">
-        <button class="btn-staff-login" onclick="logout()">🔐 Staff Login</button>
+        <button class="btn-staff-login" onclick="logout()"><i class="fas fa-lock"></i> Staff Login</button>
       </div>
     </div>
   `;

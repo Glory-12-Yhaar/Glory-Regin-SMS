@@ -14,7 +14,7 @@
 <div id="login-page" style="display:none;">
   <div class="login-wrapper">
     <div class="login-left">
-      <div class="login-logo-wrap">🏫</div>
+      <div class="login-logo-wrap"><i class="fas fa-school"></i></div>
       <h1>Glory Regin Preparatory School</h1>
       <p>A world-class school management system for modern educational institutions</p>
       <div class="stats-mini">
@@ -27,13 +27,13 @@
       <h2>Welcome Back</h2>
       <p class="sub">Sign in to access your dashboard</p>
       <div class="role-grid" id="role-grid">
-        <div class="role-btn active" onclick="setRole(this,'Admin')"><span class="ri">🛡️</span><span class="rl">Admin</span></div>
-        <div class="role-btn" onclick="setRole(this,'Teacher')"><span class="ri">👨‍🏫</span><span class="rl">Teacher</span></div>
-        <div class="role-btn" onclick="setRole(this,'Student')"><span class="ri">🎓</span><span class="rl">Student</span></div>
-        <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri">👨‍👩‍👧</span><span class="rl">Parent</span></div>
-        <div class="role-btn" onclick="setRole(this,'Accountant')"><span class="ri">💼</span><span class="rl">Accountant</span></div>
-        <div class="role-btn" onclick="setRole(this,'Alumni')"><span class="ri">🎖️</span><span class="rl">Alumni</span></div>
-        <div class="role-btn" onclick="setRole(this,'Visitor')"><span class="ri">🏷️</span><span class="rl">Visitor</span></div>
+        <div class="role-btn active" onclick="setRole(this,'Admin')"><span class="ri"><i class="fas fa-shield"></i></span><span class="rl">Admin</span></div>
+        <div class="role-btn" onclick="setRole(this,'Teacher')"><span class="ri"><i class="fas fa-chalkboard-user"></i></span><span class="rl">Teacher</span></div>
+        <div class="role-btn" onclick="setRole(this,'Student')"><span class="ri"><i class="fas fa-graduation-cap"></i></span><span class="rl">Student</span></div>
+        <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri"><i class="fas fa-people"></i></span><span class="rl">Parent</span></div>
+        <div class="role-btn" onclick="setRole(this,'Accountant')"><span class="ri"><i class="fas fa-briefcase"></i></span><span class="rl">Accountant</span></div>
+        <div class="role-btn" onclick="setRole(this,'Alumni')"><span class="ri"><i class="fas fa-medal"></i></span><span class="rl">Alumni</span></div>
+        <div class="role-btn" onclick="setRole(this,'Visitor')"><span class="ri"><i class="fas fa-tag"></i></span><span class="rl">Visitor</span></div>
         <div class="role-btn" onclick="setRole(this,'Admin')" style="opacity:0;pointer-events:none"></div>
       </div>
       <div class="form-field">
@@ -58,25 +58,25 @@
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-brand">
-      <div class="brand-mark">🏫</div>
+      <div class="brand-mark"><i class="fas fa-school"></i></div>
       <div>
         <div class="brand-name">Glory Regin Preparatory School</div>
         <div class="brand-tag">School management System</div>
       </div>
     </div>
     <div class="topbar-search">
-      <span style="font-size:14px;color:var(--gray-400)">🔍</span>
+      <span style="font-size:14px;color:var(--gray-400)"><i class="fas fa-magnifying-glass"></i></span>
       <input placeholder="Search students, classes, reports...">
     </div>
     <div class="topbar-right">
-      <div class="tb-btn" onclick="toggleDark()" title="Toggle Dark Mode">🌓</div>
-      <div class="tb-btn" title="Calendar">📅</div>
+      <div class="tb-btn" onclick="toggleDark()" title="Toggle Dark Mode"><i class="fas fa-moon"></i></div>
+      <div class="tb-btn" title="Calendar"><i class="fas fa-calendar"></i></div>
       <div class="tb-btn" title="Notifications" style="position:relative">
-        🔔<div class="notif-dot"></div>
+        <i class="fas fa-bell"></i><div class="notif-dot"></div>
       </div>
       <div class="role-chip" id="top-role">ADMIN</div>
       <div class="tb-avatar" id="top-av">AD</div>
-      <div class="tb-btn" onclick="logout()" title="Logout" style="color:var(--danger)">⏻</div>
+      <div class="tb-btn" onclick="logout()" title="Logout" style="color:var(--danger)"><i class="fas fa-power-off"></i></div>
     </div>
   </div>
 
@@ -96,7 +96,7 @@
 </div>
 
 <!-- ROLE FAB -->
-<button class="role-fab" id="role-fab" onclick="toggleRS()">👤</button>
+<button class="role-fab" id="role-fab" onclick="toggleRS()"><i class="fas fa-user"></i></button>
 <div class="role-switcher" id="role-switcher">
   <div class="rs-title">Switch Role</div>
   <div class="rs-item" onclick="switchRole('Admin')"><div class="rs-dot" style="background:#1a56db"></div>Admin</div>
