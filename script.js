@@ -284,6 +284,234 @@ const ASSIGNMENTS_DATA = {
   }
 };
 
+// ALUMNI DATA STRUCTURE
+const ALUMNI_DATA = {
+  'ALM001': {id:'ALM001', name:'Abena Owusu', classYear:2018, profession:'Software Engineer', location:'Accra · Google Ghana', avatar:'AO', avatarColor:'purple', bio:'Working as Senior Developer at Google Ghana', email:'abena.owusu@gmail.com', phone:'+233 24 111 0001', instagram:'@abenaotech', linkedin:'linkedin.com/in/abenaowusu', twitter:'@abenaotech', facebook:'facebook.com/abena.owusu'},
+  'ALM002': {id:'ALM002', name:'Kwabena Asare', classYear:2016, profession:'Medical Doctor', location:'London · NHS', avatar:'KA', avatarColor:'blue', bio:'Consultant Physician at London NHS Hospital', email:'kwabena.asare@nhs.uk', phone:'+44 7911 123456', instagram:'@kwabenadr', linkedin:'linkedin.com/in/kwabenaasare', twitter:'@kwabenaasare', facebook:'facebook.com/kwabena.asare'},
+  'ALM003': {id:'ALM003', name:'Esi Mensah', classYear:2020, profession:'Teacher', location:'Kumasi · College', avatar:'EM', avatarColor:'green', bio:'Secondary School Teacher - English & Literature', email:'esi.mensah@college.edu.gh', phone:'+233 24 222 0003', instagram:'@esimenteach', linkedin:'linkedin.com/in/esimensah', twitter:'@esiteacher', facebook:'facebook.com/esi.mensah'},
+  'ALM004': {id:'ALM004', name:'Yaw Boateng', classYear:2015, profession:'Lawyer', location:'Toronto · Law Firm', avatar:'YB', avatarColor:'gold', bio:'Senior Associate at Toronto Law Partnership', email:'yaw.boateng@lawfirm.ca', phone:'+1 416 987 6543', instagram:'@yawlawyer', linkedin:'linkedin.com/in/yawboateng', twitter:'@yawboatenglaw', facebook:'facebook.com/yaw.boateng'},
+  'ALM005': {id:'ALM005', name:'Akua Adjei', classYear:2019, profession:'Nurse', location:'Accra · Korle Bu', avatar:'AA', avatarColor:'teal', bio:'Registered Nurse at Korle Bu Teaching Hospital', email:'akua.adjei@korlebu.org', phone:'+233 24 333 0005', instagram:'@akuanurse', linkedin:'linkedin.com/in/akuaadjei', twitter:'@akuahealth', facebook:'facebook.com/akua.adjei'},
+  'ALM006': {id:'ALM006', name:'Kofi Antwi', classYear:2014, profession:'Civil Engineer', location:'Takoradi · GHA', avatar:'KA', avatarColor:'orange', bio:'Project Manager - Civil Engineering Division', email:'kofi.antwi@gha-eng.com.gh', phone:'+233 24 444 0006', instagram:'@kofieng', linkedin:'linkedin.com/in/kofiانtwi', twitter:'@kofiengineering', facebook:'facebook.com/kofi.antwi'},
+  'ALM007': {id:'ALM007', name:'Nadia Hassan', classYear:2017, profession:'Business Analyst', location:'Dubai · Tech Corp', avatar:'NH', avatarColor:'purple', bio:'Business Solutions Analyst - Middle East Tech', email:'nadia.hassan@techcorp.ae', phone:'+971 50 123 4567', instagram:'@nadiabiz', linkedin:'linkedin.com/in/nadiahassan', twitter:'@nadiatech', facebook:'facebook.com/nadia.hassan'},
+  'ALM008': {id:'ALM008', name:'Samuel Boadi', classYear:2013, profession:'Banking Executive', location:'Accra · Bank HQ', avatar:'SB', avatarColor:'blue', bio:'Head of Business Development - Banking Sector', email:'samuel.boadi@bank.com.gh', phone:'+233 24 555 0008', instagram:'@samuelbanks', linkedin:'linkedin.com/in/samuelboadi', twitter:'@samuelboadi', facebook:'facebook.com/samuel.boadi'},
+  'ALM009': {id:'ALM009', name:'Grace Mensah', classYear:2021, profession:'Graphic Designer', location:'Accra · Creative Studio', avatar:'GM', avatarColor:'pink', bio:'UI/UX Designer at Accra Creative Studio', email:'grace.mensah@creative.com.gh', phone:'+233 24 666 0009', instagram:'@gracedesi̲gns', linkedin:'linkedin.com/in/gracemensah', twitter:'@gracedesigns', facebook:'facebook.com/grace.mensah'},
+  'ALM010': {id:'ALM010', name:'David Owusu', classYear:2012, profession:'Architect', location:'Singapore · Design Firm', avatar:'DO', avatarColor:'teal', bio:'Senior Architect - International Design Projects', email:'david.owusu@designfirm.sg', phone:'+65 6789 0123', instagram:'@davidarch', linkedin:'linkedin.com/in/davidowusu', twitter:'@davidarchitect', facebook:'facebook.com/david.owusu'}
+};
+
+// STAFF DATA STRUCTURE
+const STAFF_DATA = {
+  'KWA001': {
+    id: 'KWA001',
+    name: 'Mr. Kweku Amponsah',
+    email: 'kweku.amponsah@school.edu.gh',
+    phone: '+233 24 100 0001',
+    category: 'Teaching',
+    department: 'Mathematics',
+    position: 'Senior Teacher',
+    qualifications: 'B.Sc Mathematics (Legon), Diploma in Education',
+    salaryGrade: 'Grade 8',
+    joinDate: '2013-01-15',
+    gender: 'Male',
+    dob: '1985-05-22',
+    address: '123 Education Street, Accra',
+    emergencyContact: 'Ama Amponsah',
+    emergencyPhone: '+233 244 567 890',
+    status: 'Active',
+    performance: '4.8/5',
+    assignments: ['JHS 1 Math', 'Basic 6 Maths', 'Further Maths'],
+    avatar: 'KA'
+  },
+  'AKA002': {
+    id: 'AKA002',
+    name: 'Mrs. Akua Asante',
+    email: 'akua.asante@school.edu.gh',
+    phone: '+233 24 100 0002',
+    category: 'Teaching',
+    department: 'Languages',
+    position: 'Senior Teacher',
+    qualifications: 'B.A English (UCC), Diploma in Education',
+    salaryGrade: 'Grade 7',
+    joinDate: '2017-03-10',
+    gender: 'Female',
+    dob: '1988-07-14',
+    address: '456 Learning Street, Accra',
+    emergencyContact: 'Kwame Asante',
+    emergencyPhone: '+233 245 678 901',
+    status: 'Active',
+    performance: '4.6/5',
+    assignments: ['JHS 1 English', 'Basic 6 English'],
+    avatar: 'AA'
+  },
+  'KMN003': {
+    id: 'KMN003',
+    name: 'Mr. Kojo Mensah',
+    email: 'kojo.mensah@school.edu.gh',
+    phone: '+233 24 100 0003',
+    category: 'Admin',
+    department: 'Finance',
+    position: 'Accounts Officer',
+    qualifications: 'HND Accounting',
+    salaryGrade: 'Admin A',
+    joinDate: '2015-06-20',
+    gender: 'Male',
+    dob: '1982-09-03',
+    address: '789 Finance Lane, Accra',
+    emergencyContact: 'Abena Mensah',
+    emergencyPhone: '+233 246 789 012',
+    status: 'Active',
+    performance: '4.5/5',
+    assignments: ['Payroll', 'Accounts'],
+    avatar: 'KM'
+  },
+  'ABO004': {
+    id: 'ABO004',
+    name: 'Ms. Abena Ofori',
+    email: 'abena.ofori@school.edu.gh',
+    phone: '+233 24 100 0004',
+    category: 'Admin',
+    department: 'Front Office',
+    position: 'Receptionist',
+    qualifications: 'Diploma in Secretarial Studies',
+    salaryGrade: 'Admin B',
+    joinDate: '2020-09-15',
+    gender: 'Female',
+    dob: '1995-02-11',
+    address: '321 Office Avenue, Accra',
+    emergencyContact: 'John Ofori',
+    emergencyPhone: '+233 247 890 123',
+    status: 'Active',
+    performance: '4.3/5',
+    assignments: ['Reception', 'Calls'],
+    avatar: 'AO'
+  },
+  'KWO005': {
+    id: 'KWO005',
+    name: 'Mr. Kwame Oti',
+    email: 'kwame.oti@school.edu.gh',
+    phone: '+233 24 100 0005',
+    category: 'Support',
+    department: 'Maintenance',
+    position: 'Maintenance Supervisor',
+    qualifications: 'Technical Certificate in Building Maintenance',
+    salaryGrade: 'Support',
+    joinDate: '2018-01-08',
+    gender: 'Male',
+    dob: '1980-11-30',
+    address: '654 Support Road, Accra',
+    emergencyContact: 'Ama Oti',
+    emergencyPhone: '+233 248 901 234',
+    status: 'Active',
+    performance: '4.4/5',
+    assignments: ['Maintenance', 'Repairs'],
+    avatar: 'KO'
+  },
+  'FPA006': {
+    id: 'FPA006',
+    name: 'Ms. Freda Poku',
+    email: 'freda.poku@school.edu.gh',
+    phone: '+233 24 100 0006',
+    category: 'Teaching',
+    department: 'ICT',
+    position: 'Teacher',
+    qualifications: 'B.Tech ICT (KNUST)',
+    salaryGrade: 'Grade 6',
+    joinDate: '2019-08-25',
+    gender: 'Female',
+    dob: '1992-04-18',
+    address: '987 Tech Street, Accra',
+    emergencyContact: 'Ernest Poku',
+    emergencyPhone: '+233 249 012 345',
+    status: 'Active',
+    performance: '4.7/5',
+    assignments: ['ICT Lab', 'Computer Classes'],
+    avatar: 'FP'
+  },
+  'YOB007': {
+    id: 'YOB007',
+    name: 'Mr. Yaw Boateng Sr.',
+    email: 'yaw.boateng@school.edu.gh',
+    phone: '+233 24 100 0007',
+    category: 'Teaching',
+    department: 'Social Studies',
+    position: 'Teacher',
+    qualifications: 'B.A History (UG)',
+    salaryGrade: 'Grade 6',
+    joinDate: '2016-09-12',
+    gender: 'Male',
+    dob: '1986-03-25',
+    address: '159 History Street, Accra',
+    emergencyContact: 'Grace Boateng',
+    emergencyPhone: '+233 240 123 456',
+    status: 'Active',
+    performance: '4.5/5',
+    assignments: ['Basic 6 History', 'Social Studies'],
+    avatar: 'YB'
+  },
+  'NYS008': {
+    id: 'NYS008',
+    name: 'Mrs. Nana Yaa Sekyere',
+    email: 'nana.sekyere@school.edu.gh',
+    phone: '+233 24 100 0008',
+    category: 'Teaching',
+    department: 'Science',
+    position: 'Science Coordinator',
+    qualifications: 'B.Sc Biology (KNUST), Diploma in Education',
+    salaryGrade: 'Grade 7',
+    joinDate: '2014-02-01',
+    gender: 'Female',
+    dob: '1987-06-09',
+    address: '357 Science Park, Accra',
+    emergencyContact: 'Samuel Sekyere',
+    emergencyPhone: '+233 241 234 567',
+    status: 'Active',
+    performance: '4.8/5',
+    assignments: ['Science Lab', 'Biology', 'Chemistry'],
+    avatar: 'NS'
+  },
+  'ABD009': {
+    id: 'ABD009',
+    name: 'Mr. Abdul Hassan',
+    email: 'abdul.hassan@school.edu.gh',
+    phone: '+233 24 100 0009',
+    category: 'Support',
+    department: 'Security',
+    position: 'Security Officer',
+    qualifications: 'National Security Certificate',
+    salaryGrade: 'Support',
+    joinDate: '2017-07-10',
+    gender: 'Male',
+    dob: '1979-08-15',
+    address: '741 Security Lane, Accra',
+    emergencyContact: 'Zainab Hassan',
+    emergencyPhone: '+233 242 345 678',
+    status: 'Active',
+    performance: '4.2/5',
+    assignments: ['Gate Security', 'Patrol'],
+    avatar: 'AH'
+  },
+  'RSO010': {
+    id: 'RSO010',
+    name: 'Ms. Rose Sarbah',
+    email: 'rose.sarbah@school.edu.gh',
+    phone: '+233 24 100 0010',
+    category: 'Admin',
+    department: 'Registrar',
+    position: 'Registrar',
+    qualifications: 'Diploma in Educational Management',
+    salaryGrade: 'Admin A',
+    joinDate: '2012-08-20',
+    gender: 'Female',
+    dob: '1981-10-05',
+    address: '852 Admin Street, Accra',
+    emergencyContact: 'Daniel Sarbah',
+    emergencyPhone: '+233 243 456 789',
+    status: 'Active',
+    performance: '4.9/5',
+    assignments: ['Records', 'Registration'],
+    avatar: 'RS'
+  }
+};
+
 // ═══════════════════════════════════
 // LOGIC LAYER - CALCULATIONS & GRADES
 // ═══════════════════════════════════
@@ -513,7 +741,6 @@ const MENUS={
       {id:'roles',ic:'<i class="fas fa-shield"></i>',lbl:'Roles & Permissions'},
       {id:'reports',ic:'<i class="fas fa-chart-line"></i>',lbl:'Reports & Analytics'},
       {id:'alumni',ic:'<i class="fas fa-medal"></i>',lbl:'Alumni Module'},
-      {id:'visitor_mgmt',ic:'<i class="fas fa-tag"></i>',lbl:'Visitor Management'},
       {id:'backup',ic:'<i class="fas fa-hard-drive"></i>',lbl:'Backup & Logs'},
       {id:'settings',ic:'<i class="fas fa-cog"></i>',lbl:'Settings'},
     ]},
@@ -1013,7 +1240,6 @@ function renderMain(){
     reports:()=>reportsModule(),
     alumni:()=>alumniModule(),
     alumni_pub:()=>alumniPubModule(),
-    visitor_mgmt:()=>visitorMgmtModule(),
     backup:()=>backupModule(),
     settings:()=>settingsModule(),
     profile:()=>profileModule(),
@@ -1055,8 +1281,8 @@ function hdr(title,sub,bc){
     <p>${sub}</p>
   </div>`;
 }
-function statCard(icon,val,lbl,chg,chgType,colorCls){
-  return `<div class="stat-card">
+function statCard(icon,val,lbl,chg,chgType,colorCls,isClickable,onClickFunc){
+  return `<div class="stat-card" ${isClickable?`style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'" onclick="${onClickFunc}"`:''}>
     <div class="stat-glow" style="background:var(--blue-main)"></div>
     <div class="stat-icon ${colorCls||'si-blue'}">${icon}</div>
     <div class="stat-val">${val}</div>
@@ -1264,10 +1490,10 @@ function adminDash(){
 function teacherDash(){
   return hdr('Teacher Dashboard','Welcome, Mr. Kweku Amponsah · Mathematics Department · JHS 1')+`
   <div class="stats-row">
-    ${statCard('<i class="fas fa-graduation-cap"></i>','38','My Students','2 new this term','up','si-blue')}
-    ${statCard('<i class="fas fa-book"></i>','5','Subjects Teaching','This semester','neu','si-gold')}
-    ${statCard('<i class="fas fa-check-circle"></i>','94%','Attendance Rate','Above average','up','si-green')}
-    ${statCard('<i class="fas fa-clipboard-list"></i>','8','Pending Grades','Needs grading','dn','si-red')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>','38','My Students','2 new this term','up','si-blue',true,'viewStatDetail("students")')}
+    ${statCard('<i class="fas fa-book"></i>','5','Subjects Teaching','This semester','neu','si-gold',true,'viewStatDetail("subjects")')}
+    ${statCard('<i class="fas fa-check-circle"></i>','94%','Attendance Rate','Above average','up','si-green',true,'viewStatDetail("attendance")')}
+    ${statCard('<i class="fas fa-clipboard-list"></i>','8','Pending Grades','Needs grading','dn','si-red',true,'viewStatDetail("grades")')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -1276,7 +1502,7 @@ function teacherDash(){
         <thead><tr><th>Time</th><th>Subject</th><th>Class</th><th>Room</th><th>Status</th></tr></thead>
         <tbody>
           ${[['7:30–8:20','Mathematics','JHS 1','Room 14','Done'],['8:20–9:10','Mathematics','Basic 6','Room 08','Done'],['10:00–10:50','Further Maths','JHS 2','Room 12','Up Next'],['11:00–11:50','Core Maths','Basic 1','Room 06','Upcoming'],['13:30–14:20','Statistics','Basic 3','Room 10','Upcoming']].map(([t,s,c,r,st])=>`
-          <tr>
+          <tr style="cursor:pointer" onclick="viewScheduleDetail('${t}', '${s}', '${c}')">
             <td style="color:var(--blue-main);font-weight:600">${t}</td>
             <td>${s}</td><td>${c}</td><td style="color:var(--gray-500)">${r}</td>
             <td><span class="badge ${st==='Done'?'b-success':st==='Up Next'?'b-warning':'b-info'}">${st}</span></td>
@@ -1285,9 +1511,9 @@ function teacherDash(){
       </table>
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Assignments</span><span class="card-act" onclick="navTo('assignments')">Add New</span></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Assignments</span><span class="card-act" onclick="openAddAssignmentForm()">Add New</span></div>
       ${[['Math HW Ch.5','JHS 1','Today',12,38],['Algebra Quiz','Basic 6','Friday',8,34],['Geometry WS','Basic 1','Next Week',0,32]].map(([a,c,d,s,t])=>`
-      <div style="margin-bottom:16px">
+      <div style="margin-bottom:16px;cursor:pointer;padding:8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='transparent'" onclick="viewAssignmentSubmissions('${a}')">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:13px;font-weight:600">${a}</span>
           <span class="badge ${d==='Today'?'b-warning':'b-info'}">${d}</span>
@@ -1306,10 +1532,10 @@ function teacherDash(){
           ${[['Ama Serwaa','P'],['Kwame Asante','A'],['Abena Mensah','P'],['Kofi Boateng','L'],['Akosua Darko','P'],['Yaw Mensah','P']].map(([n,s])=>`
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" ${s==='P'?'checked':''}></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" ${s==='A'?'checked':''}></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" ${s==='L'?'checked':''}></td>
-            <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..."></td>
+            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" value="P" ${s==='P'?'checked':''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" value="A" ${s==='A'?'checked':''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" value="L" ${s==='L'?'checked':''}></td>
+            <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..." data-remark_${n.replace(/ /g,'_')}></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1324,8 +1550,8 @@ function teacherDash(){
         </div>`).join('')}
       </div>
       <div class="chat-input-row">
-        <input class="chat-inp" placeholder="Type reply...">
-        <button class="chat-send">➤</button>
+        <input class="chat-inp" placeholder="Type reply..." onkeypress="if(event.key==='Enter') sendTeacherMessage()">
+        <button class="chat-send" onclick="sendTeacherMessage()">➤</button>
       </div>
     </div>
   </div>`;
@@ -6092,11 +6318,14 @@ function noticesModule(){
   let html = hdr('Notices & Announcements','Post and manage school-wide notices','Notices')+`
   <div class="g21">
     <div>
+    
       <!-- SEARCH & FILTER BAR -->
+
       <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-          <input type="text" id="notice-search" placeholder="<i class="fas fa-search"></i> Search notices..." class="input" 
-            onkeyup="filterNotices()" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+        <div style="flex:1;min-width:200px;position:relative">
+          <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);pointer-events:none;font-size:13px"></i>
+          <input type="text" id="notice-search" placeholder="Search notices..." class="input" 
+            onkeyup="filterNotices()" style="width:100%;padding:10px;padding-left:32px;border:2px solid var(--gray-300);border-radius:8px;font-size:13px;box-shadow:0 0 0 1px var(--gray-200)">
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm filter-btn" onclick="filterByAudience('All')" data-audience="All">All</button>
@@ -6743,7 +6972,7 @@ function adminMessagingModule(){
 function defaultMessagingModule(){
   return hdr('Messages','Communication system','Messages')+`
   <div class="card" style="text-align:center;padding:40px">
-    <div style="font-size:48px;margin-bottom:16px">📭</div>
+    <div style="font-size:48px;margin-bottom:16px"><i class="fas fa-inbox" style="color:var(--gray-300)"></i></div>
     <p style="color:var(--gray-400);font-size:14px">Messaging module is not available for your role.</p>
   </div>`;
 }
@@ -6800,7 +7029,7 @@ function contactMessagesModule(){
   const unreadCount = contactMessages.filter(m => !m.read).length;
   const messagesHTML = contactMessages.length === 0 ? `
     <div style="text-align:center;padding:40px 20px;color:var(--gray-400)">
-      <div style="font-size:48px;margin-bottom:12px">📭</div>
+      <div style="font-size:48px;margin-bottom:12px"><i class="fas fa-envelope" style="color:var(--gray-300)"></i></div>
       <p style="font-size:14px">No messages yet. When visitors contact you, they'll appear here.</p>
     </div>
   ` : contactMessages.slice().reverse().map(msg => `
@@ -6928,72 +7157,693 @@ function reportsModule(){
     ${statCard('<i class="fas fa-money-bill"></i>','88.6%','Fees Collection','Of target','up','si-gold')}
     ${statCard('<i class="fas fa-trophy"></i>','3.6','Average GPA','All students','up','si-purple')}
   </div>
-  <div class="mod-tabs">
-    ${['Overview','Academic','Attendance','Financial','Enrollment'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="this.parentElement.querySelectorAll('.mod-tab').forEach(x=>x.classList.remove('active'));this.classList.add('active')">${t}</div>`).join('')}
+  <div class="mod-tabs" id="report-tabs">
+    ${['Overview','Academic','Attendance','Financial','Enrollment'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="switchReportTab(this,${i})">${t}</div>`).join('')}
   </div>
-  <div class="g2 mb20">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> 12-Month Performance Trend</span></div>
-      <div style="display:flex;gap:5px;align-items:flex-end;height:150px;padding:10px 0">
-        ${[[70,80],[72,82],[68,79],[75,85],[78,88],[80,90],[82,88],[85,91],[83,89],[86,92],[88,93],[87,92]].map(([t,e])=>`
-        <div style="flex:1;display:flex;gap:2px;align-items:flex-end">
-          <div style="flex:1;background:var(--blue-main);opacity:.8;border-radius:3px 3px 0 0;height:${t*1.4}px"></div>
-          <div style="flex:1;background:var(--gold);opacity:.75;border-radius:3px 3px 0 0;height:${e*1.4}px"></div>
-        </div>`).join('')}
+
+  <!-- OVERVIEW TAB -->
+  <div class="report-tab-content active" data-tab="0">
+    <div class="g2 mb20">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> 12-Month Performance Trend</span></div>
+        <div style="display:flex;gap:5px;align-items:flex-end;height:150px;padding:10px 0">
+          ${[[70,80],[72,82],[68,79],[75,85],[78,88],[80,90],[82,88],[85,91],[83,89],[86,92],[88,93],[87,92]].map(([t,e])=>`
+          <div style="flex:1;display:flex;gap:2px;align-items:flex-end">
+            <div style="flex:1;background:var(--blue-main);opacity:.8;border-radius:3px 3px 0 0;height:${t*1.4}px"></div>
+            <div style="flex:1;background:var(--gold);opacity:.75;border-radius:3px 3px 0 0;height:${e*1.4}px"></div>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);padding:0 2px">
+          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>`<span>${m}</span>`).join('')}
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);padding:0 2px">
-        ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>`<span>${m}</span>`).join('')}
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Quick Reports</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          ${[['Academic','<i class="fas fa-chart-bar"></i>'],['Attendance','<i class="fas fa-check-circle"></i>'],['Financial','<i class="fas fa-money-bill"></i>'],['Enrollment','<i class="fas fa-graduation-cap"></i>'],['Exam Results','<i class="fas fa-chart-line"></i>'],['Top Performers','<i class="fas fa-trophy"></i>']].map(([name,icon])=>`
+          <button class="btn btn-secondary" style="font-size:11px;padding:12px" onclick="generateReportPDF('${name}')"><span style="font-size:14px;margin-right:4px">${icon}</span>${name}</button>`).join('')}
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- ACADEMIC TAB -->
+  <div class="report-tab-content" data-tab="1">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Generate Report</span></div>
-      ${[['<i class="fas fa-chart-bar"></i>','Academic Performance Report','By class, subject or student'],['<i class="fas fa-check-circle"></i>','Attendance Summary','Monthly or termly breakdown'],['<i class="fas fa-money-bill"></i>','Financial Summary','Income and expenditure'],['<i class="fas fa-graduation-cap"></i>','Enrollment Statistics','Demographics and trends'],['<i class="fas fa-chart-line"></i>','Exam Results Analysis','Grade distributions'],['<i class="fas fa-trophy"></i>','Top Performers','Honour roll report']].map(([i,t,d])=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--gray-100)">
-        <div style="display:flex;gap:10px;align-items:center">
-          <span style="font-size:18px">${i}</span>
-          <div><div style="font-size:12.5px;font-weight:600">${t}</div><div style="font-size:10px;color:var(--gray-400)">${d}</div></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Academic Performance Report</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+        <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input placeholder="Search by class or subject..." id="academic-search" onkeyup="filterReportTab('academic')"></div>
+        <select id="academic-filter" class="select-sm" onchange="filterReportTab('academic')"><option value="">All Classes</option><option value="JHS 1">JHS 1</option><option value="JHS 2">JHS 2</option><option value="JHS 3">JHS 3</option></select>
+        <button class="btn btn-primary" onclick="generateReportPDF('Academic')"><i class="fas fa-download"></i> Export PDF</button>
+      </div>
+      <table class="tbl" id="academic-table">
+        <thead><tr><th>Class</th><th>Subject</th><th>Pass Rate</th><th>Avg Score</th><th>Grade A</th><th>Grade B</th><th>Grade C</th></tr></thead>
+        <tbody id="academic-tbody">
+          <tr class="academic-row" data-class="JHS 1" data-search="jhs 1 mathematics"><td>JHS 1</td><td>Mathematics</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">92%</span></td><td>78</td><td>18</td><td>22</td><td>10</td></tr>
+          <tr class="academic-row" data-class="JHS 1" data-search="jhs 1 english"><td>JHS 1</td><td>English</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">88%</span></td><td>75</td><td>15</td><td>24</td><td>11</td></tr>
+          <tr class="academic-row" data-class="JHS 2" data-search="jhs 2 mathematics"><td>JHS 2</td><td>Mathematics</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">85%</span></td><td>72</td><td>12</td><td>28</td><td>14</td></tr>
+          <tr class="academic-row" data-class="JHS 2" data-search="jhs 2 science"><td>JHS 2</td><td>Science</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">90%</span></td><td>76</td><td>20</td><td>20</td><td>6</td></tr>
+          <tr class="academic-row" data-class="JHS 3" data-search="jhs 3 mathematics"><td>JHS 3</td><td>Mathematics</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">88%</span></td><td>74</td><td>16</td><td>26</td><td>12</td></tr>
+          <tr class="academic-row" data-class="JHS 3" data-search="jhs 3 english"><td>JHS 3</td><td>English</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">85%</span></td><td>71</td><td>14</td><td>24</td><td>16</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE TAB -->
+  <div class="report-tab-content" data-tab="2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> Attendance Summary Report</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+        <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input placeholder="Search by student name..." id="attendance-search" onkeyup="filterReportTab('attendance')"></div>
+        <select id="attendance-filter" class="select-sm" onchange="filterReportTab('attendance')"><option value="">All Periods</option><option value="First">First Term</option><option value="Second">Second Term</option><option value="Third">Third Term</option></select>
+        <button class="btn btn-primary" onclick="generateReportPDF('Attendance')"><i class="fas fa-download"></i> Export PDF</button>
+      </div>
+      <table class="tbl" id="attendance-table">
+        <thead><tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance %</th><th>Status</th></tr></thead>
+        <tbody id="attendance-tbody">
+          <tr class="attendance-row" data-student="ama serwaa" data-period="First"><td>Ama Serwaa</td><td>JHS 1</td><td>168</td><td>2</td><td>0</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">98%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Excellent</span></td></tr>
+          <tr class="attendance-row" data-student="kwame mensah" data-period="First"><td>Kwame Mensah</td><td>JHS 1</td><td>165</td><td>4</td><td>1</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">96%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Very Good</span></td></tr>
+          <tr class="attendance-row" data-student="nana yaa" data-period="First"><td>Nana Yaa</td><td>JHS 2</td><td>162</td><td>6</td><td>2</td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">94%</span></td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">Good</span></td></tr>
+          <tr class="attendance-row" data-student="kofi asante" data-period="First"><td>Kofi Asante</td><td>JHS 2</td><td>170</td><td>0</td><td>0</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">98%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Excellent</span></td></tr>
+          <tr class="attendance-row" data-student="afua owusu" data-period="First"><td>Afua Owusu</td><td>JHS 3</td><td>168</td><td>3</td><td>1</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">97%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Excellent</span></td></tr>
+          <tr class="attendance-row" data-student="yaw boateng" data-period="First"><td>Yaw Boateng</td><td>JHS 3</td><td>165</td><td>5</td><td>2</td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">95%</span></td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">Good</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FINANCIAL TAB -->
+  <div class="report-tab-content" data-tab="3">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Financial Summary Report</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+        <select id="financial-filter" class="select-sm" onchange="filterReportTab('financial')"><option value="">All Months</option><option value="January">January</option><option value="February">February</option><option value="March">March</option><option value="April">April</option></select>
+        <button class="btn btn-primary" onclick="generateReportPDF('Financial')"><i class="fas fa-download"></i> Export PDF</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+        <div class="card" style="background:linear-gradient(135deg,var(--blue-main),#2563eb)">
+          <div style="color:#fff;padding:15px">
+            <div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL INCOME</div>
+            <div style="font-size:24px;font-weight:700">GHS 245,800</div>
+            <div style="font-size:10px;opacity:.7;margin-top:8px">↑ 12% from last month</div>
+          </div>
         </div>
-        <div style="display:flex;gap:4px">
-          <button class="btn btn-secondary btn-xs" onclick="generateReport('Report')">Generate</button>
-          <button class="btn btn-primary btn-xs" onclick="alert('Downloading PDF...')"><i class="fas fa-download"></i> PDF</button>
+        <div class="card" style="background:linear-gradient(135deg,var(--danger),#dc2626)">
+          <div style="color:#fff;padding:15px">
+            <div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL EXPENDITURE</div>
+            <div style="font-size:24px;font-weight:700">GHS 156,400</div>
+            <div style="font-size:10px;opacity:.7;margin-top:8px">↑ 8% from last month</div>
+          </div>
         </div>
-      </div>`).join('')}
+        <div class="card" style="background:linear-gradient(135deg,var(--success),#10b981)">
+          <div style="color:#fff;padding:15px">
+            <div style="font-size:11px;opacity:.8;margin-bottom:5px">NET SURPLUS</div>
+            <div style="font-size:24px;font-weight:700">GHS 89,400</div>
+            <div style="font-size:10px;opacity:.7;margin-top:8px">↑ 16% improvement</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+        <div>
+          <div style="font-weight:600;margin-bottom:10px;font-size:13px">Income Breakdown</div>
+          <table class="tbl" style="font-size:12px">
+            <thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead>
+            <tbody>
+              <tr><td>Tuition Fees</td><td>GHS 188,500</td><td>76.8%</td></tr>
+              <tr><td>Donations</td><td>GHS 57,300</td><td>23.2%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div style="font-weight:600;margin-bottom:10px;font-size:13px">Expenditure Breakdown</div>
+          <table class="tbl" style="font-size:12px">
+            <thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead>
+            <tbody>
+              <tr><td>Staff Salaries</td><td>GHS 98,500</td><td>63.0%</td></tr>
+              <tr><td>Supplies & Materials</td><td>GHS 57,900</td><td>37.0%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENROLLMENT TAB -->
+  <div class="report-tab-content" data-tab="4">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-graduation-cap"></i> Enrollment Statistics Report</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+        <select id="enrollment-class-filter" class="select-sm" onchange="filterReportTab('enrollment')"><option value="">All Classes</option><option value="JHS 1">JHS 1</option><option value="JHS 2">JHS 2</option><option value="JHS 3">JHS 3</option></select>
+        <select id="enrollment-gender-filter" class="select-sm" onchange="filterReportTab('enrollment')"><option value="">All Genders</option><option value="Male">Male</option><option value="Female">Female</option></select>
+        <button class="btn btn-primary" onclick="generateReportPDF('Enrollment')"><i class="fas fa-download"></i> Export PDF</button>
+      </div>
+      <table class="tbl" id="enrollment-table">
+        <thead><tr><th>Class</th><th>Total</th><th>Male</th><th>Female</th><th>New Students</th><th>Returning</th><th>Avg Age</th></tr></thead>
+        <tbody id="enrollment-tbody">
+          <tr class="enrollment-row" data-class="JHS 1" data-gender=""><td>JHS 1</td><td>140</td><td><span style="color:var(--blue-main);font-weight:600">68</span></td><td><span style="color:var(--purple);font-weight:600">72</span></td><td>28</td><td>112</td><td>13.2</td></tr>
+          <tr class="enrollment-row" data-class="JHS 2" data-gender=""><td>JHS 2</td><td>135</td><td><span style="color:var(--blue-main);font-weight:600">64</span></td><td><span style="color:var(--purple);font-weight:600">71</span></td><td>15</td><td>120</td><td>14.1</td></tr>
+          <tr class="enrollment-row" data-class="JHS 3" data-gender=""><td>JHS 3</td><td>125</td><td><span style="color:var(--blue-main);font-weight:600">61</span></td><td><span style="color:var(--purple);font-weight:600">64</span></td><td>8</td><td>117</td><td>15.3</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>`;
 }
 
+// REPORT TAB SWITCHING
+function switchReportTab(element, tabIndex){
+  document.querySelectorAll('#report-tabs .mod-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.report-tab-content').forEach(c => c.classList.remove('active'));
+  element.classList.add('active');
+  document.querySelector(`.report-tab-content[data-tab="${tabIndex}"]`).classList.add('active');
+}
+
+// FILTER REPORTS
+function filterReportTab(tabType){
+  if(tabType === 'academic'){
+    const search = document.getElementById('academic-search').value.toLowerCase();
+    const filter = document.getElementById('academic-filter').value;
+    document.querySelectorAll('.academic-row').forEach(row => {
+      const matches = (!search || row.getAttribute('data-search').includes(search)) && (!filter || row.getAttribute('data-class') === filter);
+      row.style.display = matches ? '' : 'none';
+    });
+  }
+  else if(tabType === 'attendance'){
+    const search = document.getElementById('attendance-search').value.toLowerCase();
+    const filter = document.getElementById('attendance-filter').value;
+    document.querySelectorAll('.attendance-row').forEach(row => {
+      const matches = (!search || row.getAttribute('data-student').includes(search)) && (!filter || row.getAttribute('data-period') === filter);
+      row.style.display = matches ? '' : 'none';
+    });
+  }
+  else if(tabType === 'enrollment'){
+    const classFilter = document.getElementById('enrollment-class-filter').value;
+    const genderFilter = document.getElementById('enrollment-gender-filter').value;
+    document.querySelectorAll('.enrollment-row').forEach(row => {
+      const matches = (!classFilter || row.getAttribute('data-class') === classFilter);
+      row.style.display = matches ? '' : 'none';
+    });
+  }
+}
+
+// GENERATE REPORT PDF
+function generateReportPDF(reportType){
+  showToast('Generating ' + reportType + ' Report...', 'info');
+  
+  let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + reportType + ' Report</title><style>';
+  html += 'body{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5}';
+  html += '.header{text-align:center;margin-bottom:30px;border-bottom:3px solid #1a56db;padding-bottom:15px}';
+  html += '.header h1{color:#1a56db;margin:0;font-size:24px}';
+  html += '.header p{color:#666;margin:5px 0;font-size:12px}';
+  html += '.content{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}';
+  html += '.section{margin-bottom:25px}';
+  html += '.section-title{font-size:16px;font-weight:700;color:#1a56db;margin-bottom:12px;border-left:4px solid #1a56db;padding-left:10px}';
+  html += 'table{width:100%;border-collapse:collapse;margin-top:10px}';
+  html += 'th{background:#1a56db;color:#fff;padding:10px;text-align:left;font-size:12px;font-weight:700}';
+  html += 'td{padding:10px;border-bottom:1px solid #ddd;font-size:12px}';
+  html += 'tr:nth-child(even){background:#f9f9f9}';
+  html += '.stat{display:inline-block;margin:10px 20px 10px 0}';
+  html += '.stat-value{font-size:24px;font-weight:700;color:#1a56db}';
+  html += '.stat-label{font-size:12px;color:#666;margin-top:5px}';
+  html += '.badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46}';
+  html += '.footer{margin-top:30px;text-align:center;color:#999;font-size:11px;border-top:1px solid #ddd;padding-top:15px}';
+  html += '@media print{body{margin:0;background:#fff}}';
+  html += '</style></head><body>';
+  html += '<div class="header"><h1><i class="fas fa-school" style="color:#1a56db"></i> Glory Regin Preparatory School</h1><p>' + reportType + ' Report</p><p>Generated: ' + new Date().toLocaleString() + '</p></div>';
+  html += '<div class="content">';
+  
+  if(reportType === 'Academic'){
+    html += '<div class="section"><div class="section-title"><i class="fas fa-chart-bar"></i> Academic Performance Report</div>';
+    html += '<div class="stat"><div class="stat-value">88.7%</div><div class="stat-label">Pass Rate</div></div>';
+    html += '<div class="stat"><div class="stat-value">75.3</div><div class="stat-label">Avg Score</div></div>';
+    html += '<div class="stat"><div class="stat-value">92%</div><div class="stat-label">Top Subject</div></div></div>';
+    html += '<div class="section"><div class="section-title">Performance by Class & Subject</div><table>';
+    html += '<tr><th>Class</th><th>Subject</th><th>Pass Rate</th><th>Avg Score</th><th>Grade A</th><th>Grade B</th></tr>';
+    document.querySelectorAll('.academic-row:not([style*="display: none"])').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      html += '<tr>';
+      cells.forEach(cell => html += '<td>' + cell.innerText + '</td>');
+      html += '</tr>';
+    });
+    html += '</table></div>';
+  }
+  else if(reportType === 'Attendance'){
+    html += '<div class="section"><div class="section-title"><i class="fas fa-clipboard-list"></i> Attendance Summary Report</div>';
+    html += '<div class="stat"><div class="stat-value">94.2%</div><div class="stat-label">Avg Attendance</div></div>';
+    html += '<div class="stat"><div class="stat-value">4,856</div><div class="stat-label">Present Days</div></div></div>';
+    html += '<div class="section"><div class="section-title">Student Attendance Records</div><table>';
+    html += '<tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance %</th></tr>';
+    document.querySelectorAll('.attendance-row:not([style*="display: none"])').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      html += '<tr>';
+      cells.forEach(cell => html += '<td>' + cell.innerText + '</td>');
+      html += '</tr>';
+    });
+    html += '</table></div>';
+  }
+  else if(reportType === 'Financial'){
+    html += '<div class="section"><div class="section-title"><i class="fas fa-money-bill"></i> Financial Summary Report</div>';
+    html += '<div class="stat"><div class="stat-value">GHS 245,800</div><div class="stat-label">Total Income</div></div>';
+    html += '<div class="stat"><div class="stat-value">GHS 156,400</div><div class="stat-label">Expenditure</div></div>';
+    html += '<div class="stat"><div class="stat-value">GHS 89,400</div><div class="stat-label">Surplus</div></div></div>';
+    html += '<div class="section"><div class="section-title">Income Sources</div><table>';
+    html += '<tr><th>Source</th><th>Amount</th><th>Percentage</th></tr>';
+    html += '<tr><td>Tuition Fees</td><td>GHS 188,500</td><td>76.8%</td></tr>';
+    html += '<tr><td>Donations</td><td>GHS 57,300</td><td>23.2%</td></tr>';
+    html += '</table></div>';
+  }
+  else if(reportType === 'Enrollment'){
+    html += '<div class="section"><div class="section-title"><i class="fas fa-users"></i> Enrollment Statistics Report</div>';
+    html += '<div class="stat"><div class="stat-value">400</div><div class="stat-label">Total Students</div></div>';
+    html += '<div class="stat"><div class="stat-value">193</div><div class="stat-label">Male</div></div>';
+    html += '<div class="stat"><div class="stat-value">207</div><div class="stat-label">Female</div></div></div>';
+    html += '<div class="section"><div class="section-title">Enrollment by Class</div><table>';
+    html += '<tr><th>Class</th><th>Total</th><th>Male</th><th>Female</th><th>New</th><th>Returning</th></tr>';
+    document.querySelectorAll('.enrollment-row:not([style*="display: none"])').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      html += '<tr>';
+      for(let i=0; i<Math.min(6, cells.length); i++) html += '<td>' + cells[i].innerText + '</td>';
+      html += '</tr>';
+    });
+    html += '</table></div>';
+  }
+  
+  html += '</div><div class="footer"><p>This report was automatically generated by Glory Regin School Management System</p>';
+  html += '<p>© 2026 Glory Regin Preparatory School. All rights reserved.</p></div></body></html>';
+  
+  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = reportType.replace(/ /g, '_') + '_Report_' + new Date().toISOString().split('T')[0] + '.html';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('Report downloaded! Open the file in your browser to view or print as PDF.', 'success');
+}
+
 // SETTINGS MODULE
+// SETTINGS DATA
+const SETTINGS_DATA = {
+  schoolInfo: {
+    schoolName: 'Glory Regin Preparatory School',
+    schoolCode: 'SCH-0024',
+    schoolMotto: 'Excellence, Integrity & Service',
+    schoolLogo: null,
+    region: 'Greater Accra',
+    district: 'Accra Metropolitan',
+    phone: '+233 302 000 000',
+    email: 'info@excellence.edu.gh',
+    address: 'P.O. Box AN 1234, Main School Street, Accra North, Greater Accra Region, Ghana',
+    website: 'www.excellence.edu.gh'
+  },
+  academic: {
+    academicYear: '2024/2025',
+    currentTerm: 'Term 1',
+    termStartDate: '2025-01-13',
+    termEndDate: '2025-04-11'
+  },
+  system: {
+    maintenanceMode: false,
+    backupFrequency: 'Daily',
+    maxUploadSize: '50MB',
+    language: 'English'
+  },
+  security: {
+    passwordPolicy: 'Strong',
+    sessionTimeout: '30 minutes',
+    twoFactorAuth: true,
+    apiKeyRotation: '90 days'
+  },
+  appearance: {
+    theme: 'Light',
+    accentColor: 'Blue',
+    fontSize: 'Normal',
+    compactMode: false
+  },
+  notifications: {
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    dailyDigest: true
+  }
+};
+
 function settingsModule(){
   return hdr('System Settings','Configure school information and system preferences','Settings')+`
-  <div class="mod-tabs">
-    ${['School Info','Academic','System','Security','Appearance','Notifications'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="this.parentElement.querySelectorAll('.mod-tab').forEach(x=>x.classList.remove('active'));this.classList.add('active')">${t}</div>`).join('')}
+  <div class="mod-tabs" id="settings-tabs">
+    ${['School Info','Academic','System','Security','Appearance','Notifications'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="switchSettingsTab(${i})">${t}</div>`).join('')}
   </div>
-  <div class="g2">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-school"></i> School Information</span></div>
-      <div class="f-row"><div class="f-field"><label>School Name</label><input value="Glory Regin Preparatory school"></div><div class="f-field"><label>School Code</label><input value="SCH-0024" readonly></div></div>
-      <div class="f-row"><div class="f-field"><label>Region</label><select><option>Greater Accra</option><option>Ashanti</option></select></div><div class="f-field"><label>District</label><input value="Accra Metropolitan"></div></div>
-      <div class="f-row"><div class="f-field"><label>Phone Number</label><input value="+233 302 000 000"></div><div class="f-field"><label>Email Address</label><input value="info@excellence.edu.gh"></div></div>
-      <div class="f-field" style="margin-bottom:14px"><label>Physical Address</label><textarea style="min-height:60px">P.O. Box AN 1234, Main School Street, Accra North, Greater Accra Region, Ghana</textarea></div>
-      <div class="f-field" style="margin-bottom:14px"><label>School Website</label><input value="www.excellence.edu.gh"></div>
-      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="showToast('<i class="fas fa-check-circle"></i> Settings saved!', 'success')">Save Changes</button><button class="btn btn-secondary" onclick="location.reload()">Cancel</button></div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Academic Calendar</span></div>
-      <div class="f-row"><div class="f-field"><label>Academic Year</label><select><option>2024/2025</option><option>2025/2026</option></select></div><div class="f-field"><label>Current Term</label><select><option>Term 1</option><option>Term 2</option><option>Term 3</option></select></div></div>
-      <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" value="2025-01-13"></div><div class="f-field"><label>Term End Date</label><input type="date" value="2025-04-11"></div></div>
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
-        ${[['A','80–100','Excellent'],['B','70–79','Very Good'],['C','60–69','Good'],['D','50–59','Average'],['F','0–49','Fail']].map(([g,r,l])=>`
-        <div style="display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
-          <div class="grade-pill g${g}">${g}</div>
-          <span style="font-size:12px;flex:1">${r}</span>
-          <span style="font-size:11px;color:var(--gray-400)">${l}</span>
-        </div>`).join('')}
+
+  <!-- SCHOOL INFO TAB -->
+  <div class="settings-tab-content active" data-tab="0">
+    <div class="g2">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-school"></i> School Logo & Motto</span></div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;padding-bottom:20px;border-bottom:1.5px solid var(--gray-200);margin-bottom:20px">
+          <div class="school-logo-container" id="school-logo-display" style="width:120px;height:120px;background:var(--gray-100);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+            <div style="text-align:center">
+              <div style="font-size:40px"><i class="fas fa-image"></i></div>
+              <div style="font-size:10px;color:var(--gray-400);margin-top:6px">No logo</div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div class="f-field"><label>School Logo (Image)</label><input type="file" id="school-logo-input" accept="image/*" onchange="previewSchoolLogo()"></div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:6px">Recommended: PNG/JPG, 500x500px, max 2MB</div>
+          </div>
+        </div>
+        <div class="f-field" style="margin-bottom:16px"><label>School Motto</label><input id="school-motto" placeholder="e.g., Excellence, Integrity & Service" value="${SETTINGS_DATA.schoolInfo.schoolMotto}"></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveSchoolBrand()"><i class="fas fa-check"></i> Save Logo & Motto</button><button class="btn btn-secondary" onclick="resetBrandForm()">Reset</button></div>
       </div>
-      <button class="btn btn-primary" onclick="showToast('<i class="fas fa-check-circle"></i> Calendar updated!', 'success')">Update Calendar</button>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> School Information</span></div>
+        <div class="f-row"><div class="f-field"><label>School Name</label><input id="school-name" value="${SETTINGS_DATA.schoolInfo.schoolName}"></div><div class="f-field"><label>School Code</label><input id="school-code" value="${SETTINGS_DATA.schoolInfo.schoolCode}" readonly></div></div>
+        <div class="f-row"><div class="f-field"><label>Region</label><select id="school-region"><option>Greater Accra</option><option>Ashanti</option><option>Western</option><option>Northern</option></select></div><div class="f-field"><label>District</label><input id="school-district" value="${SETTINGS_DATA.schoolInfo.district}"></div></div>
+        <div class="f-row"><div class="f-field"><label>Phone Number</label><input id="school-phone" value="${SETTINGS_DATA.schoolInfo.phone}"></div><div class="f-field"><label>Email Address</label><input id="school-email" value="${SETTINGS_DATA.schoolInfo.email}"></div></div>
+        <div class="f-field" style="margin-bottom:14px"><label>Physical Address</label><textarea id="school-address" style="min-height:60px">${SETTINGS_DATA.schoolInfo.address}</textarea></div>
+        <div class="f-field" style="margin-bottom:14px"><label>School Website</label><input id="school-website" value="${SETTINGS_DATA.schoolInfo.website}"></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveSchoolInfo()"><i class="fas fa-check"></i> Save Changes</button><button class="btn btn-secondary" onclick="resetSchoolForm()">Reset</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Academic Calendar</span></div>
+        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year"><option>2024/2025</option><option>2025/2026</option><option>2026/2027</option></select></div><div class="f-field"><label>Current Term</label><select id="current-term"><option>Term 1</option><option>Term 2</option><option>Term 3</option></select></div></div>
+        <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="2025-01-13"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="2025-04-11"></div></div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
+          ${[['A','80–100','Excellent'],['B','70–79','Very Good'],['C','60–69','Good'],['D','50–59','Average'],['F','0–49','Fail']].map(([g,r,l])=>`
+          <div style="display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
+            <div class="grade-pill g${g}">${g}</div>
+            <span style="font-size:12px;flex:1">${r}</span>
+            <span style="font-size:11px;color:var(--gray-400)">${l}</span>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveAcademicCalendar()"><i class="fas fa-check"></i> Update Calendar</button><button class="btn btn-secondary" onclick="resetAcademicForm()">Reset</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYSTEM TAB -->
+  <div class="settings-tab-content" data-tab="1">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-cogs"></i> System Settings</span></div>
+      <div class="f-row">
+        <div class="f-field"><label>Maintenance Mode</label>
+          <select id="maintenance-mode">
+            <option value="false">Disabled</option>
+            <option value="true">Enabled</option>
+          </select>
+        </div>
+        <div class="f-field"><label>Backup Frequency</label>
+          <select id="backup-frequency">
+            <option>Hourly</option>
+            <option>Daily</option>
+            <option>Weekly</option>
+            <option>Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Max Upload Size</label>
+          <select id="max-upload">
+            <option>10MB</option>
+            <option>50MB</option>
+            <option>100MB</option>
+            <option>500MB</option>
+          </select>
+        </div>
+        <div class="f-field"><label>System Language</label>
+          <select id="system-language">
+            <option>English</option>
+            <option>Twi</option>
+            <option>Ga</option>
+            <option>French</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveSystemSettings()"><i class="fas fa-check"></i> Save System Settings</button><button class="btn btn-secondary" onclick="resetSystemForm()">Reset</button></div>
+    </div>
+  </div>
+
+  <!-- SECURITY TAB -->
+  <div class="settings-tab-content" data-tab="2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-lock"></i> Security Settings</span></div>
+      <div class="f-row">
+        <div class="f-field"><label>Password Policy</label>
+          <select id="password-policy">
+            <option>Weak</option>
+            <option>Medium</option>
+            <option>Strong</option>
+            <option>Very Strong</option>
+          </select>
+        </div>
+        <div class="f-field"><label>Session Timeout</label>
+          <select id="session-timeout">
+            <option>15 minutes</option>
+            <option>30 minutes</option>
+            <option>1 hour</option>
+            <option>2 hours</option>
+          </select>
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Two-Factor Authentication</label>
+          <select id="two-factor">
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+          </select>
+        </div>
+        <div class="f-field"><label>API Key Rotation</label>
+          <select id="api-rotation">
+            <option>30 days</option>
+            <option>60 days</option>
+            <option>90 days</option>
+            <option>180 days</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveSecuritySettings()"><i class="fas fa-check"></i> Save Security Settings</button><button class="btn btn-secondary" onclick="resetSecurityForm()">Reset</button></div>
+    </div>
+  </div>
+
+  <!-- APPEARANCE TAB -->
+  <div class="settings-tab-content" data-tab="3">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-palette"></i> Appearance Settings</span></div>
+      <div class="f-row">
+        <div class="f-field"><label>Theme</label>
+          <select id="theme-select">
+            <option>Light</option>
+            <option>Dark</option>
+            <option>Auto</option>
+          </select>
+        </div>
+        <div class="f-field"><label>Accent Color</label>
+          <select id="accent-color">
+            <option>Blue</option>
+            <option>Purple</option>
+            <option>Green</option>
+            <option>Orange</option>
+          </select>
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Font Size</label>
+          <select id="font-size">
+            <option>Small</option>
+            <option>Normal</option>
+            <option>Large</option>
+            <option>Extra Large</option>
+          </select>
+        </div>
+        <div class="f-field"><label>Compact Mode</label>
+          <select id="compact-mode">
+            <option value="false">Disabled</option>
+            <option value="true">Enabled</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveAppearanceSettings()"><i class="fas fa-check"></i> Save Appearance Settings</button><button class="btn btn-secondary" onclick="resetAppearanceForm()">Reset</button></div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS TAB -->
+  <div class="settings-tab-content" data-tab="4">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-bell"></i> Notification Preferences</span></div>
+      <div style="display:grid;gap:12px">
+        <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
+          <input type="checkbox" id="email-notif" checked style="width:20px;height:20px;cursor:pointer">
+          <label style="flex:1;margin-left:12px;cursor:pointer">Email Notifications</label>
+        </div>
+        <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
+          <input type="checkbox" id="sms-notif" style="width:20px;height:20px;cursor:pointer">
+          <label style="flex:1;margin-left:12px;cursor:pointer">SMS Notifications</label>
+        </div>
+        <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
+          <input type="checkbox" id="push-notif" checked style="width:20px;height:20px;cursor:pointer">
+          <label style="flex:1;margin-left:12px;cursor:pointer">Push Notifications</label>
+        </div>
+        <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
+          <input type="checkbox" id="daily-digest" checked style="width:20px;height:20px;cursor:pointer">
+          <label style="flex:1;margin-left:12px;cursor:pointer">Daily Digest Email</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px"><button class="btn btn-primary" onclick="saveNotificationSettings()"><i class="fas fa-check"></i> Save Notification Settings</button><button class="btn btn-secondary" onclick="resetNotificationForm()">Reset</button></div>
     </div>
   </div>`;
+}
+
+// SETTINGS FUNCTIONS
+function switchSettingsTab(tabIndex){
+  document.querySelectorAll('#settings-tabs .mod-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#settings-tabs .mod-tab')[tabIndex].classList.add('active');
+  document.querySelector(`.settings-tab-content[data-tab="${tabIndex}"]`).classList.add('active');
+}
+
+function previewSchoolLogo(){
+  const input = document.getElementById('school-logo-input');
+  if(!input.files[0]) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const display = document.getElementById('school-logo-display');
+    display.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+    SETTINGS_DATA.schoolInfo.schoolLogo = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function saveSchoolBrand(){
+  SETTINGS_DATA.schoolInfo.schoolMotto = document.getElementById('school-motto').value;
+  showToast('✓ School logo and motto saved successfully!', 'success');
+}
+
+function resetBrandForm(){
+  document.getElementById('school-motto').value = SETTINGS_DATA.schoolInfo.schoolMotto;
+  if(SETTINGS_DATA.schoolInfo.schoolLogo){
+    document.getElementById('school-logo-display').innerHTML = `<img src="${SETTINGS_DATA.schoolInfo.schoolLogo}" style="width:100%;height:100%;object-fit:cover">`;
+  } else {
+    document.getElementById('school-logo-display').innerHTML = `<div style="text-align:center"><div style="font-size:40px"><i class="fas fa-image"></i></div><div style="font-size:10px;color:var(--gray-400);margin-top:6px">No logo</div></div>`;
+  }
+  document.getElementById('school-logo-input').value = '';
+  showToast('Form reset to saved values', 'info');
+}
+
+function saveSchoolInfo(){
+  SETTINGS_DATA.schoolInfo = {
+    schoolName: document.getElementById('school-name').value,
+    schoolCode: document.getElementById('school-code').value,
+    region: document.getElementById('school-region').value,
+    district: document.getElementById('school-district').value,
+    phone: document.getElementById('school-phone').value,
+    email: document.getElementById('school-email').value,
+    address: document.getElementById('school-address').value,
+    website: document.getElementById('school-website').value
+  };
+  showToast('✓ School information saved successfully!', 'success');
+}
+
+function resetSchoolForm(){
+  document.getElementById('school-name').value = SETTINGS_DATA.schoolInfo.schoolName;
+  document.getElementById('school-district').value = SETTINGS_DATA.schoolInfo.district;
+  document.getElementById('school-phone').value = SETTINGS_DATA.schoolInfo.phone;
+  document.getElementById('school-email').value = SETTINGS_DATA.schoolInfo.email;
+  document.getElementById('school-address').value = SETTINGS_DATA.schoolInfo.address;
+  document.getElementById('school-website').value = SETTINGS_DATA.schoolInfo.website;
+  showToast('Form reset to saved values', 'info');
+}
+
+function saveAcademicCalendar(){
+  SETTINGS_DATA.academic = {
+    academicYear: document.getElementById('academic-year').value,
+    currentTerm: document.getElementById('current-term').value,
+    termStartDate: document.getElementById('term-start-date').value,
+    termEndDate: document.getElementById('term-end-date').value
+  };
+  showToast('✓ Academic calendar updated successfully!', 'success');
+}
+
+function resetAcademicForm(){
+  document.getElementById('academic-year').value = SETTINGS_DATA.academic.academicYear;
+  document.getElementById('current-term').value = SETTINGS_DATA.academic.currentTerm;
+  document.getElementById('term-start-date').value = SETTINGS_DATA.academic.termStartDate;
+  document.getElementById('term-end-date').value = SETTINGS_DATA.academic.termEndDate;
+  showToast('Form reset to saved values', 'info');
+}
+
+function saveSystemSettings(){
+  SETTINGS_DATA.system = {
+    maintenanceMode: document.getElementById('maintenance-mode').value === 'true',
+    backupFrequency: document.getElementById('backup-frequency').value,
+    maxUploadSize: document.getElementById('max-upload').value,
+    language: document.getElementById('system-language').value
+  };
+  showToast('✓ System settings saved successfully!', 'success');
+}
+
+function resetSystemForm(){
+  document.getElementById('maintenance-mode').value = SETTINGS_DATA.system.maintenanceMode;
+  document.getElementById('backup-frequency').value = SETTINGS_DATA.system.backupFrequency;
+  document.getElementById('max-upload').value = SETTINGS_DATA.system.maxUploadSize;
+  document.getElementById('system-language').value = SETTINGS_DATA.system.language;
+  showToast('Form reset to saved values', 'info');
+}
+
+function saveSecuritySettings(){
+  SETTINGS_DATA.security = {
+    passwordPolicy: document.getElementById('password-policy').value,
+    sessionTimeout: document.getElementById('session-timeout').value,
+    twoFactorAuth: document.getElementById('two-factor').value === 'true',
+    apiKeyRotation: document.getElementById('api-rotation').value
+  };
+  showToast('✓ Security settings saved successfully!', 'success');
+}
+
+function resetSecurityForm(){
+  document.getElementById('password-policy').value = SETTINGS_DATA.security.passwordPolicy;
+  document.getElementById('session-timeout').value = SETTINGS_DATA.security.sessionTimeout;
+  document.getElementById('two-factor').value = SETTINGS_DATA.security.twoFactorAuth;
+  document.getElementById('api-rotation').value = SETTINGS_DATA.security.apiKeyRotation;
+  showToast('Form reset to saved values', 'info');
+}
+
+function saveAppearanceSettings(){
+  SETTINGS_DATA.appearance = {
+    theme: document.getElementById('theme-select').value,
+    accentColor: document.getElementById('accent-color').value,
+    fontSize: document.getElementById('font-size').value,
+    compactMode: document.getElementById('compact-mode').value === 'true'
+  };
+  showToast('✓ Appearance settings saved! Refresh page to apply theme changes.', 'success');
+}
+
+function resetAppearanceForm(){
+  document.getElementById('theme-select').value = SETTINGS_DATA.appearance.theme;
+  document.getElementById('accent-color').value = SETTINGS_DATA.appearance.accentColor;
+  document.getElementById('font-size').value = SETTINGS_DATA.appearance.fontSize;
+  document.getElementById('compact-mode').value = SETTINGS_DATA.appearance.compactMode;
+  showToast('Form reset to saved values', 'info');
+}
+
+function saveNotificationSettings(){
+  SETTINGS_DATA.notifications = {
+    emailNotifications: document.getElementById('email-notif').checked,
+    smsNotifications: document.getElementById('sms-notif').checked,
+    pushNotifications: document.getElementById('push-notif').checked,
+    dailyDigest: document.getElementById('daily-digest').checked
+  };
+  showToast('✓ Notification preferences saved successfully!', 'success');
+}
+
+function resetNotificationForm(){
+  document.getElementById('email-notif').checked = SETTINGS_DATA.notifications.emailNotifications;
+  document.getElementById('sms-notif').checked = SETTINGS_DATA.notifications.smsNotifications;
+  document.getElementById('push-notif').checked = SETTINGS_DATA.notifications.pushNotifications;
+  document.getElementById('daily-digest').checked = SETTINGS_DATA.notifications.dailyDigest;
+  showToast('Form reset to saved values', 'info');
 }
 
 // ROLES MODULE
@@ -7063,35 +7913,616 @@ function usersModule(){
 
 // STAFF MODULE
 function staffModule(){
-  return hdr('Staff Management','All school staff including teachers and support staff','Staff')+`
+  // Calculate statistics
+  const totalStaff = Object.keys(STAFF_DATA).length;
+  const teachingStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Teaching').length;
+  const adminStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Admin').length;
+  const supportStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Support').length;
+  const activeStaff = Object.values(STAFF_DATA).filter(s=>s.status==='Active').length;
+
+  return hdr('Staff Management','Manage school staff - teaching, admin and support personnel','Staff')+`
   <div class="stats-row">
-    ${statCard('<i class="fas fa-users"></i>','94','Total Staff','All categories','neu','si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>','64','Teaching Staff','64 teachers','neu','si-gold')}
-    ${statCard('<i class="fas fa-building"></i>','12','Admin Staff','Support team','neu','si-green')}
-    ${statCard('<i class="fas fa-wrench"></i>','18','Support Staff','Maintenance etc','neu','si-purple')}
+    ${statCard('<i class="fas fa-users"></i>',''+totalStaff,'Total Staff','All categories','neu','si-blue')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>',''+teachingStaff,'Teaching Staff','Academic staff','neu','si-gold')}
+    ${statCard('<i class="fas fa-building"></i>',''+adminStaff,'Admin Staff','Administrative team','neu','si-green')}
+    ${statCard('<i class="fas fa-wrench"></i>',''+supportStaff,'Support Staff','Support services','neu','si-purple')}
   </div>
-  <div class="card">
-    <div class="toolbar">
-      <button class="btn btn-primary" onclick="alert('Opening staff registration form...')">+ Add Staff</button>
-      <div class="search-bar"><span><i class="fas fa-search"></i></span><input placeholder="Search staff..."></div>
-      <select class="select-sm"><option>All Categories</option><option>Teaching</option><option>Admin</option><option>Support</option></select>
+  
+  <div class="toolbar" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="toggleStaffForm()"><i class="fas fa-plus"></i> Add Staff Member</button>
+    <button class="btn btn-secondary" onclick="showStaffStatistics()"><i class="fas fa-chart-bar"></i> Statistics</button>
+    <button class="btn btn-secondary" onclick="exportStaffToCSV()"><i class="fas fa-download"></i> Export CSV</button>
+    <button class="btn btn-secondary" onclick="exportStaffToExcel()"><i class="fas fa-table"></i> Export Excel</button>
+    <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="staff-search" placeholder="Search staff by name or ID..." onkeyup="filterStaffList()"></div>
+    <select id="staff-category-filter" class="select-sm" onchange="filterStaffList()"><option value="">All Categories</option><option value="Teaching">Teaching</option><option value="Admin">Admin</option><option value="Support">Support</option></select>
+  </div>
+  
+  <!-- ADD STAFF FORM -->
+  <div id="staff-form-wrap" style="display:none;margin-bottom:20px">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-user-plus"></i> Add New Staff Member</span></div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Full Name *</label>
+          <input type="text" id="staff-name" placeholder="Full name">
+        </div>
+        <div class="form-field">
+          <label>Email Address *</label>
+          <input type="email" id="staff-email" placeholder="email@school.edu.gh">
+        </div>
+        <div class="form-field">
+          <label>Phone Number *</label>
+          <input type="tel" id="staff-phone" placeholder="+233 XXX XXX XXXX">
+        </div>
+        <div class="form-field">
+          <label>Gender *</label>
+          <select id="staff-gender"><option>-- Select --</option><option>Male</option><option>Female</option></select>
+        </div>
+        <div class="form-field">
+          <label>Date of Birth *</label>
+          <input type="date" id="staff-dob">
+        </div>
+        <div class="form-field">
+          <label>Category *</label>
+          <select id="staff-category"><option>-- Select --</option><option>Teaching</option><option>Admin</option><option>Support</option></select>
+        </div>
+        <div class="form-field">
+          <label>Department *</label>
+          <input type="text" id="staff-department" placeholder="e.g., Mathematics, Finance, Security">
+        </div>
+        <div class="form-field">
+          <label>Position/Title *</label>
+          <input type="text" id="staff-position" placeholder="e.g., Senior Teacher, Accountant">
+        </div>
+        <div class="form-field" style="grid-column:1/-1">
+          <label>Qualifications *</label>
+          <textarea id="staff-qualifications" placeholder="Education and certifications..." style="min-height:60px;font-family:Poppins,sans-serif;border:1.5px solid var(--gray-200);border-radius:6px;padding:8px;font-size:12px"></textarea>
+        </div>
+        <div class="form-field">
+          <label>Salary Grade *</label>
+          <input type="text" id="staff-salary-grade" placeholder="e.g., Grade 8, Admin A">
+        </div>
+        <div class="form-field">
+          <label>Join Date *</label>
+          <input type="date" id="staff-join-date">
+        </div>
+        <div class="form-field">
+          <label>Address</label>
+          <input type="text" id="staff-address" placeholder="Residential address">
+        </div>
+        <div class="form-field">
+          <label>Emergency Contact Name</label>
+          <input type="text" id="staff-emergency-contact" placeholder="Name">
+        </div>
+        <div class="form-field">
+          <label>Emergency Contact Phone</label>
+          <input type="tel" id="staff-emergency-phone" placeholder="+233 XXX XXX XXXX">
+        </div>
+        <div class="form-field" style="grid-column:1/-1">
+          <label>Assignments/Roles (comma-separated)</label>
+          <input type="text" id="staff-assignments" placeholder="e.g., JHS 1 Math, Math Coordinator, Form Tutor">
+        </div>
+        <div style="grid-column:1/-1;display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="submitStaffForm()"><i class="fas fa-check"></i> Add Staff</button>
+          <button class="btn btn-secondary" style="flex:1" onclick="toggleStaffForm()">Cancel</button>
+        </div>
+      </div>
     </div>
+  </div>
+  
+  <!-- STAFF LIST TABLE -->
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-list"></i> Staff Directory</span></div>
     <table class="tbl">
-      <thead><tr><th>#</th><th>Staff Member</th><th>Category</th><th>Department</th><th>Contact</th><th>Salary Grade</th><th>Join Date</th><th>Status</th></tr></thead>
-      <tbody>
-        ${[['Mr. Kweku Amponsah','Teaching','Mathematics','+233 24 100 0001','Grade 8','Jan 2013','Active','blue'],['Mrs. Akua Asante','Teaching','Languages','+233 24 100 0002','Grade 7','Mar 2017','Active','purple'],['Mr. Kojo Mensah','Admin','Finance','+233 24 100 0003','Admin A','Jun 2015','Active','gold'],['Ms. Abena Ofori','Admin','Front Office','+233 24 100 0004','Admin B','Sep 2020','Active','green'],['Mr. Kwame Oti','Support','Maintenance','+233 24 100 0005','Support','Jan 2018','Active','teal']].map(([n,cat,dept,ph,sg,jd,s,av],i)=>`
+      <thead>
         <tr>
-          <td style="color:var(--gray-400)">${i+1}</td>
-          <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${av}">${n[0]}</div>${n}</div></td>
-          <td><span class="badge b-info">${cat}</span></td>
-          <td>${dept}</td><td style="font-size:11px">${ph}</td>
-          <td><span class="badge b-gray">${sg}</span></td>
-          <td style="font-size:11px">${jd}</td>
-          <td><span class="badge b-success">${s}</span></td>
+          <th>#</th>
+          <th>Staff Name</th>
+          <th>Category</th>
+          <th>Department</th>
+          <th>Position</th>
+          <th>Phone</th>
+          <th>Join Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="staff-list-body">
+        ${Object.values(STAFF_DATA).map((staff,i)=>`
+        <tr class="staff-row" data-category="${staff.category}" data-name="${staff.name.toLowerCase()}">
+          <td style="color:var(--gray-400);font-size:11px">${i+1}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="av av-sm av-${['blue','purple','gold','green','teal'][i%5]}">${staff.avatar}</div>
+              <div>
+                <div style="font-weight:600;font-size:12px">${staff.name}</div>
+                <div style="font-size:10px;color:var(--gray-500)">${staff.id}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge ${staff.category==='Teaching'?'b-info':(staff.category==='Admin'?'b-success':'b-warning')}">${staff.category}</span></td>
+          <td style="font-size:11px">${staff.department}</td>
+          <td style="font-size:11px;color:var(--gray-600)">${staff.position}</td>
+          <td style="font-size:10px">${staff.phone}</td>
+          <td style="font-size:10px;color:var(--gray-500)">${new Date(staff.joinDate).toLocaleDateString()}</td>
+          <td><span class="badge ${staff.status==='Active'?'b-success':'b-danger'}">${staff.status}</span></td>
+          <td>
+            <div style="display:flex;gap:3px;justify-content:center">
+              <button class="btn btn-secondary btn-xs" onclick="viewStaffDetail('${staff.id}')" title="View details"><i class="fas fa-eye"></i></button>
+              <button class="btn btn-primary btn-xs" onclick="editStaff('${staff.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-xs" onclick="deleteStaff('${staff.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>
   </div>`;
+}
+
+// STAFF MANAGEMENT FUNCTIONS
+function toggleStaffForm(){
+  const form = document.getElementById('staff-form-wrap');
+  if(form) form.style.display = form.style.display==='none'?'block':'none';
+}
+
+function submitStaffForm(){
+  const name = document.getElementById('staff-name')?.value.trim();
+  const email = document.getElementById('staff-email')?.value.trim();
+  const phone = document.getElementById('staff-phone')?.value.trim();
+  const gender = document.getElementById('staff-gender')?.value;
+  const dob = document.getElementById('staff-dob')?.value;
+  const category = document.getElementById('staff-category')?.value;
+  const department = document.getElementById('staff-department')?.value.trim();
+  const position = document.getElementById('staff-position')?.value.trim();
+  const qualifications = document.getElementById('staff-qualifications')?.value.trim();
+  const salaryGrade = document.getElementById('staff-salary-grade')?.value.trim();
+  const joinDate = document.getElementById('staff-join-date')?.value;
+  const address = document.getElementById('staff-address')?.value.trim();
+  const emergencyContact = document.getElementById('staff-emergency-contact')?.value.trim();
+  const emergencyPhone = document.getElementById('staff-emergency-phone')?.value.trim();
+  const assignments = document.getElementById('staff-assignments')?.value.split(',').map(s=>s.trim()).filter(s=>s) || [];
+  
+  if(!name || !email || !phone || !gender || !dob || !category || !department || !position || !qualifications || !salaryGrade || !joinDate){
+    showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields (marked with *)', 'error');
+    return;
+  }
+  
+  // Generate staff ID
+  const categoryPrefix = category.slice(0,3).toUpperCase();
+  const staffId = categoryPrefix + String(Object.keys(STAFF_DATA).length + 1).padStart(3,'0');
+  
+  const newStaff = {
+    id: staffId,
+    name: name,
+    email: email,
+    phone: phone,
+    gender: gender,
+    dob: dob,
+    category: category,
+    department: department,
+    position: position,
+    qualifications: qualifications,
+    salaryGrade: salaryGrade,
+    joinDate: joinDate,
+    address: address,
+    emergencyContact: emergencyContact,
+    emergencyPhone: emergencyPhone,
+    assignments: assignments,
+    status: 'Active',
+    performance: '4.0/5',
+    avatar: name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()
+  };
+  
+  STAFF_DATA[staffId] = newStaff;
+  
+  showToast('<i class="fas fa-check-circle"></i> Staff member added successfully!<br/>Name: '+name+'<br/>ID: '+staffId, 'success', 4000);
+  
+  // Clear form
+  document.getElementById('staff-form-wrap').style.display = 'none';
+  document.getElementById('staff-name').value = '';
+  document.getElementById('staff-email').value = '';
+  document.getElementById('staff-phone').value = '';
+  document.getElementById('staff-gender').value = '';
+  document.getElementById('staff-dob').value = '';
+  document.getElementById('staff-category').value = '';
+  document.getElementById('staff-department').value = '';
+  document.getElementById('staff-position').value = '';
+  document.getElementById('staff-qualifications').value = '';
+  document.getElementById('staff-salary-grade').value = '';
+  document.getElementById('staff-join-date').value = '';
+  document.getElementById('staff-address').value = '';
+  document.getElementById('staff-emergency-contact').value = '';
+  document.getElementById('staff-emergency-phone').value = '';
+  document.getElementById('staff-assignments').value = '';
+  
+  // Refresh
+  renderMain();
+}
+
+function viewStaffDetail(staffId){
+  const staff = STAFF_DATA[staffId];
+  if(!staff) return;
+  
+  let html = hdr('Staff Profile','View complete staff member details','Staff')+`
+  <div class="g2 mb20">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal Information</span></div>
+      <div style="display:flex;gap:20px;align-items:center;margin-bottom:20px">
+        <div class="av av-xl av-blue">${staff.avatar}</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${staff.name}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">ID: ${staff.id}</div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <span class="badge ${staff.category==='Teaching'?'b-info':(staff.category==='Admin'?'b-success':'b-warning')}">${staff.category}</span>
+            <span class="badge b-success">${staff.status}</span>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--gray-200);padding-top:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+          <div>
+            <div style="color:var(--gray-500);font-size:11px">Gender</div>
+            <div style="font-weight:600;margin-top:4px">${staff.gender}</div>
+          </div>
+          <div>
+            <div style="color:var(--gray-500);font-size:11px">Date of Birth</div>
+            <div style="font-weight:600;margin-top:4px">${new Date(staff.dob).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+          </div>
+          <div>
+            <div style="color:var(--gray-500);font-size:11px">Email Address</div>
+            <div style="font-weight:600;margin-top:4px;color:var(--blue-main)">${staff.email}</div>
+          </div>
+          <div>
+            <div style="color:var(--gray-500);font-size:11px">Phone Number</div>
+            <div style="font-weight:600;margin-top:4px">${staff.phone}</div>
+          </div>
+          <div style="grid-column:1/-1">
+            <div style="color:var(--gray-500);font-size:11px">Residential Address</div>
+            <div style="font-weight:600;margin-top:4px">${staff.address}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> Employment Information</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Category</div>
+          <div style="font-weight:600;margin-top:4px">${staff.category}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Department</div>
+          <div style="font-weight:600;margin-top:4px">${staff.department}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Position/Title</div>
+          <div style="font-weight:600;margin-top:4px">${staff.position}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Salary Grade</div>
+          <div style="font-weight:600;margin-top:4px">${staff.salaryGrade}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Join Date</div>
+          <div style="font-weight:600;margin-top:4px">${new Date(staff.joinDate).toLocaleDateString()}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Tenure</div>
+          <div style="font-weight:600;margin-top:4px">${Math.floor((new Date()-new Date(staff.joinDate))/(365*24*60*60*1000))} years</div>
+        </div>
+        <div style="grid-column:1/-1">
+          <div style="color:var(--gray-500);font-size:11px">Qualifications</div>
+          <div style="font-weight:600;margin-top:4px">${staff.qualifications}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="g2 mb20">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-phone"></i> Emergency Contact</span></div>
+      <div style="font-size:12px">
+        <div style="margin-bottom:12px">
+          <div style="color:var(--gray-500);font-size:11px">Contact Person</div>
+          <div style="font-weight:600;margin-top:4px">${staff.emergencyContact}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:11px">Phone Number</div>
+          <div style="font-weight:600;margin-top:4px">${staff.emergencyPhone}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-star"></i> Performance & Assignments</span></div>
+      <div style="font-size:12px;margin-bottom:12px">
+        <div style="color:var(--gray-500);font-size:11px;margin-bottom:4px">Performance Rating</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1">
+            <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${parseFloat(staff.performance)*20}%"></div></div>
+          </div>
+          <div style="font-weight:700;color:var(--blue-main)">${staff.performance}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--gray-200);padding-top:12px">
+        <div style="color:var(--gray-500);font-size:11px;margin-bottom:8px">Current Assignments/Roles</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${staff.assignments.map(a=>'<span class="badge b-info" style="font-size:11px">'+a+'</span>').join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-primary" onclick="editStaff('${staff.id}')"><i class="fas fa-edit"></i> Edit Staff</button>
+    <button class="btn btn-secondary" onclick="navTo('staff')"><i class="fas fa-arrow-left"></i> Back to List</button>
+  </div>`;
+  
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function editStaff(staffId){
+  const staff = STAFF_DATA[staffId];
+  if(!staff) return;
+  
+  let html = hdr('Edit Staff Member','Update staff information','Staff')+`
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Edit Staff Details</span></div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Full Name *</label>
+        <input type="text" id="edit-staff-name" placeholder="Full name" value="${staff.name}">
+      </div>
+      <div class="form-field">
+        <label>Email Address *</label>
+        <input type="email" id="edit-staff-email" placeholder="email@school.edu.gh" value="${staff.email}">
+      </div>
+      <div class="form-field">
+        <label>Phone Number *</label>
+        <input type="tel" id="edit-staff-phone" placeholder="+233 XXX XXX XXXX" value="${staff.phone}">
+      </div>
+      <div class="form-field">
+        <label>Category *</label>
+        <select id="edit-staff-category"><option value="Teaching" ${staff.category==='Teaching'?'selected':''}>Teaching</option><option value="Admin" ${staff.category==='Admin'?'selected':''}>Admin</option><option value="Support" ${staff.category==='Support'?'selected':''}>Support</option></select>
+      </div>
+      <div class="form-field">
+        <label>Department *</label>
+        <input type="text" id="edit-staff-department" placeholder="Department" value="${staff.department}">
+      </div>
+      <div class="form-field">
+        <label>Position/Title *</label>
+        <input type="text" id="edit-staff-position" placeholder="Position" value="${staff.position}">
+      </div>
+      <div class="form-field">
+        <label>Salary Grade *</label>
+        <input type="text" id="edit-staff-salary-grade" placeholder="Salary Grade" value="${staff.salaryGrade}">
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <select id="edit-staff-status"><option value="Active" ${staff.status==='Active'?'selected':''}>Active</option><option value="On Leave">On Leave</option><option value="Retired">Retired</option></select>
+      </div>
+      <div class="form-field" style="grid-column:1/-1">
+        <label>Assignments/Roles (comma-separated)</label>
+        <input type="text" id="edit-staff-assignments" placeholder="Assignments" value="${staff.assignments.join(', ')}">
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="submitEditStaff('${staff.id}')"><i class="fas fa-check"></i> Save Changes</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="navTo('staff')">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function submitEditStaff(staffId){
+  const staff = STAFF_DATA[staffId];
+  if(!staff) return;
+  
+  staff.name = document.getElementById('edit-staff-name')?.value.trim();
+  staff.email = document.getElementById('edit-staff-email')?.value.trim();
+  staff.phone = document.getElementById('edit-staff-phone')?.value.trim();
+  staff.category = document.getElementById('edit-staff-category')?.value;
+  staff.department = document.getElementById('edit-staff-department')?.value.trim();
+  staff.position = document.getElementById('edit-staff-position')?.value.trim();
+  staff.salaryGrade = document.getElementById('edit-staff-salary-grade')?.value.trim();
+  staff.status = document.getElementById('edit-staff-status')?.value;
+  staff.assignments = document.getElementById('edit-staff-assignments')?.value.split(',').map(s=>s.trim()).filter(s=>s);
+  
+  showToast('<i class="fas fa-check-circle"></i> Staff information updated!<br/>Name: '+staff.name, 'success', 4000);
+  
+  setTimeout(() => { navTo('staff'); }, 2000);
+}
+
+function deleteStaff(staffId){
+  const staff = STAFF_DATA[staffId];
+  if(!staff) return;
+  
+  if(confirm('Are you sure you want to delete '+staff.name+'? This action cannot be undone.')){
+    delete STAFF_DATA[staffId];
+    showToast('<i class="fas fa-check-circle"></i> Staff member deleted successfully', 'success', 3000);
+    renderMain();
+  }
+}
+
+function filterStaffList(){
+  const searchTerm = document.getElementById('staff-search')?.value.toLowerCase() || '';
+  const categoryFilter = document.getElementById('staff-category-filter')?.value || '';
+  
+  const rows = document.querySelectorAll('.staff-row');
+  rows.forEach(row=>{
+    const name = row.dataset.name || '';
+    const category = row.dataset.category || '';
+    
+    const matchesSearch = name.includes(searchTerm);
+    const matchesCategory = !categoryFilter || category === categoryFilter;
+    
+    row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
+  });
+}
+
+function showStaffStatistics(){
+  const totalStaff = Object.keys(STAFF_DATA).length;
+  const teachingStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Teaching').length;
+  const adminStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Admin').length;
+  const supportStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Support').length;
+  const activeStaff = Object.values(STAFF_DATA).filter(s=>s.status==='Active').length;
+  
+  // Calculate average performance
+  const avgPerformance = (Object.values(STAFF_DATA).reduce((sum,s)=>sum+parseFloat(s.performance),0)/totalStaff).toFixed(1);
+  
+  // Get departments
+  const depts = {};
+  Object.values(STAFF_DATA).forEach(s=>{
+    depts[s.department] = (depts[s.department]||0)+1;
+  });
+  
+  let html = hdr('Staff Statistics & Reports','Comprehensive staff analysis','Staff')+`
+  <div class="stats-row">
+    ${statCard('<i class="fas fa-users"></i>',''+totalStaff,'Total Staff','All staff','neu','si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>',''+activeStaff,'Active Staff','Currently employed','neu','si-green')}
+    ${statCard('<i class="fas fa-star"></i>',''+avgPerformance,'Avg Performance','Overall rating','neu','si-gold')}
+    ${statCard('<i class="fas fa-building"></i>',''+Object.keys(depts).length,'Departments','Total categories','neu','si-purple')}
+  </div>
+  
+  <div class="g3 mb20">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-pie"></i> Staff by Category</span></div>
+      <div style="padding:20px;text-align:center">
+        <div style="margin-bottom:20px">
+          <div style="font-size:24px;font-weight:700;color:var(--blue-main)">${teachingStaff}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Teaching Staff</div>
+          <div style="font-size:11px;color:var(--gray-400)">'+((teachingStaff/totalStaff)*100).toFixed(0)+'%</div>
+        </div>
+      </div>
+      <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill pf-blue" style="width:'+((teachingStaff/totalStaff)*100)+'%"></div></div>
+      <div style="padding:0 12px;padding-bottom:12px;border-bottom:1px solid var(--gray-200)">
+        <div style="font-size:11px;color:var(--gray-500)">Total: '+teachingStaff+' of '+totalStaff+'</div>
+      </div>
+      <div style="padding-top:12px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:14px;font-weight:700;color:var(--blue-main)">${adminStaff}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Admin Staff ('+((adminStaff/totalStaff)*100).toFixed(0)+'%)</div>
+        </div>
+        <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill pf-green" style="width:'+((adminStaff/totalStaff)*100)+'%"></div></div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:14px;font-weight:700;color:var(--gold)">${supportStaff}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Support Staff ('+((supportStaff/totalStaff)*100).toFixed(0)+'%)</div>
+        </div>
+        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:'+((supportStaff/totalStaff)*100)+'%"></div></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Staff by Department</span></div>
+      <div style="font-size:12px">
+        ${Object.entries(depts).sort((a,b)=>b[1]-a[1]).map(([dept,count])=>`
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-weight:600">${dept}</span>
+            <span style="color:var(--blue-main);font-weight:700">${count}</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(count/totalStaff)*100}%"></div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-rankings"></i> Salary Grades Distribution</span></div>
+      ${(() => {
+        const salaryGrades = {};
+        Object.values(STAFF_DATA).forEach(s=>{
+          salaryGrades[s.salaryGrade] = (salaryGrades[s.salaryGrade]||0)+1;
+        });
+        return Object.entries(salaryGrades).sort((a,b)=>b[1]-a[1]).map(([grade,count])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:12px">
+          <span style="font-weight:600">${grade}</span>
+          <span style="padding:4px 10px;background:var(--blue-main);color:white;border-radius:12px;font-size:11px">${count}</span>
+        </div>`).join('');
+      })()}
+    </div>
+  </div>
+  
+  <div class="card mb20">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-table"></i> All Staff Summary</span></div>
+    <table class="tbl" style="font-size:11px">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Department</th>
+          <th>Position</th>
+          <th>Salary Grade</th>
+          <th>Join Date</th>
+          <th>Tenure</th>
+          <th>Performance</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Object.values(STAFF_DATA).map(s=>`
+        <tr>
+          <td style="font-weight:600">${s.name}</td>
+          <td><span class="badge ${s.category==='Teaching'?'b-info':(s.category==='Admin'?'b-success':'b-warning')}">${s.category}</span></td>
+          <td>${s.department}</td>
+          <td>${s.position}</td>
+          <td>${s.salaryGrade}</td>
+          <td>${new Date(s.joinDate).toLocaleDateString()}</td>
+          <td>${Math.floor((new Date()-new Date(s.joinDate))/(365*24*60*60*1000))} yrs</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:4px">
+              <div style="flex:1;height:6px;background:var(--gray-200);border-radius:3px"><div style="width:${parseFloat(s.performance)*20}%;height:100%;background:var(--blue-main);border-radius:3px"></div></div>
+              <span style="font-weight:600;font-size:10px;color:var(--blue-main)">${s.performance}</span>
+            </div>
+          </td>
+          <td><span class="badge ${s.status==='Active'?'b-success':'b-danger'}">${s.status}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-secondary" onclick="navTo('staff')"><i class="fas fa-arrow-left"></i> Back to Staff List</button>
+  </div>`;
+  
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function exportStaffToCSV(){
+  let csv = 'Staff Directory Export\n';
+  csv += 'Generated: '+new Date().toLocaleDateString()+'\n\n';
+  
+  csv += 'ID,Name,Category,Department,Position,Email,Phone,Salary Grade,Join Date,Status,Performance\n';
+  Object.values(STAFF_DATA).forEach(s=>{
+    csv += `"${s.id}","${s.name}","${s.category}","${s.department}","${s.position}","${s.email}","${s.phone}","${s.salaryGrade}","${s.joinDate}","${s.status}","${s.performance}"\n`;
+  });
+  
+  const element = document.createElement('a');
+  element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+  element.setAttribute('download', 'Staff_Directory_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+  showToast('<i class="fas fa-check-circle"></i> Staff directory exported to CSV', 'success', 3000);
+}
+
+function exportStaffToExcel(){
+  let html = '<table border="1"><tr><th>ID</th><th>Name</th><th>Category</th><th>Department</th><th>Position</th><th>Email</th><th>Phone</th><th>Salary Grade</th><th>Join Date</th><th>Status</th><th>Performance</th></tr>';
+  Object.values(STAFF_DATA).forEach(s=>{
+    html += '<tr><td>'+s.id+'</td><td>'+s.name+'</td><td>'+s.category+'</td><td>'+s.department+'</td><td>'+s.position+'</td><td>'+s.email+'</td><td>'+s.phone+'</td><td>'+s.salaryGrade+'</td><td>'+s.joinDate+'</td><td>'+s.status+'</td><td>'+s.performance+'</td></tr>';
+  });
+  html += '</table>';
+  
+  const element = document.createElement('a');
+  element.setAttribute('href', 'data:application/vnd.ms-excel,' + encodeURIComponent(html));
+  element.setAttribute('download', 'Staff_Directory_'+new Date().toISOString().slice(0,10)+'.xls');
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+  showToast('<i class="fas fa-check-circle"></i> Staff directory exported to Excel', 'success', 3000);
 }
 
 // ALUMNI MODULE (Admin view)
@@ -7106,34 +8537,187 @@ function alumniModule(){
   ${alumniDirectory()}`;
 }
 
-// VISITOR MANAGEMENT MODULE
-function visitorMgmtModule(){
-  return hdr('Visitor Management','Track and manage school visitors','Visitors')+`
-  <div class="toolbar">
-    <button class="btn btn-primary" onclick="alert('Opening visitor registration form...')">+ Register Visitor</button>
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input placeholder="Search visitors..."></div>
-    <select class="select-sm"><option>All Days</option><option>Today</option><option>This Week</option></select>
-  </div>
-  <div class="card">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Visitor</th><th>Purpose</th><th>Host/Dept</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Badge</th></tr></thead>
-      <tbody>
-        ${[['Mrs. Adjoa Sarpong','Parent Visit','Form 3A Teacher','8:30 AM','10:00 AM','Departed'],['Mr. Emmanuel Tetteh','Inspection','Admin Office','9:00 AM','—','In Premises'],['Abena Boateng','Alumni Visit','Principal','10:30 AM','12:00 PM','Departed'],['Mr. Kweku Acheampong','Job Application','HR Office','11:00 AM','—','In Premises']].map(([n,p,h,ci,co,s],i)=>`
-        <tr>
-          <td style="color:var(--gray-400)">${i+1}</td>
-          <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
-          <td>${p}</td><td>${h}</td>
-          <td style="color:var(--blue-main);font-weight:600">${ci}</td>
-          <td>${co}</td>
-          <td><span class="badge ${s==='Departed'?'b-gray':'b-success'}">${s}</span></td>
-          <td><button class="btn btn-secondary btn-xs">Print</button></td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>`;
+// ALUMNI MODULE FUNCTIONS
+function toggleAddAlumniForm(){
+  const form = document.getElementById('alumni-form-wrap');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
+function submitAlumni(){
+  const name = document.getElementById('alumni-name').value;
+  const year = document.getElementById('alumni-year').value;
+  const profession = document.getElementById('alumni-profession').value;
+  const location = document.getElementById('alumni-location').value;
+  const email = document.getElementById('alumni-email').value;
+  const phone = document.getElementById('alumni-phone').value;
+  
+  if(!name || !year || !profession || !location || !email || !phone){
+    showToast('Please fill in all required fields', 'error');
+    return;
+  }
+  
+  const id = 'ALM' + String(Object.keys(ALUMNI_DATA).length + 1).padStart(3, '0');
+  ALUMNI_DATA[id] = {
+    id, name, classYear: parseInt(year), profession, location, avatar: name.substring(0,2).toUpperCase(),
+    avatarColor: ['purple','blue','green','gold','teal','orange','pink'][Object.keys(ALUMNI_DATA).length % 7],
+    bio: document.getElementById('alumni-bio').value || 'Alumni member',
+    email, phone,
+    instagram: document.getElementById('alumni-instagram').value,
+    linkedin: document.getElementById('alumni-linkedin').value,
+    twitter: document.getElementById('alumni-twitter').value,
+    facebook: document.getElementById('alumni-facebook').value
+  };
+  
+  showToast('Alumni member added successfully!', 'success');
+  toggleAddAlumniForm();
+  navTo('alumni');
+}
+
+function filterAlumni(){
+  const search = document.getElementById('alumni-search').value.toLowerCase();
+  const yearFilter = document.getElementById('alumni-year-filter').value;
+  const profFilter = document.getElementById('alumni-profession-filter').value.toLowerCase();
+  
+  document.querySelectorAll('.alumni-card').forEach(card => {
+    const name = card.getAttribute('data-name');
+    const year = card.getAttribute('data-year');
+    const prof = card.getAttribute('data-profession');
+    
+    const matchesSearch = name.includes(search);
+    const matchesYear = !yearFilter || year === yearFilter;
+    const matchesProf = !profFilter || prof.includes(profFilter);
+    
+    card.style.display = (matchesSearch && matchesYear && matchesProf) ? '' : 'none';
+  });
+}
+
+function showAlumniProfile(alumniId){
+  const alumni = ALUMNI_DATA[alumniId];
+  if(!alumni) return;
+  
+  const modalHtml = `
+    <div class="modal-overlay" onclick="document.querySelector('.modal-overlay')?.remove()">
+      <div class="card" style="max-width:600px;margin:auto" onclick="event.stopPropagation()">
+        <div class="card-hdr" style="display:flex;justify-content:space-between;align-items:center">
+          <span class="card-title"><i class="fas fa-user"></i> Alumni Profile</span>
+          <button class="btn btn-icon" onclick="document.querySelector('.modal-overlay')?.remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="padding:20px">
+          <div style="display:flex;gap:20px;margin-bottom:20px">
+            <div class="av av-xl av-${alumni.avatarColor}">${alumni.avatar}</div>
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:700;margin-bottom:4px">${alumni.name}</div>
+              <span class="badge b-info" style="margin-bottom:12px;display:block">Class of ${alumni.classYear}</span>
+              <div style="font-size:13px;font-weight:600;color:var(--blue-main);margin-bottom:8px">${alumni.profession}</div>
+              <div style="font-size:11px;color:var(--gray-500)"><i class="fas fa-map-pin"></i> ${alumni.location}</div>
+            </div>
+          </div>
+          <div style="background:var(--blue-xpale);padding:15px;border-radius:8px;margin-bottom:20px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px">Bio</div>
+            <div style="font-size:12px;color:var(--gray-700)">${alumni.bio}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+            <div><div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Email</div><div style="font-size:12px;color:var(--blue-main)">${alumni.email}</div></div>
+            <div><div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Phone</div><div style="font-size:12px">${alumni.phone}</div></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="flex:1" onclick="showConnectModal('${alumniId}');document.querySelector('.modal-overlay')?.remove()"><i class="fas fa-paper-plane"></i> Connect</button>
+            <button class="btn btn-secondary" onclick="document.querySelector('.modal-overlay')?.remove()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function showConnectModal(alumniId){
+  const alumni = ALUMNI_DATA[alumniId];
+  if(!alumni) return;
+  
+  const modalHtml = `
+    <div class="modal-overlay" onclick="document.querySelector('.modal-overlay')?.remove()">
+      <div class="card" style="max-width:600px;margin:auto" onclick="event.stopPropagation()">
+        <div class="card-hdr" style="display:flex;justify-content:space-between;align-items:center">
+          <span class="card-title"><i class="fas fa-share-alt"></i> Connect with ${alumni.name}</span>
+          <button class="btn btn-icon" onclick="document.querySelector('.modal-overlay')?.remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="padding:20px">
+          <div style="margin-bottom:20px">
+            <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Social Media Handles</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              ${alumni.instagram ? `<a href="https://instagram.com/${alumni.instagram.replace('@','')}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-instagram"></i> ${alumni.instagram}</a>` : ''}
+              ${alumni.twitter ? `<a href="https://twitter.com/${alumni.twitter.replace('@','')}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-twitter"></i> ${alumni.twitter}</a>` : ''}
+              ${alumni.linkedin ? `<a href="https://${alumni.linkedin}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-linkedin"></i> LinkedIn</a>` : ''}
+              ${alumni.facebook ? `<a href="https://${alumni.facebook}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-facebook"></i> Facebook</a>` : ''}
+            </div>
+          </div>
+          
+          <div style="background:var(--gray-50);padding:15px;border-radius:8px;margin-bottom:20px">
+            <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:12px">Send Message to Alumni</div>
+            <textarea id="alumni-message" placeholder="Type your message..." style="width:100%;min-height:100px;padding:10px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;font-size:12px;resize:vertical"></textarea>
+          </div>
+          
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="flex:1" onclick="sendMessageToAlumni('${alumniId}')"><i class="fas fa-paper-plane"></i> Send Message</button>
+            <button class="btn btn-secondary" onclick="document.querySelector('.modal-overlay')?.remove()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  
+  const existing = document.querySelector('.modal-overlay');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function sendMessageToAlumni(alumniId){
+  const alumni = ALUMNI_DATA[alumniId];
+  const message = document.getElementById('alumni-message').value;
+  
+  if(!message.trim()){
+    showToast('Please type a message', 'error');
+    return;
+  }
+  
+  showToast('Message sent to ' + alumni.name + '!', 'success');
+  
+  // Store message in messaging system (would connect to backend in real app)
+  const msgId = 'MSG' + Date.now();
+  const timestamp = new Date().toLocaleString();
+  
+  console.log('Message sent to:', alumni.name);
+  console.log('Message:', message);
+  console.log('Time:', timestamp);
+  
+  document.querySelector('.modal-overlay')?.remove();
+}
+
+// VISITOR MANAGEMENT MODULE
 // BACKUP MODULE
+// BACKUPS DATA
+const BACKUPS_DATA = [
+  {date: 'Mar 17, 2025 2:00 AM', size: '2.4 GB', type: 'Auto', status: 'Success', id: 'BK001'},
+  {date: 'Mar 16, 2025 2:00 AM', size: '2.3 GB', type: 'Auto', status: 'Success', id: 'BK002'},
+  {date: 'Mar 15, 2025 2:00 AM', size: '2.3 GB', type: 'Manual', status: 'Success', id: 'BK003'},
+  {date: 'Mar 14, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK004'},
+  {date: 'Mar 13, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK005'},
+  {date: 'Mar 12, 2025 2:00 AM', size: '2.1 GB', type: 'Auto', status: 'Success', id: 'BK006'}
+];
+
+const SYSTEM_LOGS = [
+  {level: 'INFO', message: 'User admin logged in', time: '2025-03-17 08:00:12', type: 'login'},
+  {level: 'INFO', message: 'Student enrollment: Ama Serwaa', time: '2025-03-17 08:05:33', type: 'enrollment'},
+  {level: 'WARNING', message: 'Failed login attempt', time: '2025-03-17 08:10:45', type: 'security'},
+  {level: 'INFO', message: 'Fee payment recorded - GHS 5,000', time: '2025-03-17 08:30:12', type: 'payment'},
+  {level: 'INFO', message: 'Notice published: School Holiday', time: '2025-03-17 09:00:00', type: 'admin'},
+  {level: 'ERROR', message: 'Backup storage 80% full', time: '2025-03-17 09:15:22', type: 'system'},
+  {level: 'INFO', message: 'Timetable updated for Form 3', time: '2025-03-17 10:00:00', type: 'academic'},
+  {level: 'INFO', message: 'Academic Report generated', time: '2025-03-17 10:30:00', type: 'report'},
+  {level: 'WARNING', message: 'Database query slow - 5.2s', time: '2025-03-17 11:00:00', type: 'performance'},
+  {level: 'INFO', message: 'User Teacher logged in', time: '2025-03-17 11:15:00', type: 'login'}
+];
+
 function backupModule(){
   return hdr('Backup & System Logs','Data backup management and activity logs','Backup & Logs')+`
   <div class="g2">
@@ -7141,36 +8725,160 @@ function backupModule(){
       <div class="card-hdr"><span class="card-title"><i class="fas fa-save"></i> Database Backup</span></div>
       <div style="padding:20px;background:var(--blue-xpale);border-radius:var(--radius);text-align:center;margin-bottom:16px">
         <div style="font-size:40px;margin-bottom:10px"><i class="fas fa-save"></i></div>
-        <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">Last Backup: Today 2:00 AM</div>
-        <div style="font-size:11px;color:var(--gray-500);margin-top:4px">All data backed up successfully · Size: 2.4 GB</div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">Last Backup: ${BACKUPS_DATA[0].date}</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:4px">All data backed up successfully · Size: ${BACKUPS_DATA[0].size}</div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="btn btn-primary" style="flex:1" onclick="alert('Backup in progress...')"><i class="fas fa-sync"></i> Backup Now</button>
-        <button class="btn btn-secondary" onclick="alert('Downloading backup...')"><i class="fas fa-download"></i> Download</button>
-        <button class="btn btn-secondary" onclick="alert('Syncing to cloud...')"><i class="fas fa-cloud"></i> Cloud</button>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="performBackup()"><i class="fas fa-sync"></i> Backup Now</button>
+        <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="downloadLatestBackup()"><i class="fas fa-download"></i> Download</button>
+        <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="syncToCloud()"><i class="fas fa-cloud"></i> Cloud</button>
       </div>
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Size</th><th>Type</th><th>Status</th></tr></thead>
-        <tbody>
-          ${[['Mar 17, 2025 2:00 AM','2.4 GB','Auto','Success'],['Mar 16, 2025 2:00 AM','2.3 GB','Auto','Success'],['Mar 15, 2025 2:00 AM','2.3 GB','Manual','Success'],['Mar 14, 2025 2:00 AM','2.2 GB','Auto','Success']].map(([d,s,t,st])=>`
-          <tr><td>${d}</td><td>${s}</td><td><span class="badge b-info">${t}</span></td><td><span class="badge b-success">${st}</span></td></tr>`).join('')}
+      
+      <div style="margin-bottom:15px">
+        <input id="backup-search" type="text" placeholder="Search backups by date or size..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:12px" onkeyup="filterBackups()">
+      </div>
+      
+      <table class="tbl" id="backups-table">
+        <thead><tr><th>Date</th><th>Size</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="backups-tbody">
+          ${BACKUPS_DATA.map(b=>`
+          <tr class="backup-row" data-date="${b.date.toLowerCase()}" data-size="${b.size.toLowerCase()}">
+            <td>${b.date}</td>
+            <td>${b.size}</td>
+            <td><span class="badge ${b.type==='Auto'?'b-info':'b-warning'}">${b.type}</span></td>
+            <td><span class="badge b-success">${b.status}</span></td>
+            <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="downloadBackup('${b.id}')"><i class="fas fa-download"></i> Download</button></div></td>
+          </tr>`).join('')}
         </tbody>
       </table>
     </div>
+    
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> System Logs</span></div>
-      <div style="max-height:400px;overflow-y:auto">
-        ${[['INFO','User admin logged in','2025-03-17 08:00:12','blue'],['INFO','Student enrollment: Ama Serwaa','2025-03-17 08:05:33','blue'],['WARNING','Failed login attempt','2025-03-17 08:10:45','gold'],['INFO','Fee payment recorded','2025-03-17 08:30:12','blue'],['INFO','Notice published','2025-03-17 09:00:00','blue'],['ERROR','Backup storage 80% full','2025-03-17 09:15:22','red'],['INFO','Timetable updated','2025-03-17 10:00:00','blue'],['INFO','Report generated','2025-03-17 10:30:00','blue']].map(([lvl,msg,time,c])=>`
-        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:11px">
-          <span class="badge ${c==='blue'?'b-info':c==='gold'?'b-warning':'b-danger'}" style="font-size:9px;height:fit-content">${lvl}</span>
-          <div style="flex:1">${msg}</div>
-          <div style="color:var(--gray-400);white-space:nowrap">${time}</div>
-        </div>`).join('')}
+      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+        <input id="logs-search" type="text" placeholder="Search logs..." style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:12px" onkeyup="filterLogs()">
+        <select id="logs-filter" class="select-sm" onchange="filterLogs()">
+          <option value="">All Levels</option>
+          <option value="INFO">INFO</option>
+          <option value="WARNING">WARNING</option>
+          <option value="ERROR">ERROR</option>
+        </select>
+        <select id="logs-type-filter" class="select-sm" onchange="filterLogs()">
+          <option value="">All Types</option>
+          <option value="login">Login</option>
+          <option value="enrollment">Enrollment</option>
+          <option value="security">Security</option>
+          <option value="payment">Payment</option>
+          <option value="admin">Admin</option>
+          <option value="system">System</option>
+          <option value="academic">Academic</option>
+          <option value="report">Report</option>
+        </select>
+        <button class="btn btn-secondary" onclick="exportLogs()"><i class="fas fa-download"></i> Export</button>
+      </div>
+      
+      <div style="max-height:400px;overflow-y:auto" id="logs-container">
+        ${SYSTEM_LOGS.map((log,i)=>{
+          const color = log.level === 'INFO' ? 'b-info' : (log.level === 'WARNING' ? 'b-warning' : 'b-danger');
+          return `<div class="system-log" data-level="${log.level}" data-type="${log.type}" data-message="${log.message.toLowerCase()}" style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100);font-size:11px;align-items:flex-start">
+            <span class="badge ${color}" style="font-size:9px;height:fit-content;white-space:nowrap">${log.level}</span>
+            <div style="flex:1">
+              <div style="font-weight:600;color:var(--gray-700);margin-bottom:4px">${log.message}</div>
+              <div style="color:var(--gray-400)">${log.time}</div>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>
   </div>`;
 }
 
+// BACKUP FUNCTIONS
+function performBackup(){
+  showToast('Starting backup process...', 'info');
+  const loader = setTimeout(() => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', {year: 'numeric', month: 'short', day: '2-digit'}) + ', ' + now.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
+    
+    BACKUPS_DATA.unshift({
+      date: dateStr + ' AM',
+      size: Math.random() > 0.5 ? '2.5 GB' : '2.4 GB',
+      type: 'Manual',
+      status: 'Success',
+      id: 'BK' + String(Math.random()).slice(2,5)
+    });
+    
+    showToast('✓ Backup completed successfully!', 'success');
+    navTo('backup');
+  }, 2000);
+}
+
+function downloadLatestBackup(){
+  const latest = BACKUPS_DATA[0];
+  if(!latest) return;
+  downloadBackup(latest.id);
+}
+
+function downloadBackup(backupId){
+  const backup = BACKUPS_DATA.find(b => b.id === backupId);
+  if(!backup) return;
+  
+  showToast('Downloading backup: ' + backup.date, 'info');
+  setTimeout(() => {
+    const link = document.createElement('a');
+    link.href = 'data:application/zip;base64,UEsDBAoAAAAAAM8EwFYAAAAAAAAAAAAAAAAJAAAAZGF0YS9QSwECLQAKAAAAAA==';
+    link.download = 'backup_' + backup.id + '.zip';
+    link.click();
+    showToast('Backup downloaded successfully!', 'success');
+  }, 1000);
+}
+
+function syncToCloud(){
+  showToast('Syncing to cloud...', 'info');
+  setTimeout(() => {
+    showToast('✓ Cloud sync completed! All backups synced to cloud storage.', 'success');
+  }, 2000);
+}
+
+function filterBackups(){
+  const search = document.getElementById('backup-search').value.toLowerCase();
+  document.querySelectorAll('.backup-row').forEach(row => {
+    const date = row.getAttribute('data-date');
+    const size = row.getAttribute('data-size');
+    const matches = date.includes(search) || size.includes(search);
+    row.style.display = matches ? '' : 'none';
+  });
+}
+
+function filterLogs(){
+  const search = document.getElementById('logs-search').value.toLowerCase();
+  const levelFilter = document.getElementById('logs-filter').value;
+  const typeFilter = document.getElementById('logs-type-filter').value;
+  
+  document.querySelectorAll('.system-log').forEach(log => {
+    const level = log.getAttribute('data-level');
+    const type = log.getAttribute('data-type');
+    const message = log.getAttribute('data-message');
+    
+    const matchesSearch = message.includes(search);
+    const matchesLevel = !levelFilter || level === levelFilter;
+    const matchesType = !typeFilter || type === typeFilter;
+    
+    log.style.display = (matchesSearch && matchesLevel && matchesType) ? '' : 'none';
+  });
+}
+
+function exportLogs(){
+  const logs = SYSTEM_LOGS.map(l => `[${l.time}] ${l.level}: ${l.message}`).join('\n');
+  const element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(logs));
+  element.setAttribute('download', 'system_logs_' + new Date().toISOString().split('T')[0] + '.txt');
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+  showToast('System logs exported successfully!', 'success');
+}
 
 // PROFILE MODULE
 function profileModule(){
@@ -8098,24 +9806,49 @@ function balanceSheetModule(){
 // ALUMNI DIRECTORY
 function alumniDirectory(){
   return `<div class="toolbar">
-    <button class="btn btn-primary">+ Add Alumni</button>
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input placeholder="Search alumni..."></div>
-    <select class="select-sm"><option>All Years</option><option>Class of 2020</option><option>Class of 2018</option><option>Class of 2015</option></select>
-    <select class="select-sm"><option>All Professions</option><option>Engineering</option><option>Medicine</option><option>Law</option></select>
+    <button class="btn btn-primary" onclick="toggleAddAlumniForm()"><i class="fas fa-plus"></i> Add Alumni</button>
+    <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="alumni-search" placeholder="Search alumni..." onkeyup="filterAlumni()"></div>
+    <select id="alumni-year-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Years</option><option value="2021">Class of 2021</option><option value="2020">Class of 2020</option><option value="2019">Class of 2019</option><option value="2018">Class of 2018</option><option value="2017">Class of 2017</option><option value="2016">Class of 2016</option><option value="2015">Class of 2015</option><option value="2014">Class of 2014</option><option value="2013">Class of 2013</option><option value="2012">Class of 2012</option></select>
+    <select id="alumni-profession-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Professions</option><option value="Software Engineer">Engineering</option><option value="Medical Doctor">Medicine</option><option value="Lawyer">Law</option><option value="Teacher">Education</option><option value="Nurse">Healthcare</option><option value="Business">Business</option></select>
   </div>
-  <div class="g3">
-    ${[['Abena Owusu','2018','Software Engineer','Accra · Google Ghana','purple'],['Kwabena Asare','2016','Medical Doctor','London · NHS','blue'],['Esi Mensah','2020','Teacher','Kumasi · College','green'],['Yaw Boateng','2015','Lawyer','Toronto · Law Firm','gold'],['Akua Adjei','2019','Nurse','Accra · Korle Bu','teal'],['Kofi Antwi','2014','Civil Engineer','Takoradi · GHA','blue']].map(([n,c,p,l,av])=>`
+
+  <!-- ADD ALUMNI FORM -->
+  <div id="alumni-form-wrap" style="display:none;margin-bottom:20px">
     <div class="card">
-      <div style="display:flex;gap:12px;margin-bottom:14px">
-        <div class="av av-lg av-${av}">${n[0]}</div>
-        <div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${n}</div>
-        <span class="badge b-info" style="margin-top:4px">Class of ${c}</span></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-user-plus"></i> Add New Alumni</span></div>
+      <div class="form-grid">
+        <div class="form-field"><label>Full Name *</label><input type="text" id="alumni-name" placeholder="Full name"></div>
+        <div class="form-field"><label>Class Year *</label><input type="number" id="alumni-year" placeholder="2020" min="1985" max="2024"></div>
+        <div class="form-field"><label>Profession *</label><input type="text" id="alumni-profession" placeholder="e.g., Software Engineer"></div>
+        <div class="form-field"><label>Location *</label><input type="text" id="alumni-location" placeholder="City · Organization"></div>
+        <div class="form-field"><label>Email *</label><input type="email" id="alumni-email" placeholder="email@example.com"></div>
+        <div class="form-field"><label>Phone *</label><input type="tel" id="alumni-phone" placeholder="+233 XXX XXX XXXX"></div>
+        <div class="form-field"><label>Instagram Handle</label><input type="text" id="alumni-instagram" placeholder="@username"></div>
+        <div class="form-field"><label>LinkedIn Profile</label><input type="text" id="alumni-linkedin" placeholder="linkedin.com/in/username"></div>
+        <div class="form-field"><label>Twitter Handle</label><input type="text" id="alumni-twitter" placeholder="@username"></div>
+        <div class="form-field"><label>Facebook URL</label><input type="text" id="alumni-facebook" placeholder="facebook.com/username"></div>
+        <div class="form-field" style="grid-column:1/-1"><label>Bio</label><textarea id="alumni-bio" placeholder="Brief biography..." style="min-height:60px;font-family:Poppins,sans-serif;border:1.5px solid var(--gray-200);border-radius:6px;padding:8px;font-size:12px"></textarea></div>
+        <div style="grid-column:1/-1;display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="submitAlumni()"><i class="fas fa-check"></i> Add Alumni Member</button>
+          <button class="btn btn-secondary" style="flex:1" onclick="toggleAddAlumniForm()">Cancel</button>
+        </div>
       </div>
-      <div style="font-size:13px;font-weight:600;margin-bottom:4px">${p}</div>
-      <div style="font-size:11px;color:var(--gray-400);margin-bottom:14px"><i class="fas fa-map-pin"></i> ${l}</div>
+    </div>
+  </div>
+
+  <div class="g3" id="alumni-grid">
+    ${Object.values(ALUMNI_DATA).map(a=>`
+    <div class="card alumni-card" data-name="${a.name.toLowerCase()}" data-year="${a.classYear}" data-profession="${a.profession.toLowerCase()}">
+      <div style="display:flex;gap:12px;margin-bottom:14px">
+        <div class="av av-lg av-${a.avatarColor}">${a.avatar}</div>
+        <div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${a.name}</div>
+        <span class="badge b-info" style="margin-top:4px">Class of ${a.classYear}</span></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">${a.profession}</div>
+      <div style="font-size:11px;color:var(--gray-400);margin-bottom:14px"><i class="fas fa-map-pin"></i> ${a.location}</div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-xs" style="flex:1">Profile</button>
-        <button class="btn btn-primary btn-xs" style="flex:1">Connect</button>
+        <button class="btn btn-secondary btn-xs" style="flex:1" onclick="showAlumniProfile('${a.id}')">Profile</button>
+        <button class="btn btn-primary btn-xs" style="flex:1" onclick="showConnectModal('${a.id}')">Connect</button>
       </div>
     </div>`).join('')}
   </div>`;
@@ -8330,12 +10063,15 @@ let messageChats = {};  // Dynamic - will be populated based on current user con
 // CONTACT MESSAGES STORAGE
 let contactMessages = [];
 
+
+// NEWS & BLOG ARTICLES STORAGE
+
 let newsArticles = [
   {id:1,icon:'<i class="fas fa-trophy"></i>',title:'Students Win National Science Competition',date:'Mar 15, 2025',desc:'Our students achieved outstanding results at the national competition.',content:'Our brilliant students from Forms 2 and 3 participated in the National Science Competition held in Accra last week. They demonstrated exceptional knowledge and critical thinking skills, winning three awards across different categories. Congratulations to the Science Department and all participating students!',category:'Student Achievement',status:'Published'},
   {id:2,icon:'<i class="fas fa-book"></i>',title:'New Library Wing Inaugurated',date:'Mar 10, 2025',desc:'State-of-the-art library facility now open to all students.',content:'Our brand new library wing, featuring over 5,000 new volumes and modern study spaces, was officially inaugurated by the Minister of Education. The facility includes computer labs, reading rooms, and a digital archive. Students now have access to one of the most comprehensive library systems in the region.',category:'Infrastructure',status:'Published'},
   {id:3,icon:'<i class="fas fa-graduation-cap"></i>',title:'Top WASSCE Results 2024',date:'Feb 28, 2025',desc:'Excellence Academy secures best results in the region.',content:'We are proud to announce that our students achieved the highest WASSCE pass rate in the region for 2024. With a 98% pass rate and over 60 distinctions, our students have set a new benchmark for academic excellence. Special recognition goes to the teaching staff and parents for their unwavering support.',category:'Academic',status:'Published'},
-  {id:4,icon:'🌱',title:'Tree Planting Initiative',date:'Feb 20, 2025',desc:'School launches environmental conservation program.',content:'In celebration of Environment Day, Glory Regin Preparatory school launched a tree-planting initiative with students and staff planting over 500 trees around the campus. This initiative is part of our commitment to environmental sustainability and creating a greener campus for future generations.',category:'Community',status:'Published'},
-  {id:5,icon:'<i class="fas fa-masks"></i>',title:'Annual Cultural Day Celebrated',date:'Feb 14, 2025',desc:'Students showcase diverse talents at packed auditorium.',content:'The annual cultural day was a spectacular showcase of the diverse talents within our school community. Students performed traditional dances, musical pieces, and theatrical performances representing different cultures. Parents and staff filled the auditorium to capacity, celebrating our rich cultural heritage.',category:'Events',status:'Published'},
+  {id:4,icon:'<i class="fas fa-leaf"></i>',title:'Tree Planting Initiative',date:'Feb 20, 2025',desc:'School launches environmental conservation program.',content:'In celebration of Environment Day, Glory Regin Preparatory school launched a tree-planting initiative with students and staff planting over 500 trees around the campus. This initiative is part of our commitment to environmental sustainability and creating a greener campus for future generations.',category:'Community',status:'Published'},
+  {id:5,icon:'<i class="fas fa-theater-masks"></i>',title:'Annual Cultural Day Celebrated',date:'Feb 14, 2025',desc:'Students showcase diverse talents at packed auditorium.',content:'The annual cultural day was a spectacular showcase of the diverse talents within our school community. Students performed traditional dances, musical pieces, and theatrical performances representing different cultures. Parents and staff filled the auditorium to capacity, celebrating our rich cultural heritage.',category:'Events',status:'Published'},
   {id:6,icon:'<i class="fas fa-laptop"></i>',title:'ICT Lab Upgrade Complete',date:'Jan 30, 2025',desc:'New computers and software installed in Information Technology lab.',content:'Our Information Technology laboratory has been upgraded with 40 new computers, high-speed internet connectivity, and the latest software packages. This upgrade will enable students to gain practical skills in coding, graphic design, and digital media production. The lab is now equipped to meet international standards.',category:'Infrastructure',status:'Published'}
 ];
 
@@ -8631,7 +10367,10 @@ function visitorContact(){
   </div>
   <div class="g2">
     <div>
-      ${[['<i class="fas fa-map-pin"></i>','Address','P.O. Box AN 1234, Main School Street\nAccra North, Greater Accra Region, Ghana'],['📞','Phone','+233 302 000 000\n+233 302 000 001 (Admissions)'],['📧','Email','info@excellence.edu.gh\nadmissions@excellence.edu.gh'],['⏰','Office Hours','Monday–Friday: 7:00 AM – 5:00 PM\nSaturday: 8:00 AM – 12:00 PM']].map(([i,l,v])=>`
+      ${[['<i class="fas fa-map-pin"></i>','Address','P.O. Box AN 1234, Main School Street\nAccra North, Greater Accra Region, Ghana'],
+        ['<i class="fas fa-phone"></i>','Phone','+233 302 000 000\n+233 302 000 001 (Admissions)'],
+        ['<i class="fas fa-envelope"></i>','Email','info@excellence.edu.gh\nadmissions@excellence.edu.gh'],
+        ['<i class="fas fa-clock"></i>','Office Hours','Monday–Friday: 7:00 AM – 5:00 PM\nSaturday: 8:00 AM – 12:00 PM']].map(([i,l,v])=>`
       <div class="card mb16" style="display:flex;gap:16px;align-items:flex-start">
         <div class="notice-icon" style="background:var(--blue-xpale)">${i}</div>
         <div>
@@ -8655,7 +10394,18 @@ function visitorContact(){
 function visitorGallery(){
   return hdr('School Gallery','A visual journey through life at Glory Regin Preparatory school','Gallery')+`
   <div class="gal-grid">
-    ${[['<i class="fas fa-running"></i>','Sports Day 2024','#dbeafe'],['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','#fef3c7'],['<i class="fas fa-flask-vial"></i>','Science Laboratory','#d1fae5'],['<i class="fas fa-book"></i>','School Library','#ede9fe'],['<i class="fas fa-building"></i>','Main School Hall','#fee2e2'],['<i class="fas fa-masks"></i>','Drama & Arts Club','#e0f2fe'],['<i class="fas fa-leaf"></i>','Beautiful Campus','#d1fae5'],['<i class="fas fa-user"></i>‍<i class="fas fa-laptop"></i>','ICT Laboratory','#dbeafe'],['<i class="fas fa-palette"></i>','Art Exhibition','#fef3c7'],['<i class="fas fa-trophy"></i>','Champions Cup 2024','#fef3c7'],['<i class="fas fa-music"></i>','School Choir','#ede9fe'],['<i class="fas fa-globe"></i>','Geography Field Trip','#d1fae5']].map(([icon,label,bg])=>`
+    ${[['<i class="fas fa-running"></i>','Sports Day 2024','#dbeafe'],
+      ['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','#fef3c7'],
+      ['<i class="fas fa-flask-vial"></i>','Science Laboratory','#d1fae5'],
+      ['<i class="fas fa-book"></i>','School Library','#ede9fe'],
+      ['<i class="fas fa-building"></i>','Main School Hall','#fee2e2'],
+      ['<i class="fas fa-theater-masks"></i>','Drama & Arts Club','#e0f2fe'],
+      ['<i class="fas fa-leaf"></i>','Beautiful Campus','#d1fae5'],
+      ['<i class="fas fa-user"></i>‍<i class="fas fa-laptop"></i>','ICT Laboratory','#dbeafe'],
+      ['<i class="fas fa-palette"></i>','Art Exhibition','#fef3c7'],
+      ['<i class="fas fa-trophy"></i>','Champions Cup 2024','#fef3c7'],
+      ['<i class="fas fa-music"></i>','School Choir','#ede9fe'],
+      ['<i class="fas fa-globe"></i>','Geography Field Trip','#d1fae5']].map(([icon,label,bg])=>`
     <div class="gal-item" style="background:${bg}">
       <div class="gi-icon">${icon}</div>
       <div class="gi-label">${label}</div>
@@ -8681,11 +10431,206 @@ function saveAttendance() {
   }
   
   const data = {};
+  let count = 0;
   document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
     data[input.name] = input.value;
+    count++;
   });
+  
+  if(count === 0) {
+    showToast('<i class="fas fa-times-circle"></i> Please mark attendance for at least one student', 'error');
+    return;
+  }
+  
   console.log('Attendance saved:', data);
-  showToast('<i class="fas fa-check-circle"></i> Attendance saved!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> Attendance for ' + count + ' students saved!', 'success');
+}
+
+// TEACHER DASHBOARD INTERACTIVE FUNCTIONS
+function viewScheduleDetail(time, subject, className) {
+  const modal = `
+    <div style="padding:20px;max-width:600px">
+      <h2 style="color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-calendar"></i> Class Details</h2>
+      <div style="background:var(--blue-xpale);padding:16px;border-radius:8px;margin-bottom:16px;border-left:4px solid var(--blue-main)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+          <div><div style="color:var(--gray-500);font-size:11px;margin-bottom:4px">TIME</div><div style="font-weight:700;font-size:16px">${time}</div></div>
+          <div><div style="color:var(--gray-500);font-size:11px;margin-bottom:4px">SUBJECT</div><div style="font-weight:700;font-size:16px">${subject}</div></div>
+          <div><div style="color:var(--gray-500);font-size:11px;margin-bottom:4px">CLASS</div><div style="font-weight:700">${className}</div></div>
+          <div><div style="color:var(--gray-500);font-size:11px;margin-bottom:4px">ROOM</div><div style="font-weight:700">Room 14</div></div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-weight:600;margin-bottom:8px;display:block">Quick Notes</label>
+        <textarea placeholder="Add notes for this class..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif;min-height:100px"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary" onclick="saveClassNotes('${subject}', '${className}'); closeModal();">Save Notes</button>
+      </div>
+    </div>
+  `;
+  openModal(modal);
+}
+
+function saveClassNotes(subject, className) {
+  showToast('<i class="fas fa-check-circle"></i> Notes saved for ' + subject + ' - ' + className, 'success');
+}
+
+function viewStatDetail(statType) {
+  let content = '';
+  if(statType === 'students') {
+    content = '<h3>My Students (38)</h3><p>2 new students joined this term</p><button class="btn btn-primary" style="margin-top:10px">View All Students</button>';
+  } else if(statType === 'subjects') {
+    content = '<h3>Subjects Teaching (5)</h3><p>This semester</p><ul style="list-style:none;padding:0"><li>✓ Mathematics</li><li>✓ Further Maths</li><li>✓ Core Maths</li><li>✓ Statistics</li><li>✓ Algebra</li></ul>';
+  } else if(statType === 'attendance') {
+    content = '<h3>Attendance Rate (94%)</h3><p>Above average performance</p><div class="prog-bar"><div class="prog-fill pf-green" style="width:94%"></div></div>';
+  } else if(statType === 'grades') {
+    content = '<h3>Pending Grades (8)</h3><p>Need grading this week</p><button class="btn btn-warning" style="margin-top:10px">Grade Now</button>';
+  }
+  
+  openModal(`<div style="padding:20px;text-align:center">${content}</div>`);
+}
+
+function viewAssignmentSubmissions(assignmentName) {
+  const modal = `
+    <div style="padding:20px;max-width:700px;max-height:80vh;overflow-y:auto">
+      <h2 style="color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-file-upload"></i> ${assignmentName} - Submissions</h2>
+      <table class="tbl" style="font-size:12px">
+        <thead><tr><th>Student</th><th>Status</th><th>Submitted</th><th>Grade</th><th>Action</th></tr></thead>
+        <tbody>
+          ${[['Ama Serwaa','Submitted','Mar 15','A','Review'],['Kwame Asante','Submitted','Mar 15','B+','Review'],['Abena Mensah','Pending','-','-','N/A'],['Kofi Boateng','Submitted','Mar 14','A-','Review']].map(([s,st,d,g,a]) => `
+          <tr>
+            <td style="font-weight:600">${s}</td>
+            <td><span class="badge ${st==='Submitted'?'b-success':'b-warning'}">${st}</span></td>
+            <td>${d}</td>
+            <td>${g}</td>
+            <td><button class="btn btn-secondary btn-xs" onclick="gradeAssignmentSubmission('${s}', '${assignmentName}')">${a}</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  `;
+  openModal(modal);
+}
+
+function gradeAssignmentSubmission(studentName, assignmentName) {
+  const modal = `
+    <div style="padding:20px;max-width:500px">
+      <h2 style="color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-star"></i> Grade ${studentName}</h2>
+      <div style="background:var(--gray-50);padding:12px;border-radius:6px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--gray-600)">Assignment: <strong>${assignmentName}</strong></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-weight:600;display:block;margin-bottom:6px">Grade (A-F)</label>
+        <select id="grade-select" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif">
+          <option value="">Select Grade</option>
+          <option value="A">A (90-100)</option>
+          <option value="B+">B+ (85-89)</option>
+          <option value="B">B (80-84)</option>
+          <option value="C+">C+ (75-79)</option>
+          <option value="C">C (70-74)</option>
+          <option value="D">D (60-69)</option>
+          <option value="F">F (Below 60)</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-weight:600;display:block;margin-bottom:6px">Feedback</label>
+        <textarea placeholder="Add feedback for the student..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif;min-height:100px"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitGradeForStudent('${studentName}'); closeModal();">Submit Grade</button>
+      </div>
+    </div>
+  `;
+  openModal(modal);
+}
+
+function submitGradeForStudent(studentName) {
+  const gradeSelect = document.getElementById('grade-select');
+  const grade = gradeSelect?.value;
+  
+  if(!grade) {
+    showToast('<i class="fas fa-times-circle"></i> Please select a grade', 'error');
+    return;
+  }
+  
+  showToast(`<i class="fas fa-check-circle"></i> Grade ${grade} submitted for ${studentName}`, 'success');
+  renderMain();
+}
+
+function openAddAssignmentForm() {
+  const modal = `
+    <div style="padding:20px;max-width:600px">
+      <h2 style="color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-clipboard-list"></i> Create New Assignment</h2>
+      <div class="f-field" style="margin-bottom:12px">
+        <label>Assignment Title *</label>
+        <input id="assign-title" placeholder="e.g., Chapter 5 Homework" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif">
+      </div>
+      <div class="f-field" style="margin-bottom:12px">
+        <label>Class *</label>
+        <select id="assign-class" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif">
+          <option value="">Select Class</option>
+          <option value="JHS 1">JHS 1</option>
+          <option value="JHS 2">JHS 2</option>
+          <option value="Basic 6">Basic 6</option>
+        </select>
+      </div>
+      <div class="f-row" style="gap:12px;margin-bottom:12px">
+        <div class="f-field" style="flex:1">
+          <label>Due Date *</label>
+          <input type="date" id="assign-duedate" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif">
+        </div>
+        <div class="f-field" style="flex:1">
+          <label>Total Points</label>
+          <input type="number" id="assign-points" value="100" min="10" max="200" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif">
+        </div>
+      </div>
+      <div class="f-field" style="margin-bottom:16px">
+        <label>Description *</label>
+        <textarea id="assign-desc" placeholder="Assignment details and instructions..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:Poppins,sans-serif;min-height:100px"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createNewAssignment()">Create Assignment</button>
+      </div>
+    </div>
+  `;
+  openModal(modal);
+}
+
+function createNewAssignment() {
+  const title = document.getElementById('assign-title')?.value.trim();
+  const className = document.getElementById('assign-class')?.value;
+  const dueDate = document.getElementById('assign-duedate')?.value;
+  const points = document.getElementById('assign-points')?.value;
+  const desc = document.getElementById('assign-desc')?.value.trim();
+  
+  if(!title || !className || !dueDate || !desc) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields', 'error');
+    return;
+  }
+  
+  showToast(`<i class="fas fa-check-circle"></i> Assignment "${title}" created for ${className}!`, 'success');
+  closeModal();
+  renderMain();
+}
+
+function sendTeacherMessage() {
+  const input = document.querySelector('.chat-inp');
+  const message = input?.value.trim();
+  
+  if(!message) {
+    showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
+    return;
+  }
+  
+  showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
+  input.value = '';
+  renderMain();
 }
 
 // ═══════════════════════════════════
