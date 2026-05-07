@@ -14,17 +14,17 @@ let miniCalDate = new Date();  // Track mini calendar navigation
 const SUBJECTS_BY_CLASS = {
   'Creche': ['English', 'Mathematics', 'Social Skills', 'Creative Arts'],
   'Nursery': ['English', 'Mathematics', 'Social Studies', 'Creative Arts'],
-  'KG 1': ['English', 'Mathematics', 'Science', 'Social Studies', 'Creative Arts'],
-  'KG 2': ['English', 'Mathematics', 'Science', 'Social Studies', 'Creative Arts'],
-  'Basic 1': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'Physical Education'],
-  'Basic 2': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'Physical Education'],
-  'Basic 3': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'French', 'Physical Education'],
-  'Basic 4': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'French', 'Physical Education'],
-  'Basic 5': ['English', 'Mathematics', 'Science', 'History', 'Geography', 'ICT', 'French', 'Physical Education'],
-  'Basic 6': ['English', 'Mathematics', 'History', 'Geography', 'ICT', 'French', 'Physical Education'],
-  'JHS 1': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'French', 'Physical Education'],
-  'JHS 2': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'French', 'Physical Education'],
-  'JHS 3': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'ICT', 'French', 'Physical Education']
+  'KG 1': ['Literacy English', 'Literacy Writing', 'Numeracy', 'Creative Arts'],
+  'KG 2': ['Literacy English', 'Literacy Writing', 'Numeracy', 'Creative Arts'],
+  'Basic 1': ['English', 'Mathematics', 'Science', 'Creative Arts', 'Computing', 'Religious & Moral Education', 'History'],
+  'Basic 2': ['English', 'Mathematics', 'Science', 'Creative Arts', 'Computing', 'Religious & Moral Education', 'History'],
+  'Basic 3': ['English', 'Mathematics', 'Science', 'Creative Arts', 'Computing', 'Religious & Moral Education', 'History'],
+  'Basic 4': ['English', 'Mathematics', 'Natural Science', 'Creative Arts', 'Computing', 'French', 'History', 'Religious & Moral Education'],
+  'Basic 5': ['English', 'Mathematics', 'Natural Science', 'Creative Arts', 'Computing', 'French', 'History', 'Religious & Moral Education'],
+  'Basic 6': ['English', 'Mathematics', 'Natural Science', 'Creative Arts', 'Computing', 'French', 'History', 'Religious & Moral Education'],
+  'JHS 1': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'Computing', 'French', 'Career Technolog', 'Religious & Moral Education', 'Creative Arts & Design'],
+  'JHS 2': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'Computing', 'French', 'Career Technolog', 'Religious & Moral Education', 'Creative Arts & Design'],
+  'JHS 3': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'Computing', 'French', 'Career Technolog', 'Religious & Moral Education', 'Creative Arts & Design']
 };
 
 // STUDENT DATA STRUCTURE
@@ -44,7 +44,7 @@ const STUDENTS_DATA = {
       'English Language': { classScore: 48, examScore: 42 },
       'Integrated Science': { classScore: 46, examScore: 44 },
       'Social Studies': { classScore: 44, examScore: 40 },
-      'ICT': { classScore: 45, examScore: 38 },
+      'Coputing': { classScore: 45, examScore: 38 },
       'French Language': { classScore: 42, examScore: 35 }
     }
   },
@@ -62,8 +62,8 @@ const STUDENTS_DATA = {
       'Mathematics': { classScore: 35, examScore: 32 },
       'English Language': { classScore: 42, examScore: 40 },
       'History': { classScore: 44, examScore: 42 },
-      'Geography': { classScore: 40, examScore: 38 },
-      'ICT': { classScore: 38, examScore: 36 },
+      'Natural Science': { classScore: 40, examScore: 38 },
+      'Computing': { classScore: 38, examScore: 36 },
       'French Language': { classScore: 35, examScore: 33 }
     }
   },
@@ -81,8 +81,8 @@ const STUDENTS_DATA = {
       'Mathematics': { classScore: 48, examScore: 43 },
       'English Language': { classScore: 49, examScore: 45 },
       'History': { classScore: 47, examScore: 44 },
-      'Geography': { classScore: 45, examScore: 42 },
-      'ICT': { classScore: 46, examScore: 41 },
+      'Natural Science': { classScore: 45, examScore: 42 },
+      'Computing': { classScore: 46, examScore: 41 },
       'French Language': { classScore: 43, examScore: 40 }
     }
   },
@@ -100,8 +100,8 @@ const STUDENTS_DATA = {
       'Mathematics': { classScore: 28, examScore: 25 },
       'English Language': { classScore: 36, examScore: 34 },
       'History': { classScore: 38, examScore: 36 },
-      'Geography': { classScore: 35, examScore: 32 },
-      'ICT': { classScore: 32, examScore: 30 },
+      'Natural': { classScore: 35, examScore: 32 },
+      'Computing': { classScore: 32, examScore: 30 },
       'French Language': { classScore: 30, examScore: 28 }
     }
   },
@@ -120,7 +120,7 @@ const STUDENTS_DATA = {
       'English Language': { classScore: 50, examScore: 48 },
       'Integrated Science': { classScore: 49, examScore: 47 },
       'Social Studies': { classScore: 48, examScore: 46 },
-      'ICT': { classScore: 48, examScore: 47 },
+      'Computing': { classScore: 48, examScore: 47 },
       'French Language': { classScore: 45, examScore: 42 }
     }
   },
@@ -1121,9 +1121,33 @@ function navTo(id){
     renderSidebar();
   }
   
-  renderMain();
+  renderMain();  
+  // Close sidebar on mobile after navigation
+  closeMobileSidebar();
+  
   document.getElementById('main-content').scrollTop=0;
   window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════
+// MOBILE SIDEBAR TOGGLE FUNCTIONS
+// ═══════════════════════════════════
+function toggleMobileSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  if(!sidebar) return;
+  sidebar.classList.toggle('open');
+}
+
+function closeMobileSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  if(!sidebar) return;
+  sidebar.classList.remove('open');
+}
+
+function openMobileSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  if(!sidebar) return;
+  sidebar.classList.add('open');
 }
 
 function goBack(){
@@ -1163,16 +1187,17 @@ function renderPublicNavbar(){
           <div class="brand-tag">School Portal</div>
         </div>
       </div>
-      <div class="public-nav-links">
-        <a class="nav-link${currentMod==='dashboard'?' active':''}" onclick="navTo('dashboard')"><i class="fas fa-home"></i> Home</a>
-        <a class="nav-link${currentMod==='about'?' active':''}" onclick="navTo('about')"><i class="fas fa-info-circle"></i> About</a>
-        <a class="nav-link${currentMod==='admission'?' active':''}" onclick="navTo('admission')"><i class="fas fa-file-alt"></i> Admissions</a>
-        <a class="nav-link${currentMod==='gallery'?' active':''}" onclick="navTo('gallery')"><i class="fas fa-image"></i> Gallery</a>
-        <a class="nav-link${currentMod==='news'?' active':''}" onclick="navTo('news')"><i class="fas fa-newspaper"></i> News</a>
-        <a class="nav-link${currentMod==='contact'?' active':''}" onclick="navTo('contact')"><i class="fas fa-phone"></i> Contact</a>
+      <div class="public-nav-links" id="public-nav-links">
+        <a class="nav-link${currentMod==='dashboard'?' active':''}" onclick="navTo('dashboard');closePublicMenu()"><i class="fas fa-home"></i> Home</a>
+        <a class="nav-link${currentMod==='about'?' active':''}" onclick="navTo('about');closePublicMenu()"><i class="fas fa-info-circle"></i> About</a>
+        <a class="nav-link${currentMod==='admission'?' active':''}" onclick="navTo('admission');closePublicMenu()"><i class="fas fa-file-alt"></i> Admissions</a>
+        <a class="nav-link${currentMod==='gallery'?' active':''}" onclick="navTo('gallery');closePublicMenu()"><i class="fas fa-image"></i> Gallery</a>
+        <a class="nav-link${currentMod==='news'?' active':''}" onclick="navTo('news');closePublicMenu()"><i class="fas fa-newspaper"></i> News</a>
+        <a class="nav-link${currentMod==='contact'?' active':''}" onclick="navTo('contact');closePublicMenu()"><i class="fas fa-phone"></i> Contact</a>
       </div>
       <div class="public-nav-right">
-        <button class="btn-staff-login" onclick="logout()"><i class="fas fa-lock"></i> Staff Login</button>
+        <button class="hamburger-btn" id="hamburger-btn" title="Toggle Menu"><i class="fas fa-bars"></i></button>
+        <button class="btn-staff-login" onclick="logout()"><i class="fas fa-lock"></i> Login</button>
       </div>
     </div>
   `;
@@ -1186,6 +1211,103 @@ function renderPublicNavbar(){
   // Apply public-main-wrap class to main content
   const mainWrap = document.getElementById('main-content');
   mainWrap.className = 'public-main-wrap';
+  
+  // Initialize public menu
+  initializePublicMenu();
+}
+
+// Show/hide hamburger button and nav links based on window size
+function updatePublicNavbarResponsive(){
+  const hamburger = document.getElementById('hamburger-btn');
+  const navLinks = document.getElementById('public-nav-links');
+  
+  if(!hamburger || !navLinks) return;
+  
+  // Get current window width
+  const width = window.innerWidth;
+  
+  if(width <= 768){
+    // Mobile: show hamburger button using class
+    hamburger.classList.add('visible');
+    // CSS handles mobile styling; just ensure display is none by default
+    navLinks.style.display = 'none';
+    navLinks.classList.remove('open');
+  } else {
+    // Desktop: hide hamburger button, show nav links
+    hamburger.classList.remove('visible');
+    navLinks.style.display = 'flex';
+    navLinks.classList.remove('open');
+  }
+}
+
+// Toggle public navigation menu on mobile
+function togglePublicMenu(event){
+  if(event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  
+  const navLinks = document.getElementById('public-nav-links');
+  const width = window.innerWidth;
+  
+  if(width <= 768 && navLinks){
+    if(navLinks.classList.contains('open')){
+      navLinks.classList.remove('open');
+      navLinks.style.display = 'none';
+    } else {
+      navLinks.classList.add('open');
+      navLinks.style.display = 'flex';
+    }
+  }
+}
+
+// Close public navigation menu
+function closePublicMenu(){
+  const navLinks = document.getElementById('public-nav-links');
+  if(navLinks){
+    navLinks.classList.remove('open');
+    if(window.innerWidth <= 768){
+      navLinks.style.display = 'none';
+    }
+  }
+}
+
+// Initialize event listeners with event delegation
+function initializePublicMenu(){
+  updatePublicNavbarResponsive();
+  
+  // Use event delegation for hamburger button clicks
+  document.removeEventListener('click', handleDocumentClick);
+  document.addEventListener('click', handleDocumentClick);
+}
+
+// Global event handler for delegated clicks
+function handleDocumentClick(e){
+  const hamburgerBtn = e.target.closest('#hamburger-btn');
+  const navbar = document.querySelector('.public-navbar');
+  
+  if(hamburgerBtn){
+    e.preventDefault();
+    e.stopPropagation();
+    togglePublicMenu(e);
+  } else if(navbar && !navbar.contains(e.target)){
+    closePublicMenu();
+  }
+}
+
+// Listen for window resize
+window.addEventListener('resize', () => {
+  updatePublicNavbarResponsive();
+});
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  initializePublicMenu();
+});
+
+// Also call it immediately if DOM is already loaded
+if(document.readyState !== 'loading'){
+  initializePublicMenu();
 }
 
 // ═══════════════════════════════════
@@ -1551,7 +1673,7 @@ function teacherDash(){
       </div>
       <div class="chat-input-row">
         <input class="chat-inp" placeholder="Type reply..." onkeypress="if(event.key==='Enter') sendTeacherMessage()">
-        <button class="chat-send" onclick="sendTeacherMessage()">➤</button>
+        <button class="chat-send" onclick="sendTeacherMessage()"><i class="fa-regular fa-paper-plane"></i></button>
       </div>
     </div>
   </div>`;
@@ -10111,7 +10233,7 @@ function newsModule(){
       </div>
       <div class="f-field" style="margin-bottom:12px">
         <label>Icon/Emoji *</label>
-        <input placeholder="Choose icon (<i class="fas fa-trophy"></i>, <i class="fas fa-book"></i>, <i class="fas fa-graduation-cap"></i>, etc)" id="blogIcon" value="<i class="fas fa-newspaper"></i>" maxlength="2">
+        <input placeholder="e.g., 📰 or fa-newspaper" id="blogIcon" value="📰" maxlength="2">
       </div>
       <div class="f-row">
         <div class="f-field">
@@ -11718,6 +11840,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // Initialize Visitor home page on load
   switchRole('Visitor');
   initButtonHandlers();
+  initMobileSidebarHandlers();
 });
 
 // Re-initialize button handlers after rendering new content
@@ -11725,4 +11848,69 @@ const originalRenderMain = renderMain;
 renderMain = function() {
   originalRenderMain.call(this);
   setTimeout(initButtonHandlers, 100);
+  setTimeout(initMobileSidebarHandlers, 100);
 };
+
+// ═══════════════════════════════════
+// MOBILE SIDEBAR EVENT HANDLERS
+// ═══════════════════════════════════
+function initMobileSidebarHandlers(){
+  const sidebar = document.getElementById('sidebar');
+  const sidebarItems = document.querySelectorAll('.sb-item');
+  
+  if(!sidebar) return;
+  
+  // Close sidebar when clicking on any sidebar item
+  sidebarItems.forEach(item => {
+    item.addEventListener('click', closeMobileSidebar);
+  });
+  
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', function(event){
+    const isMobile = window.innerWidth <= 768;
+    if(!isMobile) return;
+    
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebar-toggle');
+    
+    if(!sidebar || !toggle) return;
+    
+    const isClickInSidebar = sidebar.contains(event.target);
+    const isClickOnToggle = toggle.contains(event.target);
+    
+    if(!isClickInSidebar && !isClickOnToggle && sidebar.classList.contains('open')){
+      closeMobileSidebar();
+    }
+  });
+  
+  // Handle window resize - close sidebar if resizing to desktop
+  window.addEventListener('resize', function(){
+    if(window.innerWidth > 768){
+      closeMobileSidebar();
+    }
+  });
+  
+  // Wrap all tables with responsive wrapper
+  wrapTablesForResponsiveness();
+}
+
+// ═══════════════════════════════════
+// RESPONSIVE TABLE WRAPPER
+// ═══════════════════════════════════
+function wrapTablesForResponsiveness(){
+  const tables = document.querySelectorAll('.card .tbl, .main-wrap .tbl');
+  tables.forEach(table => {
+    // Check if table is already wrapped
+    if(table.parentElement && table.parentElement.classList.contains('table-wrapper')){
+      return;
+    }
+    
+    // Create wrapper div
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-wrapper';
+    
+    // Wrap the table
+    table.parentNode.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+  });
+}

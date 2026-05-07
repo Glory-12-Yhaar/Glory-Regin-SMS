@@ -38,14 +38,11 @@
       </div>
       <div class="form-field">
         <label>Email / Username</label>
-        <input type="email" id="l-email" placeholder="Enter your email" autocomplete="email">
+        <input type="email" id="l-email" value="admin@excellence.edu.gh" placeholder="Enter your email">
       </div>
-      <div class="form-field" style="position:relative">
+      <div class="form-field">
         <label>Password</label>
-        <input type="password" id="l-pass" placeholder="Enter password" autocomplete="current-password" style="padding-right:40px">
-        <button type="button" class="password-toggle" onclick="togglePasswordVisibility()" style="position:absolute;right:12px;top:38px;background:none;border:none;color:var(--gray-500);cursor:pointer;font-size:16px;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center" title="Show/Hide password">
-          <i class="fas fa-eye" id="pass-icon"></i>
-        </button>
+        <input type="password" id="l-pass" value="••••••••" placeholder="Enter password">
       </div>
       <button class="login-btn" onclick="doLogin()">Sign In to Dashboard →</button>
       <div class="login-links">
@@ -77,6 +74,7 @@
       <div class="tb-btn" onclick="showNotifications()" title="Notifications" style="position:relative;cursor:pointer">
         <i class="fas fa-bell"></i><div class="notif-dot"></div>
       </div>
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleMobileSidebar()" title="Menu"><i class="fas fa-bars"></i></button>
       <div class="role-chip" id="top-role">ADMIN</div>
       <div class="tb-avatar" id="top-av">AD</div>
       <div class="tb-btn" onclick="logout()" title="Logout" style="color:var(--danger)"><i class="fas fa-power-off"></i></div>
@@ -93,7 +91,7 @@
   <footer class="footer">
     <span class="footer-text">© 2025 Glory Regin Preparatory school · All rights reserved</span>
     <div class="footer-links">
-      <a>Privacy Policy</a><a>Terms of Use</a><a>Help & Support</a><a>v3.0.0</a>
+      <a>Privacy Policy</a><a>Terms of Use</a><a>Help & Support</a><a>v1.0.0</a>
     </div>
   </footer>
 </div>
