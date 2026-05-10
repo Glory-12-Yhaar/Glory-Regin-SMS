@@ -1503,13 +1503,28 @@ function paginationHtml(){
 // ═══════════════════════════════════
 // ADMIN DASHBOARD
 // ═══════════════════════════════════
+function getCurrentDateString(){
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const day = days[now.getDay()];
+  const date = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  return `${day}, ${date} ${month} ${year}`;
+}
+
 function adminDash(){
-  return hdr('Admin Dashboard','Welcome back, Administrator · Monday, 17 March 2025')+`
+  const totalStudents = enrolledStudents.length;
+  const totalTeachers = teachersData.length;
+  const pendingFees = enrolledStudents.filter(s=>s.fees_status==='Pending').length;
+  
+  return hdr('Admin Dashboard','Welcome back, Administrator · '+getCurrentDateString())+`
   <div class="stats-row">
-    ${statCard('<i class="fas fa-graduation-cap"></i>','842','Total Students','12% this term','up','si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>','64','Total Teachers','3 new this month','up','si-gold')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>',''+totalStudents,'Total Students','12% this term','up','si-blue')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>',''+totalTeachers,'Total Teachers','3 new this month','up','si-gold')}
     ${statCard('<i class="fas fa-money-bill"></i>','GH₵248K','Fees Collected','8% vs last term','up','si-green')}
-    ${statCard('<i class="fas fa-exclamation-triangle"></i>','37','Pending Fees','Needs attention','dn','si-red')}
+    ${statCard('<i class="fas fa-exclamation-triangle"></i>',''+pendingFees,'Pending Fees','Needs attention','dn','si-red')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -1610,7 +1625,7 @@ function adminDash(){
 // TEACHER DASHBOARD
 // ═══════════════════════════════════
 function teacherDash(){
-  return hdr('Teacher Dashboard','Welcome, Mr. Kweku Amponsah · Mathematics Department · JHS 1')+`
+  return hdr('Teacher Dashboard','Welcome, Mr. Kweku Amponsah · Mathematics Department · JHS 1 · '+getCurrentDateString())+`
   <div class="stats-row">
     ${statCard('<i class="fas fa-graduation-cap"></i>','38','My Students','2 new this term','up','si-blue',true,'viewStatDetail("students")')}
     ${statCard('<i class="fas fa-book"></i>','5','Subjects Teaching','This semester','neu','si-gold',true,'viewStatDetail("subjects")')}
@@ -1683,7 +1698,7 @@ function teacherDash(){
 // STUDENT DASHBOARD
 // ═══════════════════════════════════
 function studentDash(){
-  return hdr('Student Dashboard','Welcome, Ama Serwaa · JHS 1 · Roll No: 2024-0042')+`
+  return hdr('Student Dashboard','Welcome, Ama Serwaa · JHS 1 · Roll No: 2024-0042 · '+getCurrentDateString())+`
   <div class="stats-row">
     ${statCard('<i class="fas fa-book"></i>','8','My Subjects','This semester','neu','si-blue')}
     ${statCard('<i class="fas fa-check-circle"></i>','96%','My Attendance','Excellent record','up','si-green')}
@@ -1751,7 +1766,7 @@ function studentDash(){
 // PARENT DASHBOARD
 // ═══════════════════════════════════
 function parentDash(){
-  return hdr('Parent Dashboard','Welcome, Mr. & Mrs. Serwaa · Parent of 2 students')+`
+  return hdr('Parent Dashboard','Welcome, Mr. & Mrs. Serwaa · Parent of 2 students · '+getCurrentDateString())+`
   <div class="stats-row">
     ${statCard('<i class="fas fa-child"></i>','2','My Children','Both active','neu','si-blue')}
     ${statCard('<i class="fas fa-check-circle"></i>','96%','Ama\'s Attendance','Excellent','up','si-green')}
@@ -1834,7 +1849,7 @@ function parentDash(){
 // ACCOUNTANT DASHBOARD
 // ═══════════════════════════════════
 function accountDash(){
-  return hdr('Accountant Dashboard','Financial Overview · Term 1, 2025 · Glory Regin Preparatory school')+`
+  return hdr('Accountant Dashboard','Financial Overview · Term 1, 2025 · Glory Regin Preparatory school · '+getCurrentDateString())+`
   <div class="stats-row">
     ${statCard('<i class="fas fa-money-bill"></i>','GH₵248K','Total Collected','8% this term','up','si-blue')}
     ${statCard('<i class="fas fa-hourglass-half"></i>','GH₵32K','Outstanding Fees','37 students','dn','si-red')}
@@ -10489,8 +10504,8 @@ function visitorContact(){
   </div>
   <div class="g2">
     <div>
-      ${[['<i class="fas fa-map-pin"></i>','Address','P.O. Box AN 1234, Main School Street\nAccra North, Greater Accra Region, Ghana'],
-        ['<i class="fas fa-phone"></i>','Phone','+233 302 000 000\n+233 302 000 001 (Admissions)'],
+      ${[['<i class="fas fa-map-pin"></i>','Address','P.O. Box 42, Jirapa\nUpper West Region, Ghana'],
+        ['<i class="fas fa-phone"></i>','Phone','0243611971 /\n0205096091'],
         ['<i class="fas fa-envelope"></i>','Email','info@excellence.edu.gh\nadmissions@excellence.edu.gh'],
         ['<i class="fas fa-clock"></i>','Office Hours','Monday–Friday: 7:00 AM – 5:00 PM\nSaturday: 8:00 AM – 12:00 PM']].map(([i,l,v])=>`
       <div class="card mb16" style="display:flex;gap:16px;align-items:flex-start">

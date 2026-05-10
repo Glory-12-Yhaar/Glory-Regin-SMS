@@ -1049,6 +1049,8 @@ body.dark .select-sm:hover{
     overflow-x:auto !important;
     overflow-y:visible;
     max-width:100% !important;
+    width:100% !important;
+    box-sizing:border-box !important;
     -webkit-overflow-scrolling:touch;
   }
   
@@ -1111,13 +1113,18 @@ body.dark .select-sm:hover{
   .card{
     padding:16px;
     border-radius:12px;
-    overflow:visible;
+    overflow:hidden;
+    box-sizing:border-box;
+    width:100%;
   }
   .card .table-wrapper{
     margin-left:-16px;
     margin-right:-16px;
     margin-bottom:-16px;
+    margin-top:0;
     padding:0;
+    width:calc(100% + 32px);
+    box-sizing:border-box;
     border-radius:0 0 var(--radius-lg) var(--radius-lg);
   }
   .card-hdr{margin-bottom:14px;flex-direction:column;gap:8px}
@@ -1125,9 +1132,10 @@ body.dark .select-sm:hover{
   .card-act{font-size:10px;padding:4px 10px}
   
   /* TABLES */
-  .tbl{font-size:11px}
-  .tbl th{padding:8px 10px;font-size:9px}
-  .tbl td{padding:9px 10px;font-size:11px}
+  .tbl{font-size:11px;width:100% !important;box-sizing:border-box !important}
+  .tbl th{padding:6px 6px;font-size:9px}
+  .tbl td{padding:6px 6px;font-size:11px}
+  .table-wrapper{overflow-x:auto !important;overflow-y:visible !important;max-width:100% !important;box-sizing:border-box !important}
   
   /* BUTTONS */
   .btn{padding:8px 14px;font-size:11px;border-radius:8px}
@@ -1446,7 +1454,7 @@ body.dark .select-sm:hover{
   /* TABLES */
   .tbl{
     font-size:11px;
-    table-layout:auto;
+    table-layout: auto;
     min-width:100%;
   }
   .tbl th{

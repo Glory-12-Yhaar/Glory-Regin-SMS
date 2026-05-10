@@ -47,7 +47,7 @@
       <button class="login-btn" onclick="doLogin()">Sign In to Dashboard →</button>
       <div class="login-links">
         <a>Forgot Password?</a>
-        <a onclick="setRole(document.querySelector('.role-btn'),this,'Visitor');doLogin()">Browse as Visitor</a>
+        <a onclick="setRole(document.querySelector('[onclick*=Visitor]'),'Visitor');doLogin()">Browse as Visitor</a>
       </div>
     </div>
   </div>
