@@ -1566,3 +1566,363 @@ body.dark .select-sm:hover{
 }
 
 .sidebar-toggle:active{transform:scale(0.95)}
+
+/* ═══════════════════ STUDENT PROFILE CARD ═══════════════════ */
+.student-profile-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px 24px;
+  background:linear-gradient(135deg,var(--blue-xpale),var(--blue-pale));
+  border-radius:var(--radius-lg);
+  border:1.5px solid var(--blue-light);
+  margin-bottom:24px;
+  box-shadow:0 2px 8px rgba(26,86,219,.08);
+}
+
+.profile-left{
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+
+.profile-info{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.profile-name{
+  font-size:18px;
+  font-weight:700;
+  color:var(--blue-dark);
+  margin:0;
+}
+
+.profile-id{
+  font-size:13px;
+  color:var(--gray-600);
+  margin:0;
+}
+
+.profile-class{
+  font-size:12px;
+  color:var(--gray-500);
+  margin:0;
+}
+
+.profile-idcard-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:var(--blue-main);
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-size:24px;
+  transition:all 0.3s ease;
+  box-shadow:0 2px 8px rgba(26,86,219,.25);
+}
+
+.profile-idcard-btn:hover{
+  background:var(--blue-dark);
+  transform:scale(1.05);
+  box-shadow:0 4px 12px rgba(26,86,219,.35);
+}
+
+.profile-idcard-btn:active{
+  transform:scale(0.98);
+}
+
+/* ═══════════════════ ID CARD MODAL ═══════════════════ */
+.idcard-modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  animation:fadeIn 0.3s ease;
+  backdrop-filter:blur(2px);
+  padding:20px;
+}
+
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+.idcard-modal-content{
+  position:relative;
+  background:white;
+  border-radius:var(--radius-lg);
+  max-width:700px;
+  width:100%;
+  max-height:90vh;
+  overflow-y:auto;
+  box-shadow:var(--shadow-xl);
+  animation:slideUp 0.3s ease;
+}
+
+@keyframes slideUp{
+  from{transform:translateY(20px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.idcard-close-btn{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:none;
+  border:none;
+  font-size:28px;
+  color:var(--gray-500);
+  cursor:pointer;
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:10;
+  transition:color 0.2s;
+}
+
+.idcard-close-btn:hover{
+  color:var(--danger);
+}
+
+.idcard-container{
+  padding:0;
+  display:flex;
+  flex-direction:column;
+}
+
+/* THE ACTUAL ID CARD DESIGN */
+.idcard-actual-card{
+  background:
+    url("data:image/svg+xml,%3Csvg width='140' height='140' viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='70' y='70' font-family='Arial, sans-serif' font-size='80' fill='%231a56db' opacity='0.08' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%8F%AB%3C/text%3E%3C/svg%3E") repeat,
+    linear-gradient(135deg,var(--white) 0%,#fafbfc 100%);
+  background-attachment: fixed;
+  border:3px solid var(--blue-main);
+  border-radius:14px;
+  padding:28px 24px;
+  margin:20px;
+  aspect-ratio:16/10;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  box-shadow:0 8px 24px rgba(26,86,219,.15);
+  position:relative;
+  overflow:hidden;
+}
+
+.idcard-actual-card::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--blue-main),var(--blue-dark));
+}
+
+.idcard-actual-card::after{
+  content:'';
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:2px;
+  background:linear-gradient(90deg,var(--blue-dark),var(--blue-main));
+}
+
+.idcard-top-section{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  padding-bottom:12px;
+  border-bottom:2px solid var(--blue-main);
+  text-align:center;
+}
+
+.idcard-logo-section{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--blue-main),var(--blue-dark));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  color:white;
+  box-shadow:0 2px 8px rgba(26,86,219,.3);
+}
+
+.idcard-school-name{
+  font-size:14px;
+  font-weight:700;
+  color:var(--blue-dark);
+  letter-spacing:0.5px;
+}
+
+.idcard-card-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--gray-800);
+  letter-spacing:2px;
+}
+
+.idcard-main-body{
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  gap:20px;
+  align-items:center;
+  flex:1;
+}
+
+.idcard-info-section{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.idcard-info-item{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.idcard-info-label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--gray-600);
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+}
+
+.idcard-info-value{
+  font-size:15px;
+  font-weight:700;
+  color:var(--blue-dark);
+}
+
+.idcard-photo-section{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+}
+
+.idcard-photo{
+  width:120px;
+  height:140px;
+  background:linear-gradient(135deg,var(--blue-pale),var(--blue-xpale));
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:3px solid var(--blue-light);
+  box-shadow:0 2px 8px rgba(26,86,219,.2);
+}
+
+.idcard-avatar{
+  width:100px;
+  height:120px;
+  font-size:32px;
+  font-weight:700;
+}
+
+.idcard-footer{
+  padding:16px 24px;
+  background:var(--gray-50);
+  border-top:1px solid var(--gray-200);
+  text-align:center;
+}
+
+.idcard-footer p{
+  font-size:10px;
+  color:var(--gray-600);
+  margin:0 0 12px 0;
+}
+
+.idcard-footer .btn{
+  width:auto;
+  padding:8px 24px;
+  justify-content:center;
+}
+
+/* RESPONSIVE ID CARD */
+@media (max-width:768px){
+  .idcard-modal-overlay{
+    padding:10px;
+  }
+  
+  .idcard-modal-content{
+    max-width:100%;
+  }
+  
+  .idcard-actual-card{
+    margin:16px;
+    padding:20px 16px;
+    gap:12px;
+    aspect-ratio:auto;
+    min-height:400px;
+  }
+  
+  .idcard-top-section{
+    gap:6px;
+    padding-bottom:10px;
+  }
+  
+  .idcard-logo-section{
+    width:40px;
+    height:40px;
+    font-size:20px;
+  }
+  
+  .idcard-school-name{
+    font-size:12px;
+  }
+  
+  .idcard-card-title{
+    font-size:14px;
+    letter-spacing:1.5px;
+  }
+  
+  .idcard-main-body{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  
+  .idcard-info-section{
+    gap:10px;
+  }
+  
+  .idcard-info-label{
+    font-size:10px;
+  }
+  
+  .idcard-info-value{
+    font-size:14px;
+  }
+  
+  .idcard-photo-section{
+    justify-content:center;
+  }
+  
+  .idcard-photo{
+    width:100px;
+    height:120px;
+  }
+  
+  .idcard-avatar{
+    width:80px;
+    height:100px;
+    font-size:24px;
+  }
+}

@@ -893,6 +893,76 @@ function toggleDark(){
   document.body.classList.toggle('dark',darkMode);
 }
 
+function showStudentIDCard(){
+  const studentName = 'Ama Serwaa';
+  const studentID = '2024-0042';
+  const studentClass = 'JHS 1';
+  const studentHouse = 'Red House';
+  const studentGender = 'Female';
+  
+  const idCardHTML = `
+    <div class="idcard-modal-overlay">
+      <div class="idcard-modal-content">
+        <button class="idcard-close-btn" onclick="this.closest('.idcard-modal-overlay').remove()">&times;</button>
+        <div class="idcard-container">
+          <div class="idcard-actual-card">
+            <div class="idcard-top-section">
+              <div class="idcard-logo-section">
+                <i class="fas fa-school"></i>
+              </div>
+              <div class="idcard-school-name">Glory Regin Preparatory School</div>
+              <div class="idcard-card-title">STUDENT ID CARD</div>
+            </div>
+            
+            <div class="idcard-main-body">
+              <div class="idcard-info-section">
+                <div class="idcard-info-item">
+                  <span class="idcard-info-label">Name:</span>
+                  <span class="idcard-info-value">${studentName}</span>
+                </div>
+                <div class="idcard-info-item">
+                  <span class="idcard-info-label">ID No:</span>
+                  <span class="idcard-info-value">${studentID}</span>
+                </div>
+                <div class="idcard-info-item">
+                  <span class="idcard-info-label">House:</span>
+                  <span class="idcard-info-value">${studentHouse}</span>
+                </div>
+                <div class="idcard-info-item">
+                  <span class="idcard-info-label">Gender:</span>
+                  <span class="idcard-info-value">${studentGender}</span>
+                </div>
+              </div>
+              
+              <div class="idcard-photo-section">
+                <div class="idcard-photo">
+                  <div class="idcard-avatar av av-xl av-blue">AS</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="idcard-footer">
+            <p>Personal identification details below. Identification details are locked after verification.</p>
+            <button class="btn btn-gold" onclick="downloadIDCard('${studentName}', '${studentID}')"><i class="fas fa-download"></i> DOWNLOAD</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', idCardHTML);
+  
+  // Add click outside to close
+  document.querySelector('.idcard-modal-overlay').addEventListener('click', function(e){
+    if(e.target === this) this.remove();
+  });
+}
+
+function downloadIDCard(studentName, studentID){
+  alert('Downloading ID Card for ' + studentName + ' (ID: ' + studentID + ')...\nThis feature will be implemented with a proper file download system.');
+}
+
 function showNotifications(){
   const notifications = [
     { 
@@ -1697,13 +1767,137 @@ function teacherDash(){
 // ═══════════════════════════════════
 // STUDENT DASHBOARD
 // ═══════════════════════════════════
+
+// Calculate class standing based on student performance
+function calculateClassStanding(studentName) {
+  const student = STUDENTS_DATA[studentName];
+  if (!student) return { standing: 'Unknown', rank: '-', trend: 'neu' };
+  
+  // Calculate total score for the student
+  function getTotalScore(scores) {
+    return Object.values(scores).reduce((sum, { classScore, examScore }) => sum + classScore + examScore, 0);
+  }
+  
+  const studentTotal = getTotalScore(student.scores);
+  const studentClass = student.class;
+  
+  // Get all students in the same class and their scores
+  const classmates = Object.entries(STUDENTS_DATA)
+    .filter(([_, data]) => data.class === studentClass)
+    .map(([name, data]) => ({
+      name,
+      total: getTotalScore(data.scores)
+    }))
+    .sort((a, b) => b.total - a.total); // Sort descending (highest first)
+  
+  // Find student's rank
+  const studentRank = classmates.findIndex(c => c.name === studentName) + 1;
+  const totalStudents = classmates.length;
+  const percentile = Math.round((studentRank / totalStudents) * 100);
+  
+  // Determine standing based on percentile
+  let standing = 'Average';
+  let trend = 'neu';
+  
+  if (percentile <= 10) {
+    standing = 'Top Performer';
+    trend = 'up';
+  } else if (percentile <= 25) {
+    standing = 'High Achiever';
+    trend = 'up';
+  } else if (percentile <= 50) {
+    standing = 'Good Performance';
+    trend = 'up';
+  } else if (percentile <= 75) {
+    standing = 'Average';
+    trend = 'neu';
+  } else {
+    standing = 'Needs Improvement';
+    trend = 'dn';
+  }
+  
+  return {
+    standing,
+    rank: `Rank ${studentRank} of ${totalStudents}`,
+    trend
+  };
+}
+
+// Get number of subjects for a student's class
+function getStudentSubjectsCount(studentClass) {
+  return SUBJECTS_BY_CLASS[studentClass] ? SUBJECTS_BY_CLASS[studentClass].length : 0;
+}
+
+// Get student's attendance percentage
+function getStudentAttendance(studentName) {
+  const student = STUDENTS_DATA[studentName];
+  return student ? student.attendance : 0;
+}
+
+// Determine attendance trend and description
+function getAttendanceTrend(percentage) {
+  let trend = 'neu';
+  let description = 'Average attendance';
+  
+  if (percentage >= 95) {
+    trend = 'up';
+    description = 'Excellent record';
+  } else if (percentage >= 85) {
+    trend = 'up';
+    description = 'Good record';
+  } else if (percentage >= 75) {
+    trend = 'neu';
+    description = 'Average attendance';
+  } else {
+    trend = 'dn';
+    description = 'Needs improvement';
+  }
+  
+  return { trend, description };
+}
+
+// Get pending tasks count (assignments with Pending or Not Started status)
+function getPendingTasksCount() {
+  const assignments = [
+    ['Mathematics','Chapter 5 Problems','Today','Pending'],
+    ['English','Essay on Climate','Mar 20','Submitted'],
+    ['Science','Lab Report','Mar 22','Pending'],
+    ['ICT','Database Project','Mar 25','In Progress'],
+    ['History','WWII Essay','Mar 28','Not Started']
+  ];
+  return assignments.filter(([_,_2,_3,status]) => status === 'Pending' || status === 'Not Started').length;
+}
+
 function studentDash(){
-  return hdr('Student Dashboard','Welcome, Ama Serwaa · JHS 1 · Roll No: 2024-0042 · '+getCurrentDateString())+`
+  const studentName = 'Ama Serwaa';
+  const studentClass = 'JHS 1';
+  
+  // Calculate all dynamic values
+  const subjectsCount = getStudentSubjectsCount(studentClass);
+  const attendance = getStudentAttendance(studentName);
+  const attendanceTrend = getAttendanceTrend(attendance);
+  const pendingTasks = getPendingTasksCount();
+  const classStanding = calculateClassStanding(studentName);
+  
+  return hdr('Student Dashboard','Welcome, '+studentName+' · '+studentClass+' · Roll No: 2024-0042 · '+getCurrentDateString())+`
+  <div class="student-profile-card">
+    <div class="profile-left">
+      <div class="profile-avatar av av-xl av-blue">AS</div>
+      <div class="profile-info">
+        <h3 class="profile-name">${studentName}</h3>
+        <p class="profile-id">ID: 2024-0042</p>
+        <p class="profile-class">${studentClass} · General</p>
+      </div>
+    </div>
+    <button class="profile-idcard-btn" onclick="showStudentIDCard()" title="View ID Card">
+      <i class="fas fa-id-card"></i>
+    </button>
+  </div>
   <div class="stats-row">
-    ${statCard('<i class="fas fa-book"></i>','8','My Subjects','This semester','neu','si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>','96%','My Attendance','Excellent record','up','si-green')}
-    ${statCard('<i class="fas fa-clipboard-list"></i>','4','Pending Tasks','Due this week','dn','si-red')}
-    ${statCard('<i class="fas fa-trophy"></i>','3.8','My GPA','Top 3 in class','up','si-gold')}
+    ${statCard('<i class="fas fa-book"></i>',subjectsCount,'My Subjects','This semester','neu','si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>',attendance+'%','My Attendance',attendanceTrend.description,attendanceTrend.trend,'si-green')}
+    ${statCard('<i class="fas fa-clipboard-list"></i>',pendingTasks,'Pending Tasks','Due this week','dn','si-red')}
+    ${statCard('<i class="fas fa-star"></i>',classStanding.standing,'Class Standing',classStanding.rank,classStanding.trend,'si-gold')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -3481,6 +3675,54 @@ function exportTeachersData(){
   showToast('<i class="fas fa-check-circle"></i> Teachers data exported!<br/>File: Teachers_Data_'+new Date().toISOString().slice(0,10)+'.csv', 'success', 3000);
 }
 
+// Message a teacher (for students only)
+function messageTeacher(teacherId, teacherName){
+  const teacher = teachersData.find(t=>t.teacher_id===teacherId);
+  if(!teacher) return;
+  
+  let html = hdr('Message '+teacherName,'Send a message to your teacher','Teachers')+`
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-envelope"></i> Send Message to ${teacherName}</span></div>
+    <div style="margin-bottom:16px;padding:12px;background:var(--blue-xpale);border-radius:var(--radius);border:1px solid var(--blue-light)">
+      <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px"><i class="fas fa-info-circle"></i> Teacher Info</div>
+      <div style="font-size:12px;color:var(--blue-dark)">
+        <strong>${teacher.name}</strong> · ${teacher.subject}<br>
+        <small>Email: ${teacher.email} | Phone: ${teacher.phone}</small>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-field" style="grid-column:1/-1">
+        <label>Subject *</label>
+        <input type="text" id="msg-subject" placeholder="e.g., Question about Mathematics assignment">
+      </div>
+      <div class="form-field" style="grid-column:1/-1">
+        <label>Message *</label>
+        <textarea id="msg-content" placeholder="Type your message here..." style="min-height:200px;resize:vertical"></textarea>
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="sendTeacherMessage('${teacherId}', '${teacherName}')"><i class="fas fa-paper-plane"></i> Send Message</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="navTo('teachers')">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// Send message to teacher (placeholder function)
+function sendTeacherMessage(teacherId, teacherName){
+  const subject = document.getElementById('msg-subject').value.trim();
+  const content = document.getElementById('msg-content').value.trim();
+  
+  if(!subject || !content){
+    showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error', 3000);
+    return;
+  }
+  
+  showToast('<i class="fas fa-check-circle"></i> Message sent to '+teacherName+'!<br/>Your teacher will respond soon.', 'success', 3000);
+  setTimeout(() => navTo('teachers'), 1500);
+}
+
 function filterTeachers(){
   const searchInput = document.getElementById('teacher-search');
   const searchText = (searchInput ? searchInput.value : '').toLowerCase();
@@ -3530,7 +3772,61 @@ function updateTeacherCards(teachers){
 // TEACHERS MODULE
 // ═══════════════════════════════════
 function teachersModule(){
+  const isStudent = currentRole === 'Student';
+  const studentClass = isStudent ? 'JHS 1' : null;
+  
+  // For students, filter teachers to only show:
+  // 1. Teachers of subjects they're taking
+  // 2. Their form class teacher
+  let filteredTeachers = teachersData;
+  if (isStudent) {
+    // Find the class teacher for student's class using classesData
+    const classInfo = classesData.find(c => c.name === studentClass);
+    const classTeacherId = classInfo ? classInfo.teacher_id : null;
+    
+    // Find subject teacher IDs for classes that match student's class
+    const subjectTeacherIds = new Set();
+    subjectsData.forEach(s => {
+      if (s.teacher_id && s.classes) {
+        // Check if class is compatible (handles "All Forms", "JHS 1-3", etc.)
+        const classes = s.classes.toLowerCase();
+        const classNum = parseInt(studentClass.split(' ')[1]) || 0;
+        
+        let isMatch = false;
+        if (classes === 'all forms') {
+          isMatch = true;
+        } else if (classes.includes('jhs') && classNum >= 1 && classNum <= 3) {
+          if (classes.includes('-')) {
+            const matches = classes.match(/\d+/g) || [];
+            if (matches.length >= 2) {
+              const start = parseInt(matches[0]);
+              const end = parseInt(matches[1]);
+              isMatch = classNum >= start && classNum <= end;
+            }
+          } else {
+            isMatch = classes.includes(`${classNum}`);
+          }
+        }
+        
+        if (isMatch) {
+          subjectTeacherIds.add(s.teacher_id);
+        }
+      }
+    });
+    
+    filteredTeachers = teachersData.filter(t => {
+      // Check if teacher is the class teacher for student's class
+      const isClassTeacher = classTeacherId && t.teacher_id === classTeacherId;
+      
+      // Check if teacher teaches a subject in student's class
+      const teachesSubject = subjectTeacherIds.has(t.teacher_id);
+      
+      return isClassTeacher || teachesSubject;
+    });
+  }
+  
   return hdr('Teachers Module','Manage all teacher profiles and subject assignments','Teachers')+`
+  ${!isStudent ? `
   <div class="toolbar">
     <button class="btn btn-primary" onclick="showAddTeacherForm()" style="cursor:pointer">+ Add Teacher</button>
     <button class="btn btn-secondary" onclick="importTeachersCSV()" style="cursor:pointer"><i class="fas fa-upload"></i> Import</button>
@@ -3538,8 +3834,13 @@ function teachersModule(){
     <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="teacher-search" placeholder="Search teachers..." onkeyup="filterTeachers()" style="cursor:text"></div>
     <select id="teacher-dept-filter" class="select-sm" onchange="filterTeachers()"><option value="All Departments">All Departments</option><option>Mathematics</option><option>Sciences</option><option>Languages</option></select>
   </div>
+  ` : `
+  <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
+    <i class="fas fa-info-circle"></i> Viewing teachers who teach your subjects and your form class teacher
+  </div>
+  `}
   <div class="g3">
-    ${teachersData.map((t)=>`
+    ${filteredTeachers.map((t)=>`
     <div class="card" style="cursor:pointer">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}">${t.gender==='Female'?'<i class="fas fa-user"></i>':'<i class="fas fa-user"></i>'}</div>
@@ -3552,8 +3853,8 @@ function teachersModule(){
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px"><i class="fas fa-users"></i> ${t.class_assigned} Class Teacher</div>
       <div style="font-size:10px;color:var(--gray-400);margin-bottom:12px"><i class="fas fa-calendar-alt"></i> ${t.schedule}</div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewTeacherProfile('${t.teacher_id}')">View Profile</button>
-        <button class="btn btn-primary btn-xs" style="flex:1" onclick="editTeacher('${t.teacher_id}')">Edit</button>
+        ${!isStudent ? `<button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewTeacherProfile('${t.teacher_id}')">View Profile</button>` : ''}
+        ${!isStudent ? `<button class="btn btn-primary btn-xs" style="flex:1" onclick="editTeacher('${t.teacher_id}')">Edit</button>` : `<button class="btn btn-primary btn-xs" style="flex:1" onclick="messageTeacher('${t.teacher_id}', '${t.name}')"><i class="fas fa-envelope"></i> Message</button>`}
       </div>
     </div>`).join('')}
   </div>`;
@@ -4073,7 +4374,10 @@ function classesModule(){
 // SUBJECTS MODULE
 function subjectsModule(){
   const filteredSubjects = updateSubjectCards(subjectsData);
+  const isStudent = currentRole === 'Student';
+  
   return hdr('Subjects Module','Curriculum management and subject assignments','Subjects')+`
+  ${!isStudent ? `
   <div class="toolbar">
     <input type="text" id="subject-search" class="input-search" placeholder="<i class="fas fa-search"></i> Search subjects..." onkeyup="filterSubjects()">
     <button class="btn btn-primary" onclick="showAddSubjectForm()">+ Add Subject</button>
@@ -4084,11 +4388,17 @@ function subjectsModule(){
       ${['All Subjects','Core','Elective','Extracurricular'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="filterSubjectsByType('${t==='All Subjects'?'All':t}')">${t}</div>`).join('')}
     </div>
   </div>
+  ` : `
+  <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
+    <i class="fas fa-info-circle"></i> You are viewing your enrolled subjects for this term
+  </div>
+  `}
   <div class="g4">
     ${filteredSubjects.map(s=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:32px">${s.icon}</div>
+        ${!isStudent ? `
         <div class="subject-menu-wrapper">
           <button class="subject-menu-btn" onclick="toggleSubjectMenu(event)">☰</button>
           <div class="subject-menu">
@@ -4097,6 +4407,7 @@ function subjectsModule(){
             <button class="subject-menu-item danger" onclick="deleteSubject('${s.subject_id}')">Delete</button>
           </div>
         </div>
+        ` : ''}
       </div>
       <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${s.name}</div>
       <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px"><i class="fas fa-chalkboard-user"></i> ${s.teacher}</div>
@@ -5378,8 +5689,8 @@ const enrolledStudents = [
   {student_id:'2024-0042',name:'Ama Serwaa',student_class:'Form 3A',gender:'Female',dob:'2008-04-15',attendance:'96%',gpa:'3.8',fees_status:'Paid',status:'Active',avatar_color:'blue',gender_abbr:'F'},
   {student_id:'2024-0043',name:'Kwame Asante',student_class:'Form 2B',gender:'Male',dob:'2009-06-10',attendance:'88%',gpa:'3.2',fees_status:'Pending',status:'Active',avatar_color:'gold',gender_abbr:'M'},
   {student_id:'2024-0044',name:'Abena Mensah',student_class:'Form 1C',gender:'Female',dob:'2010-01-05',attendance:'93%',gpa:'3.5',fees_status:'Paid',status:'Active',avatar_color:'purple',gender_abbr:'F'},
-  {student_id:'2024-0045',name:'Kofi Boateng',student_class:'Form 3B',gender:'Male',dob:'2007-09-20',attendance:'81%',gpa:'3.0',fees_status:'Partial',status:'Active',avatar_color:'blue',gender_abbr:'M'},
-  {student_id:'2024-0046',name:'Akosua Darko',student_class:'Form 2A',gender:'Female',dob:'2009-03-08',attendance:'97%',gpa:'3.9',fees_status:'Paid',status:'Active',avatar_color:'green',gender_abbr:'F'},
+  {student_id:'2024-0045',name:'Kofi Boateng',student_class:'JHS 3',gender:'Male',dob:'2007-09-20',attendance:'81%',gpa:'3.0',fees_status:'Partial',status:'Active',avatar_color:'blue',gender_abbr:'M'},
+  {student_id:'2024-0046',name:'Akosua Darko',student_class:'JHS 2',gender:'Female',dob:'2009-03-08',attendance:'97%',gpa:'3.9',fees_status:'Paid',status:'Active',avatar_color:'green',gender_abbr:'F'},
   {student_id:'2024-0047',name:'Yaw Mensah',student_class:'Form 1A',gender:'Male',dob:'2010-07-03',attendance:'85%',gpa:'3.3',fees_status:'Paid',status:'Active',avatar_color:'blue',gender_abbr:'M'},
   {student_id:'2024-0048',name:'Adwoa Frimpong',student_class:'Form 3A',gender:'Female',dob:'2007-12-12',attendance:'94%',gpa:'3.7',fees_status:'Paid',status:'Active',avatar_color:'purple',gender_abbr:'F'},
   {student_id:'2024-0049',name:'Kweku Ofori',student_class:'Form 2B',gender:'Male',dob:'2009-02-28',attendance:'79%',gpa:'2.9',fees_status:'Pending',status:'Active',avatar_color:'gold',gender_abbr:'M'},
@@ -5387,11 +5698,11 @@ const enrolledStudents = [
 
 // TEACHERS DATA
 const teachersData = [
-  {teacher_id:'T001',name:'Mr. Kweku Amponsah',subject:'Mathematics',department:'Science',experience:'12',class_assigned:'Form 2A',gender:'Male',avatar_color:'blue',phone:'+233 24 111 0001',email:'amponsah@school.edu.gh',dob:'1985-03-15',schedule:'Mon/Tue/Thu',hiring_date:'2012-08-01',status:'Active'},
-  {teacher_id:'T002',name:'Mrs. Akua Asante',subject:'English Language',department:'Languages',experience:'8',class_assigned:'Form 3B',gender:'Female',avatar_color:'purple',phone:'+233 24 111 0002',email:'asante@school.edu.gh',dob:'1990-07-22',schedule:'Mon/Wed/Fri',hiring_date:'2016-01-15',status:'Active'},
-  {teacher_id:'T003',name:'Mr. Samuel Oduro',subject:'Integrated Science',department:'Science',experience:'6',class_assigned:'Form 1',gender:'Male',avatar_color:'blue',phone:'+233 24 111 0003',email:'oduro@school.edu.gh',dob:'1992-11-10',schedule:'Tue/Thu/Fri',hiring_date:'2018-06-01',status:'Active'},
-  {teacher_id:'T004',name:'Ms. Grace Frimpong',subject:'ICT & Computing',department:'Science',experience:'4',class_assigned:'Form 2',gender:'Female',avatar_color:'green',phone:'+233 24 111 0004',email:'frimpong@school.edu.gh',dob:'1994-05-03',schedule:'Mon/Wed/Fri',hiring_date:'2020-08-01',status:'Active'},
-  {teacher_id:'T005',name:'Mr. Kofi Boateng Sr.',subject:'History & Social Studies',department:'Languages',experience:'15',class_assigned:'Form 3A',gender:'Male',avatar_color:'gold',phone:'+233 24 111 0005',email:'boateng@school.edu.gh',dob:'1982-09-17',schedule:'Mon-Fri',hiring_date:'2009-01-01',status:'Active'},
+  {teacher_id:'T001',name:'Mr. Kweku Amponsah',subject:'Mathematics',department:'Science',experience:'12',class_assigned:'JHS 2',gender:'Male',avatar_color:'blue',phone:'+233 24 111 0001',email:'amponsah@school.edu.gh',dob:'1985-03-15',schedule:'Mon/Tue/Thu',hiring_date:'2012-08-01',status:'Active'},
+  {teacher_id:'T002',name:'Mrs. Akua Asante',subject:'English Language',department:'Languages',experience:'8',class_assigned:'JHS 3',gender:'Female',avatar_color:'purple',phone:'+233 24 111 0002',email:'asante@school.edu.gh',dob:'1990-07-22',schedule:'Mon/Wed/Fri',hiring_date:'2016-01-15',status:'Active'},
+  {teacher_id:'T003',name:'Mr. Samuel Oduro',subject:'Integrated Science',department:'Science',experience:'6',class_assigned:'JHS 1',gender:'Male',avatar_color:'blue',phone:'+233 24 111 0003',email:'oduro@school.edu.gh',dob:'1992-11-10',schedule:'Tue/Thu/Fri',hiring_date:'2018-06-01',status:'Active'},
+  {teacher_id:'T004',name:'Ms. Grace Frimpong',subject:'ICT & Computing',department:'Science',experience:'4',class_assigned:'Not Assigned',gender:'Female',avatar_color:'green',phone:'+233 24 111 0004',email:'frimpong@school.edu.gh',dob:'1994-05-03',schedule:'Mon/Wed/Fri',hiring_date:'2020-08-01',status:'Active'},
+  {teacher_id:'T005',name:'Mr. Kofi Boateng Sr.',subject:'History & Social Studies',department:'Languages',experience:'15',class_assigned:'Not Assigned',gender:'Male',avatar_color:'gold',phone:'+233 24 111 0005',email:'boateng@school.edu.gh',dob:'1982-09-17',schedule:'Mon-Fri',hiring_date:'2009-01-01',status:'Active'},
   {teacher_id:'T006',name:'Mrs. Esi Aidoo',subject:'French Language',department:'Languages',experience:'10',class_assigned:'Not Assigned',gender:'Female',avatar_color:'teal',phone:'+233 24 111 0006',email:'aidoo@school.edu.gh',dob:'1988-02-08',schedule:'Tue/Thu',hiring_date:'2014-03-15',status:'Active'},
 ];
 
@@ -9070,7 +9381,7 @@ function lessonNotesModule(){
       <table class="tbl">
         <thead><tr><th>Title</th><th>Subject</th><th>Class</th><th>Date</th><th>Type</th><th>Downloads</th><th>Actions</th></tr></thead>
         <tbody>
-          ${[['Chapter 5: Quadratic Equations','Mathematics','Form 2A','Mar 15','PDF',24],['English Essay Writing Guide','English','Form 3A','Mar 12','DOCX',18],['Science Lab Safety Rules','Science','Form 1C','Mar 10','PDF',32],['ICT Database Notes','ICT','Form 2B','Mar 8','PPTX',15]].map(([t,s,c,d,ty,dl])=>`
+          ${[['Chapter 5: Quadratic Equations','Mathematics','JHS 2','Mar 15','PDF',24],['English Essay Writing Guide','English','Form 3A','Mar 12','DOCX',18],['Science Lab Safety Rules','Science','Form 1C','Mar 10','PDF',32],['ICT Database Notes','ICT','Form 2B','Mar 8','PPTX',15]].map(([t,s,c,d,ty,dl])=>`
           <tr>
             <td style="font-weight:600">${t}</td><td>${s}</td><td>${c}</td><td>${d}</td>
             <td><span class="badge b-info">${ty}</span></td>
@@ -9838,7 +10149,7 @@ function receiptsModule(){
     <table class="tbl">
       <thead><tr><th>Receipt No.</th><th>Student</th><th>Class</th><th>Amount</th><th>Term</th><th>Date</th><th>Issued By</th><th>Actions</th></tr></thead>
       <tbody>
-        ${[['#R-0482','Ama Serwaa','Form 3A','GH₵2,400','Term 1','Mar 15','Mr. Kojo'],['#R-0481','Kwame Asante','Form 2B','GH₵1,200','Term 1','Mar 15','Mr. Kojo'],['#R-0480','Abena Mensah','Form 1C','GH₵2,200','Term 1','Mar 14','Mr. Kojo'],['#R-0479','Akosua Darko','Form 2A','GH₵2,300','Term 1','Mar 13','Mr. Kojo']].map(([r,n,c,a,t,d,ib])=>`
+        ${[['#R-0482','Ama Serwaa','Form 3A','GH₵2,400','Term 1','Mar 15','Mr. Kojo'],['#R-0481','Kwame Asante','Form 2B','GH₵1,200','Term 1','Mar 15','Mr. Kojo'],['#R-0480','Abena Mensah','Form 1C','GH₵2,200','Term 1','Mar 14','Mr. Kojo'],['#R-0479','Akosua Darko','JHS 2','GH₵2,300','Term 1','Mar 13','Mr. Kojo']].map(([r,n,c,a,t,d,ib])=>`
         <tr>
           <td style="color:var(--blue-main);font-weight:700">${r}</td>
           <td>${n}</td><td>${c}</td>
@@ -10756,7 +11067,7 @@ function createNewAssignment() {
   renderMain();
 }
 
-function sendTeacherMessage() {
+function sendChatMessage() {
   const input = document.querySelector('.chat-inp');
   const message = input?.value.trim();
   
