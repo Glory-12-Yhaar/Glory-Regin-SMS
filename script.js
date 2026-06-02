@@ -2,9 +2,46 @@
 // ═══════════════════════════════════
 // STATE & CONFIG
 // ═══════════════════════════════════
-let currentRole='Visitor', currentMod='dashboard', darkMode=false, loginRole='Admin';
+let currentRole='Visitor', currentMod='dashboard', darkMode=false, loginRole='Teacher';
 let navigationHistory = ['dashboard'];  // Track page history for back button
 let miniCalDate = new Date();  // Track mini calendar navigation
+
+// ═══════════════════════════════════
+// DARK MODE INITIALIZATION
+// ═══════════════════════════════════
+function initializeDarkMode(){
+  // Load saved theme preference from localStorage
+  const savedTheme = localStorage.getItem('gloryReginTheme');
+  if(savedTheme){
+    darkMode = savedTheme === 'dark';
+  } else if(SETTINGS_DATA && SETTINGS_DATA.appearance){
+    darkMode = SETTINGS_DATA.appearance.theme === 'Dark';
+  }
+  applyTheme();
+}
+
+function applyTheme(){
+  if(darkMode){
+    document.body.classList.add('dark');
+    document.documentElement.style.colorScheme = 'dark';
+  } else {
+    document.body.classList.remove('dark');
+    document.documentElement.style.colorScheme = 'light';
+  }
+  // Update Settings data
+  if(SETTINGS_DATA && SETTINGS_DATA.appearance){
+    SETTINGS_DATA.appearance.theme = darkMode ? 'Dark' : 'Light';
+    saveSettingsToStorage();
+  }
+  // Update theme selector if it exists
+  const themeSelect = document.getElementById('theme-select');
+  if(themeSelect){
+    themeSelect.value = darkMode ? 'Dark' : 'Light';
+  }
+}
+
+// Initialize dark mode on page load
+window.addEventListener('load', initializeDarkMode);
 
 // ═══════════════════════════════════
 // DATA LAYER - STUDENTS, SUBJECTS, SCORES
@@ -512,6 +549,70 @@ const STAFF_DATA = {
   }
 };
 
+// USER ACCOUNTS DATA
+const USERS_DATA = {
+  'user001': {
+    id: 'user001',
+    name: 'System Admin',
+    username: 'admin',
+    email: 'admin@excellence.edu.gh',
+    role: 'Admin',
+    password: 'admin123', // hashed in production
+    lastLogin: 'Today 8:00 AM',
+    status: 'Active',
+    createdDate: '2024-01-15',
+    avatar: 'SA'
+  },
+  'user002': {
+    id: 'user002',
+    name: 'Mr. Amponsah',
+    username: 'k.amponsah',
+    email: 'k.amponsah@excellence.edu.gh',
+    role: 'Teacher',
+    password: 'teacher123',
+    lastLogin: 'Today 7:30 AM',
+    status: 'Active',
+    createdDate: '2024-02-01',
+    avatar: 'MA'
+  },
+  'user003': {
+    id: 'user003',
+    name: 'Ama Serwaa',
+    username: 'ama.serwaa',
+    email: 'ama@student.edu.gh',
+    role: 'Student',
+    password: 'student123',
+    lastLogin: 'Yesterday',
+    status: 'Active',
+    createdDate: '2024-08-10',
+    avatar: 'AS'
+  },
+  'user004': {
+    id: 'user004',
+    name: 'Mr. Kojo (Acct)',
+    username: 'k.accountant',
+    email: 'accountant@excellence.edu.gh',
+    role: 'Accountant',
+    password: 'acct123',
+    lastLogin: 'Today 9:00 AM',
+    status: 'Active',
+    createdDate: '2024-03-05',
+    avatar: 'KA'
+  },
+  'user005': {
+    id: 'user005',
+    name: 'Mr. Serwaa (Parent)',
+    username: 'serwaa.parent',
+    email: 'parent@email.com',
+    role: 'Parent',
+    password: 'parent123',
+    lastLogin: '2 days ago',
+    status: 'Active',
+    createdDate: '2024-08-15',
+    avatar: 'SP'
+  }
+};
+
 // ═══════════════════════════════════
 // LOGIC LAYER - CALCULATIONS & GRADES
 // ═══════════════════════════════════
@@ -859,6 +960,17 @@ const MENUS={
 
 const AV_INIT={Admin:'AD',Teacher:'TC',Student:'ST',Parent:'PR',Accountant:'AC',Alumni:'AL',Visitor:'VI'};
 
+// Role-specific image mapping
+const ROLE_IMAGES = {
+  'Teacher': 'teacher.jpeg',
+  'Student': 'student.jpeg',
+  'Parent': 'parent.jpeg',
+  'Accountant': 'Accountant.jpeg',
+  'Alumni': 'Alumni.jpeg',
+  'Visitor': null, // No login required for visitor
+  'Admin': 'admin.jpeg'
+};
+
 // ═══════════════════════════════════
 // LOGIN / AUTH
 // ═══════════════════════════════════
@@ -866,7 +978,84 @@ function setRole(el,role){
   document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   loginRole=role;
+  // Show role-specific login page if not visitor
+  if(role !== 'Visitor'){
+    showRoleLoginModal(role);
+  } else {
+    doLogin();
+  }
 }
+
+function showRoleLoginModal(role){
+  const roleImage = ROLE_IMAGES[role];
+  const roleLoginPage = `
+    <div id="role-login-page" class="role-login-page">
+      <button class="role-login-back" onclick="backToRoles()"><i class="fas fa-arrow-left"></i></button>
+      <div class="role-login-wrapper">
+        <div class="role-login-image-section">
+          <div class="role-login-image">
+            <img src="${roleImage}" alt="${role}">
+            <div class="role-login-logo"><img src="Logo.png" alt="Logo"></div>
+          </div>
+        </div>
+        <div class="role-login-form-section">
+          <div class="role-login-form">
+            <h2>${role} Login</h2>
+            <p>Access your ${role.toLowerCase()} dashboard</p>
+            <div class="form-field">
+              <label>Email / Username</label>
+              <input type="text" id="role-email" placeholder="Enter your email or username">
+            </div>
+            <div class="form-field">
+              <label>Password</label>
+              <input type="password" id="role-pass" placeholder="Enter password">
+            </div>
+            <button class="login-btn" onclick="doRoleLogin('${role}')">Sign In to ${role} Dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Remove any existing role login page
+  const existing = document.getElementById('role-login-page');
+  if(existing) existing.remove();
+  
+  // Insert full page login
+  document.body.insertAdjacentHTML('afterbegin', roleLoginPage);
+  document.getElementById('login-page').style.display='none';
+}
+
+function doRoleLogin(role){
+  const email = document.getElementById('role-email')?.value;
+  const pass = document.getElementById('role-pass')?.value;
+  
+  if(!email || !pass){
+    showToast('Please fill in all fields', 'error');
+    return;
+  }
+  
+  loginRole = role;
+  const roleLoginPage = document.getElementById('role-login-page');
+  if(roleLoginPage) roleLoginPage.remove();
+  doLogin();
+}
+
+function backToRoles(){
+  const roleLoginPage = document.getElementById('role-login-page');
+  if(roleLoginPage) {
+    roleLoginPage.style.opacity='0';
+    roleLoginPage.style.transition='opacity 0.3s ease-out';
+    setTimeout(()=>{
+      if(document.getElementById('role-login-page')) roleLoginPage.remove();
+      document.getElementById('login-page').style.display='flex';
+    }, 300);
+  } else {
+    document.getElementById('login-page').style.display='flex';
+  }
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+}
+
 function doLogin(){
   document.getElementById('login-page').style.display='none';
   document.getElementById('app-shell').classList.add('active');
@@ -888,9 +1077,20 @@ function showStaffLoginModal(){
   let loginForm = document.getElementById('login-page').innerHTML;
   openModal(loginForm);
 }
+function adminLogin(){
+  const adminPassword = prompt('Enter Admin Password:');
+  if(adminPassword === '12345'){
+    loginRole = 'Admin';
+    doLogin();
+  } else if(adminPassword !== null) {
+    showToast('<i class="fas fa-times-circle"></i> Incorrect password', 'error');
+  }
+}
 function toggleDark(){
-  darkMode=!darkMode;
-  document.body.classList.toggle('dark',darkMode);
+  darkMode = !darkMode;
+  applyTheme();
+  localStorage.setItem('gloryReginTheme', darkMode ? 'dark' : 'light');
+  showToast(`✓ ${darkMode ? 'Dark' : 'Light'} mode enabled`, 'success');
 }
 
 function showStudentIDCard(){
@@ -908,7 +1108,7 @@ function showStudentIDCard(){
           <div class="idcard-actual-card">
             <div class="idcard-top-section">
               <div class="idcard-logo-section">
-                <i class="fas fa-school"></i>
+                <img src="Logo.png" alt="School Logo" style="width:100%;height:100%;object-fit:contain">
               </div>
               <div class="idcard-school-name">Glory Regin Preparatory School</div>
               <div class="idcard-card-title">STUDENT ID CARD</div>
@@ -1251,7 +1451,7 @@ function renderPublicNavbar(){
   navbar.innerHTML = `
     <div class="public-nav-container">
       <div class="public-brand">
-        <div class="brand-mark"><i class="fas fa-school"></i></div>
+        <div class="brand-mark"><img src="Logo.png" alt="Logo" style="width:100%;height:100%;object-fit:contain"></div>
         <div class="brand-info">
           <div class="brand-name">Glory Regin Preparatory school</div>
           <div class="brand-tag">School Portal</div>
@@ -2169,7 +2369,7 @@ function alumniDash(){
 // ═══════════════════════════════════
 function visitorHome(){
   return `<div class="visitor-hero">
-    <h1><i class="fas fa-school"></i> Glory Regin Preparatory school</h1>
+    <h1>Glory Regin Preparatory school</h1>
     <p>Nurturing minds, building character, and shaping futures since 1985. A premier educational institution in Ghana known for academic excellence and holistic development.</p>
     <div class="hero-btns">
       <button class="hero-btn-gold" onclick="navTo('admission')">Apply for Admission</button>
@@ -5119,12 +5319,25 @@ function attendanceModule(){
   // Check if user is a teacher (only teachers can mark attendance)
   const canMarkAttendance = currentRole === 'Teacher';
   
+  // Calculate attendance stats
+  const attendanceData = [['Creche',28,26,2],['Nursery',32,31,1],['KG 1',35,33,2],['KG 2',36,35,1],['Basic 1',38,36,2],['Basic 2',40,38,2],['Basic 3',42,40,2],['Basic 4',38,35,3],['Basic 5',40,39,1],['Basic 6',36,34,2],['JHS 1',42,40,2],['JHS 2',40,37,3],['JHS 3',39,37,2]];
+  
+  const totalStudents = attendanceData.reduce((sum, [,total]) => sum + total, 0);
+  const presentCount = attendanceData.reduce((sum, [,,present]) => sum + present, 0);
+  const absentCount = attendanceData.reduce((sum, [,,,absent]) => sum + absent, 0);
+  const lateCount = totalStudents - presentCount - absentCount;
+  
+  const presentPercent = ((presentCount / totalStudents) * 100).toFixed(1);
+  const absentPercent = ((absentCount / totalStudents) * 100).toFixed(1);
+  const latePercent = ((lateCount / totalStudents) * 100).toFixed(1);
+  const monthlyAverage = 94.2;
+  
   return hdr('Attendance Module','Daily attendance tracking and management','Attendance')+`
   <div class="stats-row">
-    ${statCard('<i class="fas fa-check-circle"></i>','798','Present Today','94.8%','up','si-green')}
-    ${statCard('<i class="fas fa-times-circle"></i>','37','Absent Today','4.4%','dn','si-red')}
-    ${statCard('<i class="fas fa-clock"></i>','7','Late Today','0.8%','dn','si-gold')}
-    ${statCard('<i class="fas fa-chart-bar"></i>','94.2%','Monthly Average','On track','up','si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>',presentCount,'Present Today',presentPercent+'%','up','si-green')}
+    ${statCard('<i class="fas fa-times-circle"></i>',absentCount,'Absent Today',absentPercent+'%','dn','si-red')}
+    ${statCard('<i class="fas fa-clock"></i>',lateCount,'Late Today',latePercent+'%','dn','si-gold')}
+    ${statCard('<i class="fas fa-chart-bar"></i>',monthlyAverage+'%','Monthly Average','On track','up','si-blue')}
   </div>
   <div class="g2">
     <div class="card">
@@ -5155,21 +5368,6 @@ function attendanceModule(){
           </tbody>
         </table>
       `}
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Attendance by Class — Today</span><button class="btn btn-primary btn-sm" onclick="generateAttendanceReport()"><i class="fas fa-file"></i> Generate Report</button></div>
-      ${[['Creche',28,26,2],['Nursery',32,31,1],['KG 1',35,33,2],['KG 2',36,35,1],['Basic 1',38,36,2],['Basic 2',40,38,2],['Basic 3',42,40,2],['Basic 4',38,35,3],['Basic 5',40,39,1],['Basic 6',36,34,2],['JHS 1',42,40,2],['JHS 2',40,37,3],['JHS 3',39,37,2]].map(([c,t,p,a])=>`
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-          <span style="font-weight:600">${c}</span>
-          <span>${p}/${t} present · <span style="color:var(--danger)">${a} absent</span></span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill pf-green" style="width:${Math.round(p/t*100)}%"></div></div>
-      </div>`).join('')}
-      <div style="margin-top:16px;padding:12px;background:var(--blue-xpale);border-radius:var(--radius)">
-        <div style="font-size:12px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">Daily Summary</div>
-        <div style="font-size:11px;color:var(--blue-main)">Total: 842 students · Present: 798 · Absent: 37 · Late: 7</div>
-      </div>
     </div>
   </div>`;
 }
@@ -5864,7 +6062,7 @@ function generateReportCard(studentId) {
     <div class="rc-wrap">
       <!-- HEADER -->
       <div class="rc-header" style="text-align:center;border-bottom:3px solid var(--blue-main);padding-bottom:20px;margin-bottom:30px">
-        <div style="font-size:48px;margin-bottom:8px"><i class="fas fa-school"></i></div>
+        <div style="font-size:48px;margin-bottom:8px;display:flex;align-items:center;justify-content:center"><img src="Logo.png" alt="Logo" style="width:50px;height:50px;object-fit:contain"></div>
         <h1 style="font-size:28px;font-weight:800;color:var(--blue-dark);margin:0 0 8px 0">Glory Regin Preparatory school</h1>
         <p style="color:var(--gray-500);margin:0 0 4px 0">Nurturing Excellence Since 1985</p>
         <p style="color:var(--gray-400);margin:0;font-size:12px">P.O. Box AN 1234, Main School Street, Accra North</p>
@@ -6069,8 +6267,15 @@ function reportCardsModule(){
 function assignmentsModule(){
   const isTeacher = currentRole === 'Teacher';
   const isAdmin = currentRole === 'Admin';
+  const isStudent = currentRole === 'Student';
+  const studentClass = 'JHS 1'; // Student's class
   
   let assignmentsList = Object.values(ASSIGNMENTS_DATA);
+  
+  // Filter assignments for students - only show assignments for their class
+  if(isStudent) {
+    assignmentsList = assignmentsList.filter(assignment => assignment.class === studentClass);
+  }
   
   const submitCount = (assignment) => Object.keys(assignment.submissions).length;
   const totalStudents = 38; // Average class size
@@ -6080,12 +6285,15 @@ function assignmentsModule(){
   let html = hdr('Assignments Module','Create and manage class assignments','Assignments')+`
   <div class="g21">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> All Assignments</span>${createButtonHTML}</div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> ${isStudent ? 'My Assignments' : 'All Assignments'}</span>${createButtonHTML}</div>
       <table class="tbl">
-        <thead><tr><th>Title</th><th>Subject</th><th>Class</th><th>Due Date</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Title</th><th>Subject</th>${!isStudent ? '<th>Class</th>' : ''}<th>Due Date</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>`;
   
-  assignmentsList.forEach(assignment => {
+  if(assignmentsList.length === 0) {
+    html += `<tr><td colspan="${!isStudent ? '7' : '6'}" style="text-align:center;padding:20px;color:var(--gray-600)"><i class="fas fa-inbox"></i> No assignments available</td></tr>`;
+  } else {
+    assignmentsList.forEach(assignment => {
     const submittedCount = submitCount(assignment);
     const dueDate = new Date(assignment.dueDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
     const statusBadge = assignment.status === 'Active' ? 'b-success' : 'b-info';
@@ -6094,7 +6302,7 @@ function assignmentsModule(){
       <tr>
         <td style="font-weight:600">${assignment.title}</td>
         <td>${assignment.subject}</td>
-        <td>${assignment.class}</td>
+        ${!isStudent ? `<td>${assignment.class}</td>` : ''}
         <td style="color:var(--blue-main);font-weight:600">${dueDate}</td>
         <td>${submittedCount}/${totalStudents}</td>
         <td><span class="badge ${statusBadge}">${assignment.status}</span></td>
@@ -6103,7 +6311,8 @@ function assignmentsModule(){
           ${isTeacher ? `<button class="btn btn-primary btn-xs" onclick="gradeAssignment('${assignment.id}')">Grade</button>` : ''}
         </div></td>
       </tr>`;
-  });
+    });
+  }
   
   html += `</tbody></table></div>`;
   
@@ -6189,63 +6398,52 @@ function viewAssignment(assignmentId) {
     return;
   }
   
-  const submittedCount = Object.keys(assignment.submissions).length;
-  const totalCount = 38;
-  const submissionList = Object.entries(assignment.submissions).map(([student, data]) => `
-    <div style="padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:8px;border-left:4px solid ${data.score >= assignment.maxScore * 0.8 ? 'var(--success)' : data.score >= assignment.maxScore * 0.6 ? 'var(--warning)' : 'var(--danger)'}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <strong style="color:var(--gray-800)">${student}</strong>
-        <span style="padding:4px 10px;background:${data.score >= assignment.maxScore * 0.8 ? 'var(--success)' : data.score >= assignment.maxScore * 0.6 ? 'var(--warning)' : 'var(--danger)'};color:white;border-radius:4px;font-weight:700;font-size:11px">${data.score}/${assignment.maxScore}</span>
+  const html = `
+    <div style="background:var(--blue-main);color:white;padding:40px 20px;margin-bottom:30px;border-radius:8px">
+      <div style="max-width:1200px;margin:0 auto">
+        <h1 style="margin:0 0 12px 0;font-size:32px">${assignment.title}</h1>
+        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} • ${assignment.class}</p>
       </div>
-      <div style="font-size:12px;color:var(--gray-600);margin-bottom:4px"><i class="fas fa-upload"></i> Submitted: ${new Date(data.submitted).toLocaleDateString()}</div>
-      <div style="font-size:11px;color:var(--gray-700);padding:8px;background:white;border-radius:4px">${data.feedback || 'No feedback yet'}</div>
     </div>
-  `).join('');
-  
-  const notSubmittedList = submittedCount < totalCount ? `<div style="padding:12px;background:var(--gray-50);border-radius:6px;color:var(--gray-600);font-size:12px"><i class="fas fa-file-alt"></i> ${totalCount - submittedCount} students have not yet submitted.</div>` : '';
-  
-  const modalHTML = `
-    <div style="max-width:800px;background:white;border-radius:12px;overflow:hidden">
-      <div style="padding:24px;background:var(--blue-main);color:white">
-        <h2 style="margin:0 0 4px 0">${assignment.title}</h2>
-        <p style="margin:4px 0;font-size:13px;opacity:0.9">${assignment.subject} • ${assignment.class}</p>
-      </div>
-      
-      <div style="padding:24px">
-        <div style="margin-bottom:20px;padding:16px;background:var(--blue-xpale);border-radius:8px;border-left:4px solid var(--blue-main)">
-          <h4 style="margin:0 0 10px 0;color:var(--blue-dark);font-size:13px;font-weight:700"><i class="fas fa-clipboard-list"></i> Assignment Details</h4>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
-            <div><span style="color:var(--gray-600)">Due Date:</span> <strong>${new Date(assignment.dueDate).toLocaleDateString()}</strong></div>
-            <div><span style="color:var(--gray-600)">Max Score:</span> <strong>${assignment.maxScore}</strong></div>
-            <div><span style="color:var(--gray-600)">Created:</span> <strong>${new Date(assignment.createdDate).toLocaleDateString()}</strong></div>
-            <div><span style="color:var(--gray-600)">Status:</span> <span style="padding:2px 8px;background:${assignment.status === 'Active' ? 'var(--success)' : 'var(--info)'};color:white;border-radius:4px;font-weight:700;font-size:10px">${assignment.status}</span></div>
+    
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="margin-bottom:30px;padding:24px;background:var(--blue-xpale);border-radius:8px;border-left:4px solid var(--blue-main)">
+        <h3 style="margin:0 0 16px 0;color:var(--blue-dark);font-size:16px;font-weight:700"><i class="fas fa-clipboard-list"></i> Assignment Details</h3>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;font-size:14px">
+          <div>
+            <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Due Date</span>
+            <div style="margin-top:6px;font-weight:600;font-size:16px">${new Date(assignment.dueDate).toLocaleDateString()}</div>
           </div>
-        </div>
-        
-        <div style="margin-bottom:20px;padding:16px;background:var(--gray-50);border-radius:8px">
-          <h4 style="margin:0 0 10px 0;color:var(--gray-800);font-size:13px;font-weight:700"><i class="fas fa-file-alt"></i> Instructions</h4>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:var(--gray-700)">${assignment.instructions}</p>
-          ${assignment.attachment ? `<div style="margin-top:10px;padding:10px;background:white;border-radius:6px;border-left:3px solid var(--blue-main);font-size:11px"><strong><i class="fas fa-paperclip"></i> Attachment:</strong> ${assignment.attachment}</div>` : ''}
-        </div>
-        
-        <div style="margin-bottom:20px">
-          <h4 style="margin:0 0 15px 0;color:var(--gray-800);font-size:13px;font-weight:700"><i class="fas fa-upload"></i> Submissions (${submittedCount}/${totalCount})</h4>
-          <div style="width:100%;height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:12px">
-            <div style="width:${Math.round(submittedCount/totalCount*100)}%;height:100%;background:var(--success)"></div>
+          <div>
+            <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Max Score</span>
+            <div style="margin-top:6px;font-weight:600;font-size:16px">${assignment.maxScore}</div>
           </div>
-          ${submissionList}
-          ${notSubmittedList}
+          <div>
+            <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Created</span>
+            <div style="margin-top:6px;font-weight:600;font-size:16px">${new Date(assignment.createdDate).toLocaleDateString()}</div>
+          </div>
+          <div>
+            <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Status</span>
+            <div style="margin-top:6px"><span style="padding:6px 12px;background:${assignment.status === 'Active' ? 'var(--success)' : 'var(--info)'};color:white;border-radius:4px;font-weight:700;font-size:12px">${assignment.status}</span></div>
+          </div>
         </div>
       </div>
       
-      <div style="padding:20px;background:var(--gray-50);border-top:1px solid var(--gray-200);text-align:right">
-        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-        ${currentRole === 'Teacher' ? `<button class="btn btn-primary" style="margin-left:8px" onclick="closeModal();gradeAssignment('${assignmentId}')">Grade Submissions</button>` : ''}
+      <div style="margin-bottom:30px;padding:24px;background:white;border-radius:8px;border:1px solid var(--gray-200)">
+        <h3 style="margin:0 0 16px 0;color:var(--gray-800);font-size:16px;font-weight:700"><i class="fas fa-file-alt"></i> Instructions</h3>
+        <p style="margin:0 0 16px 0;font-size:14px;line-height:1.8;color:var(--gray-700)">${assignment.instructions}</p>
+        ${assignment.attachment ? `<div style="padding:12px;background:var(--gray-50);border-radius:6px;border-left:4px solid var(--blue-main);font-size:13px"><strong><i class="fas fa-paperclip"></i> Attachment:</strong> ${assignment.attachment}</div>` : ''}
+      </div>
+      
+      <div style="display:flex;gap:12px;margin-bottom:30px">
+        <button class="btn btn-secondary" onclick="currentMod='assignments';renderMain()"><i class="fas fa-arrow-left"></i> Back to Assignments</button>
+        ${currentRole === 'Teacher' ? `<button class="btn btn-primary" onclick="gradeAssignment('${assignmentId}')"><i class="fas fa-pen-fancy"></i> Grade Submissions</button>` : ''}
       </div>
     </div>
   `;
   
-  openModal(modalHTML);
+  document.getElementById('main-content').innerHTML = html;
+  document.getElementById('main-content').scrollTop = 0;
 }
 
 function gradeAssignment(assignmentId) {
@@ -6714,7 +6912,7 @@ function eventsModule(){
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span>${currentRole==='Visitor'?'':`<button class="btn btn-primary btn-sm" onclick="alert('Opening event creation form...')">+ Add Event</button>`}</div>
-      ${[['<i class="fas fa-running"></i>','Sports Day','March 24, 2025','All Students & Staff','Full-day sports competition. Students must wear house colors. Attendance compulsory. Parents welcome.','All Day','success'],['<i class="fas fa-users"></i>','PTA Meeting','March 20, 2025','Parents & Teachers','End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.','3:00 PM','info'],['<i class="fas fa-file-alt"></i>','Term 1 Exams Begin','April 1, 2025','Form 1–3','Final examinations for Term 1. Detailed timetable available on the portal.','7:30 AM','warning'],['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','April 15, 2025','All','Annual prize-giving and graduation ceremony. Smart attire required for all.','10:00 AM','success'],['<i class="fas fa-school"></i>','Open Day','April 20, 2025','Prospective Parents','School open day for prospective students and parents. Tours from 9AM.','9:00 AM','info']].map(([i,t,d,aud,desc,time,type])=>`
+      ${[['<i class="fas fa-running"></i>','Sports Day','March 24, 2025','All Students & Staff','Full-day sports competition. Students must wear house colors. Attendance compulsory. Parents welcome.','All Day','success'],['<i class="fas fa-users"></i>','PTA Meeting','March 20, 2025','Parents & Teachers','End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.','3:00 PM','info'],['<i class="fas fa-file-alt"></i>','Term 1 Exams Begin','April 1, 2025','Form 1–3','Final examinations for Term 1. Detailed timetable available on the portal.','7:30 AM','warning'],['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','April 15, 2025','All','Annual prize-giving and graduation ceremony. Smart attire required for all.','10:00 AM','success'],['<img src="Logo.png" alt="Logo" style="width:24px;height:24px;object-fit:contain">','Open Day','April 20, 2025','Prospective Parents','School open day for prospective students and parents. Tours from 9AM.','9:00 AM','info']].map(([i,t,d,aud,desc,time,type])=>`
       <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--gray-100)">
         <div style="width:54px;background:var(--blue-xpale);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;padding:8px">${i}</div>
         <div style="flex:1">
@@ -7817,7 +8015,7 @@ function generateReportPDF(reportType){
   html += '.footer{margin-top:30px;text-align:center;color:#999;font-size:11px;border-top:1px solid #ddd;padding-top:15px}';
   html += '@media print{body{margin:0;background:#fff}}';
   html += '</style></head><body>';
-  html += '<div class="header"><h1><i class="fas fa-school" style="color:#1a56db"></i> Glory Regin Preparatory School</h1><p>' + reportType + ' Report</p><p>Generated: ' + new Date().toLocaleString() + '</p></div>';
+  html += '<div class="header"><h1><img src="Logo.png" alt="Logo" style="width:30px;height:30px;object-fit:contain;margin-right:8px;display:inline-block;color:#1a56db"> Glory Regin Preparatory School</h1><p>' + reportType + ' Report</p><p>Generated: ' + new Date().toLocaleString() + '</p></div>';
   html += '<div class="content">';
   
   if(reportType === 'Academic'){
@@ -7896,12 +8094,12 @@ const SETTINGS_DATA = {
     schoolName: 'Glory Regin Preparatory School',
     schoolCode: 'SCH-0024',
     schoolMotto: 'Excellence, Integrity & Service',
-    schoolLogo: null,
-    region: 'Greater Accra',
-    district: 'Accra Metropolitan',
-    phone: '+233 302 000 000',
+    schoolLogo: 'Logo.png',
+    region: 'Upper West',
+    district: 'Jirapa',
+    phone: '0243611971 / 0205096091',
     email: 'info@excellence.edu.gh',
-    address: 'P.O. Box AN 1234, Main School Street, Accra North, Greater Accra Region, Ghana',
+    address: 'P.O. Box 42, Jirapa, Upper West Region, Ghana',
     website: 'www.excellence.edu.gh'
   },
   academic: {
@@ -7936,6 +8134,31 @@ const SETTINGS_DATA = {
   }
 };
 
+// SETTINGS PERSISTENCE - Save/Load from localStorage
+function saveSettingsToStorage(){
+  try {
+    localStorage.setItem('gloryReginSettings', JSON.stringify(SETTINGS_DATA));
+  } catch(e) {
+    console.log('Could not save settings to storage:', e);
+  }
+}
+
+function loadSettingsFromStorage(){
+  try {
+    const saved = localStorage.getItem('gloryReginSettings');
+    if(saved) {
+      const savedData = JSON.parse(saved);
+      // Merge saved data with SETTINGS_DATA
+      Object.assign(SETTINGS_DATA, savedData);
+    }
+  } catch(e) {
+    console.log('Could not load settings from storage:', e);
+  }
+}
+
+// Load settings on initialization
+loadSettingsFromStorage();
+
 function settingsModule(){
   return hdr('System Settings','Configure school information and system preferences','Settings')+`
   <div class="mod-tabs" id="settings-tabs">
@@ -7946,7 +8169,7 @@ function settingsModule(){
   <div class="settings-tab-content active" data-tab="0">
     <div class="g2">
       <div class="card">
-        <div class="card-hdr"><span class="card-title"><i class="fas fa-school"></i> School Logo & Motto</span></div>
+        <div class="card-hdr"><span class="card-title"><img src="Logo.png" alt="Logo" style="width:24px;height:24px;object-fit:contain;margin-right:8px;display:inline-block"> School Logo & Motto</span></div>
         <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;padding-bottom:20px;border-bottom:1.5px solid var(--gray-200);margin-bottom:20px">
           <div class="school-logo-container" id="school-logo-display" style="width:120px;height:120px;background:var(--gray-100);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden">
             <div style="text-align:center">
@@ -7966,7 +8189,7 @@ function settingsModule(){
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> School Information</span></div>
         <div class="f-row"><div class="f-field"><label>School Name</label><input id="school-name" value="${SETTINGS_DATA.schoolInfo.schoolName}"></div><div class="f-field"><label>School Code</label><input id="school-code" value="${SETTINGS_DATA.schoolInfo.schoolCode}" readonly></div></div>
-        <div class="f-row"><div class="f-field"><label>Region</label><select id="school-region"><option>Greater Accra</option><option>Ashanti</option><option>Western</option><option>Northern</option></select></div><div class="f-field"><label>District</label><input id="school-district" value="${SETTINGS_DATA.schoolInfo.district}"></div></div>
+        <div class="f-row"><div class="f-field"><label>Region</label><select id="school-region">${['Greater Accra','Ashanti','Western','Northern','Upper West','Upper East','Volta','Eastern','Central','Oti','Savannah','North East'].map(r=>`<option ${r===SETTINGS_DATA.schoolInfo.region?'selected':''}>${r}</option>`).join('')}</select></div><div class="f-field"><label>District</label><input id="school-district" value="${SETTINGS_DATA.schoolInfo.district}"></div></div>
         <div class="f-row"><div class="f-field"><label>Phone Number</label><input id="school-phone" value="${SETTINGS_DATA.schoolInfo.phone}"></div><div class="f-field"><label>Email Address</label><input id="school-email" value="${SETTINGS_DATA.schoolInfo.email}"></div></div>
         <div class="f-field" style="margin-bottom:14px"><label>Physical Address</label><textarea id="school-address" style="min-height:60px">${SETTINGS_DATA.schoolInfo.address}</textarea></div>
         <div class="f-field" style="margin-bottom:14px"><label>School Website</label><input id="school-website" value="${SETTINGS_DATA.schoolInfo.website}"></div>
@@ -8166,6 +8389,7 @@ function previewSchoolLogo(){
 
 function saveSchoolBrand(){
   SETTINGS_DATA.schoolInfo.schoolMotto = document.getElementById('school-motto').value;
+  saveSettingsToStorage();
   showToast('✓ School logo and motto saved successfully!', 'success');
 }
 
@@ -8191,11 +8415,13 @@ function saveSchoolInfo(){
     address: document.getElementById('school-address').value,
     website: document.getElementById('school-website').value
   };
+  saveSettingsToStorage();
   showToast('✓ School information saved successfully!', 'success');
 }
 
 function resetSchoolForm(){
   document.getElementById('school-name').value = SETTINGS_DATA.schoolInfo.schoolName;
+  document.getElementById('school-region').value = SETTINGS_DATA.schoolInfo.region;
   document.getElementById('school-district').value = SETTINGS_DATA.schoolInfo.district;
   document.getElementById('school-phone').value = SETTINGS_DATA.schoolInfo.phone;
   document.getElementById('school-email').value = SETTINGS_DATA.schoolInfo.email;
@@ -8211,6 +8437,7 @@ function saveAcademicCalendar(){
     termStartDate: document.getElementById('term-start-date').value,
     termEndDate: document.getElementById('term-end-date').value
   };
+  saveSettingsToStorage();
   showToast('✓ Academic calendar updated successfully!', 'success');
 }
 
@@ -8229,6 +8456,7 @@ function saveSystemSettings(){
     maxUploadSize: document.getElementById('max-upload').value,
     language: document.getElementById('system-language').value
   };
+  saveSettingsToStorage();
   showToast('✓ System settings saved successfully!', 'success');
 }
 
@@ -8247,6 +8475,7 @@ function saveSecuritySettings(){
     twoFactorAuth: document.getElementById('two-factor').value === 'true',
     apiKeyRotation: document.getElementById('api-rotation').value
   };
+  saveSettingsToStorage();
   showToast('✓ Security settings saved successfully!', 'success');
 }
 
@@ -8259,13 +8488,19 @@ function resetSecurityForm(){
 }
 
 function saveAppearanceSettings(){
+  const selectedTheme = document.getElementById('theme-select').value;
   SETTINGS_DATA.appearance = {
-    theme: document.getElementById('theme-select').value,
+    theme: selectedTheme,
     accentColor: document.getElementById('accent-color').value,
     fontSize: document.getElementById('font-size').value,
     compactMode: document.getElementById('compact-mode').value === 'true'
   };
-  showToast('✓ Appearance settings saved! Refresh page to apply theme changes.', 'success');
+  // Apply theme immediately if it changed
+  darkMode = selectedTheme === 'Dark';
+  applyTheme();
+  localStorage.setItem('gloryReginTheme', darkMode ? 'dark' : 'light');
+  saveSettingsToStorage();
+  showToast('✓ Appearance settings saved successfully!', 'success');
 }
 
 function resetAppearanceForm(){
@@ -8283,6 +8518,7 @@ function saveNotificationSettings(){
     pushNotifications: document.getElementById('push-notif').checked,
     dailyDigest: document.getElementById('daily-digest').checked
   };
+  saveSettingsToStorage();
   showToast('✓ Notification preferences saved successfully!', 'success');
 }
 
@@ -8333,30 +8569,215 @@ function rolesModule(){
 
 // USERS MODULE
 function usersModule(){
+  let filteredUsers = Object.values(USERS_DATA);
+  const searchTerm = document.getElementById('user-search')?.value?.toLowerCase() || '';
+  const roleFilter = document.getElementById('user-role-filter')?.value || 'All Roles';
+  
+  if(searchTerm){
+    filteredUsers = filteredUsers.filter(u => 
+      u.name.toLowerCase().includes(searchTerm) || 
+      u.username.toLowerCase().includes(searchTerm) || 
+      u.email.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  if(roleFilter !== 'All Roles'){
+    filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
+  }
+  
+  const roleColors = {Admin:'danger',Teacher:'info',Student:'success',Accountant:'warning',Parent:'purple',Alumni:'teal',Visitor:'gray'};
+  
   return hdr('User Accounts','Manage all system user accounts','User Accounts')+`
-  <div class="toolbar">
-    <button class="btn btn-primary" onclick="alert('Opening user account creation form...')">+ Create Account</button>
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input placeholder="Search users..."></div>
-    <select class="select-sm"><option>All Roles</option><option>Admin</option><option>Teacher</option><option>Student</option></select>
+  <div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+    <button class="btn btn-primary" onclick="toggleUserForm()"><i class="fas fa-plus"></i> Create Account</button>
+    <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="user-search" placeholder="Search by name, username, or email..." onkeyup="filterUsers()"></div>
+    <select id="user-role-filter" class="select-sm" onchange="filterUsers()">
+      <option>All Roles</option>
+      <option>Admin</option>
+      <option>Teacher</option>
+      <option>Student</option>
+      <option>Accountant</option>
+      <option>Parent</option>
+      <option>Alumni</option>
+      <option>Visitor</option>
+    </select>
   </div>
+  
+  <!-- CREATE/EDIT USER FORM -->
+  <div id="user-form-wrap" style="display:none;margin-bottom:20px">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-user-plus"></i> <span id="form-title">Create New User Account</span></span><button class="btn btn-secondary btn-xs" onclick="toggleUserForm()">Cancel</button></div>
+      <div style="padding:20px">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="user-name" placeholder="e.g., John Doe" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+        </div>
+        <div class="g2" style="gap:15px">
+          <div class="form-group">
+            <label>Username *</label>
+            <input type="text" id="user-username" placeholder="e.g., john.doe" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="user-email" placeholder="e.g., john@school.edu.gh" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+          </div>
+        </div>
+        <div class="g2" style="gap:15px">
+          <div class="form-group">
+            <label>Role *</label>
+            <select id="user-role" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+              <option>Admin</option>
+              <option>Teacher</option>
+              <option>Student</option>
+              <option>Accountant</option>
+              <option>Parent</option>
+              <option>Alumni</option>
+              <option>Visitor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Password *</label>
+            <input type="password" id="user-password" placeholder="Enter password" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:15px">
+          <button class="btn btn-primary" onclick="saveUser()" id="save-user-btn">Create Account</button>
+          <button class="btn btn-secondary" onclick="toggleUserForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <div class="card">
     <table class="tbl">
       <thead><tr><th>#</th><th>User</th><th>Username</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
-        ${[['System Admin','admin','admin@excellence.edu.gh','Admin','Today 8:00 AM','Active','blue'],['Mr. Amponsah','k.amponsah','k.amponsah@excellence.edu.gh','Teacher','Today 7:30 AM','Active','green'],['Ama Serwaa','ama.serwaa','ama@student.edu.gh','Student','Yesterday','Active','purple'],['Mr. Kojo (Acct)','k.accountant','accountant@excellence.edu.gh','Accountant','Today 9:00 AM','Active','gold'],['Mr. Serwaa (Parent)','serwaa.parent','parent@email.com','Parent','2 days ago','Active','teal']].map(([n,un,em,r,ll,s,av],i)=>`
+        ${filteredUsers.length > 0 ? filteredUsers.map((u,i)=>`
         <tr>
           <td style="color:var(--gray-400)">${i+1}</td>
-          <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${av}">${n[0]}</div>${n}</div></td>
-          <td style="color:var(--blue-main)">@${un}</td>
-          <td style="font-size:11px">${em}</td>
-          <td><span class="badge b-info">${r}</span></td>
-          <td style="font-size:11px;color:var(--gray-400)">${ll}</td>
-          <td><span class="badge b-success">${s}</span></td>
-          <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert('Editing user')">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteRecord('', 'User')">Disable</button></div></td>
-        </tr>`).join('')}
+          <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${u.role.toLowerCase()}">${u.avatar}</div><strong>${u.name}</strong></div></td>
+          <td style="color:var(--blue-main)">@${u.username}</td>
+          <td style="font-size:11px;color:var(--gray-600)">${u.email}</td>
+          <td><span class="badge b-${roleColors[u.role]}">${u.role}</span></td>
+          <td style="font-size:11px;color:var(--gray-400)">${u.lastLogin}</td>
+          <td><span class="badge b-${u.status === 'Active' ? 'success' : 'danger'}">${u.status}</span></td>
+          <td><div style="display:flex;gap:4px">
+            <button class="btn btn-secondary btn-xs" onclick="editUser('${u.id}')">Edit</button>
+            <button class="btn btn-${u.status === 'Active' ? 'danger' : 'warning'} btn-xs" onclick="toggleUserStatus('${u.id}','${u.status}')">${u.status === 'Active' ? 'Disable' : 'Enable'}</button>
+          </div></td>
+        </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:20px">No users found</td></tr>'}
       </tbody>
     </table>
   </div>`;
+}
+
+// USER MANAGEMENT FUNCTIONS
+function toggleUserForm(){
+  const form = document.getElementById('user-form-wrap');
+  if(form.style.display === 'none'){
+    document.getElementById('user-name').value = '';
+    document.getElementById('user-username').value = '';
+    document.getElementById('user-email').value = '';
+    document.getElementById('user-role').value = 'Teacher';
+    document.getElementById('user-password').value = '';
+    document.getElementById('save-user-btn').textContent = 'Create Account';
+    document.getElementById('form-title').textContent = 'Create New User Account';
+    document.getElementById('user-name').focus();
+  }
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function filterUsers(){
+  currentMod = 'users';
+  renderMain();
+}
+
+function saveUser(){
+  const name = document.getElementById('user-name').value.trim();
+  const username = document.getElementById('user-username').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const role = document.getElementById('user-role').value;
+  const password = document.getElementById('user-password').value;
+  
+  if(!name || !username || !email || !password){
+    showToast('Please fill in all required fields', 'warning');
+    return;
+  }
+  
+  if(email.indexOf('@') === -1){
+    showToast('Please enter a valid email address', 'warning');
+    return;
+  }
+  
+  // Check if username already exists (for new users)
+  const saveBtn = document.getElementById('save-user-btn');
+  const isEdit = saveBtn.textContent === 'Update Account';
+  
+  if(!isEdit && Object.values(USERS_DATA).some(u => u.username === username)){
+    showToast('Username already exists', 'warning');
+    return;
+  }
+  
+  if(isEdit){
+    // Update existing user
+    const userId = document.getElementById('user-form-wrap').dataset.userId;
+    USERS_DATA[userId] = {
+      ...USERS_DATA[userId],
+      name,
+      username,
+      email,
+      role,
+      password
+    };
+    showToast('✓ User account updated successfully!', 'success');
+  } else {
+    // Create new user
+    const newId = 'user' + (Object.keys(USERS_DATA).length + 1).toString().padStart(3, '0');
+    USERS_DATA[newId] = {
+      id: newId,
+      name,
+      username,
+      email,
+      role,
+      password,
+      lastLogin: 'Never',
+      status: 'Active',
+      createdDate: new Date().toISOString().split('T')[0],
+      avatar: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    };
+    showToast('✓ User account created successfully!', 'success');
+  }
+  
+  toggleUserForm();
+  currentMod = 'users';
+  renderMain();
+}
+
+function editUser(userId){
+  const user = USERS_DATA[userId];
+  if(!user) return;
+  
+  document.getElementById('user-name').value = user.name;
+  document.getElementById('user-username').value = user.username;
+  document.getElementById('user-email').value = user.email;
+  document.getElementById('user-role').value = user.role;
+  document.getElementById('user-password').value = user.password;
+  document.getElementById('save-user-btn').textContent = 'Update Account';
+  document.getElementById('form-title').textContent = 'Edit User Account';
+  document.getElementById('user-form-wrap').dataset.userId = userId;
+  document.getElementById('user-form-wrap').style.display = 'block';
+  document.getElementById('user-name').focus();
+}
+
+function toggleUserStatus(userId, currentStatus){
+  if(!userId || !USERS_DATA[userId]) return;
+  
+  USERS_DATA[userId].status = currentStatus === 'Active' ? 'Disabled' : 'Active';
+  const newStatus = USERS_DATA[userId].status;
+  
+  showToast(`✓ User ${newStatus === 'Active' ? 'enabled' : 'disabled'} successfully!`, 'success');
+  currentMod = 'users';
+  renderMain();
 }
 
 // STAFF MODULE
@@ -9785,7 +10206,7 @@ const EVENTS_DATA = [
   { id: 2, title: '<i class="fas fa-users"></i> PTA Meeting', date: '2026-03-20', time: '15:00', allDay: false, audience: 'Parents & Teachers', description: 'End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.' },
   { id: 3, title: '<i class="fas fa-file-alt"></i> Term 1 Exams Begin', date: '2026-04-01', time: '07:30', allDay: false, audience: 'Basic 4–6, JHS 1–3', description: 'Final examinations for Term 1. Detailed timetable available on the portal.' },
   { id: 4, title: '<i class="fas fa-graduation-cap"></i> Prize Giving Ceremony', date: '2026-04-15', time: '10:00', allDay: false, audience: 'All', description: 'Annual prize-giving and graduation ceremony. Smart attire required for all.' },
-  { id: 5, title: '<i class="fas fa-school"></i> Open Day', date: '2026-04-20', time: '09:00', allDay: false, audience: 'Prospective Parents', description: 'School open day for prospective students and parents. Tours from 9AM.' }
+  { id: 5, title: '<img src="Logo.png" alt="Logo" style="width:16px;height:16px;object-fit:contain"> Open Day', date: '2026-04-20', time: '09:00', allDay: false, audience: 'Prospective Parents', description: 'School open day for prospective students and parents. Tours from 9AM.' }
 ];
 
 // EVENTS MODULE
@@ -10408,7 +10829,9 @@ function visitorAbout(){
     <p>Established in 1985, nurturing leaders for over 40 years</p>
   </div>
   <div class="g3 mb24">
-    ${[['<i class="fas fa-target"></i>','Our Mission','To provide holistic, quality education that develops critical thinking, character and lifelong learning in every student.'],['<i class="fas fa-eye"></i>','Our Vision','To be the leading secondary school in Ghana, producing graduates who are globally competitive and community-driven.'],['<i class="fas fa-gem"></i>','Our Values','Excellence, Integrity, Innovation, Teamwork, Service and Respect for diversity and human dignity.']].map(([i,t,d])=>`
+    ${[['<i class="fas fa-compass"></i>','Our Mission','To provide a Gracious, Caring, Disciplined and serene Environment that will help build up the Ghanaian Child to Excel academically, Morally, Spiritually and Socially.'],
+      ['<i class="fas fa-eye"></i>','Our Vision','To be an exceptional educational facility that will provide a strong and excellent foundation for the Ghanaian child to become a great future leader.'],
+      ['<i class="fas fa-gem"></i>','Our Values','Excellence, Integrity, Innovation, Teamwork, Service and Respect for diversity and human dignity.']].map(([i,t,d])=>`
     <div class="card" style="text-align:center">
       <div style="font-size:40px;margin-bottom:14px">${i}</div>
       <h3 style="font-size:15px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${t}</h3>
@@ -10442,7 +10865,6 @@ function visitorAdmission(){
       <div class="f-row"><div class="f-field"><label>Date of Birth</label><input type="date"></div><div class="f-field"><label>Gender</label><select><option>Female</option><option>Male</option></select></div></div>
       <div class="f-row"><div class="f-field"><label>Parent/Guardian Name</label><input placeholder="Full name"></div><div class="f-field"><label>Contact Number</label><input placeholder="+233..."></div></div>
       <div class="f-field" style="margin-bottom:12px"><label>Email Address</label><input placeholder="email@example.com"></div>
-      <div class="f-field" style="margin-bottom:14px"><label>BECE Aggregate Score</label><input type="number" placeholder="e.g. 12"></div>
       <button class="btn btn-primary" style="width:100%">Submit Application</button>
     </div>
   </div>`;
@@ -10517,7 +10939,7 @@ let contactMessages = [];
 let newsArticles = [
   {id:1,icon:'<i class="fas fa-trophy"></i>',title:'Students Win National Science Competition',date:'Mar 15, 2025',desc:'Our students achieved outstanding results at the national competition.',content:'Our brilliant students from Forms 2 and 3 participated in the National Science Competition held in Accra last week. They demonstrated exceptional knowledge and critical thinking skills, winning three awards across different categories. Congratulations to the Science Department and all participating students!',category:'Student Achievement',status:'Published'},
   {id:2,icon:'<i class="fas fa-book"></i>',title:'New Library Wing Inaugurated',date:'Mar 10, 2025',desc:'State-of-the-art library facility now open to all students.',content:'Our brand new library wing, featuring over 5,000 new volumes and modern study spaces, was officially inaugurated by the Minister of Education. The facility includes computer labs, reading rooms, and a digital archive. Students now have access to one of the most comprehensive library systems in the region.',category:'Infrastructure',status:'Published'},
-  {id:3,icon:'<i class="fas fa-graduation-cap"></i>',title:'Top WASSCE Results 2024',date:'Feb 28, 2025',desc:'Excellence Academy secures best results in the region.',content:'We are proud to announce that our students achieved the highest WASSCE pass rate in the region for 2024. With a 98% pass rate and over 60 distinctions, our students have set a new benchmark for academic excellence. Special recognition goes to the teaching staff and parents for their unwavering support.',category:'Academic',status:'Published'},
+  {id:3,icon:'<i class="fas fa-graduation-cap"></i>',title:'Top BECE Results 2024',date:'Feb 28, 2025',desc:'Excellence Academy secures best results in the region.',content:'We are proud to announce that our students achieved the highest BECE pass rate in the region for 2024. With a 98% pass rate and over 60 distinctions, our students have set a new benchmark for academic excellence. Special recognition goes to the teaching staff and parents for their unwavering support.',category:'Academic',status:'Published'},
   {id:4,icon:'<i class="fas fa-leaf"></i>',title:'Tree Planting Initiative',date:'Feb 20, 2025',desc:'School launches environmental conservation program.',content:'In celebration of Environment Day, Glory Regin Preparatory school launched a tree-planting initiative with students and staff planting over 500 trees around the campus. This initiative is part of our commitment to environmental sustainability and creating a greener campus for future generations.',category:'Community',status:'Published'},
   {id:5,icon:'<i class="fas fa-theater-masks"></i>',title:'Annual Cultural Day Celebrated',date:'Feb 14, 2025',desc:'Students showcase diverse talents at packed auditorium.',content:'The annual cultural day was a spectacular showcase of the diverse talents within our school community. Students performed traditional dances, musical pieces, and theatrical performances representing different cultures. Parents and staff filled the auditorium to capacity, celebrating our rich cultural heritage.',category:'Events',status:'Published'},
   {id:6,icon:'<i class="fas fa-laptop"></i>',title:'ICT Lab Upgrade Complete',date:'Jan 30, 2025',desc:'New computers and software installed in Information Technology lab.',content:'Our Information Technology laboratory has been upgraded with 40 new computers, high-speed internet connectivity, and the latest software packages. This upgrade will enable students to gain practical skills in coding, graphic design, and digital media production. The lab is now equipped to meet international standards.',category:'Infrastructure',status:'Published'}
@@ -10818,7 +11240,7 @@ function visitorContact(){
       ${[['<i class="fas fa-map-pin"></i>','Address','P.O. Box 42, Jirapa\nUpper West Region, Ghana'],
         ['<i class="fas fa-phone"></i>','Phone','0243611971 /\n0205096091'],
         ['<i class="fas fa-envelope"></i>','Email','info@excellence.edu.gh\nadmissions@excellence.edu.gh'],
-        ['<i class="fas fa-clock"></i>','Office Hours','Monday–Friday: 7:00 AM – 5:00 PM\nSaturday: 8:00 AM – 12:00 PM']].map(([i,l,v])=>`
+        ['<i class="fas fa-clock"></i>','Office Hours','Monday–Friday: 7:00 AM – 5:00 PM']].map(([i,l,v])=>`
       <div class="card mb16" style="display:flex;gap:16px;align-items:flex-start">
         <div class="notice-icon" style="background:var(--blue-xpale)">${i}</div>
         <div>
@@ -10844,16 +11266,14 @@ function visitorGallery(){
   <div class="gal-grid">
     ${[['<i class="fas fa-running"></i>','Sports Day 2024','#dbeafe'],
       ['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','#fef3c7'],
-      ['<i class="fas fa-flask-vial"></i>','Science Laboratory','#d1fae5'],
       ['<i class="fas fa-book"></i>','School Library','#ede9fe'],
-      ['<i class="fas fa-building"></i>','Main School Hall','#fee2e2'],
       ['<i class="fas fa-theater-masks"></i>','Drama & Arts Club','#e0f2fe'],
       ['<i class="fas fa-leaf"></i>','Beautiful Campus','#d1fae5'],
       ['<i class="fas fa-user"></i>‍<i class="fas fa-laptop"></i>','ICT Laboratory','#dbeafe'],
       ['<i class="fas fa-palette"></i>','Art Exhibition','#fef3c7'],
       ['<i class="fas fa-trophy"></i>','Champions Cup 2024','#fef3c7'],
       ['<i class="fas fa-music"></i>','School Choir','#ede9fe'],
-      ['<i class="fas fa-globe"></i>','Geography Field Trip','#d1fae5']].map(([icon,label,bg])=>`
+      ['<i class="fas fa-globe"></i>','Field Trip','#d1fae5']].map(([icon,label,bg])=>`
     <div class="gal-item" style="background:${bg}">
       <div class="gi-icon">${icon}</div>
       <div class="gi-label">${label}</div>
@@ -11380,7 +11800,7 @@ function viewReportCard(studentName) {
         
         <!-- LEFT: SCHOOL LOGO -->
         <div style="text-align:center">
-          <div style="font-size:35px;margin-bottom:4px"><i class="fas fa-school"></i></div>
+          <div style="font-size:35px;margin-bottom:4px;display:flex;align-items:center;justify-content:center"><img src="Logo.png" alt="Logo" style="width:40px;height:40px;object-fit:contain"></div>
           <p style="margin:0;font-size:9px;color:var(--gray-600);font-weight:600">LOGO</p>
         </div>
 
