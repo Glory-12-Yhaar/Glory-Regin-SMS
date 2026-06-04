@@ -13,41 +13,21 @@
 <!-- ═══════════ LOGIN PAGE ═══════════ -->
 <div id="login-page" style="display:none;">
   <div class="login-wrapper">
-    <div class="login-left">
-      <div class="login-logo-wrap"><img src="Logo.png" alt="School Logo" style="width:100%;height:100%;object-fit:contain"></div>
-      <h1>Glory Regin Preparatory School</h1>
-      <p>A world-class school management system for modern educational institutions</p>
-      <div class="stats-mini">
-        <div class="stat-mini"><div class="num">842</div><div class="lbl">Students</div></div>
-        <div class="stat-mini"><div class="num">64</div><div class="lbl">Teachers</div></div>
-        <div class="stat-mini"><div class="num">98%</div><div class="lbl">Pass Rate</div></div>
-      </div>
+    <div class="login-logo-wrap"><img src="Logo.png" alt="School Logo" style="width:100%;height:100%;object-fit:contain"></div>
+    <h1>Glory Regin Preparatory School</h1>
+    <p class="sub">Select your role to access the portal</p>
+    
+    <div class="role-grid" id="role-grid">
+      <div class="role-btn active" onclick="setRole(this,'Teacher')"><span class="ri"><i class="fas fa-chalkboard-user"></i></span><span class="rl">Teacher</span></div>
+      <div class="role-btn" onclick="setRole(this,'Student')"><span class="ri"><i class="fas fa-graduation-cap"></i></span><span class="rl">Student</span></div>
+      <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri"><i class="fa-solid fa-hands-holding-child"></i></span><span class="rl">Parent</span></div>
+      <div class="role-btn" onclick="setRole(this,'Accountant')"><span class="ri"><i class="fas fa-briefcase"></i></span><span class="rl">Accountant</span></div>
+      <div class="role-btn" onclick="setRole(this,'Alumni')"><span class="ri"><i class="fas fa-medal"></i></span><span class="rl">Alumni</span></div>
+      <div class="role-btn" onclick="setRole(this,'Visitor')"><span class="ri"><i class="fas fa-tag"></i></span><span class="rl">Visitor</span></div>
     </div>
-    <div class="login-right">
-      <h2>Welcome Back</h2>
-      <p class="sub">Sign in to access your dashboard</p>
-      <div class="role-grid" id="role-grid">
-        <div class="role-btn active" onclick="setRole(this,'Teacher')"><span class="ri"><i class="fas fa-chalkboard-user"></i></span><span class="rl">Teacher</span></div>
-        <div class="role-btn" onclick="setRole(this,'Student')"><span class="ri"><i class="fas fa-graduation-cap"></i></span><span class="rl">Student</span></div>
-        <div class="role-btn" onclick="setRole(this,'Parent')"><span class="ri"><i class="fa-solid fa-hands-holding-child"></i></span><span class="rl">Parent</span></div>
-        <div class="role-btn" onclick="setRole(this,'Accountant')"><span class="ri"><i class="fas fa-briefcase"></i></span><span class="rl">Accountant</span></div>
-        <div class="role-btn" onclick="setRole(this,'Alumni')"><span class="ri"><i class="fas fa-medal"></i></span><span class="rl">Alumni</span></div>
-        <div class="role-btn" onclick="setRole(this,'Visitor')"><span class="ri"><i class="fas fa-tag"></i></span><span class="rl">Visitor</span></div>
-      </div>
-      <div class="form-field">
-        <label>Email / Username</label>
-        <input type="email" id="l-email" value="admin@excellence.edu.gh" placeholder="Enter your email">
-      </div>
-      <div class="form-field">
-        <label>Password</label>
-        <input type="password" id="l-pass" value="••••••••" placeholder="Enter password">
-      </div>
-      <button class="login-btn" onclick="doLogin()">Sign In to Dashboard →</button>
-      <div class="login-links">
-        <a>Forgot Password?</a>
-        <a onclick="setRole(document.querySelector('[onclick*=Visitor]'),'Visitor');doLogin()">Browse as Visitor</a>
-        <a onclick="adminLogin()" style="color:#d97706;font-weight:600">Admin Portal</a>
-      </div>
+    
+    <div class="login-links">
+      <a onclick="adminLogin()" class="admin-portal-link">Admin Portal</a>
     </div>
   </div>
 </div>

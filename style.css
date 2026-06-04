@@ -73,56 +73,85 @@ html,body{
   bottom:-200px;right:-100px;pointer-events:none;
 }
 .login-wrapper{
-  display:flex;width:900px;max-width:96vw;min-height:560px;
-  border-radius:var(--radius-xl);overflow:hidden;
-  box-shadow:var(--shadow-xl);position:relative;z-index:1;
-}
-.login-left{
-  flex:1;background:linear-gradient(160deg,rgba(10,34,64,.95),rgba(26,86,219,.85));
-  padding:50px 40px;display:flex;flex-direction:column;justify-content:center;
-  align-items:center;text-align:center;position:relative;overflow:hidden;
-}
-.login-left::before{
-  content:'';position:absolute;width:300px;height:300px;border-radius:50%;
-  border:1px solid rgba(255,255,255,.08);top:-80px;left:-80px;
-}
-.login-left::after{
-  content:'';position:absolute;width:200px;height:200px;border-radius:50%;
-  border:1px solid rgba(245,158,11,.2);bottom:40px;right:-50px;
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;max-width:520px;margin:20px;
+  padding:44px 36px;
+  background:rgba(255,255,255,0.92);
+  border:1px solid rgba(255,255,255,0.4);
+  border-radius:24px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+  position:relative;z-index:1;
+  text-align:center;
 }
 .login-logo-wrap{
-  width:90px;height:90px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:38px;margin-bottom:24px;
+  width:90px;height:90px;border-radius:22px;background:#fff;
+  padding:12px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.06);margin-bottom:20px;
+  animation:floatLogo 4s ease-in-out infinite;
+  border:1px solid var(--gray-150);
+}
+.login-wrapper h1{
+  font-size:24px;font-weight:800;color:var(--blue-dark);
+  margin-bottom:8px;letter-spacing:-.5px;
+}
+.login-wrapper .sub{
+  font-size:13px;color:var(--gray-500);margin-bottom:32px;
+}
+.role-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  width:100%;margin-bottom:28px;
+}
+.role-btn{
+  padding:16px 12px;border-radius:14px;border:1.5px solid var(--gray-200);
+  background:var(--white);cursor:pointer;text-align:center;transition:all .25s ease;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.role-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(26,86,219,.08);
+}
+.role-btn.active{
+  border-color:var(--blue-main);
+  background:var(--blue-xpale);
+  box-shadow:0 8px 20px rgba(26,86,219,.12);
+}
+.role-btn .ri{
+  font-size:24px;display:block;margin-bottom:6px;
+  transition:transform .2s;
+}
+.role-btn .ri i{font-size:24px;color:var(--gray-600)}
+.role-btn:hover .ri i{transform:scale(1.1)}
+.role-btn.active .ri i{color:var(--blue-main)}
+.role-btn .rl{font-size:11px;font-weight:600;color:var(--gray-600)}
+.role-btn.active .rl{color:var(--blue-main)}
+
+/* MODAL ADAPTATION */
+#global-modal .login-wrapper{
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:20px 10px;
+  max-width:100%;
+  margin:0;
+}
+#global-modal > div {
+  border-radius:24px !important;
+  max-width:540px !important;
+  background:rgba(255,255,255,0.96) !important;
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.4);
 }
 
-.login-logo-wrap i{font-size:48px;color:#fff}
-.login-left h1{font-family:'Playfair Display',serif;font-size:26px;color:#fff;line-height:1.3;margin-bottom:12px}
-.login-left p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;max-width:220px}
-.login-left .stats-mini{
-  display:flex;gap:20px;margin-top:36px;
+.login-links{
+  margin-top:12px;
 }
-.stat-mini{text-align:center}
-.stat-mini .num{font-size:22px;font-weight:800;color:var(--gold)}
-.stat-mini .lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px}
-.login-right{
-  width:400px;background:var(--white);padding:44px 40px;
-  display:flex;flex-direction:column;justify-content:center;
+.admin-portal-link{
+  color:var(--gold-dark);font-weight:700;font-size:13px;
+  cursor:pointer;transition:color .2s;text-decoration:none;
 }
-.login-right h2{font-size:22px;font-weight:700;color:var(--blue-dark);margin-bottom:4px}
-.login-right .sub{font-size:12px;color:var(--gray-400);margin-bottom:28px}
-.role-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:22px}
-.role-btn{
-  padding:8px 4px;border-radius:var(--radius);border:1.5px solid var(--gray-200);
-  background:var(--white);cursor:pointer;text-align:center;transition:all .2s;
+.admin-portal-link:hover{
+  color:var(--gold);text-decoration:underline;
 }
-.role-btn:hover,.role-btn.active{
-  border-color:var(--blue-main);background:var(--blue-xpale);
-}
-.role-btn .ri{font-size:18px;display:block;margin-bottom:3px}
-.role-btn .ri i{font-size:20px}
-.role-btn .rl{font-size:9px;font-weight:600;color:var(--gray-600)}
-.role-btn.active .rl{color:var(--blue-main)}
 .form-field{margin-bottom:16px}
 .form-field label{display:block;font-size:11px;font-weight:600;color:var(--gray-600);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
 .form-field input{
@@ -389,14 +418,83 @@ html,body{
   .role-login-image-section{min-width:350px}
 }
 
+/* ═══════════════════ ADMIN LOGIN PAGE ═══════════════════ */
+.admin-image-section{
+  background:linear-gradient(160deg,rgba(10,20,40,.97),rgba(26,56,120,.9)) !important;
+}
+
+.admin-badge{
+  position:absolute;bottom:30px;left:30px;z-index:10;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  color:var(--blue-dark);
+  padding:10px 22px;border-radius:12px;
+  font-size:13px;font-weight:700;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 6px 20px rgba(245,158,11,.35);
+  animation:fadeInUp 0.6s ease-out 0.6s both;
+  letter-spacing:.3px;
+}
+.admin-badge i{font-size:16px}
+
+.admin-icon-wrap{
+  width:64px;height:64px;border-radius:18px;
+  background:linear-gradient(135deg,var(--blue-main),var(--blue-dark));
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+  box-shadow:0 8px 24px rgba(26,86,219,.25);
+  animation:fadeInUp 0.5s ease-out 0.2s both;
+}
+.admin-icon-wrap i{
+  font-size:28px;color:#fff;
+}
+
+.admin-login-btn{
+  background:linear-gradient(135deg,#3b82f6,#1e3a5f) !important;
+  color:#fff !important;
+  font-weight:700 !important;
+  box-shadow:0 6px 20px rgba(59,130,246,.3) !important;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.admin-login-btn:hover{
+  box-shadow:0 8px 28px rgba(59,130,246,.4) !important;
+  transform:translateY(-2px);
+}
+.admin-login-btn::before{
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent) !important;
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #64748b;
+  font-size: 16px;
+  z-index: 2;
+}
+.toggle-password:hover {
+  color: #3b82f6;
+}
+
 @media(max-width:768px){
-  .role-login-page{flex-direction:column;}
+  .role-login-wrapper{flex-direction:column;}
+  .role-login-page{overflow-y:auto;display:block;}
   .role-login-image-section{
-    min-height:40vh;min-width:auto;
+    min-height:35vh;min-width:100%;
   }
-  .role-login-form-section{padding:30px 24px;min-height:60vh}
+  .role-login-form-section{padding:30px 24px;min-height:65vh;}
   .role-login-form{max-width:100%}
-  .role-login-logo{width:70px;height:70px}
+  .role-login-logo{width:70px;height:70px;top:20px;right:20px;}
   .role-login-logo img{width:50px;height:50px}
 }
 
@@ -868,6 +966,12 @@ html,body{
 .tt .break{background:var(--gray-100);color:var(--gray-500);font-style:italic;white-space:nowrap}
 .tt .sub-cell{cursor:pointer;transition:background .15s;color:var(--gray-700);white-space:nowrap}
 .tt .sub-cell:hover{background:var(--blue-xpale);color:var(--blue-main)}
+.tt-break-row td{background:var(--gray-50)!important}
+.tt-assembly-row td{background:rgba(100,116,139,.06)!important}
+.tt-class-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:12px;border:1px solid var(--gray-200)}
+.tt-class-tab{padding:7px 16px;border-radius:20px;border:1.5px solid var(--gray-200);background:white;font-size:11px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all .2s;font-family:Poppins,sans-serif;white-space:nowrap}
+.tt-class-tab:hover{border-color:var(--blue-main);color:var(--blue-main);background:var(--blue-xpale)}
+.tt-class-tab.active{background:linear-gradient(135deg,#3b82f6,#1e3a5f);color:white;border-color:transparent;box-shadow:0 2px 8px rgba(59,130,246,.3)}
 
 /* ACTIVITY FEED */
 .activity{display:flex;flex-direction:column;gap:0}
@@ -1323,6 +1427,16 @@ body.dark .role-login-back:hover{
   background:rgba(255,255,255,.25);box-shadow:0 6px 20px rgba(0,0,0,.6);color:#4a5568;
 }
 
+body.dark .admin-icon-wrap{
+  background:linear-gradient(135deg,#3b82f6,#1e3a5f);
+  box-shadow:0 8px 24px rgba(59,130,246,.2);
+}
+
+body.dark .admin-login-btn{
+  background:linear-gradient(135deg,#fbbf24,#f59e0b) !important;
+  color:#1a1a2e !important;
+}
+
 body.dark .login-container{
   background:#0a0a0a;
 }
@@ -1641,38 +1755,20 @@ body.dark .select-sm:hover{
   /* LOGIN PAGE */
   #login-page{padding:16px;min-height:100vh}
   .login-wrapper{
-    flex-direction:column;width:100%;max-width:100%;
-    min-height:auto;border-radius:16px;
+    width:100%;max-width:440px;
+    padding:32px 20px;
+    border-radius:20px;
   }
-  .login-left{
-    padding:30px 20px;min-height:200px;
-    order:1;
-  }
-  .login-left h1{font-size:22px}
-  .login-left p{font-size:12px}
-  .login-logo-wrap{width:70px;height:70px;font-size:32px;margin-bottom:16px}
-  .login-logo-wrap i{font-size:36px}
-  .login-left .stats-mini{gap:12px;margin-top:20px}
-  .stat-mini .num{font-size:18px}
-  .stat-mini .lbl{font-size:8px}
-  
-  .login-right{
-    width:100%;padding:24px 20px;order:2;
-  }
-  .login-right h2{font-size:20px}
-  .login-right .sub{font-size:11px;margin-bottom:20px}
+  .login-wrapper h1{font-size:20px}
+  .login-logo-wrap{width:76px;height:76px;margin-bottom:16px;border-radius:18px;padding:8px}
   .role-grid{
-    grid-template-columns:repeat(2,1fr);gap:4px;margin-bottom:16px;
+    grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;
   }
-  .role-btn{padding:6px 3px}
-  .role-btn .ri{font-size:16px}
-  .role-btn .ri i{font-size:18px}
-  .role-btn .rl{font-size:8px}
-  .form-field{margin-bottom:12px}
-  .form-field label{font-size:10px}
-  .form-field input{padding:10px 12px;font-size:12px}
-  .login-btn{padding:12px;font-size:13px}
-  .login-links{flex-direction:column;gap:8px;margin-top:10px;font-size:11px}
+  .role-btn{padding:12px 6px;border-radius:10px}
+  .role-btn .ri{font-size:20px}
+  .role-btn .ri i{font-size:20px}
+  .role-btn .rl{font-size:9px}
+  .login-links{margin-top:10px;font-size:12px}
   
   /* BADGES */
   .badge{padding:2px 8px;font-size:9px}
@@ -1927,16 +2023,12 @@ body.dark .select-sm:hover{
   }
   
   /* LOGIN */
-  .login-wrapper{border-radius:12px}
-  .login-left{padding:24px 16px}
-  .login-right{padding:20px 16px}
-  .login-right h2{font-size:18px}
-  .role-grid{grid-template-columns:repeat(2,1fr)}
-  .role-btn{padding:4px 2px}
-  .role-btn .ri{font-size:14px}
-  .role-btn .ri i{font-size:16px}
-  .role-btn .rl{font-size:7px}
-  .login-btn{padding:10px;font-size:12px}
+  .login-wrapper{border-radius:16px;padding:24px 16px}
+  .role-grid{grid-template-columns:1fr;gap:8px}
+  .role-btn{padding:10px 4px}
+  .role-btn .ri{font-size:18px}
+  .role-btn .ri i{font-size:18px}
+  .role-btn .rl{font-size:8px}
   
   /* TABLES */
   .tbl{

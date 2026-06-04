@@ -1,27 +1,27 @@
-﻿
+
 // ═══════════════════════════════════
 // STATE & CONFIG
 // ═══════════════════════════════════
-let currentRole='Visitor', currentMod='dashboard', darkMode=false, loginRole='Teacher';
+let currentRole = 'Visitor', currentMod = 'dashboard', darkMode = false, loginRole = 'Teacher';
 let navigationHistory = ['dashboard'];  // Track page history for back button
 let miniCalDate = new Date();  // Track mini calendar navigation
 
 // ═══════════════════════════════════
 // DARK MODE INITIALIZATION
 // ═══════════════════════════════════
-function initializeDarkMode(){
+function initializeDarkMode() {
   // Load saved theme preference from localStorage
   const savedTheme = localStorage.getItem('gloryReginTheme');
-  if(savedTheme){
+  if (savedTheme) {
     darkMode = savedTheme === 'dark';
-  } else if(SETTINGS_DATA && SETTINGS_DATA.appearance){
+  } else if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
     darkMode = SETTINGS_DATA.appearance.theme === 'Dark';
   }
   applyTheme();
 }
 
-function applyTheme(){
-  if(darkMode){
+function applyTheme() {
+  if (darkMode) {
     document.body.classList.add('dark');
     document.documentElement.style.colorScheme = 'dark';
   } else {
@@ -29,13 +29,13 @@ function applyTheme(){
     document.documentElement.style.colorScheme = 'light';
   }
   // Update Settings data
-  if(SETTINGS_DATA && SETTINGS_DATA.appearance){
+  if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
     SETTINGS_DATA.appearance.theme = darkMode ? 'Dark' : 'Light';
     saveSettingsToStorage();
   }
   // Update theme selector if it exists
   const themeSelect = document.getElementById('theme-select');
-  if(themeSelect){
+  if (themeSelect) {
     themeSelect.value = darkMode ? 'Dark' : 'Light';
   }
 }
@@ -49,19 +49,19 @@ window.addEventListener('load', initializeDarkMode);
 
 // SUBJECTS BY CLASS
 const SUBJECTS_BY_CLASS = {
-  'Creche': ['English', 'Mathematics', 'Social Skills', 'Creative Arts'],
-  'Nursery': ['English', 'Mathematics', 'Social Studies', 'Creative Arts'],
-  'KG 1': ['Literacy English', 'Literacy Writing', 'Numeracy', 'Creative Arts'],
-  'KG 2': ['Literacy English', 'Literacy Writing', 'Numeracy', 'Creative Arts'],
-  'Basic 1': ['English', 'Mathematics', 'Science', 'Creative Arts', 'Computing', 'Religious & Moral Education', 'History'],
-  'Basic 2': ['English', 'Mathematics', 'Science', 'Creative Arts', 'Computing', 'Religious & Moral Education', 'History'],
-  'Basic 3': ['English', 'Mathematics', 'Science', 'Creative Arts', 'Computing', 'Religious & Moral Education', 'History'],
-  'Basic 4': ['English', 'Mathematics', 'Natural Science', 'Creative Arts', 'Computing', 'French', 'History', 'Religious & Moral Education'],
-  'Basic 5': ['English', 'Mathematics', 'Natural Science', 'Creative Arts', 'Computing', 'French', 'History', 'Religious & Moral Education'],
-  'Basic 6': ['English', 'Mathematics', 'Natural Science', 'Creative Arts', 'Computing', 'French', 'History', 'Religious & Moral Education'],
-  'JHS 1': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'Computing', 'French', 'Career Technolog', 'Religious & Moral Education', 'Creative Arts & Design'],
-  'JHS 2': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'Computing', 'French', 'Career Technolog', 'Religious & Moral Education', 'Creative Arts & Design'],
-  'JHS 3': ['English', 'Mathematics', 'Integrated Science', 'Social Studies', 'Computing', 'French', 'Career Technolog', 'Religious & Moral Education', 'Creative Arts & Design']
+  'Creche': ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'],
+  'Nursery': ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'],
+  'KG 1': ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'],
+  'KG 2': ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'],
+  'Basic 1': ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'],
+  'Basic 2': ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'],
+  'Basic 3': ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'],
+  'Basic 4': ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'],
+  'Basic 5': ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'],
+  'Basic 6': ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'],
+  'JHS 1': ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'],
+  'JHS 2': ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'],
+  'JHS 3': ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare']
 };
 
 // STUDENT DATA STRUCTURE
@@ -323,16 +323,16 @@ const ASSIGNMENTS_DATA = {
 
 // ALUMNI DATA STRUCTURE
 const ALUMNI_DATA = {
-  'ALM001': {id:'ALM001', name:'Abena Owusu', classYear:2018, profession:'Software Engineer', location:'Accra · Google Ghana', avatar:'AO', avatarColor:'purple', bio:'Working as Senior Developer at Google Ghana', email:'abena.owusu@gmail.com', phone:'+233 24 111 0001', instagram:'@abenaotech', linkedin:'linkedin.com/in/abenaowusu', twitter:'@abenaotech', facebook:'facebook.com/abena.owusu'},
-  'ALM002': {id:'ALM002', name:'Kwabena Asare', classYear:2016, profession:'Medical Doctor', location:'London · NHS', avatar:'KA', avatarColor:'blue', bio:'Consultant Physician at London NHS Hospital', email:'kwabena.asare@nhs.uk', phone:'+44 7911 123456', instagram:'@kwabenadr', linkedin:'linkedin.com/in/kwabenaasare', twitter:'@kwabenaasare', facebook:'facebook.com/kwabena.asare'},
-  'ALM003': {id:'ALM003', name:'Esi Mensah', classYear:2020, profession:'Teacher', location:'Kumasi · College', avatar:'EM', avatarColor:'green', bio:'Secondary School Teacher - English & Literature', email:'esi.mensah@college.edu.gh', phone:'+233 24 222 0003', instagram:'@esimenteach', linkedin:'linkedin.com/in/esimensah', twitter:'@esiteacher', facebook:'facebook.com/esi.mensah'},
-  'ALM004': {id:'ALM004', name:'Yaw Boateng', classYear:2015, profession:'Lawyer', location:'Toronto · Law Firm', avatar:'YB', avatarColor:'gold', bio:'Senior Associate at Toronto Law Partnership', email:'yaw.boateng@lawfirm.ca', phone:'+1 416 987 6543', instagram:'@yawlawyer', linkedin:'linkedin.com/in/yawboateng', twitter:'@yawboatenglaw', facebook:'facebook.com/yaw.boateng'},
-  'ALM005': {id:'ALM005', name:'Akua Adjei', classYear:2019, profession:'Nurse', location:'Accra · Korle Bu', avatar:'AA', avatarColor:'teal', bio:'Registered Nurse at Korle Bu Teaching Hospital', email:'akua.adjei@korlebu.org', phone:'+233 24 333 0005', instagram:'@akuanurse', linkedin:'linkedin.com/in/akuaadjei', twitter:'@akuahealth', facebook:'facebook.com/akua.adjei'},
-  'ALM006': {id:'ALM006', name:'Kofi Antwi', classYear:2014, profession:'Civil Engineer', location:'Takoradi · GHA', avatar:'KA', avatarColor:'orange', bio:'Project Manager - Civil Engineering Division', email:'kofi.antwi@gha-eng.com.gh', phone:'+233 24 444 0006', instagram:'@kofieng', linkedin:'linkedin.com/in/kofiانtwi', twitter:'@kofiengineering', facebook:'facebook.com/kofi.antwi'},
-  'ALM007': {id:'ALM007', name:'Nadia Hassan', classYear:2017, profession:'Business Analyst', location:'Dubai · Tech Corp', avatar:'NH', avatarColor:'purple', bio:'Business Solutions Analyst - Middle East Tech', email:'nadia.hassan@techcorp.ae', phone:'+971 50 123 4567', instagram:'@nadiabiz', linkedin:'linkedin.com/in/nadiahassan', twitter:'@nadiatech', facebook:'facebook.com/nadia.hassan'},
-  'ALM008': {id:'ALM008', name:'Samuel Boadi', classYear:2013, profession:'Banking Executive', location:'Accra · Bank HQ', avatar:'SB', avatarColor:'blue', bio:'Head of Business Development - Banking Sector', email:'samuel.boadi@bank.com.gh', phone:'+233 24 555 0008', instagram:'@samuelbanks', linkedin:'linkedin.com/in/samuelboadi', twitter:'@samuelboadi', facebook:'facebook.com/samuel.boadi'},
-  'ALM009': {id:'ALM009', name:'Grace Mensah', classYear:2021, profession:'Graphic Designer', location:'Accra · Creative Studio', avatar:'GM', avatarColor:'pink', bio:'UI/UX Designer at Accra Creative Studio', email:'grace.mensah@creative.com.gh', phone:'+233 24 666 0009', instagram:'@gracedesi̲gns', linkedin:'linkedin.com/in/gracemensah', twitter:'@gracedesigns', facebook:'facebook.com/grace.mensah'},
-  'ALM010': {id:'ALM010', name:'David Owusu', classYear:2012, profession:'Architect', location:'Singapore · Design Firm', avatar:'DO', avatarColor:'teal', bio:'Senior Architect - International Design Projects', email:'david.owusu@designfirm.sg', phone:'+65 6789 0123', instagram:'@davidarch', linkedin:'linkedin.com/in/davidowusu', twitter:'@davidarchitect', facebook:'facebook.com/david.owusu'}
+  'ALM001': { id: 'ALM001', name: 'Abena Owusu', classYear: 2018, profession: 'Software Engineer', location: 'Accra · Google Ghana', avatar: 'AO', avatarColor: 'purple', bio: 'Working as Senior Developer at Google Ghana', email: 'abena.owusu@gmail.com', phone: '+233 24 111 0001', instagram: '@abenaotech', linkedin: 'linkedin.com/in/abenaowusu', twitter: '@abenaotech', facebook: 'facebook.com/abena.owusu' },
+  'ALM002': { id: 'ALM002', name: 'Kwabena Asare', classYear: 2016, profession: 'Medical Doctor', location: 'London · NHS', avatar: 'KA', avatarColor: 'blue', bio: 'Consultant Physician at London NHS Hospital', email: 'kwabena.asare@nhs.uk', phone: '+44 7911 123456', instagram: '@kwabenadr', linkedin: 'linkedin.com/in/kwabenaasare', twitter: '@kwabenaasare', facebook: 'facebook.com/kwabena.asare' },
+  'ALM003': { id: 'ALM003', name: 'Esi Mensah', classYear: 2020, profession: 'Teacher', location: 'Kumasi · College', avatar: 'EM', avatarColor: 'green', bio: 'Secondary School Teacher - English & Literature', email: 'esi.mensah@college.edu.gh', phone: '+233 24 222 0003', instagram: '@esimenteach', linkedin: 'linkedin.com/in/esimensah', twitter: '@esiteacher', facebook: 'facebook.com/esi.mensah' },
+  'ALM004': { id: 'ALM004', name: 'Yaw Boateng', classYear: 2015, profession: 'Lawyer', location: 'Toronto · Law Firm', avatar: 'YB', avatarColor: 'gold', bio: 'Senior Associate at Toronto Law Partnership', email: 'yaw.boateng@lawfirm.ca', phone: '+1 416 987 6543', instagram: '@yawlawyer', linkedin: 'linkedin.com/in/yawboateng', twitter: '@yawboatenglaw', facebook: 'facebook.com/yaw.boateng' },
+  'ALM005': { id: 'ALM005', name: 'Akua Adjei', classYear: 2019, profession: 'Nurse', location: 'Accra · Korle Bu', avatar: 'AA', avatarColor: 'teal', bio: 'Registered Nurse at Korle Bu Teaching Hospital', email: 'akua.adjei@korlebu.org', phone: '+233 24 333 0005', instagram: '@akuanurse', linkedin: 'linkedin.com/in/akuaadjei', twitter: '@akuahealth', facebook: 'facebook.com/akua.adjei' },
+  'ALM006': { id: 'ALM006', name: 'Kofi Antwi', classYear: 2014, profession: 'Civil Engineer', location: 'Takoradi · GHA', avatar: 'KA', avatarColor: 'orange', bio: 'Project Manager - Civil Engineering Division', email: 'kofi.antwi@gha-eng.com.gh', phone: '+233 24 444 0006', instagram: '@kofieng', linkedin: 'linkedin.com/in/kofiانtwi', twitter: '@kofiengineering', facebook: 'facebook.com/kofi.antwi' },
+  'ALM007': { id: 'ALM007', name: 'Nadia Hassan', classYear: 2017, profession: 'Business Analyst', location: 'Dubai · Tech Corp', avatar: 'NH', avatarColor: 'purple', bio: 'Business Solutions Analyst - Middle East Tech', email: 'nadia.hassan@techcorp.ae', phone: '+971 50 123 4567', instagram: '@nadiabiz', linkedin: 'linkedin.com/in/nadiahassan', twitter: '@nadiatech', facebook: 'facebook.com/nadia.hassan' },
+  'ALM008': { id: 'ALM008', name: 'Samuel Boadi', classYear: 2013, profession: 'Banking Executive', location: 'Accra · Bank HQ', avatar: 'SB', avatarColor: 'blue', bio: 'Head of Business Development - Banking Sector', email: 'samuel.boadi@bank.com.gh', phone: '+233 24 555 0008', instagram: '@samuelbanks', linkedin: 'linkedin.com/in/samuelboadi', twitter: '@samuelboadi', facebook: 'facebook.com/samuel.boadi' },
+  'ALM009': { id: 'ALM009', name: 'Grace Mensah', classYear: 2021, profession: 'Graphic Designer', location: 'Accra · Creative Studio', avatar: 'GM', avatarColor: 'pink', bio: 'UI/UX Designer at Accra Creative Studio', email: 'grace.mensah@creative.com.gh', phone: '+233 24 666 0009', instagram: '@gracedesi̲gns', linkedin: 'linkedin.com/in/gracemensah', twitter: '@gracedesigns', facebook: 'facebook.com/grace.mensah' },
+  'ALM010': { id: 'ALM010', name: 'David Owusu', classYear: 2012, profession: 'Architect', location: 'Singapore · Design Firm', avatar: 'DO', avatarColor: 'teal', bio: 'Senior Architect - International Design Projects', email: 'david.owusu@designfirm.sg', phone: '+65 6789 0123', instagram: '@davidarch', linkedin: 'linkedin.com/in/davidowusu', twitter: '@davidarchitect', facebook: 'facebook.com/david.owusu' }
 };
 
 // STAFF DATA STRUCTURE
@@ -657,18 +657,18 @@ function calculateClassPosition(studentName, classVal) {
     name,
     average: calculateAverage(data.scores)
   }));
-  
+
   classWithAverages.sort((a, b) => b.average - a.average);
   const position = classWithAverages.findIndex(s => s.name === studentName) + 1;
   const totalInClass = classWithAverages.length;
-  
+
   return { position, totalInClass };
 }
 
 function getStudentScoresWithGrades(studentName) {
   const student = STUDENTS_DATA[studentName];
   if (!student) return null;
-  
+
   const subjectScores = {};
   Object.entries(student.scores).forEach(([subject, scores]) => {
     const total = calculateTotalScore(scores.classScore, scores.examScore);
@@ -679,28 +679,28 @@ function getStudentScoresWithGrades(studentName) {
       grade: calculateGrade(total)
     };
   });
-  
+
   return subjectScores;
 }
 
 // ═══════════════════════════════════
 // TOAST NOTIFICATION SYSTEM
 // ═══════════════════════════════════
-function showToast(message, type = 'success', duration = 3000){
+function showToast(message, type = 'success', duration = 3000) {
   const toastContainer = document.getElementById('toast-container') || createToastContainer();
   const toast = document.createElement('div');
   toast.className = 'toast toast-' + type;
   toast.innerHTML = message;
   toast.style.animation = 'slideInRight 0.3s ease';
   toastContainer.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.style.animation = 'slideOutRight 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, duration);
 }
 
-function createToastContainer(){
+function createToastContainer() {
   const container = document.createElement('div');
   container.id = 'toast-container';
   container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:90%';
@@ -711,7 +711,7 @@ function createToastContainer(){
 // ═══════════════════════════════════
 // MODAL SYSTEM
 // ═══════════════════════════════════
-function openModal(content){
+function openModal(content, isCustom = false) {
   let modal = document.getElementById('global-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -720,13 +720,18 @@ function openModal(content){
     modal.onclick = (e) => e.target === modal && closeModal();
     document.body.appendChild(modal);
   }
-  
-  modal.innerHTML = `<div style="background:white;border-radius:8px;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:900px;width:95vw">${content}</div>`;
+
+  if (isCustom) {
+    modal.innerHTML = content;
+  } else {
+    modal.innerHTML = `<div style="background:white;border-radius:8px;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:900px;width:95vw">${content}</div>`;
+  }
+
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
-function closeModal(){
+function closeModal() {
   const modal = document.getElementById('global-modal');
   if (modal) {
     modal.style.display = 'none';
@@ -737,228 +742,270 @@ function closeModal(){
 // ═══════════════════════════════════
 // ENHANCED SELECT/DROPDOWN SYSTEM
 // ═══════════════════════════════════
-function initializeSelectEnhancements(){
+function initializeSelectEnhancements() {
   // Add enhanced visual feedback to all selects
   const allSelects = document.querySelectorAll('select');
   allSelects.forEach(select => {
     // Add change event listener for visual feedback
-    select.addEventListener('change', function(){
+    select.addEventListener('change', function () {
       this.style.color = this.value && this.value !== '-- Select --' && this.value !== '-- Select Class --' ? 'var(--blue-main)' : 'var(--gray-800)';
       this.style.fontWeight = this.value && this.value !== '-- Select --' && this.value !== '-- Select Class --' ? '600' : '500';
     });
-    
+
     // Add focus event for better interaction
-    select.addEventListener('focus', function(){
+    select.addEventListener('focus', function () {
       this.style.boxShadow = '0 0 0 4px rgba(26,86,219,.12)';
     });
-    
+
     // Add blur event
-    select.addEventListener('blur', function(){
+    select.addEventListener('blur', function () {
       this.style.boxShadow = '';
     });
   });
 }
 
 // Initialize select enhancements when DOM is ready
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', function () {
   initializeSelectEnhancements();
   // Re-initialize after any page navigation
 });
 
 // Call initialization after role switch and navigation
 const originalNavTo = navTo;
-navTo = function(id){
+navTo = function (id) {
   originalNavTo(id);
   setTimeout(initializeSelectEnhancements, 10);
 };
 
 const originalSwitchRole = switchRole;
-switchRole = function(role){
+switchRole = function (role) {
   originalSwitchRole(role);
   setTimeout(initializeSelectEnhancements, 10);
 };
 
 // Helper function to get selected option label
-function getSelectLabel(selectElement){
-  if(!selectElement) return '';
+function getSelectLabel(selectElement) {
+  if (!selectElement) return '';
   const selectedOption = selectElement.options[selectElement.selectedIndex];
   return selectedOption ? selectedOption.text : '';
 }
 
 // Helper function to create a styled dropdown button
-function createStyledDropdownButton(selectElement, label = '▼ Select'){
+function createStyledDropdownButton(selectElement, label = '▼ Select') {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = 'position:relative;display:inline-block;width:100%';
-  
+
   const button = document.createElement('button');
   button.className = 'select-btn';
   button.type = 'button';
   button.innerHTML = `<span>${getSelectLabel(selectElement) || label}</span>`;
   button.style.width = '100%';
   button.style.justifyContent = 'space-between';
-  
+
   button.addEventListener('click', (e) => {
     e.preventDefault();
     selectElement.click();
   });
-  
+
   selectElement.addEventListener('change', () => {
     button.innerHTML = `<span>${getSelectLabel(selectElement)}</span><span style="font-size:11px;opacity:0.6">▼</span>`;
   });
-  
-  return {wrapper, button, selectElement};
+
+  return { wrapper, button, selectElement };
 }
 
-const MENUS={
-  Admin:[
-    {g:'Main',items:[
-      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
-      {id:'admissions',ic:'<i class="fas fa-file-alt"></i>',lbl:'Admissions',badge:'12'},
-      {id:'students',ic:'<i class="fas fa-graduation-cap"></i>',lbl:'Students',badge:'842'},
-      {id:'teachers',ic:'<i class="fas fa-chalkboard-user"></i>',lbl:'Teachers'},
-      {id:'parents',ic:'<i class="fa-solid fa-hands-holding-child"></i>',lbl:'Parents'},
-    ]},
-    {g:'Academic',items:[
-      {id:'classes',ic:'<i class="fas fa-building"></i>',lbl:'Classes'},
-      {id:'subjects',ic:'<i class="fas fa-book"></i>',lbl:'Subjects'},
-      {id:'timetable',ic:'<i class="fas fa-calendar"></i>',lbl:'Timetable'},
-      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
-      {id:'exams',ic:'<i class="fas fa-file-alt"></i>',lbl:'Exams & Reports'},
-      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
-    ]},
-    {g:'Finance',items:[
-      {id:'fees',ic:'<i class="fas fa-money-bill"></i>',lbl:'Fees / Payments'},
-    ]},
-    {g:'Communication',items:[
-      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events / Calendar'},
-      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices',badge:'5'},
-      {id:'news',ic:'<i class="fas fa-newspaper"></i>',lbl:'News & Blog'},
-      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messaging'},
-      {id:'contact_messages',ic:'<i class="fas fa-envelope"></i>',lbl:'Contact Messages',badge:()=>contactMessages.filter(m=>!m.read).length||0},
-    ]},
-    {g:'Administration',items:[
-      {id:'staff',ic:'<i class="fas fa-users"></i>',lbl:'Staff Management'},
-      {id:'users',ic:'<i class="fas fa-key"></i>',lbl:'User Accounts'},
-      {id:'roles',ic:'<i class="fas fa-shield"></i>',lbl:'Roles & Permissions'},
-      {id:'reports',ic:'<i class="fas fa-chart-line"></i>',lbl:'Reports & Analytics'},
-      {id:'alumni',ic:'<i class="fas fa-medal"></i>',lbl:'Alumni Module'},
-      {id:'backup',ic:'<i class="fas fa-hard-drive"></i>',lbl:'Backup & Logs'},
-      {id:'settings',ic:'<i class="fas fa-cog"></i>',lbl:'Settings'},
-    ]},
+const MENUS = {
+  Admin: [
+    {
+      g: 'Main', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'admissions', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Admissions', badge: '12' },
+        { id: 'students', ic: '<i class="fas fa-graduation-cap"></i>', lbl: 'Students', badge: '842' },
+        { id: 'teachers', ic: '<i class="fas fa-chalkboard-user"></i>', lbl: 'Teachers' },
+        { id: 'parents', ic: '<i class="fa-solid fa-hands-holding-child"></i>', lbl: 'Parents' },
+      ]
+    },
+    {
+      g: 'Academic', items: [
+        { id: 'classes', ic: '<i class="fas fa-building"></i>', lbl: 'Classes' },
+        { id: 'subjects', ic: '<i class="fas fa-book"></i>', lbl: 'Subjects' },
+        { id: 'timetable', ic: '<i class="fas fa-calendar"></i>', lbl: 'Timetable' },
+        { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
+        { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exams & Reports' },
+        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
+      ]
+    },
+    {
+      g: 'Finance', items: [
+        { id: 'fees', ic: '<i class="fas fa-money-bill"></i>', lbl: 'Fees / Payments' },
+      ]
+    },
+    {
+      g: 'Communication', items: [
+        { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Calendar' },
+        { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices', badge: '5' },
+        { id: 'news', ic: '<i class="fas fa-newspaper"></i>', lbl: 'News & Blog' },
+        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messaging' },
+        { id: 'contact_messages', ic: '<i class="fas fa-envelope"></i>', lbl: 'Contact Messages', badge: () => contactMessages.filter(m => !m.read).length || 0 },
+      ]
+    },
+    {
+      g: 'Administration', items: [
+        { id: 'staff', ic: '<i class="fas fa-users"></i>', lbl: 'Staff Management' },
+        { id: 'users', ic: '<i class="fas fa-key"></i>', lbl: 'User Accounts' },
+        { id: 'roles', ic: '<i class="fas fa-shield"></i>', lbl: 'Roles & Permissions' },
+        { id: 'reports', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Reports & Analytics' },
+        { id: 'alumni', ic: '<i class="fas fa-medal"></i>', lbl: 'Alumni Module' },
+        { id: 'backup', ic: '<i class="fas fa-hard-drive"></i>', lbl: 'Backup & Logs' },
+        { id: 'settings', ic: '<i class="fas fa-cog"></i>', lbl: 'Settings' },
+      ]
+    },
   ],
-  Teacher:[
-    {g:'Main',items:[
-      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
-      {id:'classes',ic:'<i class="fas fa-building"></i>',lbl:'My Classes'},
-      {id:'students',ic:'<i class="fas fa-graduation-cap"></i>',lbl:'Students List'},
-    ]},
-    {g:'Academic',items:[
-      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
-      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
-      {id:'grades',ic:'<i class="fas fa-file-alt"></i>',lbl:'Enter Grades'},
-      {id:'exams',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Exams & Grading'},
-      {id:'reportcards',ic:'<i class="fas fa-certificate"></i>',lbl:'Report Cards'},
-      {id:'lessonnotes',ic:'<i class="fas fa-file"></i>',lbl:'Lesson Notes'},
-      {id:'timetable',ic:'<i class="fas fa-calendar"></i>',lbl:'Timetable'},
-    ]},
-    {g:'Communication',items:[
-      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
-      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messaging / Chat'},
-      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events / Calendar'},
-    ]},
-    {g:'Account',items:[{id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Profile Settings'}]},
+  Teacher: [
+    {
+      g: 'Main', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'classes', ic: '<i class="fas fa-building"></i>', lbl: 'My Classes' },
+        { id: 'students', ic: '<i class="fas fa-graduation-cap"></i>', lbl: 'Students List' },
+      ]
+    },
+    {
+      g: 'Academic', items: [
+        { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
+        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
+        { id: 'grades', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Enter Grades' },
+        { id: 'exams', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Exams & Grading' },
+        { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Cards' },
+        { id: 'lessonnotes', ic: '<i class="fas fa-file"></i>', lbl: 'Lesson Notes' },
+        { id: 'timetable', ic: '<i class="fas fa-calendar"></i>', lbl: 'Timetable' },
+      ]
+    },
+    {
+      g: 'Communication', items: [
+        { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
+        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messaging / Chat' },
+        { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Calendar' },
+      ]
+    },
+    { g: 'Account', items: [{ id: 'profile', ic: '<i class="fas fa-user"></i>', lbl: 'Profile Settings' }] },
   ],
-  Student:[
-    {g:'Main',items:[
-      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
-      {id:'subjects',ic:'<i class="fas fa-book"></i>',lbl:'My Subjects'},
-      {id:'teachers',ic:'<i class="fas fa-chalkboard-user"></i>',lbl:'My Teachers'},
-      {id:'timetable',ic:'<i class="fas fa-calendar"></i>',lbl:'Timetable'},
-    ]},
-    {g:'Academic',items:[
-      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
-      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
-      {id:'exams',ic:'<i class="fas fa-file-alt"></i>',lbl:'Exam Results'},
-      {id:'reportcards',ic:'<i class="fas fa-certificate"></i>',lbl:'Report Card'},
-    ]},
-    {g:'Finance & Info',items:[
-      {id:'fees',ic:'<i class="fas fa-money-bill"></i>',lbl:'Fees Status'},
-      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
-      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messages'},
-      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events'},
-    ]},
-    {g:'Account',items:[{id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Profile'}]},
+  Student: [
+    {
+      g: 'Main', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'subjects', ic: '<i class="fas fa-book"></i>', lbl: 'My Subjects' },
+        { id: 'teachers', ic: '<i class="fas fa-chalkboard-user"></i>', lbl: 'My Teachers' },
+        { id: 'timetable', ic: '<i class="fas fa-calendar"></i>', lbl: 'Timetable' },
+      ]
+    },
+    {
+      g: 'Academic', items: [
+        { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
+        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
+        { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exam Results' },
+        { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Card' },
+      ]
+    },
+    {
+      g: 'Finance & Info', items: [
+        { id: 'fees', ic: '<i class="fas fa-money-bill"></i>', lbl: 'Fees Status' },
+        { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
+        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages' },
+        { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events' },
+      ]
+    },
+    { g: 'Account', items: [{ id: 'profile', ic: '<i class="fas fa-user"></i>', lbl: 'Profile' }] },
   ],
-  Parent:[
-    {g:'Main',items:[
-      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
-      {id:'children',ic:'<i class="fas fa-baby"></i>',lbl:'My Children'},
-      {id:'attendance',ic:'<i class="fas fa-check-circle"></i>',lbl:'Attendance'},
-    ]},
-    {g:'Academic',items:[
-      {id:'reportcards',ic:'<i class="fas fa-certificate"></i>',lbl:'Report Cards'},
-      {id:'assignments',ic:'<i class="fas fa-clipboard-list"></i>',lbl:'Assignments'},
-    ]},
-    {g:'Finance & Info',items:[
-      {id:'fees',ic:'<i class="fas fa-money-bill"></i>',lbl:'Fees / Payments'},
-      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messages'},
-      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
-      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events'},
-      {id:'teachers',ic:'<i class="fas fa-chalkboard-user"></i>',lbl:'Teacher Communication'},
-    ]},
-    {g:'Account',items:[{id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Profile'}]},
+  Parent: [
+    {
+      g: 'Main', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'children', ic: '<i class="fas fa-baby"></i>', lbl: 'My Children' },
+        { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
+      ]
+    },
+    {
+      g: 'Academic', items: [
+        { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Cards' },
+        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
+      ]
+    },
+    {
+      g: 'Finance & Info', items: [
+        { id: 'fees', ic: '<i class="fas fa-money-bill"></i>', lbl: 'Fees / Payments' },
+        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages' },
+        { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
+        { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events' },
+        { id: 'teachers', ic: '<i class="fas fa-chalkboard-user"></i>', lbl: 'Teacher Communication' },
+      ]
+    },
+    { g: 'Account', items: [{ id: 'profile', ic: '<i class="fas fa-user"></i>', lbl: 'Profile' }] },
   ],
-  Accountant:[
-    {g:'Main',items:[
-      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
-      {id:'fees',ic:'<i class="fas fa-credit-card"></i>',lbl:'Student Fees'},
-      {id:'payments',ic:'<i class="fas fa-money-bill-wave"></i>',lbl:'Payments (Cash)'},
-      {id:'expenses',ic:'<i class="fas fa-chart-line"></i>',lbl:'Expenses'},
-    ]},
-    {g:'Payroll & Structure',items:[
-      {id:'salary',ic:'<i class="fas fa-briefcase"></i>',lbl:'Salary / Payroll'},
-      {id:'feestructure',ic:'<i class="fas fa-hammer"></i>',lbl:'Fee Structure'},
-      {id:'receipts',ic:'<i class="fas fa-receipt"></i>',lbl:'Receipts'},
-    ]},
-    {g:'Reports',items:[
-      {id:'reports',ic:'<i class="fas fa-chart-line"></i>',lbl:'Financial Reports'},
-      {id:'balance',ic:'<i class="fas fa-balance-scale"></i>',lbl:'Balance Sheet'},
-    ]},
-    {g:'System',items:[
-      {id:'notices',ic:'<i class="fas fa-bell"></i>',lbl:'Notifications'},
-      {id:'settings',ic:'<i class="fas fa-cog"></i>',lbl:'Settings'},
-    ]},
+  Accountant: [
+    {
+      g: 'Main', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'fees', ic: '<i class="fas fa-credit-card"></i>', lbl: 'Student Fees' },
+        { id: 'payments', ic: '<i class="fas fa-money-bill-wave"></i>', lbl: 'Payments (Cash)' },
+        { id: 'expenses', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Expenses' },
+      ]
+    },
+    {
+      g: 'Payroll & Structure', items: [
+        { id: 'salary', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Salary / Payroll' },
+        { id: 'feestructure', ic: '<i class="fas fa-hammer"></i>', lbl: 'Fee Structure' },
+        { id: 'receipts', ic: '<i class="fas fa-receipt"></i>', lbl: 'Receipts' },
+      ]
+    },
+    {
+      g: 'Reports', items: [
+        { id: 'reports', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Financial Reports' },
+        { id: 'balance', ic: '<i class="fas fa-balance-scale"></i>', lbl: 'Balance Sheet' },
+      ]
+    },
+    {
+      g: 'System', items: [
+        { id: 'notices', ic: '<i class="fas fa-bell"></i>', lbl: 'Notifications' },
+        { id: 'settings', ic: '<i class="fas fa-cog"></i>', lbl: 'Settings' },
+      ]
+    },
   ],
-  Alumni:[
-    {g:'Main',items:[
-      {id:'dashboard',ic:'<i class="fas fa-chart-pie"></i>',lbl:'Dashboard Overview'},
-      {id:'profile',ic:'<i class="fas fa-user"></i>',lbl:'Alumni Profile'},
-      {id:'directory',ic:'<i class="fas fa-address-book"></i>',lbl:'Alumni Directory'},
-    ]},
-    {g:'Community',items:[
-      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events / Reunions'},
-      {id:'donations',ic:'<i class="fas fa-handshake"></i>',lbl:'Donations'},
-      {id:'messaging',ic:'<i class="fas fa-comments"></i>',lbl:'Messages'},
-      {id:'notices',ic:'<i class="fas fa-bullhorn"></i>',lbl:'Notices'},
-      {id:'jobs',ic:'<i class="fas fa-briefcase"></i>',lbl:'Job Board'},
-      {id:'certificates',ic:'<i class="fas fa-certificate"></i>',lbl:'Certificates Request'},
-    ]},
+  Alumni: [
+    {
+      g: 'Main', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'profile', ic: '<i class="fas fa-user"></i>', lbl: 'Alumni Profile' },
+        { id: 'directory', ic: '<i class="fas fa-address-book"></i>', lbl: 'Alumni Directory' },
+      ]
+    },
+    {
+      g: 'Community', items: [
+        { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Reunions' },
+        { id: 'donations', ic: '<i class="fas fa-handshake"></i>', lbl: 'Donations' },
+        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages' },
+        { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
+        { id: 'jobs', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Job Board' },
+        { id: 'certificates', ic: '<i class="fas fa-certificate"></i>', lbl: 'Certificates Request' },
+      ]
+    },
   ],
-  Visitor:[
-    {g:'Public Pages',items:[
-      {id:'dashboard',ic:'<i class="fas fa-home"></i>',lbl:'Home Page'},
-      {id:'about',ic:'<i class="fas fa-info-circle"></i>',lbl:'About School'},
-      {id:'admission',ic:'<i class="fas fa-file-alt"></i>',lbl:'Admission Info'},
-      {id:'news',ic:'<i class="fas fa-newspaper"></i>',lbl:'News / Blog'},
-      {id:'events',ic:'<i class="fas fa-calendar-alt"></i>',lbl:'Events'},
-      {id:'contact',ic:'<i class="fas fa-phone"></i>',lbl:'Contact Page'},
-      {id:'gallery',ic:'<i class="fas fa-image"></i>',lbl:'Gallery'},
-      {id:'alumni_pub',ic:'<i class="fas fa-medal"></i>',lbl:'Alumni Page'},
-    ]},
+  Visitor: [
+    {
+      g: 'Public Pages', items: [
+        { id: 'dashboard', ic: '<i class="fas fa-home"></i>', lbl: 'Home Page' },
+        { id: 'about', ic: '<i class="fas fa-info-circle"></i>', lbl: 'About School' },
+        { id: 'admission', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Admission Info' },
+        { id: 'news', ic: '<i class="fas fa-newspaper"></i>', lbl: 'News / Blog' },
+        { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events' },
+        { id: 'contact', ic: '<i class="fas fa-phone"></i>', lbl: 'Contact Page' },
+        { id: 'gallery', ic: '<i class="fas fa-image"></i>', lbl: 'Gallery' },
+        { id: 'alumni_pub', ic: '<i class="fas fa-medal"></i>', lbl: 'Alumni Page' },
+      ]
+    },
   ],
 };
 
-const AV_INIT={Admin:'AD',Teacher:'TC',Student:'ST',Parent:'PR',Accountant:'AC',Alumni:'AL',Visitor:'VI'};
+const AV_INIT = { Admin: 'AD', Teacher: 'TC', Student: 'ST', Parent: 'PR', Accountant: 'AC', Alumni: 'AL', Visitor: 'VI' };
 
 // Role-specific image mapping
 const ROLE_IMAGES = {
@@ -974,19 +1021,20 @@ const ROLE_IMAGES = {
 // ═══════════════════════════════════
 // LOGIN / AUTH
 // ═══════════════════════════════════
-function setRole(el,role){
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+function setRole(el, role) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  loginRole=role;
+  loginRole = role;
   // Show role-specific login page if not visitor
-  if(role !== 'Visitor'){
+  if (role !== 'Visitor') {
     showRoleLoginModal(role);
   } else {
     doLogin();
   }
 }
 
-function showRoleLoginModal(role){
+function showRoleLoginModal(role) {
+  closeModal();
   const roleImage = ROLE_IMAGES[role];
   const roleLoginPage = `
     <div id="role-login-page" class="role-login-page">
@@ -1008,7 +1056,10 @@ function showRoleLoginModal(role){
             </div>
             <div class="form-field">
               <label>Password</label>
-              <input type="password" id="role-pass" placeholder="Enter password">
+              <div class="password-wrapper">
+                <input type="password" id="role-pass" placeholder="Enter password">
+                <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('role-pass', this)"></i>
+              </div>
             </div>
             <button class="login-btn" onclick="doRoleLogin('${role}')">Sign In to ${role} Dashboard →</button>
           </div>
@@ -1016,90 +1067,181 @@ function showRoleLoginModal(role){
       </div>
     </div>
   `;
-  
+
   // Remove any existing role login page
   const existing = document.getElementById('role-login-page');
-  if(existing) existing.remove();
-  
+  if (existing) existing.remove();
+
   // Insert full page login
   document.body.insertAdjacentHTML('afterbegin', roleLoginPage);
-  document.getElementById('login-page').style.display='none';
+  document.getElementById('login-page').style.display = 'none';
 }
 
-function doRoleLogin(role){
+function doRoleLogin(role) {
   const email = document.getElementById('role-email')?.value;
   const pass = document.getElementById('role-pass')?.value;
-  
-  if(!email || !pass){
+
+  if (!email || !pass) {
     showToast('Please fill in all fields', 'error');
     return;
   }
-  
+
   loginRole = role;
   const roleLoginPage = document.getElementById('role-login-page');
-  if(roleLoginPage) roleLoginPage.remove();
+  if (roleLoginPage) roleLoginPage.remove();
   doLogin();
 }
 
-function backToRoles(){
+function backToRoles() {
   const roleLoginPage = document.getElementById('role-login-page');
-  if(roleLoginPage) {
-    roleLoginPage.style.opacity='0';
-    roleLoginPage.style.transition='opacity 0.3s ease-out';
-    setTimeout(()=>{
-      if(document.getElementById('role-login-page')) roleLoginPage.remove();
-      document.getElementById('login-page').style.display='flex';
+  if (roleLoginPage) {
+    roleLoginPage.style.opacity = '0';
+    roleLoginPage.style.transition = 'opacity 0.3s ease-out';
+    setTimeout(() => {
+      if (document.getElementById('role-login-page')) roleLoginPage.remove();
+      if (currentRole === 'Visitor') {
+        showStaffLoginModal();
+      } else {
+        document.getElementById('login-page').style.display = 'flex';
+      }
     }, 300);
   } else {
-    document.getElementById('login-page').style.display='flex';
+    if (currentRole === 'Visitor') {
+      showStaffLoginModal();
+    } else {
+      document.getElementById('login-page').style.display = 'flex';
+    }
   }
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
 }
 
-function doLogin(){
-  document.getElementById('login-page').style.display='none';
+function doLogin() {
+  document.getElementById('login-page').style.display = 'none';
   document.getElementById('app-shell').classList.add('active');
-  document.getElementById('role-fab').style.display='flex';
+  document.getElementById('role-fab').style.display = 'flex';
   closeModal();
   switchRole(loginRole);
 }
-function logout(){
-  if(currentRole==='Visitor'){
+function logout() {
+  if (currentRole === 'Visitor') {
     showStaffLoginModal();
-  }else{
+  } else {
     document.getElementById('app-shell').classList.remove('active');
-    document.getElementById('login-page').style.display='flex';
-    document.getElementById('role-fab').style.display='none';
+    document.getElementById('login-page').style.display = 'flex';
+    document.getElementById('role-fab').style.display = 'none';
     document.getElementById('role-switcher').classList.remove('open');
   }
 }
-function showStaffLoginModal(){
+function showStaffLoginModal() {
   let loginForm = document.getElementById('login-page').innerHTML;
   openModal(loginForm);
 }
-function adminLogin(){
-  const adminPassword = prompt('Enter Admin Password:');
-  if(adminPassword === '12345'){
-    loginRole = 'Admin';
-    doLogin();
-  } else if(adminPassword !== null) {
-    showToast('<i class="fas fa-times-circle"></i> Incorrect password', 'error');
+function adminLogin() {
+  closeModal();
+  const adminLoginPage = `
+    <div id="role-login-page" class="role-login-page admin-login-page">
+      <button class="role-login-back" onclick="backToRoles()"><i class="fas fa-arrow-left"></i></button>
+      <div class="role-login-wrapper">
+        <div class="role-login-image-section admin-image-section">
+          <div class="role-login-image">
+            <img src="admin.jpeg" alt="Admin">
+            <div class="role-login-logo"><img src="Logo.png" alt="Logo"></div>
+          </div>
+        </div>
+        <div class="role-login-form-section">
+          <div class="role-login-form">
+            <div class="admin-icon-wrap"><i class="fas fa-user-shield"></i></div>
+            <h2>Admin Portal</h2>
+            <p>Enter your credentials to access the admin dashboard</p>
+            <div class="form-field">
+              <label>Admin Username</label>
+              <input type="text" id="admin-user" placeholder="Enter admin username" value="admin">
+            </div>
+            <div class="form-field">
+              <label>Admin Password</label>
+              <div class="password-wrapper">
+                <input type="password" id="admin-pass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+                <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('admin-pass', this)"></i>
+              </div>
+            </div>
+            <button class="login-btn admin-login-btn" onclick="doAdminLogin()"><i class="fas fa-shield-halved"></i> Access Admin Dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const existing = document.getElementById('role-login-page');
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML('afterbegin', adminLoginPage);
+  document.getElementById('login-page').style.display = 'none';
+
+  // Focus the password field
+  setTimeout(() => {
+    const passField = document.getElementById('admin-pass');
+    if (passField) passField.focus();
+  }, 500);
+}
+
+function togglePasswordVisibility(inputId, iconElement) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    iconElement.classList.remove('fa-eye');
+    iconElement.classList.add('fa-eye-slash');
+  } else {
+    input.type = 'password';
+    iconElement.classList.remove('fa-eye-slash');
+    iconElement.classList.add('fa-eye');
   }
 }
-function toggleDark(){
+
+function doAdminLogin() {
+  const user = document.getElementById('admin-user')?.value;
+  const pass = document.getElementById('admin-pass')?.value;
+
+  if (!pass) {
+    showToast('<i class="fas fa-exclamation-triangle"></i> Please enter the admin password', 'error');
+    return;
+  }
+
+  if (pass === '12345') {
+    loginRole = 'Admin';
+    const adminPage = document.getElementById('role-login-page');
+    if (adminPage) adminPage.remove();
+    doLogin();
+    showToast('<i class="fas fa-shield-halved"></i> Welcome, Administrator!', 'success');
+  } else {
+    showToast('<i class="fas fa-times-circle"></i> Incorrect admin password', 'error');
+    const passField = document.getElementById('admin-pass');
+    if (passField) {
+      passField.value = '';
+      passField.focus();
+      passField.style.borderColor = 'var(--danger)';
+      passField.style.boxShadow = '0 0 0 3px rgba(239,68,68,.15)';
+      setTimeout(() => {
+        passField.style.borderColor = '';
+        passField.style.boxShadow = '';
+      }, 2000);
+    }
+  }
+}
+function toggleDark() {
   darkMode = !darkMode;
   applyTheme();
   localStorage.setItem('gloryReginTheme', darkMode ? 'dark' : 'light');
   showToast(`✓ ${darkMode ? 'Dark' : 'Light'} mode enabled`, 'success');
 }
 
-function showStudentIDCard(){
+function showStudentIDCard() {
   const studentName = 'Ama Serwaa';
   const studentID = '2024-0042';
   const studentClass = 'JHS 1';
   const studentHouse = 'Red House';
   const studentGender = 'Female';
-  
+
   const idCardHTML = `
     <div class="idcard-modal-overlay">
       <div class="idcard-modal-content">
@@ -1150,292 +1292,240 @@ function showStudentIDCard(){
       </div>
     </div>
   `;
-  
+
   document.body.insertAdjacentHTML('beforeend', idCardHTML);
-  
+
   // Add click outside to close
-  document.querySelector('.idcard-modal-overlay').addEventListener('click', function(e){
-    if(e.target === this) this.remove();
+  document.querySelector('.idcard-modal-overlay').addEventListener('click', function (e) {
+    if (e.target === this) this.remove();
   });
 }
 
-function downloadIDCard(studentName, studentID){
+function downloadIDCard(studentName, studentID) {
   alert('Downloading ID Card for ' + studentName + ' (ID: ' + studentID + ')...\nThis feature will be implemented with a proper file download system.');
 }
 
-function showNotifications(){
-  const notifications = [
-    { 
-      id: 1, 
-      icon: '<i class="fas fa-clipboard-list"></i>', 
-      title: 'New Assignment', 
-      msg: 'Math HW Ch.5 posted', 
-      time: '2m ago', 
-      read: false,
-      fullMsg: 'Mr. Amponsah has posted a new assignment: Mathematics Chapter 5 Problems. Due date: March 22, 2026. Please complete and submit before the deadline.',
-      action: 'View Assignment',
-      actionLink: 'assignments'
-    },
-    { 
-      id: 2, 
-      icon: '<i class="fas fa-check-circle"></i>', 
-      title: 'Grade Posted', 
-      msg: 'Your essay - Grade A', 
-      time: '1h ago', 
-      read: false,
-      fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.',
-      action: 'View Feedback',
-      actionLink: 'grades'
-    },
-    { 
-      id: 3, 
-      icon: '<i class="fas fa-graduation-cap"></i>', 
-      title: 'Admission Update', 
-      msg: 'New student enrolled', 
-      time: '3h ago', 
-      read: true,
-      fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.',
-      action: 'View Details',
-      actionLink: 'admissions'
-    },
-    { 
-      id: 4, 
-      icon: '<i class="fas fa-comments"></i>', 
-      title: 'New Message', 
-      msg: 'Message from Ms. Mensah', 
-      time: '5h ago', 
-      read: true,
-      fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.',
-      action: 'Reply',
-      actionLink: 'messaging'
-    },
-    { 
-      id: 5, 
-      icon: '<i class="fas fa-exclamation-triangle"></i>', 
-      title: 'Fee Reminder', 
-      msg: '5 students pending fees', 
-      time: '1d ago', 
-      read: true,
-      fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GH₵4,800. Please follow up with parents or view the fees module for details.',
-      action: 'View Fees',
-      actionLink: 'fees'
-    }
-  ];
-  
-  let html = `<div style="max-width:90%;width:90%;background:white;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg)">
-    <div style="padding:16px;background:var(--blue-main);color:white;display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">Notifications</h3>
-      <button class="btn" style="background:rgba(255,255,255,0.2);color:white;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-weight:600" onclick="closeModal()">✕</button>
-    </div>
-    <div style="max-height:400px;overflow-y:auto">`;
-  
-  notifications.forEach(notif => {
-    html += `<div style="padding:12px;border-bottom:1px solid var(--gray-100);cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='var(--blue-xpale)';this.style.transform='translateX(4px)'" onmouseout="this.style.background='transparent';this.style.transform='translateX(0)'" onclick="viewNotificationDetail(${notif.id})">
-      <div style="display:flex;gap:10px">
-        <div style="font-size:18px;color:var(--blue-main)">${notif.icon}</div>
-        <div style="flex:1">
-          <div style="font-weight:600;color:var(--gray-900)">${notif.title}${!notif.read?'<span style="display:inline-block;width:6px;height:6px;background:var(--danger);border-radius:50%;margin-left:8px"></span>':''}</div>
-          <div style="font-size:12px;color:var(--gray-600);margin-top:2px">${notif.msg}</div>
-          <div style="font-size:10px;color:var(--gray-400);margin-top:4px">${notif.time}</div>
-        </div>
-        <div style="font-size:12px;color:var(--blue-main);font-weight:600">→</div>
-      </div>
-    </div>`;
-  });
-  
-  html += `</div>
-    <div style="padding:12px;text-align:center;border-top:1px solid var(--gray-100)">
-      <a style="color:var(--blue-main);font-weight:600;cursor:pointer;font-size:13px" onclick="closeModal()">Close</a>
-    </div>
-  </div>`;
-  
-  openModal(html);
+let APP_NOTIFICATIONS = [
+  { id: 1, icon: '<i class="fas fa-clipboard-list"></i>', title: 'New Assignment', msg: 'Math HW Ch.5 posted', time: '2m ago', read: false, fullMsg: 'Mr. Amponsah has posted a new assignment: Mathematics Chapter 5 Problems. Due date: March 22, 2026. Please complete and submit before the deadline.', action: 'View Assignment', actionLink: 'assignments' },
+  { id: 2, icon: '<i class="fas fa-check-circle"></i>', title: 'Grade Posted', msg: 'Your essay - Grade A', time: '1h ago', read: false, fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.', action: 'View Feedback', actionLink: 'grades' },
+  { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Admission Update', msg: 'New student enrolled', time: '3h ago', read: true, fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.', action: 'View Details', actionLink: 'admissions' },
+  { id: 4, icon: '<i class="fas fa-comments"></i>', title: 'New Message', msg: 'Message from Ms. Mensah', time: '5h ago', read: true, fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.', action: 'Reply', actionLink: 'messaging' },
+  { id: 5, icon: '<i class="fas fa-exclamation-triangle"></i>', title: 'Fee Reminder', msg: '5 students pending fees', time: '1d ago', read: true, fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GH₵4,800. Please follow up with parents or view the fees module for details.', action: 'View Fees', actionLink: 'fees' }
+];
+
+function markNotificationAsRead(id, event) {
+  if (event) event.stopPropagation();
+  const notif = APP_NOTIFICATIONS.find(n => n.id === id);
+  if (notif) {
+    notif.read = true;
+    showNotifications();
+  }
 }
 
-function viewNotificationDetail(notifId){
-  const allNotifs = [
-    { 
-      id: 1, 
-      icon: '<i class="fas fa-clipboard-list"></i>', 
-      title: 'New Assignment', 
-      msg: 'Math HW Ch.5 posted', 
-      time: '2m ago', 
-      read: false,
-      fullMsg: 'Mr. Amponsah has posted a new assignment: Mathematics Chapter 5 Problems. Due date: March 22, 2026. Please complete and submit before the deadline.',
-      action: 'View Assignment',
-      actionLink: 'assignments'
-    },
-    { 
-      id: 2, 
-      icon: '<i class="fas fa-check-circle"></i>', 
-      title: 'Grade Posted', 
-      msg: 'Your essay - Grade A', 
-      time: '1h ago', 
-      read: false,
-      fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.',
-      action: 'View Feedback',
-      actionLink: 'grades'
-    },
-    { 
-      id: 3, 
-      icon: '<i class="fas fa-graduation-cap"></i>', 
-      title: 'Admission Update', 
-      msg: 'New student enrolled', 
-      time: '3h ago', 
-      read: true,
-      fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.',
-      action: 'View Details',
-      actionLink: 'admissions'
-    },
-    { 
-      id: 4, 
-      icon: '<i class="fas fa-comments"></i>', 
-      title: 'New Message', 
-      msg: 'Message from Ms. Mensah', 
-      time: '5h ago', 
-      read: true,
-      fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.',
-      action: 'Reply',
-      actionLink: 'messaging'
-    },
-    { 
-      id: 5, 
-      icon: '<i class="fas fa-exclamation-triangle"></i>', 
-      title: 'Fee Reminder', 
-      msg: '5 students pending fees', 
-      time: '1d ago', 
-      read: true,
-      fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GH₵4,800. Please follow up with parents or view the fees module for details.',
-      action: 'View Fees',
-      actionLink: 'fees'
-    }
-  ];
-  
-  const notif = allNotifs.find(n => n.id === notifId);
-  if(!notif) return;
-  
-  let html = `<div style="max-width:90%;width:90%;background:white;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg)">
-      <div style="display:flex;gap:12px">
-        <div style="font-size:32px;color:var(--blue-main)">${notif.icon}</div>
-        <div>
-          <h2 style="margin:0;font-size:20px">${notif.title}</h2>
-          <p style="margin:6px 0 0 0;opacity:0.9;font-size:13px">${notif.time}</p>
-        </div>
+function clearAllNotifications() {
+  APP_NOTIFICATIONS = [];
+  showToast('<i class="fas fa-check-circle"></i> All notifications cleared', 'success');
+  showNotifications();
+}
+
+function deleteNotification(id, event) {
+  if (event) event.stopPropagation();
+  APP_NOTIFICATIONS = APP_NOTIFICATIONS.filter(n => n.id !== id);
+  showToast('<i class="fas fa-check-circle"></i> Notification deleted', 'success');
+  showNotifications();
+}
+
+function showNotifications() {
+  const unreadCount = APP_NOTIFICATIONS.filter(n => !n.read).length;
+
+  let html = `<div style="max-width:460px;width:95%;background:rgba(255,255,255,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.5);border-radius:24px;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.12)">
+    <div style="padding:20px 24px;background:linear-gradient(135deg,var(--blue-main),#1e3a5f);color:white;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div>
+        <h3 style="margin:0;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px">
+          <i class="fas fa-bell"></i> Notifications 
+          ${unreadCount > 0 ? `<span style="background:var(--danger);color:white;font-size:11px;padding:3px 10px;border-radius:12px;font-weight:700;box-shadow:0 4px 10px rgba(239,68,68,0.3)">${unreadCount} New</span>` : ''}
+        </h3>
       </div>
-      <button class="btn" style="background:rgba(255,255,255,0.3);color:white;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600" onclick="showNotifications()">← Back</button>
+      <div style="display:flex;gap:8px">
+        ${APP_NOTIFICATIONS.length > 0 ? `<button onclick="clearAllNotifications()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="Clear All"><i class="fas fa-trash-alt"></i></button>` : ''}
+        <button onclick="closeModal()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="Close"><i class="fas fa-times"></i></button>
+      </div>
     </div>
     
+    <div style="max-height:450px;overflow-y:auto;padding:16px">`;
+
+  if (APP_NOTIFICATIONS.length === 0) {
+    html += `<div style="padding:50px 20px;text-align:center;color:var(--gray-500)">
+      <div style="font-size:54px;margin-bottom:16px;opacity:0.3;color:var(--blue-main)"><i class="fas fa-bell-slash"></i></div>
+      <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">No notifications</div>
+      <div style="font-size:14px;margin-top:6px">You're all caught up!</div>
+    </div>`;
+  } else {
+    APP_NOTIFICATIONS.forEach(notif => {
+      html += `<div style="padding:16px;margin-bottom:12px;border-radius:16px;background:${notif.read ? 'rgba(255,255,255,0.7)' : 'white'};border:1px solid ${notif.read ? 'transparent' : 'rgba(59,130,246,0.3)'};box-shadow:${notif.read ? 'none' : '0 8px 24px rgba(59,130,246,0.1)'};cursor:pointer;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);position:relative" 
+        onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 28px rgba(0,0,0,0.08)'" 
+        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='${notif.read ? 'none' : '0 8px 24px rgba(59,130,246,0.1)'}'" 
+        onclick="viewNotificationDetail(${notif.id})">
+        <div style="display:flex;gap:16px">
+          <div style="font-size:22px;color:${notif.read ? 'var(--gray-400)' : 'var(--blue-main)'};background:${notif.read ? 'var(--gray-100)' : 'var(--blue-xpale)'};width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            ${notif.icon}
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;color:${notif.read ? 'var(--gray-700)' : 'var(--blue-dark)'};margin-bottom:4px;display:flex;align-items:center;justify-content:space-between">
+              <span>${notif.title} ${!notif.read ? '<span style="display:inline-block;width:8px;height:8px;background:var(--danger);border-radius:50%;margin-left:8px;vertical-align:middle;box-shadow:0 0 8px rgba(239,68,68,0.5)"></span>' : ''}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--gray-400)">${notif.time}</span>
+            </div>
+            <div style="font-size:13.5px;color:var(--gray-600);line-height:1.5">${notif.msg}</div>
+          </div>
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;opacity:${notif.read ? '0.6' : '1'}">
+          ${!notif.read ? `<button onclick="markNotificationAsRead(${notif.id}, event)" style="background:var(--blue-xpale);color:var(--blue-main);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='var(--blue-pale)'" onmouseout="this.style.background='var(--blue-xpale)'"><i class="fas fa-check"></i> Mark Read</button>` : ''}
+          <button onclick="deleteNotification(${notif.id}, event)" style="background:rgba(239,68,68,0.1);color:var(--danger);border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += `</div></div>`;
+
+  openModal(html, true);
+}
+
+function viewNotificationDetail(notifId) {
+  const notif = APP_NOTIFICATIONS.find(n => n.id === notifId);
+  if (!notif) return;
+
+  // Mark as read when viewing details
+  notif.read = true;
+
+  let html = `<div style="max-width:500px;width:95%;background:rgba(255,255,255,0.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.5);border-radius:24px;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.15)">
+      <div style="padding:24px;background:linear-gradient(135deg,var(--blue-main),#1e3a5f);color:white;display:flex;gap:16px;align-items:center;position:relative">
+        <button class="btn" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.2);color:white;padding:8px;width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s" onclick="showNotifications()"><i class="fas fa-arrow-left"></i></button>
+        <div style="font-size:36px;background:rgba(255,255,255,0.2);width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,0.1)">
+          ${notif.icon}
+        </div>
+        <div style="flex:1;padding-right:40px">
+          <h2 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.5px">${notif.title}</h2>
+          <p style="margin:6px 0 0 0;opacity:0.8;font-size:13px;font-weight:500"><i class="far fa-clock"></i> ${notif.time}</p>
+        </div>
+      </div>
+    
     <div style="padding:24px;background:var(--gray-50)">
-      <div style="background:white;padding:16px;border-radius:10px;line-height:1.6;color:var(--gray-800);font-size:14px;margin-bottom:16px">
+      <div style="background:white;padding:20px;border-radius:16px;line-height:1.7;color:var(--gray-800);font-size:15px;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,0.04);border:1px solid var(--gray-100)">
         ${notif.fullMsg}
       </div>
       
-      <div style="display:flex;gap:10px">
-        <button class="btn" style="flex:1;background:var(--blue-main);color:white;padding:12px;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.2s" onmouseover="this.style.background='var(--blue-mid)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='var(--blue-main)';this.style.transform='translateY(0)'" onclick="navTo('${notif.actionLink}');closeModal()">${notif.action}</button>
-        <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-800);padding:12px;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.2s" onmouseover="this.style.background='var(--gray-300)'" onmouseout="this.style.background='var(--gray-200)'" onclick="showNotifications()">Dismiss</button>
+      <div style="display:flex;gap:12px">
+        <button class="btn" style="flex:1;background:var(--blue-main);color:white;padding:14px;border:none;border-radius:12px;cursor:pointer;font-weight:700;font-size:14px;transition:all 0.2s;box-shadow:0 8px 20px rgba(26,86,219,0.2)" onmouseover="this.style.background='var(--blue-mid)';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='var(--blue-main)';this.style.transform='translateY(0)'" onclick="navTo('${notif.actionLink}');closeModal()">
+          ${notif.action} <i class="fas fa-arrow-right" style="margin-left:6px"></i>
+        </button>
+        <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-800);padding:14px;border:none;border-radius:12px;cursor:pointer;font-weight:700;font-size:14px;transition:all 0.2s" onmouseover="this.style.background='var(--gray-300)'" onmouseout="this.style.background='var(--gray-200)'" onclick="showNotifications()">
+          Back to list
+        </button>
       </div>
     </div>
   </div>`;
-  
-  openModal(html);
+
+  openModal(html, true);
 }
 
 // ═══════════════════════════════════
 // ROLE / NAVIGATION
 // ═══════════════════════════════════
-function toggleRS(){document.getElementById('role-switcher').classList.toggle('open')}
-function switchRole(role){
-  currentRole=role;
+function toggleRS() { document.getElementById('role-switcher').classList.toggle('open') }
+function switchRole(role) {
+  currentRole = role;
   document.getElementById('role-switcher').classList.remove('open');
-  document.getElementById('top-role').textContent=role.toUpperCase();
-  document.getElementById('top-av').textContent=AV_INIT[role]||'US';
-  const menus=MENUS[role]||MENUS.Admin;
-  currentMod=menus[0].items[0].id;
-  
+  document.getElementById('top-role').textContent = role.toUpperCase();
+  document.getElementById('top-av').textContent = AV_INIT[role] || 'US';
+  const menus = MENUS[role] || MENUS.Admin;
+  currentMod = menus[0].items[0].id;
+
   // Show/hide sidebar and topbar based on role
   const sidebar = document.getElementById('sidebar');
   const topbar = document.querySelector('.topbar');
   const roleFab = document.getElementById('role-fab');
   const mainWrap = document.getElementById('main-content');
-  
-  if(role==='Visitor'){
-    if(sidebar) sidebar.style.display='none';
-    if(topbar) topbar.style.display='none';
-    if(roleFab) roleFab.style.display='none';
+
+  if (role === 'Visitor') {
+    if (sidebar) sidebar.style.display = 'none';
+    if (topbar) topbar.style.display = 'none';
+    if (roleFab) roleFab.style.display = 'none';
     mainWrap.className = 'public-main-wrap';
     renderPublicNavbar();
-  }else{
-    if(sidebar) sidebar.style.display='flex';
-    if(topbar) topbar.style.display='flex';
-    if(roleFab) roleFab.style.display='flex';
+  } else {
+    if (sidebar) sidebar.style.display = 'flex';
+    if (topbar) topbar.style.display = 'flex';
+    if (roleFab) roleFab.style.display = 'flex';
     mainWrap.className = 'main-wrap';
     renderSidebar();
   }
   renderMain();
 }
-function navTo(id){
+function navTo(id) {
   // Add to navigation history if it's different from current
-  if(id !== currentMod) {
+  if (id !== currentMod) {
     navigationHistory.push(id);
     // Limit history to last 10 pages
-    if(navigationHistory.length > 10) {
+    if (navigationHistory.length > 10) {
       navigationHistory.shift();
     }
   }
-  
-  currentMod=id;
-  
-  if(currentRole==='Visitor'){
+
+  currentMod = id;
+
+  if (currentRole === 'Visitor') {
     renderPublicNavbar();
-  }else{
+  } else {
     renderSidebar();
   }
-  
-  renderMain();  
+
+  renderMain();
   // Close sidebar on mobile after navigation
   closeMobileSidebar();
-  
-  document.getElementById('main-content').scrollTop=0;
-  window.scrollTo(0,0);
+
+  document.getElementById('main-content').scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 // ═══════════════════════════════════
 // MOBILE SIDEBAR TOGGLE FUNCTIONS
 // ═══════════════════════════════════
-function toggleMobileSidebar(){
+function toggleMobileSidebar() {
   const sidebar = document.getElementById('sidebar');
-  if(!sidebar) return;
+  if (!sidebar) return;
   sidebar.classList.toggle('open');
 }
 
-function closeMobileSidebar(){
+function closeMobileSidebar() {
   const sidebar = document.getElementById('sidebar');
-  if(!sidebar) return;
+  if (!sidebar) return;
   sidebar.classList.remove('open');
 }
 
-function openMobileSidebar(){
+function openMobileSidebar() {
   const sidebar = document.getElementById('sidebar');
-  if(!sidebar) return;
+  if (!sidebar) return;
   sidebar.classList.add('open');
 }
 
-function goBack(){
+function goBack() {
   // Remove current page and go to previous
-  if(navigationHistory.length > 1) {
+  if (navigationHistory.length > 1) {
     navigationHistory.pop();  // Remove current
     const previousMod = navigationHistory[navigationHistory.length - 1];
     currentMod = previousMod;
-    
-    if(currentRole==='Visitor'){
+
+    if (currentRole === 'Visitor') {
       renderPublicNavbar();
-    }else{
+    } else {
       renderSidebar();
     }
-    
+
     renderMain();
-    document.getElementById('main-content').scrollTop=0;
-    window.scrollTo(0,0);
+    document.getElementById('main-content').scrollTop = 0;
+    window.scrollTo(0, 0);
   } else {
     // If no history, go to dashboard
     navTo('dashboard');
@@ -1445,7 +1535,7 @@ function goBack(){
 // ═══════════════════════════════════
 // RENDER PUBLIC NAVBAR
 // ═══════════════════════════════════
-function renderPublicNavbar(){
+function renderPublicNavbar() {
   const navbar = document.createElement('nav');
   navbar.className = 'public-navbar';
   navbar.innerHTML = `
@@ -1458,12 +1548,12 @@ function renderPublicNavbar(){
         </div>
       </div>
       <div class="public-nav-links" id="public-nav-links">
-        <a class="nav-link${currentMod==='dashboard'?' active':''}" onclick="navTo('dashboard');closePublicMenu()"><i class="fas fa-home"></i> Home</a>
-        <a class="nav-link${currentMod==='about'?' active':''}" onclick="navTo('about');closePublicMenu()"><i class="fas fa-info-circle"></i> About</a>
-        <a class="nav-link${currentMod==='admission'?' active':''}" onclick="navTo('admission');closePublicMenu()"><i class="fas fa-file-alt"></i> Admissions</a>
-        <a class="nav-link${currentMod==='gallery'?' active':''}" onclick="navTo('gallery');closePublicMenu()"><i class="fas fa-image"></i> Gallery</a>
-        <a class="nav-link${currentMod==='news'?' active':''}" onclick="navTo('news');closePublicMenu()"><i class="fas fa-newspaper"></i> News</a>
-        <a class="nav-link${currentMod==='contact'?' active':''}" onclick="navTo('contact');closePublicMenu()"><i class="fas fa-phone"></i> Contact</a>
+        <a class="nav-link${currentMod === 'dashboard' ? ' active' : ''}" onclick="navTo('dashboard');closePublicMenu()"><i class="fas fa-home"></i> Home</a>
+        <a class="nav-link${currentMod === 'about' ? ' active' : ''}" onclick="navTo('about');closePublicMenu()"><i class="fas fa-info-circle"></i> About</a>
+        <a class="nav-link${currentMod === 'admission' ? ' active' : ''}" onclick="navTo('admission');closePublicMenu()"><i class="fas fa-file-alt"></i> Admissions</a>
+        <a class="nav-link${currentMod === 'gallery' ? ' active' : ''}" onclick="navTo('gallery');closePublicMenu()"><i class="fas fa-image"></i> Gallery</a>
+        <a class="nav-link${currentMod === 'news' ? ' active' : ''}" onclick="navTo('news');closePublicMenu()"><i class="fas fa-newspaper"></i> News</a>
+        <a class="nav-link${currentMod === 'contact' ? ' active' : ''}" onclick="navTo('contact');closePublicMenu()"><i class="fas fa-phone"></i> Contact</a>
       </div>
       <div class="public-nav-right">
         <button class="hamburger-btn" id="hamburger-btn" title="Toggle Menu"><i class="fas fa-bars"></i></button>
@@ -1471,32 +1561,32 @@ function renderPublicNavbar(){
       </div>
     </div>
   `;
-  
+
   const existingNavbar = document.querySelector('.public-navbar');
-  if(existingNavbar) existingNavbar.remove();
-  
+  if (existingNavbar) existingNavbar.remove();
+
   const appShell = document.getElementById('app-shell');
   appShell.insertBefore(navbar, appShell.firstChild);
-  
+
   // Apply public-main-wrap class to main content
   const mainWrap = document.getElementById('main-content');
   mainWrap.className = 'public-main-wrap';
-  
+
   // Initialize public menu
   initializePublicMenu();
 }
 
 // Show/hide hamburger button and nav links based on window size
-function updatePublicNavbarResponsive(){
+function updatePublicNavbarResponsive() {
   const hamburger = document.getElementById('hamburger-btn');
   const navLinks = document.getElementById('public-nav-links');
-  
-  if(!hamburger || !navLinks) return;
-  
+
+  if (!hamburger || !navLinks) return;
+
   // Get current window width
   const width = window.innerWidth;
-  
-  if(width <= 768){
+
+  if (width <= 768) {
     // Mobile: show hamburger button using class
     hamburger.classList.add('visible');
     // CSS handles mobile styling; just ensure display is none by default
@@ -1511,17 +1601,17 @@ function updatePublicNavbarResponsive(){
 }
 
 // Toggle public navigation menu on mobile
-function togglePublicMenu(event){
-  if(event) {
+function togglePublicMenu(event) {
+  if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
-  
+
   const navLinks = document.getElementById('public-nav-links');
   const width = window.innerWidth;
-  
-  if(width <= 768 && navLinks){
-    if(navLinks.classList.contains('open')){
+
+  if (width <= 768 && navLinks) {
+    if (navLinks.classList.contains('open')) {
       navLinks.classList.remove('open');
       navLinks.style.display = 'none';
     } else {
@@ -1532,35 +1622,35 @@ function togglePublicMenu(event){
 }
 
 // Close public navigation menu
-function closePublicMenu(){
+function closePublicMenu() {
   const navLinks = document.getElementById('public-nav-links');
-  if(navLinks){
+  if (navLinks) {
     navLinks.classList.remove('open');
-    if(window.innerWidth <= 768){
+    if (window.innerWidth <= 768) {
       navLinks.style.display = 'none';
     }
   }
 }
 
 // Initialize event listeners with event delegation
-function initializePublicMenu(){
+function initializePublicMenu() {
   updatePublicNavbarResponsive();
-  
+
   // Use event delegation for hamburger button clicks
   document.removeEventListener('click', handleDocumentClick);
   document.addEventListener('click', handleDocumentClick);
 }
 
 // Global event handler for delegated clicks
-function handleDocumentClick(e){
+function handleDocumentClick(e) {
   const hamburgerBtn = e.target.closest('#hamburger-btn');
   const navbar = document.querySelector('.public-navbar');
-  
-  if(hamburgerBtn){
+
+  if (hamburgerBtn) {
     e.preventDefault();
     e.stopPropagation();
     togglePublicMenu(e);
-  } else if(navbar && !navbar.contains(e.target)){
+  } else if (navbar && !navbar.contains(e.target)) {
     closePublicMenu();
   }
 }
@@ -1576,86 +1666,86 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Also call it immediately if DOM is already loaded
-if(document.readyState !== 'loading'){
+if (document.readyState !== 'loading') {
   initializePublicMenu();
 }
 
 // ═══════════════════════════════════
 // RENDER SIDEBAR
 // ═══════════════════════════════════
-function renderSidebar(){
-  const menus=MENUS[currentRole]||MENUS.Admin;
-  let h='';
-  menus.forEach(sec=>{
-    h+=`<div class="sb-section"><div class="sb-label">${sec.g}</div>`;
-    sec.items.forEach(it=>{
-      h+=`<div class="sb-item${it.id===currentMod?' active':''}" onclick="navTo('${it.id}')">
+function renderSidebar() {
+  const menus = MENUS[currentRole] || MENUS.Admin;
+  let h = '';
+  menus.forEach(sec => {
+    h += `<div class="sb-section"><div class="sb-label">${sec.g}</div>`;
+    sec.items.forEach(it => {
+      h += `<div class="sb-item${it.id === currentMod ? ' active' : ''}" onclick="navTo('${it.id}')">
         <span class="si">${it.ic}</span>
         <span class="sl">${it.lbl}</span>
-        ${it.badge?`<span class="sb-badge">${typeof it.badge === 'function' ? it.badge() : it.badge}</span>`:''}
+        ${it.badge ? `<span class="sb-badge">${typeof it.badge === 'function' ? it.badge() : it.badge}</span>` : ''}
       </div>`;
     });
-    h+=`</div><div class="sb-divider"></div>`;
+    h += `</div><div class="sb-divider"></div>`;
   });
-  document.getElementById('sidebar').innerHTML=h;
+  document.getElementById('sidebar').innerHTML = h;
 }
 
 // ═══════════════════════════════════
 // RENDER MAIN
 // ═══════════════════════════════════
-function renderMain(){
-  const el=document.getElementById('main-content');
-  const r=currentRole, m=currentMod;
-  const map={
-    dashboard:()=>({Admin:adminDash,Teacher:teacherDash,Student:studentDash,Parent:parentDash,Accountant:accountDash,Alumni:alumniDash,Visitor:visitorHome}[r]||adminDash)(),
-    students:()=>studentsModule(),
-    teachers:()=>teachersModule(),
-    parents:()=>parentsModule(),
-    classes:()=>classesModule(),
-    subjects:()=>subjectsModule(),
-    timetable:()=>timetableModule(),
-    attendance:()=>attendanceModule(),
-    grades:()=>gradesModule(),
-    exams:()=>examsModule(),
-    admissions:()=>admissionsModule(),
-    assignments:()=>assignmentsModule(),
-    fees:()=>feesModule(),
-    payments:()=>paymentsModule(),
-    events:()=>eventsModule(),
-    notices:()=>noticesModule(),
-    news:()=>currentRole==='Visitor'?visitorNews():newsModule(),
-    messaging:()=>messagingModule(),
-    contact_messages:()=>contactMessagesModule(),
-    staff:()=>staffModule(),
-    users:()=>usersModule(),
-    roles:()=>rolesModule(),
-    reports:()=>reportsModule(),
-    alumni:()=>alumniModule(),
-    alumni_pub:()=>alumniPubModule(),
-    backup:()=>backupModule(),
-    settings:()=>settingsModule(),
-    profile:()=>profileModule(),
-    reportcards:()=>reportCardsModule(),
-    lessonnotes:()=>lessonNotesModule(),
-    children:()=>childrenModule(),
-    salary:()=>salaryModule(),
-    feestructure:()=>feeStructModule(),
-    receipts:()=>receiptsModule(),
-    balance:()=>balanceSheetModule(),
-    expenses:()=>expensesModule(),
-    directory:()=>alumniDirectory(),
-    donations:()=>donationsModule(),
-    jobs:()=>jobBoardModule(),
-    certificates:()=>certificatesModule(),
-    about:()=>visitorAbout(),
-    admission:()=>visitorAdmission(),
-    contact:()=>visitorContact(),
-    gallery:()=>visitorGallery(),
+function renderMain() {
+  const el = document.getElementById('main-content');
+  const r = currentRole, m = currentMod;
+  const map = {
+    dashboard: () => ({ Admin: adminDash, Teacher: teacherDash, Student: studentDash, Parent: parentDash, Accountant: accountDash, Alumni: alumniDash, Visitor: visitorHome }[r] || adminDash)(),
+    students: () => studentsModule(),
+    teachers: () => teachersModule(),
+    parents: () => parentsModule(),
+    classes: () => classesModule(),
+    subjects: () => subjectsModule(),
+    timetable: () => timetableModule(),
+    attendance: () => attendanceModule(),
+    grades: () => gradesModule(),
+    exams: () => examsModule(),
+    admissions: () => admissionsModule(),
+    assignments: () => assignmentsModule(),
+    fees: () => feesModule(),
+    payments: () => paymentsModule(),
+    events: () => eventsModule(),
+    notices: () => noticesModule(),
+    news: () => currentRole === 'Visitor' ? visitorNews() : newsModule(),
+    messaging: () => messagingModule(),
+    contact_messages: () => contactMessagesModule(),
+    staff: () => staffModule(),
+    users: () => usersModule(),
+    roles: () => rolesModule(),
+    reports: () => reportsModule(),
+    alumni: () => alumniModule(),
+    alumni_pub: () => alumniPubModule(),
+    backup: () => backupModule(),
+    settings: () => settingsModule(),
+    profile: () => profileModule(),
+    reportcards: () => reportCardsModule(),
+    lessonnotes: () => lessonNotesModule(),
+    children: () => childrenModule(),
+    salary: () => salaryModule(),
+    feestructure: () => feeStructModule(),
+    receipts: () => receiptsModule(),
+    balance: () => balanceSheetModule(),
+    expenses: () => expensesModule(),
+    directory: () => alumniDirectory(),
+    donations: () => donationsModule(),
+    jobs: () => jobBoardModule(),
+    certificates: () => certificatesModule(),
+    about: () => visitorAbout(),
+    admission: () => visitorAdmission(),
+    contact: () => visitorContact(),
+    gallery: () => visitorGallery(),
   };
-  el.innerHTML=(map[m]||map.dashboard)();
-  
+  el.innerHTML = (map[m] || map.dashboard)();
+
   // Initialize calendar if events module
-  if(m === 'events') {
+  if (m === 'events') {
     setTimeout(() => renderCalendar(currentCalendarYear, currentCalendarMonth), 100);
   }
 }
@@ -1663,52 +1753,52 @@ function renderMain(){
 // ═══════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════
-function hdr(title,sub,bc){
+function hdr(title, sub, bc) {
   return `<div class="page-hdr">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
       <button class="back-btn" onclick="goBack()" title="Go back">← Back</button>
-      <div class="breadcrumb"><i class="fas fa-home"></i> Home › <span>${bc||title}</span></div>
+      <div class="breadcrumb"><i class="fas fa-home"></i> Home › <span>${bc || title}</span></div>
     </div>
     <h1>${title}</h1>
     <p>${sub}</p>
   </div>`;
 }
-function statCard(icon,val,lbl,chg,chgType,colorCls,isClickable,onClickFunc){
-  return `<div class="stat-card" ${isClickable?`style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'" onclick="${onClickFunc}"`:''}>
+function statCard(icon, val, lbl, chg, chgType, colorCls, isClickable, onClickFunc) {
+  return `<div class="stat-card" ${isClickable ? `style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'" onclick="${onClickFunc}"` : ''}>
     <div class="stat-glow" style="background:var(--blue-main)"></div>
-    <div class="stat-icon ${colorCls||'si-blue'}">${icon}</div>
+    <div class="stat-icon ${colorCls || 'si-blue'}">${icon}</div>
     <div class="stat-val">${val}</div>
     <div class="stat-lbl">${lbl}</div>
-    <div class="stat-chg chg-${chgType||'up'}">${chgType==='up'?'▲':'▼'} ${chg}</div>
+    <div class="stat-chg chg-${chgType || 'up'}">${chgType === 'up' ? '▲' : '▼'} ${chg}</div>
   </div>`;
 }
-function mini_cal(){
-  const days=['Su','Mo','Tu','We','Th','Fr','Sa'];
+function mini_cal() {
+  const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   const today = new Date();
   const year = miniCalDate.getFullYear();
   const month = miniCalDate.getMonth();
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
   // Get first day of month and number of days
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
-  let h=`<div class="cal-wrap">
+
+  let h = `<div class="cal-wrap">
     <div class="cal-hdr">
       <div class="cal-nav" style="cursor:pointer" onclick="miniCalPrev()">‹</div>
       <span class="cal-title" id="mini-cal-title" style="min-width:120px;text-align:center">${monthNames[month]} ${year}</span>
       <div class="cal-nav" style="cursor:pointer" onclick="miniCalNext()">›</div>
     </div>
     <div class="cal-grid">
-      ${days.map(d=>`<div class="cal-dname">${d}</div>`).join('')}
-      ${Array.from({length:firstDay},()=>'').map(()=>`<div class="cal-day"></div>`).join('')}
-      ${Array.from({length:daysInMonth},(_,i)=>i+1).map(d=>{
-        const cellDate = new Date(year, month, d);
-        const isToday = cellDate.toDateString() === today.toDateString();
-        const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-        const cls = isToday ? 'cal-today' : hasEvent ? 'cal-event' : '';
-        return `<div class="cal-day ${cls}">${d}</div>`;
-      }).join('')}
+      ${days.map(d => `<div class="cal-dname">${d}</div>`).join('')}
+      ${Array.from({ length: firstDay }, () => '').map(() => `<div class="cal-day"></div>`).join('')}
+      ${Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
+    const cellDate = new Date(year, month, d);
+    const isToday = cellDate.toDateString() === today.toDateString();
+    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    const cls = isToday ? 'cal-today' : hasEvent ? 'cal-event' : '';
+    return `<div class="cal-day ${cls}">${d}</div>`;
+  }).join('')}
     </div>
     <div style="margin-top:12px;display:flex;gap:12px;font-size:10px;color:var(--gray-500)">
       <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--blue-main);display:inline-block"></span>Today</span>
@@ -1718,54 +1808,54 @@ function mini_cal(){
   return h;
 }
 
-function miniCalNext(){
+function miniCalNext() {
   miniCalDate.setMonth(miniCalDate.getMonth() + 1);
   updateMiniCal();
 }
 
-function miniCalPrev(){
+function miniCalPrev() {
   miniCalDate.setMonth(miniCalDate.getMonth() - 1);
   updateMiniCal();
 }
 
-function updateMiniCal(){
-  const days=['Su','Mo','Tu','We','Th','Fr','Sa'];
+function updateMiniCal() {
+  const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   const today = new Date();
   const year = miniCalDate.getFullYear();
   const month = miniCalDate.getMonth();
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
   // Get first day of month and number of days
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
+
   // Update title
   const titleEl = document.getElementById('mini-cal-title');
-  if(titleEl) titleEl.textContent = monthNames[month] + ' ' + year;
-  
+  if (titleEl) titleEl.textContent = monthNames[month] + ' ' + year;
+
   // Rebuild grid
-  let grid = days.map(d=>`<div class="cal-dname">${d}</div>`).join('');
-  grid += Array.from({length:firstDay},()=>'').map(()=>`<div class="cal-day"></div>`).join('');
-  grid += Array.from({length:daysInMonth},(_,i)=>i+1).map(d=>{
+  let grid = days.map(d => `<div class="cal-dname">${d}</div>`).join('');
+  grid += Array.from({ length: firstDay }, () => '').map(() => `<div class="cal-day"></div>`).join('');
+  grid += Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
     const cellDate = new Date(year, month, d);
     const isToday = cellDate.toDateString() === today.toDateString();
-    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
     const cls = isToday ? 'cal-today' : hasEvent ? 'cal-event' : '';
     return `<div class="cal-day ${cls}">${d}</div>`;
   }).join('');
-  
+
   const gridEl = document.querySelector('.cal-grid');
-  if(gridEl) gridEl.innerHTML = grid;
+  if (gridEl) gridEl.innerHTML = grid;
 }
-function bars(data,cls){
-  const mx=Math.max(...data);
-  return `<div class="chart-wrap">${data.map(v=>`<div class="c-bar ${cls||'pf-blue'}" style="height:${Math.round(v/mx*140)}px;background:${cls==='pf-gold'?'var(--gold)':'var(--blue-main)'}"></div>`).join('')}</div>`;
+function bars(data, cls) {
+  const mx = Math.max(...data);
+  return `<div class="chart-wrap">${data.map(v => `<div class="c-bar ${cls || 'pf-blue'}" style="height:${Math.round(v / mx * 140)}px;background:${cls === 'pf-gold' ? 'var(--gold)' : 'var(--blue-main)'}"></div>`).join('')}</div>`;
 }
-function paginationHtml(){
+function paginationHtml() {
   return `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--gray-200)">
     <span style="font-size:12px;color:var(--gray-500)">Showing 1–10 of many results</span>
     <div class="pagination">
-      ${[1,2,3,'…',22].map(p=>`<button class="pg-btn${p===1?' active':''}" onclick="goToPage(${typeof p === 'number' ? p : '\"' + p + '\"'})">${p}</button>`).join('')}
+      ${[1, 2, 3, '…', 22].map(p => `<button class="pg-btn${p === 1 ? ' active' : ''}" onclick="goToPage(${typeof p === 'number' ? p : '\"' + p + '\"'})">${p}</button>`).join('')}
     </div>
   </div>`;
 }
@@ -1773,10 +1863,10 @@ function paginationHtml(){
 // ═══════════════════════════════════
 // ADMIN DASHBOARD
 // ═══════════════════════════════════
-function getCurrentDateString(){
+function getCurrentDateString() {
   const now = new Date();
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const day = days[now.getDay()];
   const date = now.getDate();
   const month = months[now.getMonth()];
@@ -1784,17 +1874,17 @@ function getCurrentDateString(){
   return `${day}, ${date} ${month} ${year}`;
 }
 
-function adminDash(){
+function adminDash() {
   const totalStudents = enrolledStudents.length;
   const totalTeachers = teachersData.length;
-  const pendingFees = enrolledStudents.filter(s=>s.fees_status==='Pending').length;
-  
-  return hdr('Admin Dashboard','Welcome back, Administrator · '+getCurrentDateString())+`
+  const pendingFees = enrolledStudents.filter(s => s.fees_status === 'Pending').length;
+
+  return hdr('Admin Dashboard', 'Welcome back, Administrator · ' + getCurrentDateString()) + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-graduation-cap"></i>',''+totalStudents,'Total Students','12% this term','up','si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>',''+totalTeachers,'Total Teachers','3 new this month','up','si-gold')}
-    ${statCard('<i class="fas fa-money-bill"></i>','GH₵248K','Fees Collected','8% vs last term','up','si-green')}
-    ${statCard('<i class="fas fa-exclamation-triangle"></i>',''+pendingFees,'Pending Fees','Needs attention','dn','si-red')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>', '' + totalStudents, 'Total Students', '12% this term', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>', '' + totalTeachers, 'Total Teachers', '3 new this month', 'up', 'si-gold')}
+    ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵248K', 'Fees Collected', '8% vs last term', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-exclamation-triangle"></i>', '' + pendingFees, 'Pending Fees', 'Needs attention', 'dn', 'si-red')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -1803,14 +1893,14 @@ function adminDash(){
         <span class="card-act" onclick="showMonthlyEnrollmentAttendanceReport()" style="cursor:pointer">Full Report</span>
       </div>
       <div style="display:flex;gap:4px;align-items:flex-end;height:140px">
-        ${[80,65,90,75,88,72,95,85,70,92,80,60].map((h,i)=>`
+        ${[80, 65, 90, 75, 88, 72, 95, 85, 70, 92, 80, 60].map((h, i) => `
         <div style="flex:1;display:flex;gap:2px;align-items:flex-end">
-          <div style="flex:1;height:${Math.round(h*1.3)}px;background:var(--blue-main);border-radius:3px 3px 0 0;opacity:.85"></div>
-          <div style="flex:1;height:${Math.round(h*.9)}px;background:var(--gold);border-radius:3px 3px 0 0;opacity:.75"></div>
+          <div style="flex:1;height:${Math.round(h * 1.3)}px;background:var(--blue-main);border-radius:3px 3px 0 0;opacity:.85"></div>
+          <div style="flex:1;height:${Math.round(h * .9)}px;background:var(--gold);border-radius:3px 3px 0 0;opacity:.75"></div>
         </div>`).join('')}
       </div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-top:6px;padding:0 2px">
-        ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>`<span>${m}</span>`).join('')}
+        ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => `<span>${m}</span>`).join('')}
       </div>
       <div style="display:flex;gap:16px;margin-top:10px">
         <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray-600)"><span style="width:10px;height:10px;background:var(--blue-main);border-radius:2px;display:inline-block"></span>Enrollment</span>
@@ -1825,12 +1915,12 @@ function adminDash(){
       <table class="tbl">
         <thead><tr><th>Student</th><th>Class</th><th>Status</th><th>Fees</th></tr></thead>
         <tbody>
-          ${[['Ama Serwaa','JHS 1','Active','Paid','blue'],['Kwame Asante','Basic 6','Active','Pending','gold'],['Abena Mensah','Basic 1','Active','Paid','blue'],['Kofi Boateng','JHS 2','Active','Partial','purple'],['Akosua Darko','Basic 3','Active','Paid','green']].map(([n,c,s,f,av])=>`
+          ${[['Ama Serwaa', 'JHS 1', 'Active', 'Paid', 'blue'], ['Kwame Asante', 'Basic 6', 'Active', 'Pending', 'gold'], ['Abena Mensah', 'Basic 1', 'Active', 'Paid', 'blue'], ['Kofi Boateng', 'JHS 2', 'Active', 'Partial', 'purple'], ['Akosua Darko', 'Basic 3', 'Active', 'Paid', 'green']].map(([n, c, s, f, av]) => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-${av}">${n[0]}</div><strong>${n}</strong></div></td>
             <td>${c}</td>
             <td><span class="badge b-success">${s}</span></td>
-            <td><span class="badge ${f==='Paid'?'b-success':f==='Pending'?'b-danger':'b-warning'}">${f}</span></td>
+            <td><span class="badge ${f === 'Paid' ? 'b-success' : f === 'Pending' ? 'b-danger' : 'b-warning'}">${f}</span></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1838,9 +1928,9 @@ function adminDash(){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-bell"></i> Recent Activity</span></div>
       <div class="activity">
-        ${[['blue','New student enrolled — Ama Serwaa','5 min ago'],['gold','Assignment submitted by Basic 6','12 min ago'],['green','Fee payment received — GH₵800','30 min ago'],['red','3 students absent in Creche','1 hr ago'],['blue','Notice published: Sports Day','2 hrs ago'],['green','Timetable updated for JHS 1','3 hrs ago'],['purple','New teacher profile created','4 hrs ago']].map(([c,t,time])=>`
+        ${[['blue', 'New student enrolled — Ama Serwaa', '5 min ago'], ['gold', 'Assignment submitted by Basic 6', '12 min ago'], ['green', 'Fee payment received — GH₵800', '30 min ago'], ['red', '3 students absent in Creche', '1 hr ago'], ['blue', 'Notice published: Sports Day', '2 hrs ago'], ['green', 'Timetable updated for JHS 1', '3 hrs ago'], ['purple', 'New teacher profile created', '4 hrs ago']].map(([c, t, time]) => `
         <div class="act-item">
-          <div class="act-dot" style="background:var(--${c==='blue'?'blue-main':c==='green'?'success':c==='red'?'danger':c==='purple'?'purple':'gold'})"></div>
+          <div class="act-dot" style="background:var(--${c === 'blue' ? 'blue-main' : c === 'green' ? 'success' : c === 'red' ? 'danger' : c === 'purple' ? 'purple' : 'gold'})"></div>
           <div class="act-content"><div class="act-text">${t}</div><div class="act-time">${time}</div></div>
         </div>`).join('')}
       </div>
@@ -1849,13 +1939,13 @@ function adminDash(){
   <div class="g3">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Classes Overview</span></div>
-      ${[['Primary/Basic',330,6,370],['Junior High (JHS)',215,3,250],['Early Childhood',140,4,180]].map(([f,n,c,t])=>`
+      ${[['Primary/Basic', 330, 6, 370], ['Junior High (JHS)', 215, 3, 250], ['Early Childhood', 140, 4, 180]].map(([f, n, c, t]) => `
       <div style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
           <span style="font-weight:600">${f} — ${c} classes</span>
           <span style="color:var(--gray-500)">${n}/${t}</span>
         </div>
-        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${Math.round(n/t*100)}%"></div></div>
+        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${Math.round(n / t * 100)}%"></div></div>
       </div>`).join('')}
     </div>
     <div class="card">
@@ -1864,11 +1954,11 @@ function adminDash(){
         <svg viewBox="0 0 120 120" width="120" height="120">
           <circle cx="60" cy="60" r="50" fill="none" stroke="var(--gray-200)" stroke-width="14"/>
           <circle cx="60" cy="60" r="50" fill="none" stroke="var(--blue-main)" stroke-width="14"
-            stroke-dasharray="${Math.PI*100*0.75} ${Math.PI*100*0.25}" stroke-linecap="round"
+            stroke-dasharray="${Math.PI * 100 * 0.75} ${Math.PI * 100 * 0.25}" stroke-linecap="round"
             transform="rotate(-90 60 60)"/>
           <circle cx="60" cy="60" r="50" fill="none" stroke="var(--gold)" stroke-width="14"
-            stroke-dasharray="${Math.PI*100*0.15} ${Math.PI*100*0.85}" stroke-linecap="round"
-            stroke-dashoffset="-${Math.PI*100*0.75}" transform="rotate(-90 60 60)"/>
+            stroke-dasharray="${Math.PI * 100 * 0.15} ${Math.PI * 100 * 0.85}" stroke-linecap="round"
+            stroke-dashoffset="-${Math.PI * 100 * 0.75}" transform="rotate(-90 60 60)"/>
           <text x="60" y="64" text-anchor="middle" font-size="16" font-weight="800" fill="var(--blue-dark)">75%</text>
         </svg>
       </div>
@@ -1880,7 +1970,7 @@ function adminDash(){
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-trophy"></i> Subject Performance</span></div>
-      ${[['Mathematics','92%',92],['English','88%',88],['Science','85%',85],['ICT','94%',94],['History','78%',78]].map(([s,p,v])=>`
+      ${[['Mathematics', '92%', 92], ['English', '88%', 88], ['Science', '85%', 85], ['ICT', '94%', 94], ['History', '78%', 78]].map(([s, p, v]) => `
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
           <span>${s}</span><span style="color:var(--blue-main);font-weight:700">${p}</span>
@@ -1894,13 +1984,13 @@ function adminDash(){
 // ═══════════════════════════════════
 // TEACHER DASHBOARD
 // ═══════════════════════════════════
-function teacherDash(){
-  return hdr('Teacher Dashboard','Welcome, Mr. Kweku Amponsah · Mathematics Department · JHS 1 · '+getCurrentDateString())+`
+function teacherDash() {
+  return hdr('Teacher Dashboard', 'Welcome, Mr. Kweku Amponsah · Mathematics Department · JHS 1 · ' + getCurrentDateString()) + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-graduation-cap"></i>','38','My Students','2 new this term','up','si-blue',true,'viewStatDetail("students")')}
-    ${statCard('<i class="fas fa-book"></i>','5','Subjects Teaching','This semester','neu','si-gold',true,'viewStatDetail("subjects")')}
-    ${statCard('<i class="fas fa-check-circle"></i>','94%','Attendance Rate','Above average','up','si-green',true,'viewStatDetail("attendance")')}
-    ${statCard('<i class="fas fa-clipboard-list"></i>','8','Pending Grades','Needs grading','dn','si-red',true,'viewStatDetail("grades")')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>', '38', 'My Students', '2 new this term', 'up', 'si-blue', true, 'viewStatDetail("students")')}
+    ${statCard('<i class="fas fa-book"></i>', '5', 'Subjects Teaching', 'This semester', 'neu', 'si-gold', true, 'viewStatDetail("subjects")')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '94%', 'Attendance Rate', 'Above average', 'up', 'si-green', true, 'viewStatDetail("attendance")')}
+    ${statCard('<i class="fas fa-clipboard-list"></i>', '8', 'Pending Grades', 'Needs grading', 'dn', 'si-red', true, 'viewStatDetail("grades")')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -1908,25 +1998,25 @@ function teacherDash(){
       <table class="tbl">
         <thead><tr><th>Time</th><th>Subject</th><th>Class</th><th>Room</th><th>Status</th></tr></thead>
         <tbody>
-          ${[['7:30–8:20','Mathematics','JHS 1','Room 14','Done'],['8:20–9:10','Mathematics','Basic 6','Room 08','Done'],['10:00–10:50','Further Maths','JHS 2','Room 12','Up Next'],['11:00–11:50','Core Maths','Basic 1','Room 06','Upcoming'],['13:30–14:20','Statistics','Basic 3','Room 10','Upcoming']].map(([t,s,c,r,st])=>`
+          ${[['7:30–8:20', 'Mathematics', 'JHS 1', 'Room 14', 'Done'], ['8:20–9:10', 'Mathematics', 'Basic 6', 'Room 08', 'Done'], ['10:00–10:50', 'Further Maths', 'JHS 2', 'Room 12', 'Up Next'], ['11:00–11:50', 'Core Maths', 'Basic 1', 'Room 06', 'Upcoming'], ['13:30–14:20', 'Statistics', 'Basic 3', 'Room 10', 'Upcoming']].map(([t, s, c, r, st]) => `
           <tr style="cursor:pointer" onclick="viewScheduleDetail('${t}', '${s}', '${c}')">
             <td style="color:var(--blue-main);font-weight:600">${t}</td>
             <td>${s}</td><td>${c}</td><td style="color:var(--gray-500)">${r}</td>
-            <td><span class="badge ${st==='Done'?'b-success':st==='Up Next'?'b-warning':'b-info'}">${st}</span></td>
+            <td><span class="badge ${st === 'Done' ? 'b-success' : st === 'Up Next' ? 'b-warning' : 'b-info'}">${st}</span></td>
           </tr>`).join('')}
         </tbody>
       </table>
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Assignments</span><span class="card-act" onclick="openAddAssignmentForm()">Add New</span></div>
-      ${[['Math HW Ch.5','JHS 1','Today',12,38],['Algebra Quiz','Basic 6','Friday',8,34],['Geometry WS','Basic 1','Next Week',0,32]].map(([a,c,d,s,t])=>`
+      ${[['Math HW Ch.5', 'JHS 1', 'Today', 12, 38], ['Algebra Quiz', 'Basic 6', 'Friday', 8, 34], ['Geometry WS', 'Basic 1', 'Next Week', 0, 32]].map(([a, c, d, s, t]) => `
       <div style="margin-bottom:16px;cursor:pointer;padding:8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='transparent'" onclick="viewAssignmentSubmissions('${a}')">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:13px;font-weight:600">${a}</span>
-          <span class="badge ${d==='Today'?'b-warning':'b-info'}">${d}</span>
+          <span class="badge ${d === 'Today' ? 'b-warning' : 'b-info'}">${d}</span>
         </div>
         <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${c} · ${s}/${t} submitted</div>
-        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(s/t*100)}%"></div></div>
+        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(s / t * 100)}%"></div></div>
       </div>`).join('')}
     </div>
   </div>
@@ -1936,13 +2026,13 @@ function teacherDash(){
       <table class="tbl">
         <thead><tr><th>Student</th><th style="text-align:center">P</th><th style="text-align:center">A</th><th style="text-align:center">L</th><th>Remark</th></tr></thead>
         <tbody>
-          ${[['Ama Serwaa','P'],['Kwame Asante','A'],['Abena Mensah','P'],['Kofi Boateng','L'],['Akosua Darko','P'],['Yaw Mensah','P']].map(([n,s])=>`
+          ${[['Ama Serwaa', 'P'], ['Kwame Asante', 'A'], ['Abena Mensah', 'P'], ['Kofi Boateng', 'L'], ['Akosua Darko', 'P'], ['Yaw Mensah', 'P']].map(([n, s]) => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" value="P" ${s==='P'?'checked':''}></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" value="A" ${s==='A'?'checked':''}></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'_')}" value="L" ${s==='L'?'checked':''}></td>
-            <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..." data-remark_${n.replace(/ /g,'_')}></td>
+            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '_')}" value="P" ${s === 'P' ? 'checked' : ''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '_')}" value="A" ${s === 'A' ? 'checked' : ''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '_')}" value="L" ${s === 'L' ? 'checked' : ''}></td>
+            <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..." data-remark_${n.replace(/ /g, '_')}></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1950,7 +2040,7 @@ function teacherDash(){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Messages</span><span class="card-act" onclick="navTo('messaging')">Open Chat</span></div>
       <div class="chat-msgs">
-        ${[['Admin','Staff meeting tomorrow at 3PM',false],['Parent Serwaa','Please update Ama\'s grade',false]].map(([n,m,mine])=>`
+        ${[['Admin', 'Staff meeting tomorrow at 3PM', false], ['Parent Serwaa', 'Please update Ama\'s grade', false]].map(([n, m, mine]) => `
         <div class="chat-msg">
           <div class="av av-sm av-blue">${n[0]}</div>
           <div><div class="chat-bubble them">${m}</div><div class="chat-meta">${n}</div></div>
@@ -1972,15 +2062,15 @@ function teacherDash(){
 function calculateClassStanding(studentName) {
   const student = STUDENTS_DATA[studentName];
   if (!student) return { standing: 'Unknown', rank: '-', trend: 'neu' };
-  
+
   // Calculate total score for the student
   function getTotalScore(scores) {
     return Object.values(scores).reduce((sum, { classScore, examScore }) => sum + classScore + examScore, 0);
   }
-  
+
   const studentTotal = getTotalScore(student.scores);
   const studentClass = student.class;
-  
+
   // Get all students in the same class and their scores
   const classmates = Object.entries(STUDENTS_DATA)
     .filter(([_, data]) => data.class === studentClass)
@@ -1989,16 +2079,16 @@ function calculateClassStanding(studentName) {
       total: getTotalScore(data.scores)
     }))
     .sort((a, b) => b.total - a.total); // Sort descending (highest first)
-  
+
   // Find student's rank
   const studentRank = classmates.findIndex(c => c.name === studentName) + 1;
   const totalStudents = classmates.length;
   const percentile = Math.round((studentRank / totalStudents) * 100);
-  
+
   // Determine standing based on percentile
   let standing = 'Average';
   let trend = 'neu';
-  
+
   if (percentile <= 10) {
     standing = 'Top Performer';
     trend = 'up';
@@ -2015,7 +2105,7 @@ function calculateClassStanding(studentName) {
     standing = 'Needs Improvement';
     trend = 'dn';
   }
-  
+
   return {
     standing,
     rank: `Rank ${studentRank} of ${totalStudents}`,
@@ -2038,7 +2128,7 @@ function getStudentAttendance(studentName) {
 function getAttendanceTrend(percentage) {
   let trend = 'neu';
   let description = 'Average attendance';
-  
+
   if (percentage >= 95) {
     trend = 'up';
     description = 'Excellent record';
@@ -2052,34 +2142,34 @@ function getAttendanceTrend(percentage) {
     trend = 'dn';
     description = 'Needs improvement';
   }
-  
+
   return { trend, description };
 }
 
 // Get pending tasks count (assignments with Pending or Not Started status)
 function getPendingTasksCount() {
   const assignments = [
-    ['Mathematics','Chapter 5 Problems','Today','Pending'],
-    ['English','Essay on Climate','Mar 20','Submitted'],
-    ['Science','Lab Report','Mar 22','Pending'],
-    ['ICT','Database Project','Mar 25','In Progress'],
-    ['History','WWII Essay','Mar 28','Not Started']
+    ['Mathematics', 'Chapter 5 Problems', 'Today', 'Pending'],
+    ['English', 'Essay on Climate', 'Mar 20', 'Submitted'],
+    ['Science', 'Lab Report', 'Mar 22', 'Pending'],
+    ['ICT', 'Database Project', 'Mar 25', 'In Progress'],
+    ['History', 'WWII Essay', 'Mar 28', 'Not Started']
   ];
-  return assignments.filter(([_,_2,_3,status]) => status === 'Pending' || status === 'Not Started').length;
+  return assignments.filter(([_, _2, _3, status]) => status === 'Pending' || status === 'Not Started').length;
 }
 
-function studentDash(){
+function studentDash() {
   const studentName = 'Ama Serwaa';
   const studentClass = 'JHS 1';
-  
+
   // Calculate all dynamic values
   const subjectsCount = getStudentSubjectsCount(studentClass);
   const attendance = getStudentAttendance(studentName);
   const attendanceTrend = getAttendanceTrend(attendance);
   const pendingTasks = getPendingTasksCount();
   const classStanding = calculateClassStanding(studentName);
-  
-  return hdr('Student Dashboard','Welcome, '+studentName+' · '+studentClass+' · Roll No: 2024-0042 · '+getCurrentDateString())+`
+
+  return hdr('Student Dashboard', 'Welcome, ' + studentName + ' · ' + studentClass + ' · Roll No: 2024-0042 · ' + getCurrentDateString()) + `
   <div class="student-profile-card">
     <div class="profile-left">
       <div class="profile-avatar av av-xl av-blue">AS</div>
@@ -2094,10 +2184,10 @@ function studentDash(){
     </button>
   </div>
   <div class="stats-row">
-    ${statCard('<i class="fas fa-book"></i>',subjectsCount,'My Subjects','This semester','neu','si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>',attendance+'%','My Attendance',attendanceTrend.description,attendanceTrend.trend,'si-green')}
-    ${statCard('<i class="fas fa-clipboard-list"></i>',pendingTasks,'Pending Tasks','Due this week','dn','si-red')}
-    ${statCard('<i class="fas fa-star"></i>',classStanding.standing,'Class Standing',classStanding.rank,classStanding.trend,'si-gold')}
+    ${statCard('<i class="fas fa-book"></i>', subjectsCount, 'My Subjects', 'This semester', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', attendance + '%', 'My Attendance', attendanceTrend.description, attendanceTrend.trend, 'si-green')}
+    ${statCard('<i class="fas fa-clipboard-list"></i>', pendingTasks, 'Pending Tasks', 'Due this week', 'dn', 'si-red')}
+    ${statCard('<i class="fas fa-star"></i>', classStanding.standing, 'Class Standing', classStanding.rank, classStanding.trend, 'si-gold')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -2105,30 +2195,30 @@ function studentDash(){
       <table class="tbl">
         <thead><tr><th>Subject</th><th>Assignment</th><th>Due Date</th><th>Status</th></tr></thead>
         <tbody>
-          ${[['Mathematics','Chapter 5 Problems','Today','Pending'],['English','Essay on Climate','Mar 20','Submitted'],['Science','Lab Report','Mar 22','Pending'],['ICT','Database Project','Mar 25','In Progress'],['History','WWII Essay','Mar 28','Not Started']].map(([s,t,d,st])=>`
+          ${[['Mathematics', 'Chapter 5 Problems', 'Today', 'Pending'], ['English', 'Essay on Climate', 'Mar 20', 'Submitted'], ['Science', 'Lab Report', 'Mar 22', 'Pending'], ['ICT', 'Database Project', 'Mar 25', 'In Progress'], ['History', 'WWII Essay', 'Mar 28', 'Not Started']].map(([s, t, d, st]) => `
           <tr>
             <td style="font-weight:600">${s}</td><td>${t}</td>
-            <td style="${d==='Today'?'color:var(--danger);font-weight:700':'color:var(--gray-600)'}">${d}</td>
-            <td><span class="badge ${st==='Submitted'?'b-success':st==='Pending'?'b-warning':st==='In Progress'?'b-info':'b-gray'}">${st}</span></td>
+            <td style="${d === 'Today' ? 'color:var(--danger);font-weight:700' : 'color:var(--gray-600)'}">${d}</td>
+            <td><span class="badge ${st === 'Submitted' ? 'b-success' : st === 'Pending' ? 'b-warning' : st === 'In Progress' ? 'b-info' : 'b-gray'}">${st}</span></td>
           </tr>`).join('')}
         </tbody>
       </table>
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-target"></i> My Performance</span></div>
-      ${[['Mathematics',88],['English',92],['Science',85],['ICT',95],['History',78],['French',72]].map(([s,v])=>`
+      ${[['Mathematics', 88], ['English', 92], ['Science', 85], ['ICT', 95], ['History', 78], ['French', 72]].map(([s, v]) => `
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
           <span>${s}</span><span style="color:var(--blue-main);font-weight:700">${v}%</span>
         </div>
-        <div class="prog-bar"><div class="prog-fill ${v>=90?'pf-green':v>=75?'pf-blue':'pf-gold'}" style="width:${v}%"></div></div>
+        <div class="prog-bar"><div class="prog-fill ${v >= 90 ? 'pf-green' : v >= 75 ? 'pf-blue' : 'pf-gold'}" style="width:${v}%"></div></div>
       </div>`).join('')}
     </div>
   </div>
   <div class="g3">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar"></i> Today's Timetable</span></div>
-      ${[['7:30','Mathematics','Rm 14','Mr. Amponsah'],['8:20','English','Rm 02','Mrs. Asante'],['10:00','Science','Lab 1','Mr. Oduro'],['11:00','ICT','Lab 2','Ms. Frimpong'],['13:30','History','Rm 08','Mr. Boateng']].map(([t,s,r,tc])=>`
+      ${[['7:30', 'Mathematics', 'Rm 14', 'Mr. Amponsah'], ['8:20', 'English', 'Rm 02', 'Mrs. Asante'], ['10:00', 'Science', 'Lab 1', 'Mr. Oduro'], ['11:00', 'ICT', 'Lab 2', 'Ms. Frimpong'], ['13:30', 'History', 'Rm 08', 'Mr. Boateng']].map(([t, s, r, tc]) => `
       <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100)">
         <div style="font-size:11px;color:var(--blue-main);font-weight:700;min-width:42px">${t}</div>
         <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} · ${tc}</div></div>
@@ -2136,7 +2226,7 @@ function studentDash(){
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Notices</span></div>
-      ${[['<i class="fas fa-file-alt"></i>','Exam Schedule Released','Check portal for timetable'],['<i class="fas fa-running"></i>','Sports Day — Mar 24','All students attend'],['<i class="fas fa-book"></i>','Library Closure','March 20 only']].map(([i,t,d])=>`
+      ${[['<i class="fas fa-file-alt"></i>', 'Exam Schedule Released', 'Check portal for timetable'], ['<i class="fas fa-running"></i>', 'Sports Day — Mar 24', 'All students attend'], ['<i class="fas fa-book"></i>', 'Library Closure', 'March 20 only']].map(([i, t, d]) => `
       <div class="notice-item" style="padding:10px 0">
         <div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px">${i}</div>
         <div class="notice-content"><h4>${t}</h4><p>${d}</p></div>
@@ -2159,18 +2249,18 @@ function studentDash(){
 // ═══════════════════════════════════
 // PARENT DASHBOARD
 // ═══════════════════════════════════
-function parentDash(){
-  return hdr('Parent Dashboard','Welcome, Mr. & Mrs. Serwaa · Parent of 2 students · '+getCurrentDateString())+`
+function parentDash() {
+  return hdr('Parent Dashboard', 'Welcome, Mr. & Mrs. Serwaa · Parent of 2 students · ' + getCurrentDateString()) + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-child"></i>','2','My Children','Both active','neu','si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>','96%','Ama\'s Attendance','Excellent','up','si-green')}
-    ${statCard('<i class="fas fa-file"></i>','A','Last Report Grade','Term 2, 2024','up','si-gold')}
-    ${statCard('<i class="fas fa-money-bill"></i>','Paid','Fees Status','All clear','up','si-green')}
+    ${statCard('<i class="fas fa-child"></i>', '2', 'My Children', 'Both active', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '96%', 'Ama\'s Attendance', 'Excellent', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-file"></i>', 'A', 'Last Report Grade', 'Term 2, 2024', 'up', 'si-gold')}
+    ${statCard('<i class="fas fa-money-bill"></i>', 'Paid', 'Fees Status', 'All clear', 'up', 'si-green')}
   </div>
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-child"></i> My Children</span></div>
-      ${[['Ama Serwaa','JHS 1','2024-0042','96%','3.8','Paid','blue'],['Kweku Serwaa','Basic 3','2024-0143','91%','3.5','Paid','purple']].map(([n,c,r,att,gpa,f,av])=>`
+      ${[['Ama Serwaa', 'JHS 1', '2024-0042', '96%', '3.8', 'Paid', 'blue'], ['Kweku Serwaa', 'Basic 3', '2024-0143', '91%', '3.5', 'Paid', 'purple']].map(([n, c, r, att, gpa, f, av]) => `
       <div style="display:flex;gap:16px;align-items:center;padding:14px;background:var(--gray-50);border-radius:var(--radius-lg);margin-bottom:12px">
         <div class="av av-lg av-${av}">${n[0]}</div>
         <div style="flex:1">
@@ -2206,10 +2296,10 @@ function parentDash(){
   <div class="g3">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Pending Assignments</span></div>
-      ${[['Math HW','Ama Serwaa','Today'],['English Essay','Ama Serwaa','Mar 20'],['ICT Project','Kweku Serwaa','Mar 25']].map(([a,c,d])=>`
+      ${[['Math HW', 'Ama Serwaa', 'Today'], ['English Essay', 'Ama Serwaa', 'Mar 20'], ['ICT Project', 'Kweku Serwaa', 'Mar 25']].map(([a, c, d]) => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
         <div><div style="font-size:12.5px;font-weight:600">${a}</div><div style="font-size:11px;color:var(--gray-400)">${c}</div></div>
-        <span class="badge ${d==='Today'?'b-danger':'b-warning'}">${d}</span>
+        <span class="badge ${d === 'Today' ? 'b-danger' : 'b-warning'}">${d}</span>
       </div>`).join('')}
     </div>
     <div class="card">
@@ -2227,7 +2317,7 @@ function parentDash(){
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span></div>
-      ${[['Mar 20','PTA Meeting','3:00 PM School Hall'],['Mar 24','Sports Day','All day event'],['Apr 01','Term Exams Begin','8:00 AM daily']].map(([d,e,t])=>`
+      ${[['Mar 20', 'PTA Meeting', '3:00 PM School Hall'], ['Mar 24', 'Sports Day', 'All day event'], ['Apr 01', 'Term Exams Begin', '8:00 AM daily']].map(([d, e, t]) => `
       <div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
         <div style="min-width:46px;height:46px;background:var(--blue-xpale);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center">
           <span style="font-size:9px;color:var(--blue-main);font-weight:700">${d.split(' ')[0]}</span>
@@ -2242,13 +2332,13 @@ function parentDash(){
 // ═══════════════════════════════════
 // ACCOUNTANT DASHBOARD
 // ═══════════════════════════════════
-function accountDash(){
-  return hdr('Accountant Dashboard','Financial Overview · Term 1, 2025 · Glory Regin Preparatory school · '+getCurrentDateString())+`
+function accountDash() {
+  return hdr('Accountant Dashboard', 'Financial Overview · Term 1, 2025 · Glory Regin Preparatory school · ' + getCurrentDateString()) + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-money-bill"></i>','GH₵248K','Total Collected','8% this term','up','si-blue')}
-    ${statCard('<i class="fas fa-hourglass-half"></i>','GH₵32K','Outstanding Fees','37 students','dn','si-red')}
-    ${statCard('<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>','GH₵89K','Total Expenses','Within budget','neu','si-gold')}
-    ${statCard('<i class="fas fa-chart-bar"></i>','GH₵124K','Net Balance','Surplus','up','si-green')}
+    ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵248K', 'Total Collected', '8% this term', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵32K', 'Outstanding Fees', '37 students', 'dn', 'si-red')}
+    ${statCard('<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>', 'GH₵89K', 'Total Expenses', 'Within budget', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', 'GH₵124K', 'Net Balance', 'Surplus', 'up', 'si-green')}
   </div>
   <div class="g21 mb20">
     <div class="card">
@@ -2256,14 +2346,14 @@ function accountDash(){
       <table class="tbl">
         <thead><tr><th>Student</th><th>Amount</th><th>Date</th><th>Receipt No.</th><th>Method</th><th>Status</th></tr></thead>
         <tbody>
-          ${[['Ama Serwaa','GH₵2,400','Mar 15','#R-0482','Cash','Paid'],['Kwame Asante','GH₵1,200','Mar 15','#R-0481','Cash','Partial'],['Abena Mensah','GH₵2,400','Mar 14','#R-0480','Cash','Paid'],['Kofi Boateng','—','—','—','—','Pending'],['Akosua Darko','GH₵2,400','Mar 13','#R-0479','Cash','Paid']].map(([n,a,d,r,m,s])=>`
+          ${[['Ama Serwaa', 'GH₵2,400', 'Mar 15', '#R-0482', 'Cash', 'Paid'], ['Kwame Asante', 'GH₵1,200', 'Mar 15', '#R-0481', 'Cash', 'Partial'], ['Abena Mensah', 'GH₵2,400', 'Mar 14', '#R-0480', 'Cash', 'Paid'], ['Kofi Boateng', '—', '—', '—', '—', 'Pending'], ['Akosua Darko', 'GH₵2,400', 'Mar 13', '#R-0479', 'Cash', 'Paid']].map(([n, a, d, r, m, s]) => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-gold">${n[0]}</div>${n}</div></td>
             <td style="font-weight:700;color:var(--blue-dark)">${a}</td>
             <td>${d}</td>
             <td style="color:var(--blue-main)">${r}</td>
             <td>${m}</td>
-            <td><span class="badge ${s==='Paid'?'b-success':s==='Pending'?'b-danger':'b-warning'}">${s}</span></td>
+            <td><span class="badge ${s === 'Paid' ? 'b-success' : s === 'Pending' ? 'b-danger' : 'b-warning'}">${s}</span></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -2291,17 +2381,17 @@ function accountDash(){
   <div class="g3">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Revenue Breakdown</span></div>
-      ${[['School Fees','GH₵248,000',78],['Exam Fees','GH₵18,000',6],['Sports Levy','GH₵9,600',3],['Lab Fees','GH₵12,800',4],['Other','GH₵9,600',3]].map(([c,a,p])=>`
+      ${[['School Fees', 'GH₵248,000', 78], ['Exam Fees', 'GH₵18,000', 6], ['Sports Levy', 'GH₵9,600', 3], ['Lab Fees', 'GH₵12,800', 4], ['Other', 'GH₵9,600', 3]].map(([c, a, p]) => `
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
           <span>${c}</span><span style="font-weight:600">${a}</span>
         </div>
-        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${p*1.2}%"></div></div>
+        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${p * 1.2}%"></div></div>
       </div>`).join('')}
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> Payroll Status</span></div>
-      ${[['Teaching Staff','64 staff','Mar 28'],['Admin Staff','12 staff','Mar 28'],['Support Staff','18 staff','Mar 30']].map(([t,s,d])=>`
+      ${[['Teaching Staff', '64 staff', 'Mar 28'], ['Admin Staff', '12 staff', 'Mar 28'], ['Support Staff', '18 staff', 'Mar 30']].map(([t, s, d]) => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
         <div><div style="font-size:12.5px;font-weight:600">${t}</div><div style="font-size:11px;color:var(--gray-400)">${s}</div></div>
         <span class="badge b-warning">Due ${d}</span>
@@ -2318,7 +2408,7 @@ function accountDash(){
 // ═══════════════════════════════════
 // ALUMNI DASHBOARD
 // ═══════════════════════════════════
-function alumniDash(){
+function alumniDash() {
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1><i class="fas fa-graduation-cap"></i> Welcome, Alumni Network</h1>
     <p>Stay connected with your alma mater, reconnect with classmates, and give back to Glory Regin Preparatory school</p>
@@ -2326,12 +2416,12 @@ function alumniDash(){
       <button class="hero-btn-gold" onclick="navTo('directory')">Browse Directory</button>
       <button class="hero-btn-outline" onclick="navTo('events')">Upcoming Reunions</button>
     </div>
-  </div>`+`
+  </div>`+ `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-medal"></i>','1,240','Total Alumni','Network growing','up','si-blue')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>','3','Upcoming Events','This quarter','neu','si-gold')}
-    ${statCard('<i class="fas fa-briefcase"></i>','28','Job Listings','Posted by alumni','up','si-green')}
-    ${statCard('<i class="fas fa-handshake"></i>','GH₵42K','Total Donations','This year','up','si-purple')}
+    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Network growing', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Upcoming Events', 'This quarter', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-briefcase"></i>', '28', 'Job Listings', 'Posted by alumni', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Total Donations', 'This year', 'up', 'si-purple')}
   </div>
   <div class="g2 mb20">
     <div class="card">
@@ -2339,7 +2429,7 @@ function alumniDash(){
       <table class="tbl">
         <thead><tr><th>Name</th><th>Class</th><th>Location</th><th>Profession</th><th>Connect</th></tr></thead>
         <tbody>
-          ${[['Abena Owusu','2018','Accra','Software Engineer','purple'],['Kwabena Asare','2016','London','Medical Doctor','blue'],['Esi Mensah','2020','Kumasi','Teacher','green'],['Yaw Boateng','2015','Toronto','Lawyer','gold']].map(([n,c,l,p,av])=>`
+          ${[['Abena Owusu', '2018', 'Accra', 'Software Engineer', 'purple'], ['Kwabena Asare', '2016', 'London', 'Medical Doctor', 'blue'], ['Esi Mensah', '2020', 'Kumasi', 'Teacher', 'green'], ['Yaw Boateng', '2015', 'Toronto', 'Lawyer', 'gold']].map(([n, c, l, p, av]) => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${av}">${n[0]}</div>${n}</div></td>
             <td><span class="badge b-info">Class of ${c}</span></td>
@@ -2351,7 +2441,7 @@ function alumniDash(){
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> Latest Jobs</span><span class="card-act" onclick="navTo('jobs')">View All</span></div>
-      ${[['Software Dev Intern','Accra · Abena Owusu (2018)','Today'],['Medical Resident','Korle Bu · Kwabena (2016)','2 days ago'],['Teaching Position','Kumasi · Esi Mensah (2020)','1 week ago']].map(([t,l,d])=>`
+      ${[['Software Dev Intern', 'Accra · Abena Owusu (2018)', 'Today'], ['Medical Resident', 'Korle Bu · Kwabena (2016)', '2 days ago'], ['Teaching Position', 'Kumasi · Esi Mensah (2020)', '1 week ago']].map(([t, l, d]) => `
       <div style="padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px">
         <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">${t}</div>
         <div style="font-size:11px;color:var(--gray-500);margin-top:4px">${l}</div>
@@ -2367,7 +2457,7 @@ function alumniDash(){
 // ═══════════════════════════════════
 // VISITOR HOME
 // ═══════════════════════════════════
-function visitorHome(){
+function visitorHome() {
   return `<div class="visitor-hero">
     <h1>Glory Regin Preparatory school</h1>
     <p>Nurturing minds, building character, and shaping futures since 1985. A premier educational institution in Ghana known for academic excellence and holistic development.</p>
@@ -2378,13 +2468,13 @@ function visitorHome(){
     </div>
   </div>
   <div class="stats-row mb24">
-    ${statCard('<i class="fas fa-graduation-cap"></i>','5,200+','Alumni Worldwide','And growing','up','si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>','64','Expert Teachers','Dedicated faculty','neu','si-gold')}
-    ${statCard('<i class="fas fa-trophy"></i>','98%','Pass Rate','Consistent excellence','up','si-green')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>','40','Years of Excellence','Since 1985','neu','si-purple')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>', '5,200+', 'Alumni Worldwide', 'And growing', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>', '64', 'Expert Teachers', 'Dedicated faculty', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-trophy"></i>', '98%', 'Pass Rate', 'Consistent excellence', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-calendar-alt"></i>', '40', 'Years of Excellence', 'Since 1985', 'neu', 'si-purple')}
   </div>
   <div class="g3 mb24">
-    ${[['<i class="fas fa-info-circle" style="font-size:36px"></i>','About School','Our history, mission, vision and values','about'],['<i class="fas fa-file-alt" style="font-size:36px"></i>','Admissions','Requirements, process and deadlines','admission'],['<i class="fas fa-calendar-alt" style="font-size:36px"></i>','Events','Sports Day, Prize Giving, Open Day','events'],['<i class="fas fa-image" style="font-size:36px"></i>','Gallery','Photos from school life','gallery'],['<i class="fas fa-newspaper" style="font-size:36px"></i>','News & Blog','Latest school news','news'],['<i class="fas fa-phone" style="font-size:36px"></i>','Contact Us','Get in touch with us','contact']].map(([i,t,d,id])=>`
+    ${[['<i class="fas fa-info-circle" style="font-size:36px"></i>', 'About School', 'Our history, mission, vision and values', 'about'], ['<i class="fas fa-file-alt" style="font-size:36px"></i>', 'Admissions', 'Requirements, process and deadlines', 'admission'], ['<i class="fas fa-calendar-alt" style="font-size:36px"></i>', 'Events', 'Sports Day, Prize Giving, Open Day', 'events'], ['<i class="fas fa-image" style="font-size:36px"></i>', 'Gallery', 'Photos from school life', 'gallery'], ['<i class="fas fa-newspaper" style="font-size:36px"></i>', 'News & Blog', 'Latest school news', 'news'], ['<i class="fas fa-phone" style="font-size:36px"></i>', 'Contact Us', 'Get in touch with us', 'contact']].map(([i, t, d, id]) => `
     <div class="card" style="cursor:pointer;transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="navTo('${id}')">
       <div style="margin-bottom:14px;color:var(--blue-main)">${i}</div>
       <h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">${t}</h3>
@@ -2397,16 +2487,16 @@ function visitorHome(){
 // ═══════════════════════════════════
 // ADMISSIONS MODULE
 // ═══════════════════════════════════
-function admissionsModule(){
-  const approved = admissionsData.filter(a=>a.status==='Approved').length;
-  const pending = admissionsData.filter(a=>a.status==='Pending').length;
-  const rejected = admissionsData.filter(a=>a.status==='Rejected').length;
-  return hdr('Admissions Module','Process new student admissions and generate student IDs','Admissions')+`
+function admissionsModule() {
+  const approved = admissionsData.filter(a => a.status === 'Approved').length;
+  const pending = admissionsData.filter(a => a.status === 'Pending').length;
+  const rejected = admissionsData.filter(a => a.status === 'Rejected').length;
+  return hdr('Admissions Module', 'Process new student admissions and generate student IDs', 'Admissions') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-clipboard-list"></i>','12','Total Applications','This academic year','neu','si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>',''+approved,'Approved','Ready for enrollment','up','si-green')}
-    ${statCard('<i class="fas fa-hourglass-half"></i>',''+pending,'Pending','Awaiting review','neu','si-gold')}
-    ${statCard('<i class="fas fa-times-circle"></i>',''+rejected,'Rejected','Did not meet criteria','dn','si-red')}
+    ${statCard('<i class="fas fa-clipboard-list"></i>', '12', 'Total Applications', 'This academic year', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '' + approved, 'Approved', 'Ready for enrollment', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-hourglass-half"></i>', '' + pending, 'Pending', 'Awaiting review', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-times-circle"></i>', '' + rejected, 'Rejected', 'Did not meet criteria', 'dn', 'si-red')}
   </div>
   <div class="toolbar">
     <button class="btn btn-primary" onclick="toggleAdmForm()"><i class="fas fa-plus"></i> New Admission Form</button>
@@ -2482,6 +2572,10 @@ function admissionsModule(){
           <select id="adm-class"><option>-- Select Class --</option><option>Creche</option><option>Nursery</option><option>KG 1</option><option>KG 2</option><option>Basic 1</option><option>Basic 2</option><option>Basic 3</option><option>Basic 4</option><option>Basic 5</option><option>Basic 6</option><option>JHS 1</option><option>JHS 2</option><option>JHS 3</option></select>
         </div>
         <div class="form-field">
+          <label>House</label>
+          <select id="adm-house"><option>-- Select House --</option><option>LivingStone</option><option>Nkrumah</option><option>Aggrey</option><option>Guggisberg</option></select>
+        </div>
+        <div class="form-field">
           <label>Academic Year *</label>
           <select id="adm-year"><option>2025/2026</option><option>2024/2025</option></select>
         </div>
@@ -2526,7 +2620,7 @@ function admissionsModule(){
         </tr>
       </thead>
       <tbody>
-        ${admissionsData.filter(a=>a.status==='Pending').map((a,i)=>'<tr><td style="color:var(--gray-400)">'+((i+1))+'</td><td style="font-weight:600;color:var(--blue-dark)">'+a.adm_id+'</td><td>'+a.name+'</td><td style="font-size:11px">'+a.dob+'</td><td><span class="badge b-info">'+a.class_applying+'</span></td><td style="font-size:11px">'+a.parent_name+'</td><td style="font-size:11px;color:var(--gray-500)">'+a.created+'</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\''+a.adm_id+'\', \''+a.name+'\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\''+a.adm_id+'\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('')}
+        ${admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('')}
       </tbody>
     </table>
   </div>
@@ -2547,7 +2641,7 @@ function admissionsModule(){
         </tr>
       </thead>
       <tbody>
-        ${admissionsData.filter(a=>a.status==='Approved').map((a,i)=>'<tr><td style="color:var(--gray-400)">'+((i+1))+'</td><td style="font-weight:600;color:var(--blue-dark)">'+a.adm_id+'</td><td style="font-weight:700;color:var(--success)">'+generateStudentID(a.class_applying,''+admissionsData.indexOf(a))+'</td><td>'+a.name+'</td><td><span class="badge b-info">'+a.class_applying+'</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for '+a.name+'...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\''+a.adm_id+'\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('')}
+        ${admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('')}
       </tbody>
     </table>
   </div>
@@ -2567,26 +2661,26 @@ function admissionsModule(){
         </tr>
       </thead>
       <tbody>
-        ${admissionsData.filter(a=>a.status==='Rejected').map((a,i)=>'<tr><td style="color:var(--gray-400)">'+((i+1))+'</td><td style="font-weight:600;color:var(--blue-dark)">'+a.adm_id+'</td><td>'+a.name+'</td><td><span class="badge b-secondary">'+a.class_applying+'</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">'+a.created+'</td></tr>').join('')}
+        ${admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('')}
       </tbody>
     </table>
   </div>
   `;
 }
 
-function toggleAdmForm(){
+function toggleAdmForm() {
   const form = document.getElementById('adm-form-wrap');
-  if(form) form.style.display = form.style.display==='none'?'block':'none';
+  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-function generateStudentID(classApplying, index){
+function generateStudentID(classApplying, index) {
   const year = new Date().getFullYear();
   const prefix = classApplying.includes('JHS') ? 'JHS' : 'FORM';
   const seq = String(index).padStart(3, '0');
   return prefix + year + '-' + seq;
 }
 
-function submitAdmission(){
+function submitAdmission() {
   const name = document.getElementById('adm-name').value.trim();
   const dob = document.getElementById('adm-dob').value;
   const gender = document.getElementById('adm-gender').value;
@@ -2599,17 +2693,18 @@ function submitAdmission(){
   const school = document.getElementById('adm-school').value.trim();
   const lastClass = document.getElementById('adm-last-class').value;
   const classApplying = document.getElementById('adm-class').value;
+  const house = document.getElementById('adm-house').value;
   const academicYear = document.getElementById('adm-year').value;
   const picture = window.admPictureData || null;
-  
-  if(!name || !dob || !gender || !address || !parentName || !parentPhone || !relationship || !school || !classApplying){
+
+  if (!name || !dob || !gender || !address || !parentName || !parentPhone || !relationship || !school || !classApplying) {
     alert('Please fill in all required fields (marked with *)');
     return;
   }
-  
+
   const today = new Date().toISOString().split('T')[0];
-  const admNo = 'ADM' + today.slice(0,4) + '-' + String(admissionsData.length + 1).padStart(3, '0');
-  
+  const admNo = 'ADM' + today.slice(0, 4) + '-' + String(admissionsData.length + 1).padStart(3, '0');
+
   const newAdmission = {
     adm_id: admNo,
     name: name,
@@ -2619,6 +2714,7 @@ function submitAdmission(){
     phone: phone,
     school: school,
     class_applying: classApplying,
+    house: house !== '-- Select House --' ? house : null,
     academic_year: academicYear,
     status: 'Pending',
     parent_name: parentName,
@@ -2627,10 +2723,10 @@ function submitAdmission(){
     picture: picture,
     created: today
   };
-  
+
   admissionsData.push(newAdmission);
   showToast('<i class="fas fa-check-circle"></i> Application submitted!<br/>Application #: ' + admNo + '<br/>Status: Pending Review', 'success', 4000);
-  
+
   // Clear form
   document.getElementById('adm-form-wrap').style.display = 'none';
   document.getElementById('adm-name').value = '';
@@ -2644,18 +2740,19 @@ function submitAdmission(){
   document.getElementById('adm-occupation').value = '';
   document.getElementById('adm-school').value = '';
   document.getElementById('adm-last-class').value = '';
-  document.getElementById('adm-class').value = '';
+  document.getElementById('adm-class').value = '-- Select Class --';
+  document.getElementById('adm-house').value = '-- Select House --';
   document.getElementById('adm-picture').value = '';
   document.getElementById('adm-pic-preview').innerHTML = '<i class="fas fa-camera" style="color:var(--gray-400)"></i>';
   window.admPictureData = null;
-  
+
   // Refresh module
   renderMain('admissions');
 }
 
-function approveAdmission(admId, studentName){
-  const adm = admissionsData.find(a=>a.adm_id===admId);
-  if(adm){
+function approveAdmission(admId, studentName) {
+  const adm = admissionsData.find(a => a.adm_id === admId);
+  if (adm) {
     adm.status = 'Approved';
     const studentID = generateStudentID(adm.class_applying, admissionsData.indexOf(adm));
     showToast('<i class="fas fa-check-circle"></i> Admission Approved!<br/>Student: ' + studentName + '<br/>Student ID: ' + studentID, 'success', 4000);
@@ -2663,10 +2760,10 @@ function approveAdmission(admId, studentName){
   }
 }
 
-function rejectAdmission(admId){
-  const adm = admissionsData.find(a=>a.adm_id===admId);
-  if(adm){
-    if(confirm('Are you sure you want to reject this application?')){
+function rejectAdmission(admId) {
+  const adm = admissionsData.find(a => a.adm_id === admId);
+  if (adm) {
+    if (confirm('Are you sure you want to reject this application?')) {
       adm.status = 'Rejected';
       alert('<i class="fas fa-times-circle"></i> Application has been rejected.');
       renderMain('admissions');
@@ -2674,17 +2771,17 @@ function rejectAdmission(admId){
   }
 }
 
-function enrollStudent(admissionId){
-  const admission = admissionsData.find(a=>a.adm_id===admissionId);
-  if(!admission){
+function enrollStudent(admissionId) {
+  const admission = admissionsData.find(a => a.adm_id === admissionId);
+  if (!admission) {
     alert('<i class="fas fa-times-circle"></i> Admission record not found');
     return;
   }
-  
+
   const studentID = generateStudentID(admission.class_applying, admissionsData.indexOf(admission));
-  const avatarColors = ['blue','gold','purple','green','teal','orange','pink','red'];
-  const randomColor = avatarColors[Math.floor(Math.random()*avatarColors.length)];
-  
+  const avatarColors = ['blue', 'gold', 'purple', 'green', 'teal', 'orange', 'pink', 'red'];
+  const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+
   const newStudent = {
     student_id: studentID,
     name: admission.name,
@@ -2699,112 +2796,113 @@ function enrollStudent(admissionId){
     gender_abbr: admission.gender[0],
     parent_name: admission.parent_name,
     parent_phone: admission.parent_phone,
+    house: admission.house || 'Not Assigned',
     picture: admission.picture,
     enrolled_date: new Date().toISOString().split('T')[0]
   };
-  
+
   enrolledStudents.push(newStudent);
   admission.status = 'Enrolled';
-  
-  showToast('<i class="fas fa-check-circle"></i> Student Enrolled Successfully!<br/>Name: '+admission.name+'<br/>ID: '+studentID+'<br/>Class: '+admission.class_applying, 'success', 4000);
-  
+
+  showToast('<i class="fas fa-check-circle"></i> Student Enrolled Successfully!<br/>Name: ' + admission.name + '<br/>ID: ' + studentID + '<br/>Class: ' + admission.class_applying, 'success', 4000);
+
   renderMain('admissions');
 }
 
-function showAdmissionStatistics(){
+function showAdmissionStatistics() {
   const total = admissionsData.length;
-  const approved = admissionsData.filter(a=>a.status==='Approved').length;
-  const pending = admissionsData.filter(a=>a.status==='Pending').length;
-  const rejected = admissionsData.filter(a=>a.status==='Rejected').length;
-  const enrolled = admissionsData.filter(a=>a.status==='Enrolled').length;
-  
+  const approved = admissionsData.filter(a => a.status === 'Approved').length;
+  const pending = admissionsData.filter(a => a.status === 'Pending').length;
+  const rejected = admissionsData.filter(a => a.status === 'Rejected').length;
+  const enrolled = admissionsData.filter(a => a.status === 'Enrolled').length;
+
   const byClass = {};
-  admissionsData.forEach(a=>{
-    byClass[a.class_applying] = (byClass[a.class_applying]||0)+1;
+  admissionsData.forEach(a => {
+    byClass[a.class_applying] = (byClass[a.class_applying] || 0) + 1;
   });
-  
-  const maleCount = admissionsData.filter(a=>a.gender==='Male').length;
-  const femaleCount = admissionsData.filter(a=>a.gender==='Female').length;
-  
+
+  const maleCount = admissionsData.filter(a => a.gender === 'Male').length;
+  const femaleCount = admissionsData.filter(a => a.gender === 'Female').length;
+
   const statusData = [
-    {status:'Pending',count:pending,color:'var(--gold)',percentage:Math.round((pending/total)*100)},
-    {status:'Approved',count:approved,color:'var(--success)',percentage:Math.round((approved/total)*100)},
-    {status:'Enrolled',count:enrolled,color:'var(--blue-main)',percentage:Math.round((enrolled/total)*100)},
-    {status:'Rejected',count:rejected,color:'var(--danger)',percentage:Math.round((rejected/total)*100)}
+    { status: 'Pending', count: pending, color: 'var(--gold)', percentage: Math.round((pending / total) * 100) },
+    { status: 'Approved', count: approved, color: 'var(--success)', percentage: Math.round((approved / total) * 100) },
+    { status: 'Enrolled', count: enrolled, color: 'var(--blue-main)', percentage: Math.round((enrolled / total) * 100) },
+    { status: 'Rejected', count: rejected, color: 'var(--danger)', percentage: Math.round((rejected / total) * 100) }
   ];
-  
-  let html = hdr('Admission Statistics Report','Comprehensive analysis of admission applications','Statistics');
-  
+
+  let html = hdr('Admission Statistics Report', 'Comprehensive analysis of admission applications', 'Statistics');
+
   html += '<div class=\"stats-row\" style=\"margin-bottom:24px\">';
-  html += statCard('<i class="fas fa-clipboard-list"></i>',total,'Total Applications','Academic Year 2025/2026','neu','si-blue');
-  html += statCard('<i class="fas fa-hourglass-half"></i>',pending,'Pending Applications','Awaiting review','neu','si-gold');
-  html += statCard('<i class="fas fa-check-circle"></i>',approved,'Approved Applications','Ready for enrollment','up','si-green');
-  html += statCard('<i class="fas fa-book"></i>',enrolled,'Enrolled Students','Successfully enrolled','up','si-purple');
+  html += statCard('<i class="fas fa-clipboard-list"></i>', total, 'Total Applications', 'Academic Year 2025/2026', 'neu', 'si-blue');
+  html += statCard('<i class="fas fa-hourglass-half"></i>', pending, 'Pending Applications', 'Awaiting review', 'neu', 'si-gold');
+  html += statCard('<i class="fas fa-check-circle"></i>', approved, 'Approved Applications', 'Ready for enrollment', 'up', 'si-green');
+  html += statCard('<i class="fas fa-book"></i>', enrolled, 'Enrolled Students', 'Successfully enrolled', 'up', 'si-purple');
   html += '</div>';
-  
+
   html += '<div class=\"g2 mb20\"><div class=\"card\"><div class=\"card-hdr\"><span class=\"card-title\"><i class=\"fas fa-chart-bar\"></i> Status Distribution</span></div><div style=\"padding:20px\">';
-  statusData.forEach(s=>{
-    const pct = Math.round((s.count/total)*100);
-    html += '<div style=\"margin-bottom:16px\"><div style=\"display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px\"><span style=\"font-weight:600\">'+s.status+'</span><span style=\"color:var(--gray-500)\">'+s.count+' ('+pct+'%)</span></div>';
-    html += '<div style=\"height:20px;background:var(--gray-100);border-radius:10px;overflow:hidden\"><div style=\"height:100%;background:'+s.color+';width:'+pct+'%;transition:width 0.3s\"></div></div></div>';
+  statusData.forEach(s => {
+    const pct = Math.round((s.count / total) * 100);
+    html += '<div style=\"margin-bottom:16px\"><div style=\"display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px\"><span style=\"font-weight:600\">' + s.status + '</span><span style=\"color:var(--gray-500)\">' + s.count + ' (' + pct + '%)</span></div>';
+    html += '<div style=\"height:20px;background:var(--gray-100);border-radius:10px;overflow:hidden\"><div style=\"height:100%;background:' + s.color + ';width:' + pct + '%;transition:width 0.3s\"></div></div></div>';
   });
   html += '</div></div>';
-  
+
   html += '<div class=\"card\"><div class=\"card-hdr\"><span class=\"card-title\"><i class="fas fa-users"></i> Gender Breakdown</span></div><div style=\"padding:20px;text-align:center\">';
   html += '<div style=\"display:flex;gap:20px;justify-content:center;margin-bottom:16px\">';
-  html += '<div><div style=\"font-size:28px;font-weight:700;color:var(--blue-main)\">'+maleCount+'</div><div style=\"font-size:12px;color:var(--gray-500);margin-top:4px\">Male Students</div><div style=\"font-size:11px;color:var(--gray-400);margin-top:4px\">'+Math.round((maleCount/total)*100)+'%</div></div>';
+  html += '<div><div style=\"font-size:28px;font-weight:700;color:var(--blue-main)\">' + maleCount + '</div><div style=\"font-size:12px;color:var(--gray-500);margin-top:4px\">Male Students</div><div style=\"font-size:11px;color:var(--gray-400);margin-top:4px\">' + Math.round((maleCount / total) * 100) + '%</div></div>';
   html += '<div style=\"border-left:1px solid var(--gray-200)\"></div>';
-  html += '<div><div style=\"font-size:28px;font-weight:700;color:var(--purple)\">'+femaleCount+'</div><div style=\"font-size:12px;color:var(--gray-500);margin-top:4px\">Female Students</div><div style=\"font-size:11px;color:var(--gray-400);margin-top:4px\">'+Math.round((femaleCount/total)*100)+'%</div></div>';
+  html += '<div><div style=\"font-size:28px;font-weight:700;color:var(--purple)\">' + femaleCount + '</div><div style=\"font-size:12px;color:var(--gray-500);margin-top:4px\">Female Students</div><div style=\"font-size:11px;color:var(--gray-400);margin-top:4px\">' + Math.round((femaleCount / total) * 100) + '%</div></div>';
   html += '</div></div></div></div>';
-  
+
   html += '<div class=\"card mb20\"><div class=\"card-hdr\"><span class=\"card-title\"><i class=\"fas fa-building\"></i> Applications by Class</span></div>';
   html += '<table class=\"tbl\" style=\"font-size:12px\"><thead><tr><th>Class</th><th>Applications</th><th>Percentage</th><th>Bar</th></tr></thead><tbody>';
-  Object.entries(byClass).sort((a,b)=>b[1]-a[1]).forEach(([cls,count])=>{
-    const pct = Math.round((count/total)*100);
-    html += '<tr><td style=\"font-weight:600\">'+cls+'</td><td>'+count+'</td><td style=\"font-size:11px;color:var(--gray-500)\">'+pct+'%</td>';
-    html += '<td><div style=\"height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;width:100px\"><div style=\"height:100%;background:var(--blue-main);width:'+pct+'%\"></div></div></td></tr>';
+  Object.entries(byClass).sort((a, b) => b[1] - a[1]).forEach(([cls, count]) => {
+    const pct = Math.round((count / total) * 100);
+    html += '<tr><td style=\"font-weight:600\">' + cls + '</td><td>' + count + '</td><td style=\"font-size:11px;color:var(--gray-500)\">' + pct + '%</td>';
+    html += '<td><div style=\"height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;width:100px\"><div style=\"height:100%;background:var(--blue-main);width:' + pct + '%\"></div></div></td></tr>';
   });
   html += '</tbody></table></div>';
-  
+
   html += '<div class=\"g2 mb20\"><div class=\"card\"><div class=\"card-hdr\"><span class=\"card-title\"><i class=\"fas fa-chart-line\"></i> Success Metrics</span></div><div style=\"padding:20px\">';
-  html += '<div style=\"display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:12px\"><div style=\"font-size:24px;color:var(--success)\"><i class=\"fas fa-check-circle\"></i></div><div style=\"flex:1;margin-left:12px\"><div style=\"font-size:12px;color:var(--gray-500)\">Approval Rate</div><div style=\"font-size:18px;font-weight:700;color:var(--success)\">'+Math.round((approved/total)*100)+'%</div></div></div>';
-  html += '<div style=\"display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:12px\"><div style=\"font-size:24px;color:var(--blue-main)\"><i class=\"fas fa-book\"></i></div><div style=\"flex:1;margin-left:12px\"><div style=\"font-size:12px;color:var(--gray-500)\">Enrollment Rate</div><div style=\"font-size:18px;font-weight:700;color:var(--blue-main)\">'+Math.round((enrolled/(approved||1))*100)+'%</div></div></div>';
-  html += '<div style=\"display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:6px;\"><div style=\"font-size:24px;color:var(--danger)\"><i class=\"fas fa-times-circle\"></i></div><div style=\"flex:1;margin-left:12px\"><div style=\"font-size:12px;color:var(--gray-500)\">Rejection Rate</div><div style=\"font-size:18px;font-weight:700;color:var(--danger)\">'+Math.round((rejected/total)*100)+'%</div></div></div>';
+  html += '<div style=\"display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:12px\"><div style=\"font-size:24px;color:var(--success)\"><i class=\"fas fa-check-circle\"></i></div><div style=\"flex:1;margin-left:12px\"><div style=\"font-size:12px;color:var(--gray-500)\">Approval Rate</div><div style=\"font-size:18px;font-weight:700;color:var(--success)\">' + Math.round((approved / total) * 100) + '%</div></div></div>';
+  html += '<div style=\"display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:12px\"><div style=\"font-size:24px;color:var(--blue-main)\"><i class=\"fas fa-book\"></i></div><div style=\"flex:1;margin-left:12px\"><div style=\"font-size:12px;color:var(--gray-500)\">Enrollment Rate</div><div style=\"font-size:18px;font-weight:700;color:var(--blue-main)\">' + Math.round((enrolled / (approved || 1)) * 100) + '%</div></div></div>';
+  html += '<div style=\"display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:6px;\"><div style=\"font-size:24px;color:var(--danger)\"><i class=\"fas fa-times-circle\"></i></div><div style=\"flex:1;margin-left:12px\"><div style=\"font-size:12px;color:var(--gray-500)\">Rejection Rate</div><div style=\"font-size:18px;font-weight:700;color:var(--danger)\">' + Math.round((rejected / total) * 100) + '%</div></div></div>';
   html += '</div></div>';
-  
+
   html += '<div class=\"card\"><div class=\"card-hdr\"><span class=\"card-title\"><i class=\"fas fa-calendar-alt\"></i> Academic Year</span></div><div style=\"padding:20px\"><div style=\"text-align:center;padding:20px\">';
   html += '<div style=\"font-size:32px;font-weight:700;color:var(--blue-dark)\">2025/2026</div><div style=\"font-size:12px;color:var(--gray-500);margin-top:8px\">Current Academic Year</div>';
-  html += '<div style=\"display:flex;gap:8px;margin-top:16px;justify-content:center\"><span class=\"badge b-info\">'+total+' Applicants</span><span class=\"badge b-success\">'+enrolled+' Enrolled</span></div>';
+  html += '<div style=\"display:flex;gap:8px;margin-top:16px;justify-content:center\"><span class=\"badge b-info\">' + total + ' Applicants</span><span class=\"badge b-success\">' + enrolled + ' Enrolled</span></div>';
   html += '</div></div></div></div>';
-  
+
   html += '<div class=\"card\"><div class=\"card-hdr\"><span class=\"card-title\"><i class=\"fas fa-clipboard-list\"></i> Recent Activity</span></div>';
   html += '<table class=\"tbl\" style=\"font-size:11px\"><thead><tr><th>Date</th><th>Student</th><th>Status</th><th>Class</th><th>Action</th></tr></thead><tbody>';
-  admissionsData.slice().reverse().slice(0,8).forEach((a)=>{
-    const badgeClass = a.status==='Approved'?'b-success':(a.status==='Pending'?'b-warning':(a.status==='Enrolled'?'b-info':'b-danger'));
-    html += '<tr><td style=\"color:var(--gray-500)\">'+a.created+'</td><td style=\"font-weight:600\">'+a.name+'</td><td><span class=\"badge '+badgeClass+'\">'+a.status+'</span></td><td style=\"font-size:10px\">'+a.class_applying+'</td><td><span style=\"font-size:10px;color:var(--gray-400)\">Applied on '+a.created+'</span></td></tr>';
+  admissionsData.slice().reverse().slice(0, 8).forEach((a) => {
+    const badgeClass = a.status === 'Approved' ? 'b-success' : (a.status === 'Pending' ? 'b-warning' : (a.status === 'Enrolled' ? 'b-info' : 'b-danger'));
+    html += '<tr><td style=\"color:var(--gray-500)\">' + a.created + '</td><td style=\"font-weight:600\">' + a.name + '</td><td><span class=\"badge ' + badgeClass + '\">' + a.status + '</span></td><td style=\"font-size:10px\">' + a.class_applying + '</td><td><span style=\"font-size:10px;color:var(--gray-400)\">Applied on ' + a.created + '</span></td></tr>';
   });
   html += '</tbody></table></div>';
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function previewAdmPicture(input){
+function previewAdmPicture(input) {
   const preview = document.getElementById('adm-pic-preview');
-  if(input.files && input.files[0]){
+  if (input.files && input.files[0]) {
     const file = input.files[0];
-    if(file.size > 5*1024*1024){
+    if (file.size > 5 * 1024 * 1024) {
       alert('File size exceeds 5MB. Please choose a smaller image.');
       input.value = '';
       preview.innerHTML = '<i class="fas fa-camera" style="color:var(--gray-400)"></i>';
       return;
     }
     const reader = new FileReader();
-    reader.onload = function(e){
-      preview.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
+    reader.onload = function (e) {
+      preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
       window.admPictureData = e.target.result;
     };
     reader.readAsDataURL(file);
-  }else{
+  } else {
     preview.innerHTML = '<i class="fas fa-camera" style="color:var(--gray-400)"></i>';
     window.admPictureData = null;
   }
@@ -2813,7 +2911,7 @@ function previewAdmPicture(input){
 // ═══════════════════════════════════
 // REPORT GENERATION FUNCTIONS
 // ═══════════════════════════════════
-function printEnrollmentAttendanceReport(){
+function printEnrollmentAttendanceReport() {
   const printWindow = window.open('', '', 'width=1000,height=800');
   const content = document.getElementById('main-content').innerHTML;
   printWindow.document.write(`
@@ -2845,7 +2943,7 @@ function printEnrollmentAttendanceReport(){
     </head>
     <body>
       <h1>Monthly Enrollment & Attendance Report</h1>
-      <div class="hdr-sub">Generated on ${new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})} at ${new Date().toLocaleTimeString()}</div>
+      <div class="hdr-sub">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${new Date().toLocaleTimeString()}</div>
       ${content}
     </body>
     </html>
@@ -2854,26 +2952,26 @@ function printEnrollmentAttendanceReport(){
   setTimeout(() => { printWindow.print(); }, 250);
 }
 
-function exportEnrollmentAttendanceToExcel(){
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const enrollmentData=[42,48,45,52,58,62,68,75,82,88,94,102];
-  const attendanceData=[88,89,87,90,92,93,94,96,95,97,98,96];
-  
+function exportEnrollmentAttendanceToExcel() {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
+  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+
   let csv = 'Monthly Enrollment & Attendance Report\n';
-  csv += 'Generated: '+new Date().toLocaleDateString()+'\n\n';
-  
+  csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
+
   csv += 'Month,Enrollment,Attendance %,Performance\n';
-  for(let i=0; i<months.length; i++){
-    const perf = attendanceData[i]>=95?'Excellent':(attendanceData[i]>=90?'Very Good':'Good');
-    csv += months[i]+','+enrollmentData[i]+','+attendanceData[i]+','+perf+'\n';
+  for (let i = 0; i < months.length; i++) {
+    const perf = attendanceData[i] >= 95 ? 'Excellent' : (attendanceData[i] >= 90 ? 'Very Good' : 'Good');
+    csv += months[i] + ',' + enrollmentData[i] + ',' + attendanceData[i] + ',' + perf + '\n';
   }
-  
+
   csv += '\n\nClass-wise Summary\n';
   csv += 'Class,Peak Enrollment,Average Attendance\n';
   csv += 'Form 1,35,92%\n';
   csv += 'Form 2,47,97%\n';
   csv += 'Form 3,20,98%\n';
-  
+
   csv += '\n\nKey Metrics\n';
   csv += 'Metric,Value\n';
   csv += 'Total Enrollment Growth,42 to 102 (+142.9%)\n';
@@ -2882,22 +2980,22 @@ function exportEnrollmentAttendanceToExcel(){
   csv += 'Monthly Average Attendance,92.5%\n';
   csv += 'Highest Enrollment Month,December (102 students)\n';
   csv += 'Peak Attendance Month,October & November (97-98%)\n';
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'Enrollment_Attendance_Report_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'Enrollment_Attendance_Report_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-  showToast('<i class="fas fa-check-circle"></i> Report exported successfully!<br/>File: Enrollment_Attendance_Report_'+new Date().toISOString().slice(0,10)+'.csv', 'success', 4000);
+  showToast('<i class="fas fa-check-circle"></i> Report exported successfully!<br/>File: Enrollment_Attendance_Report_' + new Date().toISOString().slice(0, 10) + '.csv', 'success', 4000);
 }
 
-function downloadEnrollmentAttendancePDF(){
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const enrollmentData=[42,48,45,52,58,62,68,75,82,88,94,102];
-  const attendanceData=[88,89,87,90,92,93,94,96,95,97,98,96];
-  
+function downloadEnrollmentAttendancePDF() {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
+  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+
   let html = '<html><head><meta charset="UTF-8"><style>';
   html += 'body{font-family:Arial,sans-serif;margin:20px;color:#333}';
   html += 'h1{font-size:20px;margin:0 0 10px 0}h2{font-size:14px;margin:15px 0 10px 0;border-bottom:2px solid #0066cc;padding-bottom:5px}';
@@ -2906,24 +3004,24 @@ function downloadEnrollmentAttendancePDF(){
   html += '.stat-val{font-size:20px;font-weight:bold;color:#0066cc}.stat-lbl{font-size:11px;color:#666}';
   html += '.page-break{page-break-after:always}';
   html += '</style></head><body>';
-  
+
   html += '<h1><i class="fas fa-chart-bar"></i> Monthly Enrollment & Attendance Report</h1>';
-  html += '<p style="color:#666;font-size:12px">Generated on '+new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})+'</p>';
-  
+  html += '<p style="color:#666;font-size:12px">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</p>';
+
   html += '<h2>Summary Metrics</h2>';
   html += '<div class="stat"><div class="stat-val">102</div><div class="stat-lbl">Current Enrollment</div></div>';
   html += '<div class="stat"><div class="stat-val">96%</div><div class="stat-lbl">Avg Attendance</div></div>';
   html += '<div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Active Classes</div></div>';
   html += '<div class="stat"><div class="stat-val">842</div><div class="stat-lbl">Total Students</div></div>';
-  
+
   html += '<h2>Monthly Breakdown</h2>';
   html += '<table><tr><th>Month</th><th>Enrollment</th><th>Attendance %</th><th>Performance</th></tr>';
-  for(let i=0; i<months.length; i++){
-    const perf = attendanceData[i]>=95?'Excellent':(attendanceData[i]>=90?'Very Good':'Good');
-    html += '<tr><td>'+months[i]+'</td><td>'+enrollmentData[i]+'</td><td>'+attendanceData[i]+'%</td><td>'+perf+'</td></tr>';
+  for (let i = 0; i < months.length; i++) {
+    const perf = attendanceData[i] >= 95 ? 'Excellent' : (attendanceData[i] >= 90 ? 'Very Good' : 'Good');
+    html += '<tr><td>' + months[i] + '</td><td>' + enrollmentData[i] + '</td><td>' + attendanceData[i] + '%</td><td>' + perf + '</td></tr>';
   }
   html += '</table>';
-  
+
   html += '<div class="page-break"></div>';
   html += '<h2>Class-wise Analysis</h2>';
   html += '<table><tr><th>Class</th><th>Peak Enrollment</th><th>Average Attendance</th></tr>';
@@ -2931,7 +3029,7 @@ function downloadEnrollmentAttendancePDF(){
   html += '<tr><td>Form 2</td><td>47 students</td><td>97%</td></tr>';
   html += '<tr><td>Form 3</td><td>20 students</td><td>98%</td></tr>';
   html += '</table>';
-  
+
   html += '<h2>Key Statistics</h2>';
   html += '<table>';
   html += '<tr><th>Metric</th><th>Value</th></tr>';
@@ -2940,33 +3038,33 @@ function downloadEnrollmentAttendancePDF(){
   html += '<tr><td>Monthly Average Enrollment</td><td>67.3 students</td></tr>';
   html += '<tr><td>Monthly Average Attendance</td><td>92.5%</td></tr>';
   html += '</table>';
-  
+
   html += '</body></html>';
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(html));
-  element.setAttribute('download', 'Enrollment_Attendance_Report_'+new Date().toISOString().slice(0,10)+'.pdf.html');
+  element.setAttribute('download', 'Enrollment_Attendance_Report_' + new Date().toISOString().slice(0, 10) + '.pdf.html');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-  showToast('<i class="fas fa-check-circle"></i> PDF generated!<br/>File: Enrollment_Attendance_Report_'+new Date().toISOString().slice(0,10)+'.pdf.html', 'success', 4000);
+  showToast('<i class="fas fa-check-circle"></i> PDF generated!<br/>File: Enrollment_Attendance_Report_' + new Date().toISOString().slice(0, 10) + '.pdf.html', 'success', 4000);
 }
 
 // ═══════════════════════════════════
 // MONTHLY ENROLLMENT & ATTENDANCE REPORT
 // ═══════════════════════════════════
-function showMonthlyEnrollmentAttendanceReport(){
-  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const enrollmentData=[42,48,45,52,58,62,68,75,82,88,94,102];
-  const attendanceData=[88,89,87,90,92,93,94,96,95,97,98,96];
-  const classData={
-    'Form 1':{enr:[12,14,13,16,18,20,22,25,28,30,32,35],att:[85,86,84,87,89,90,91,93,92,94,95,93]},
-    'Form 2':{enr:[18,20,19,22,25,28,30,33,36,40,43,47],att:[88,89,87,91,93,94,95,97,96,98,99,97]},
-    'Form 3':{enr:[12,14,13,14,15,14,16,17,18,18,19,20],att:[92,93,91,92,93,94,95,96,95,97,98,98]}
+function showMonthlyEnrollmentAttendanceReport() {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
+  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+  const classData = {
+    'Form 1': { enr: [12, 14, 13, 16, 18, 20, 22, 25, 28, 30, 32, 35], att: [85, 86, 84, 87, 89, 90, 91, 93, 92, 94, 95, 93] },
+    'Form 2': { enr: [18, 20, 19, 22, 25, 28, 30, 33, 36, 40, 43, 47], att: [88, 89, 87, 91, 93, 94, 95, 97, 96, 98, 99, 97] },
+    'Form 3': { enr: [12, 14, 13, 14, 15, 14, 16, 17, 18, 18, 19, 20], att: [92, 93, 91, 92, 93, 94, 95, 96, 95, 97, 98, 98] }
   };
 
-  let html = hdr('<i class="fas fa-chart-bar"></i> Monthly Enrollment & Attendance Report','Comprehensive analysis of student enrollment and attendance trends','Report')+`
+  let html = hdr('<i class="fas fa-chart-bar"></i> Monthly Enrollment & Attendance Report', 'Comprehensive analysis of student enrollment and attendance trends', 'Report') + `
   <div class="stats-row">
     <div class="stat-card si-blue">
       <div class="stat-val">102</div>
@@ -2994,10 +3092,10 @@ function showMonthlyEnrollmentAttendanceReport(){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> 12-Month Enrollment Trend</span></div>
       <div style="display:flex;gap:3px;align-items:flex-end;height:180px;padding:15px 10px;background:var(--gray-xlight);border-radius:8px">
-        ${enrollmentData.map((v,i)=>`
+        ${enrollmentData.map((v, i) => `
         <div style="flex:1;display:flex;flex-direction:column;align-items:center">
-          <div title="${months[i]}: ${v} students" style="width:100%;height:${v*1.5}px;background:linear-gradient(180deg,var(--blue-main),var(--blue-light));border-radius:3px 3px 0 0;opacity:.85;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85"></div>
-          <div style="font-size:9px;color:var(--gray-500);margin-top:3px">${months[i].slice(0,3)}</div>
+          <div title="${months[i]}: ${v} students" style="width:100%;height:${v * 1.5}px;background:linear-gradient(180deg,var(--blue-main),var(--blue-light));border-radius:3px 3px 0 0;opacity:.85;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.85"></div>
+          <div style="font-size:9px;color:var(--gray-500);margin-top:3px">${months[i].slice(0, 3)}</div>
           <div style="font-size:9px;font-weight:600;color:var(--blue-dark)">${v}</div>
         </div>`).join('')}
       </div>
@@ -3006,10 +3104,10 @@ function showMonthlyEnrollmentAttendanceReport(){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> 12-Month Attendance Trend</span></div>
       <div style="display:flex;gap:3px;align-items:flex-end;height:160px;padding:15px 10px;background:var(--gray-xlight);border-radius:8px;overflow:hidden">
-        ${attendanceData.map((v,i)=>`
+        ${attendanceData.map((v, i) => `
         <div style="flex:1;display:flex;flex-direction:column;align-items:center">
-          <div title="${months[i]}: ${v}% attendance" style="width:100%;height:${Math.round((v-85)*12)}px;background:linear-gradient(180deg,var(--success),var(--success-light));border-radius:3px 3px 0 0;opacity:.9;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.9"></div>
-          <div style="font-size:9px;color:var(--gray-500);margin-top:2px">${months[i].slice(0,3)}</div>
+          <div title="${months[i]}: ${v}% attendance" style="width:100%;height:${Math.round((v - 85) * 12)}px;background:linear-gradient(180deg,var(--success),var(--success-light));border-radius:3px 3px 0 0;opacity:.9;cursor:pointer;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.9"></div>
+          <div style="font-size:9px;color:var(--gray-500);margin-top:2px">${months[i].slice(0, 3)}</div>
           <div style="font-size:9px;font-weight:600;color:var(--success)">${v}%</div>
         </div>`).join('')}
       </div>
@@ -3019,12 +3117,12 @@ function showMonthlyEnrollmentAttendanceReport(){
   <div class="card mb20">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Class-wise Enrollment & Attendance Breakdown</span></div>
     <div class="g3">
-      ${Object.entries(classData).map(([cls,data])=>`
+      ${Object.entries(classData).map(([cls, data]) => `
       <div style="padding:12px;border:1px solid var(--gray-200);border-radius:8px">
         <div style="font-weight:700;color:var(--blue-main);margin-bottom:10px">${cls}</div>
         <div style="margin-bottom:12px">
-          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Enrollment: ${data.enr[11]} students (↑${data.enr[11]-data.enr[10]} this month)</div>
-          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(data.enr[11]/35)*100}%"></div></div>
+          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Enrollment: ${data.enr[11]} students (↑${data.enr[11] - data.enr[10]} this month)</div>
+          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(data.enr[11] / 35) * 100}%"></div></div>
         </div>
         <div>
           <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Attendance: ${data.att[11]}%</div>
@@ -3032,7 +3130,7 @@ function showMonthlyEnrollmentAttendanceReport(){
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-100);font-size:10px;color:var(--gray-500)">
           <div>Peak: ${Math.max(...data.enr)} students</div>
-          <div>Avg Att: ${Math.round(data.att.reduce((a,b)=>a+b,0)/data.att.length)}%</div>
+          <div>Avg Att: ${Math.round(data.att.reduce((a, b) => a + b, 0) / data.att.length)}%</div>
         </div>
       </div>`).join('')}
     </div>
@@ -3043,21 +3141,21 @@ function showMonthlyEnrollmentAttendanceReport(){
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Key Metrics</span></div>
       <div style="padding:12px 0">
         ${[
-          ['Enrollment Growth','Jan→Dec','42 → 102 students','↑142.9%','success'],
-          ['Attendance Improvement','Jan→Dec','88% → 96%','↑9.1%','success'],
-          ['Monthly Avg Enrollment','2024/2025','67.3 students','Stable','info'],
-          ['Monthly Avg Attendance','2024/2025','92.5%','Excellent','success'],
-          ['Highest Enrollment Month','December','102 students','Peak term','gold'],
-          ['Highest Attendance Month','October/Nov','97-98%','Peak performance','success']
-        ].map(([label,period,value,change,color])=>`
+      ['Enrollment Growth', 'Jan→Dec', '42 → 102 students', '↑142.9%', 'success'],
+      ['Attendance Improvement', 'Jan→Dec', '88% → 96%', '↑9.1%', 'success'],
+      ['Monthly Avg Enrollment', '2024/2025', '67.3 students', 'Stable', 'info'],
+      ['Monthly Avg Attendance', '2024/2025', '92.5%', 'Excellent', 'success'],
+      ['Highest Enrollment Month', 'December', '102 students', 'Peak term', 'gold'],
+      ['Highest Attendance Month', 'October/Nov', '97-98%', 'Peak performance', 'success']
+    ].map(([label, period, value, change, color]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <div>
             <div style="font-weight:600;font-size:12px">${label}</div>
             <div style="font-size:10px;color:var(--gray-500)">${period}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-weight:700;color:var(--${color==='success'?'success':color==='danger'?'danger':'blue-main'})">${value}</div>
-            <div style="font-size:10px;color:var(--${color==='success'?'success':color==='danger'?'danger':'gold'})">${change}</div>
+            <div style="font-weight:700;color:var(--${color === 'success' ? 'success' : color === 'danger' ? 'danger' : 'blue-main'})">${value}</div>
+            <div style="font-size:10px;color:var(--${color === 'success' ? 'success' : color === 'danger' ? 'danger' : 'gold'})">${change}</div>
           </div>
         </div>`).join('')}
       </div>
@@ -3126,21 +3224,21 @@ function showMonthlyEnrollmentAttendanceReport(){
         </tr>
       </thead>
       <tbody>
-        ${enrollmentData.map((enr,i)=>{
-          const prevEnr = i>0?enrollmentData[i-1]:42;
-          const change = enr-prevEnr;
-          const att = attendanceData[i];
-          const trend = change>0?'<i class="fas fa-chart-line"></i>':change<0?'<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>':'<i class="fas fa-arrow-right"></i>';
-          const perfColor = att>=95?'success':(att>=90?'blue-main':'warning');
-          return `<tr>
+        ${enrollmentData.map((enr, i) => {
+      const prevEnr = i > 0 ? enrollmentData[i - 1] : 42;
+      const change = enr - prevEnr;
+      const att = attendanceData[i];
+      const trend = change > 0 ? '<i class="fas fa-chart-line"></i>' : change < 0 ? '<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>' : '<i class="fas fa-arrow-right"></i>';
+      const perfColor = att >= 95 ? 'success' : (att >= 90 ? 'blue-main' : 'warning');
+      return `<tr>
             <td style="font-weight:600">${months[i]}</td>
             <td style="text-align:center;font-weight:600">${enr}</td>
-            <td style="text-align:center;color:${change>0?'var(--success)':'var(--gray-500)'}">${change>0?'+'+change:change===0?'—':change}</td>
+            <td style="text-align:center;color:${change > 0 ? 'var(--success)' : 'var(--gray-500)'}">${change > 0 ? '+' + change : change === 0 ? '—' : change}</td>
             <td style="text-align:center;font-weight:600;color:var(--${perfColor})">${att}%</td>
             <td style="text-align:center;font-size:16px">${trend}</td>
-            <td><span class="badge b-${perfColor==='success'?'success':'info'}">${att>=95?'Excellent':att>=90?'Very Good':'Good'}</span></td>
+            <td><span class="badge b-${perfColor === 'success' ? 'success' : 'info'}">${att >= 95 ? 'Excellent' : att >= 90 ? 'Very Good' : 'Good'}</span></td>
           </tr>`;
-        }).join('')}
+    }).join('')}
       </tbody>
     </table>
   </div>
@@ -3160,8 +3258,8 @@ function showMonthlyEnrollmentAttendanceReport(){
 // ═══════════════════════════════════
 // STUDENT MANAGEMENT FUNCTIONS
 // ═══════════════════════════════════
-function showEnrollStudentForm(){
-  let html = hdr('Enroll New Student','Add a student to the system','Students')+`
+function showEnrollStudentForm() {
+  let html = hdr('Enroll New Student', 'Add a student to the system', 'Students') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-file-alt"></i> Student Enrollment Form</span></div>
     <div class="form-grid">
@@ -3199,11 +3297,11 @@ function showEnrollStudentForm(){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function submitStudentEnrollment(){
+function submitStudentEnrollment() {
   const name = document.getElementById('std-name')?.value.trim();
   const dob = document.getElementById('std-dob')?.value;
   const gender = document.getElementById('std-gender')?.value;
@@ -3211,12 +3309,12 @@ function submitStudentEnrollment(){
   const address = document.getElementById('std-address')?.value.trim();
   const parentName = document.getElementById('std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('std-parent-phone')?.value.trim();
-  
-  if(!name || !dob || !gender || !studentClass){
+
+  if (!name || !dob || !gender || !studentClass) {
     showToast('<i class=\"fas fa-times-circle\"></i> Please fill all required fields', 'error');
     return;
   }
-  
+
   const studentId = '2024-' + String(enrolledStudents.length + 1000).slice(-4);
   const newStudent = {
     student_id: studentId,
@@ -3228,28 +3326,28 @@ function submitStudentEnrollment(){
     gpa: '3.5',
     fees_status: 'Paid',
     status: 'Active',
-    avatar_color: ['blue','gold','purple','green','teal'][Math.floor(Math.random()*5)],
-    gender_abbr: gender==='Male'?'M':'F',
+    avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][Math.floor(Math.random() * 5)],
+    gender_abbr: gender === 'Male' ? 'M' : 'F',
     address: address,
     parent_name: parentName,
     parent_phone: parentPhone,
     picture: null,
     enrolled_date: new Date().toISOString().split('T')[0]
   };
-  
+
   enrolledStudents.push(newStudent);
-  showToast('<i class="fas fa-check-circle"></i> Student enrolled!<br/>ID: '+studentId+'<br/>Name: '+name, 'success', 4000);
-  
+  showToast('<i class="fas fa-check-circle"></i> Student enrolled!<br/>ID: ' + studentId + '<br/>Name: ' + name, 'success', 4000);
+
   setTimeout(() => {
     navTo('students');
   }, 2000);
 }
 
-function viewStudent(studentId){
-  const student = enrolledStudents.find(s=>s.student_id===studentId);
-  if(!student) return;
-  
-  let html = hdr('Student Profile','View student details and academic records','Students')+`
+function viewStudent(studentId) {
+  const student = enrolledStudents.find(s => s.student_id === studentId);
+  if (!student) return;
+
+  let html = hdr('Student Profile', 'View student details and academic records', 'Students') + `
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal Information</span></div>
@@ -3281,7 +3379,7 @@ function viewStudent(studentId){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Academic Status</span></div>
       <div class="stats-row" style="grid-template-columns:repeat(2,1fr);gap:12px">
-        ${[['<i class="fas fa-chart-line"></i>','GPA',student.gpa,'si-blue'],['<i class="fas fa-check-circle"></i>','Attendance',student.attendance,'si-green'],['<i class="fas fa-money-bill"></i>','Fees',student.fees_status,'si-'+({Paid:'green',Pending:'warning',Partial:'gold'}[student.fees_status]||'gray')],['<i class="fas fa-graduation-cap"></i>','Status',student.status,'si-info']].map(([ic,lbl,val,cls])=>'<div class="stat-card '+cls+'"><div class="stat-val">'+val+'</div><div class="stat-lbl">'+lbl+'</div></div>').join('')}
+        ${[['<i class="fas fa-chart-line"></i>', 'GPA', student.gpa, 'si-blue'], ['<i class="fas fa-check-circle"></i>', 'Attendance', student.attendance, 'si-green'], ['<i class="fas fa-money-bill"></i>', 'Fees', student.fees_status, 'si-' + ({ Paid: 'green', Pending: 'warning', Partial: 'gold' }[student.fees_status] || 'gray')], ['<i class="fas fa-graduation-cap"></i>', 'Status', student.status, 'si-info']].map(([ic, lbl, val, cls]) => '<div class="stat-card ' + cls + '"><div class="stat-val">' + val + '</div><div class="stat-lbl">' + lbl + '</div></div>').join('')}
       </div>
     </div>
   </div>
@@ -3304,15 +3402,15 @@ function viewStudent(studentId){
     <button class="btn btn-primary" onclick="editStudent('${studentId}')"><i class="fas fa-edit"></i> Edit</button>
     <button class="btn btn-secondary" onclick="navTo('students')">Back to Students</button>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function editStudent(studentId){
-  const student = enrolledStudents.find(s=>s.student_id===studentId);
-  if(!student) return;
-  
-  let html = hdr('Edit Student','Update student information','Students')+`
+function editStudent(studentId) {
+  const student = enrolledStudents.find(s => s.student_id === studentId);
+  if (!student) return;
+
+  let html = hdr('Edit Student', 'Update student information', 'Students') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Edit Student Details</span></div>
     <div class="form-grid">
@@ -3360,14 +3458,14 @@ function editStudent(studentId){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function saveStudentChanges(studentId){
-  const student = enrolledStudents.find(s=>s.student_id===studentId);
-  if(!student) return;
-  
+function saveStudentChanges(studentId) {
+  const student = enrolledStudents.find(s => s.student_id === studentId);
+  if (!student) return;
+
   student.name = document.getElementById('edit-std-name')?.value || student.name;
   student.student_class = document.getElementById('edit-std-class')?.value || student.student_class;
   student.fees_status = document.getElementById('edit-std-fees')?.value || student.fees_status;
@@ -3375,21 +3473,21 @@ function saveStudentChanges(studentId){
   student.address = document.getElementById('edit-std-address')?.value || '';
   student.parent_name = document.getElementById('edit-std-parent-name')?.value || '';
   student.parent_phone = document.getElementById('edit-std-parent-phone')?.value || '';
-  
-  showToast('<i class="fas fa-check-circle"></i> Student details updated!<br/>Name: '+student.name, 'success', 3000);
-  
+
+  showToast('<i class="fas fa-check-circle"></i> Student details updated!<br/>Name: ' + student.name, 'success', 3000);
+
   setTimeout(() => {
     viewStudent(studentId);
   }, 1500);
 }
 
-function importStudentsCSV(){
+function importStudentsCSV() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.csv';
   input.onchange = (e) => {
     const file = e.target.files[0];
-    if(file){
+    if (file) {
       showToast('<i class="fas fa-check-circle"></i> CSV imported!<br/>' + file.name, 'success');
       navTo('students');
     }
@@ -3397,15 +3495,15 @@ function importStudentsCSV(){
   input.click();
 }
 
-function exportStudentsData(){
+function exportStudentsData() {
   let csv = 'Student ID,Name,Class,Gender,DOB,Attendance,GPA,Fees,Status,Address,Parent,Phone,Enrolled Date\n';
-  enrolledStudents.forEach((s)=>{
-    csv += s.student_id+','+s.name+','+s.student_class+','+s.gender+','+s.dob+','+s.attendance+','+s.gpa+','+s.fees_status+','+s.status+','+s.address+','+s.parent_name+','+s.parent_phone+','+s.enrolled_date+'\n';
+  enrolledStudents.forEach((s) => {
+    csv += s.student_id + ',' + s.name + ',' + s.student_class + ',' + s.gender + ',' + s.dob + ',' + s.attendance + ',' + s.gpa + ',' + s.fees_status + ',' + s.status + ',' + s.address + ',' + s.parent_name + ',' + s.parent_phone + ',' + s.enrolled_date + '\n';
   });
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'Students_Data_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'Students_Data_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -3419,44 +3517,44 @@ function exportStudentsData(){
 // ═══════════════════════════════════
 // STUDENT FILTERING & SEARCH
 // ═══════════════════════════════════
-function filterStudents(){
+function filterStudents() {
   const searchInput = document.getElementById('student-search');
   const searchText = (searchInput ? searchInput.value : '').toLowerCase();
   const classFilter = document.getElementById('student-class-filter');
   const selectedClass = classFilter ? classFilter.value : 'All Classes';
   const statusFilter = document.getElementById('student-status-filter');
   const selectedStatus = statusFilter ? statusFilter.value : 'All Status';
-  
-  let filtered = enrolledStudents.filter((s)=>{
-    const matchSearch = !searchText || s.name.toLowerCase().includes(searchText) || 
-                        s.student_id.toLowerCase().includes(searchText) ||
-                        (s.parent_name && s.parent_name.toLowerCase().includes(searchText));
+
+  let filtered = enrolledStudents.filter((s) => {
+    const matchSearch = !searchText || s.name.toLowerCase().includes(searchText) ||
+      s.student_id.toLowerCase().includes(searchText) ||
+      (s.parent_name && s.parent_name.toLowerCase().includes(searchText));
     const matchClass = selectedClass === 'All Classes' || s.student_class === selectedClass;
     const matchStatus = selectedStatus === 'All Status' || s.status === selectedStatus;
-    
+
     return matchSearch && matchClass && matchStatus;
   });
-  
+
   updateStudentTable(filtered);
 }
 
-function updateStudentTable(students){
+function updateStudentTable(students) {
   const tbody = document.querySelector('table.tbl tbody');
-  if(!tbody) return;
-  
-  if(students.length === 0){
+  if (!tbody) return;
+
+  if (students.length === 0) {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--gray-400)">No students found</td></tr>';
     return;
   }
-  
-  tbody.innerHTML = students.map((s,i)=>'<tr><td style="color:var(--gray-400);font-size:11px">'+(i+1)+'</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-'+s.avatar_color+'">'+s.name[0]+'</div><span style="font-weight:600">'+s.name+'</span></div></td><td style="font-size:11px;color:var(--gray-400)">'+s.student_id+'</td><td>'+s.student_class+'</td><td><span class="badge '+((s.gender_abbr==='F')?'b-purple':'b-info')+'">'+s.gender+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+s.dob+'</td><td style="font-weight:600;color:'+(parseFloat(s.attendance)>=90?'var(--success)':'var(--warning)')+'">'+(s.attendance)+'</td><td style="font-weight:700;color:var(--blue-dark)">'+s.gpa+'</td><td><span class="badge '+(s.fees_status==='Paid'?'b-success':(s.fees_status==='Pending'?'b-danger':'b-warning'))+'">'+s.fees_status+'</span></td><td><span class="badge b-success">'+s.status+'</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewStudent(\''+s.student_id+'\')">View</button><button class="btn btn-primary btn-xs" onclick="editStudent(\''+s.student_id+'\')">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteRecord(\''+s.student_id+'\', \'Student\')">Del</button></div></td></tr>').join('');
+
+  tbody.innerHTML = students.map((s, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + s.avatar_color + '">' + s.name[0] + '</div><span style="font-weight:600">' + s.name + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + s.student_id + '</td><td>' + s.student_class + '</td><td><span class="badge ' + ((s.gender_abbr === 'F') ? 'b-purple' : 'b-info') + '">' + s.gender + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + s.dob + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + (s.attendance) + '</td><td style="font-weight:700;color:var(--blue-dark)">' + s.gpa + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + s.fees_status + '</span></td><td><span class="badge b-success">' + s.status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewStudent(\'' + s.student_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="editStudent(\'' + s.student_id + '\')">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteRecord(\'' + s.student_id + '\', \'Student\')">Del</button></div></td></tr>').join('');
 }
 
 // ═══════════════════════════════════
 // STUDENTS MODULE
 // ═══════════════════════════════════
-function studentsModule(){
-  const html = hdr('Students Module','Manage all student records, enrollment and academic data','Students')+`
+function studentsModule() {
+  const html = hdr('Students Module', 'Manage all student records, enrollment and academic data', 'Students') + `
   <div class="toolbar">
     <button class="btn btn-secondary" onclick="importStudentsCSV()" style="cursor:pointer"><i class="fas fa-upload"></i> Import CSV</button>
     <button class="btn btn-secondary" onclick="exportStudentsData()" style="cursor:pointer"><i class="fas fa-download"></i> Export</button>
@@ -3468,20 +3566,20 @@ function studentsModule(){
     <table class="tbl">
       <thead><tr><th>#</th><th>Student</th><th>Roll No.</th><th>Class</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>GPA</th><th>Fees</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
-        ${enrolledStudents.map((s,i)=>'<tr><td style="color:var(--gray-400);font-size:11px">'+(i+1)+'</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-'+s.avatar_color+'">'+s.name[0]+'</div><span style="font-weight:600">'+s.name+'</span></div></td><td style="font-size:11px;color:var(--gray-400)">'+s.student_id+'</td><td>'+s.student_class+'</td><td><span class="badge '+((s.gender_abbr==='F')?'b-purple':'b-info')+'">'+s.gender+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+s.dob+'</td><td style="font-weight:600;color:'+(parseFloat(s.attendance)>=90?'var(--success)':'var(--warning)')+'">'+(s.attendance)+'</td><td style="font-weight:700;color:var(--blue-dark)">'+s.gpa+'</td><td><span class="badge '+(s.fees_status==='Paid'?'b-success':(s.fees_status==='Pending'?'b-danger':'b-warning'))+'">'+s.fees_status+'</span></td><td><span class="badge b-success">'+s.status+'</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewStudent(\''+s.student_id+'\')">View</button><button class="btn btn-primary btn-xs" onclick="editStudent(\''+s.student_id+'\')">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteRecord(\''+s.student_id+'\', \'Student\')">Del</button></div></td></tr>').join('')}
+        ${enrolledStudents.map((s, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + s.avatar_color + '">' + s.name[0] + '</div><span style="font-weight:600">' + s.name + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + s.student_id + '</td><td>' + s.student_class + '</td><td><span class="badge ' + ((s.gender_abbr === 'F') ? 'b-purple' : 'b-info') + '">' + s.gender + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + s.dob + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + (s.attendance) + '</td><td style="font-weight:700;color:var(--blue-dark)">' + s.gpa + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + s.fees_status + '</span></td><td><span class="badge b-success">' + s.status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewStudent(\'' + s.student_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="editStudent(\'' + s.student_id + '\')">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteRecord(\'' + s.student_id + '\', \'Student\')">Del</button></div></td></tr>').join('')}
       </tbody>
     </table>
     ${paginationHtml()}
   </div>`;
-  
+
   return html;
 }
 
 // ═══════════════════════════════════
 // TEACHER MANAGEMENT FUNCTIONS
 // ═══════════════════════════════════
-function showAddTeacherForm(){
-  let html = hdr('Add New Teacher','Register a new teacher in the system','Teachers')+`
+function showAddTeacherForm() {
+  let html = hdr('Add New Teacher', 'Register a new teacher in the system', 'Teachers') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-file-alt"></i> Teacher Registration Form</span></div>
     <div class="form-grid">
@@ -3539,24 +3637,24 @@ function showAddTeacherForm(){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function previewTeacherPicture(input){
+function previewTeacherPicture(input) {
   const preview = document.getElementById('tchr-picture-preview');
   const img = document.getElementById('tchr-pic-img');
-  
-  if(input.files && input.files[0]){
+
+  if (input.files && input.files[0]) {
     const file = input.files[0];
-    
-    if(file.size > 5242880){
+
+    if (file.size > 5242880) {
       showToast('<i class=\"fas fa-times-circle\"></i> Picture must be less than 5MB', 'error');
       input.value = '';
       preview.style.display = 'none';
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       img.src = e.target.result;
@@ -3567,7 +3665,7 @@ function previewTeacherPicture(input){
   }
 }
 
-function submitTeacherForm(){
+function submitTeacherForm() {
   const name = document.getElementById('tchr-name')?.value.trim();
   const gender = document.getElementById('tchr-gender')?.value;
   const dob = document.getElementById('tchr-dob')?.value;
@@ -3580,12 +3678,12 @@ function submitTeacherForm(){
   const hireDate = document.getElementById('tchr-hiring-date')?.value;
   const pictureInput = document.getElementById('tchr-picture');
   const picture = pictureInput?.dataset.base64 || null;
-  
-  if(!name || !gender || !dob || !email || !phone || !subject || !department || !experience){
+
+  if (!name || !gender || !dob || !email || !phone || !subject || !department || !experience) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
-  
+
   const teacherId = 'T' + String(teachersData.length + 1).padStart(3, '0');
   const newTeacher = {
     teacher_id: teacherId,
@@ -3595,7 +3693,7 @@ function submitTeacherForm(){
     experience: experience,
     class_assigned: classAssignment || 'Not Assigned',
     gender: gender,
-    avatar_color: ['blue','gold','purple','green','teal'][Math.floor(Math.random()*5)],
+    avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][Math.floor(Math.random() * 5)],
     phone: phone,
     email: email,
     dob: dob,
@@ -3604,25 +3702,25 @@ function submitTeacherForm(){
     status: 'Active',
     picture: picture
   };
-  
+
   teachersData.push(newTeacher);
   showToast('<i class="fas fa-check-circle"></i> Teacher registered!<br/>ID: ' + teacherId + '<br/>Name: ' + name, 'success', 4000);
-  
+
   setTimeout(() => {
     navTo('teachers');
   }, 2000);
 }
 
-function viewTeacherProfile(teacherId){
-  const teacher = teachersData.find(t=>t.teacher_id===teacherId);
-  if(!teacher) return;
-  
-  let html = hdr('Teacher Profile','View teacher details and assignments','Teachers')+`
+function viewTeacherProfile(teacherId) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
+  let html = hdr('Teacher Profile', 'View teacher details and assignments', 'Teachers') + `
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal Information</span></div>
       <div style="display:flex;gap:20px;margin-bottom:20px">
-        ${teacher.picture ? '<img src="'+teacher.picture+'" style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:2px solid var(--blue-pale)">' : '<div class="av av-xl av-'+teacher.avatar_color+'">'+(teacher.gender==='Female'?'<i class="fas fa-user"></i>':'<i class="fas fa-user"></i>')+'</div>'}
+        ${teacher.picture ? '<img src="' + teacher.picture + '" style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:2px solid var(--blue-pale)">' : '<div class="av av-xl av-' + teacher.avatar_color + '">' + (teacher.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>') + '</div>'}
         <div style="flex:1">
           <div style="font-size:18px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${teacher.name}</div>
           <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Teacher ID: <strong>${teacher.teacher_id}</strong></div>
@@ -3648,7 +3746,7 @@ function viewTeacherProfile(teacherId){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Professional Information</span></div>
       <div class="stats-row" style="grid-template-columns:repeat(2,1fr);gap:12px">
-        ${[['<i class="fas fa-book"></i>','Subject',teacher.subject,'si-blue'],['<i class="fas fa-building"></i>','Department',teacher.department,'si-green'],['<i class="fas fa-hourglass-half"></i>','Experience',teacher.experience+' years','si-gold'],['<i class="fas fa-graduation-cap"></i>','Class',teacher.class_assigned,'si-purple']].map(([ic,lbl,val,cls])=>'<div class="stat-card '+cls+'"><div class="stat-val">'+val+'</div><div class="stat-lbl">'+lbl+'</div></div>').join('')}
+        ${[['<i class="fas fa-book"></i>', 'Subject', teacher.subject, 'si-blue'], ['<i class="fas fa-building"></i>', 'Department', teacher.department, 'si-green'], ['<i class="fas fa-hourglass-half"></i>', 'Experience', teacher.experience + ' years', 'si-gold'], ['<i class="fas fa-graduation-cap"></i>', 'Class', teacher.class_assigned, 'si-purple']].map(([ic, lbl, val, cls]) => '<div class="stat-card ' + cls + '"><div class="stat-val">' + val + '</div><div class="stat-lbl">' + lbl + '</div></div>').join('')}
       </div>
     </div>
   </div>
@@ -3676,15 +3774,15 @@ function viewTeacherProfile(teacherId){
     <button class="btn btn-danger" onclick="deleteRecord('${teacherId}', 'Teacher')"><i class="fas fa-trash"></i> Delete</button>
     <button class="btn btn-secondary" onclick="navTo('teachers')">Back</button>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function editTeacher(teacherId){
-  const teacher = teachersData.find(t=>t.teacher_id===teacherId);
-  if(!teacher) return;
-  
-  let html = hdr('Edit Teacher','Update teacher information','Teachers')+`
+function editTeacher(teacherId) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
+  let html = hdr('Edit Teacher', 'Update teacher information', 'Teachers') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Edit Teacher Details</span></div>
     <div class="form-grid">
@@ -3694,7 +3792,7 @@ function editTeacher(teacherId){
       </div>
       <div class="form-field">
         <label>Gender *</label>
-        <select id="edit-tchr-gender"><option value="Male" ${teacher.gender==='Male'?'selected':''}>Male</option><option value="Female" ${teacher.gender==='Female'?'selected':''}>Female</option></select>
+        <select id="edit-tchr-gender"><option value="Male" ${teacher.gender === 'Male' ? 'selected' : ''}>Male</option><option value="Female" ${teacher.gender === 'Female' ? 'selected' : ''}>Female</option></select>
       </div>
       <div class="form-field">
         <label>Date of Birth *</label>
@@ -3714,7 +3812,7 @@ function editTeacher(teacherId){
       </div>
       <div class="form-field">
         <label>Department *</label>
-        <select id="edit-tchr-department"><option value="Mathematics" ${teacher.department==='Mathematics'?'selected':''}>Mathematics</option><option value="Sciences" ${teacher.department==='Sciences'?'selected':''}>Sciences</option><option value="Languages" ${teacher.department==='Languages'?'selected':''}>Languages</option></select>
+        <select id="edit-tchr-department"><option value="Mathematics" ${teacher.department === 'Mathematics' ? 'selected' : ''}>Mathematics</option><option value="Sciences" ${teacher.department === 'Sciences' ? 'selected' : ''}>Sciences</option><option value="Languages" ${teacher.department === 'Languages' ? 'selected' : ''}>Languages</option></select>
       </div>
       <div class="form-field">
         <label>Years of Experience *</label>
@@ -3722,7 +3820,7 @@ function editTeacher(teacherId){
       </div>
       <div class="form-field">
         <label>Class Assignment</label>
-        <select id="edit-tchr-class"><option value="Not Assigned" ${teacher.class_assigned==='Not Assigned'?'selected':''}>Not Assigned</option><option value="Creche" ${teacher.class_assigned==='Creche'?'selected':''}>Creche</option><option value="Nursery" ${teacher.class_assigned==='Nursery'?'selected':''}>Nursery</option><option value="KG 1" ${teacher.class_assigned==='KG 1'?'selected':''}>KG 1</option><option value="KG 2" ${teacher.class_assigned==='KG 2'?'selected':''}>KG 2</option><option value="Basic 1" ${teacher.class_assigned==='Basic 1'?'selected':''}>Basic 1</option><option value="Basic 2" ${teacher.class_assigned==='Basic 2'?'selected':''}>Basic 2</option><option value="Basic 3" ${teacher.class_assigned==='Basic 3'?'selected':''}>Basic 3</option><option value="Basic 4" ${teacher.class_assigned==='Basic 4'?'selected':''}>Basic 4</option><option value="Basic 5" ${teacher.class_assigned==='Basic 5'?'selected':''}>Basic 5</option><option value="Basic 6" ${teacher.class_assigned==='Basic 6'?'selected':''}>Basic 6</option><option value="JHS 1" ${teacher.class_assigned==='JHS 1'?'selected':''}>JHS 1</option><option value="JHS 2" ${teacher.class_assigned==='JHS 2'?'selected':''}>JHS 2</option><option value="JHS 3" ${teacher.class_assigned==='JHS 3'?'selected':''}>JHS 3</option></select>
+        <select id="edit-tchr-class"><option value="Not Assigned" ${teacher.class_assigned === 'Not Assigned' ? 'selected' : ''}>Not Assigned</option><option value="Creche" ${teacher.class_assigned === 'Creche' ? 'selected' : ''}>Creche</option><option value="Nursery" ${teacher.class_assigned === 'Nursery' ? 'selected' : ''}>Nursery</option><option value="KG 1" ${teacher.class_assigned === 'KG 1' ? 'selected' : ''}>KG 1</option><option value="KG 2" ${teacher.class_assigned === 'KG 2' ? 'selected' : ''}>KG 2</option><option value="Basic 1" ${teacher.class_assigned === 'Basic 1' ? 'selected' : ''}>Basic 1</option><option value="Basic 2" ${teacher.class_assigned === 'Basic 2' ? 'selected' : ''}>Basic 2</option><option value="Basic 3" ${teacher.class_assigned === 'Basic 3' ? 'selected' : ''}>Basic 3</option><option value="Basic 4" ${teacher.class_assigned === 'Basic 4' ? 'selected' : ''}>Basic 4</option><option value="Basic 5" ${teacher.class_assigned === 'Basic 5' ? 'selected' : ''}>Basic 5</option><option value="Basic 6" ${teacher.class_assigned === 'Basic 6' ? 'selected' : ''}>Basic 6</option><option value="JHS 1" ${teacher.class_assigned === 'JHS 1' ? 'selected' : ''}>JHS 1</option><option value="JHS 2" ${teacher.class_assigned === 'JHS 2' ? 'selected' : ''}>JHS 2</option><option value="JHS 3" ${teacher.class_assigned === 'JHS 3' ? 'selected' : ''}>JHS 3</option></select>
       </div>
       <div class="form-field">
         <label>Hiring Date</label>
@@ -3731,7 +3829,7 @@ function editTeacher(teacherId){
       <div class="form-field" style="grid-column:1/-1">
         <label><i class="fas fa-camera"></i> Profile Picture (Optional)</label>
         <input type="file" id="edit-tchr-picture" accept="image/*" onchange="previewEditTeacherPicture(this)">
-        ${teacher.picture ? '<div style="margin-top:12px"><img src="'+teacher.picture+'" style="max-width:150px;max-height:150px;border-radius:8px;border:2px solid var(--blue-pale)"><p style="font-size:11px;color:var(--gray-500);margin-top:8px">Current picture</p></div>' : '<p style="font-size:11px;color:var(--gray-400);margin-top:4px">No picture yet</p>'}
+        ${teacher.picture ? '<div style="margin-top:12px"><img src="' + teacher.picture + '" style="max-width:150px;max-height:150px;border-radius:8px;border:2px solid var(--blue-pale)"><p style="font-size:11px;color:var(--gray-500);margin-top:8px">Current picture</p></div>' : '<p style="font-size:11px;color:var(--gray-400);margin-top:4px">No picture yet</p>'}
         <div id="edit-tchr-picture-preview" style="margin-top:12px;display:none">
           <img id="edit-tchr-pic-img" style="max-width:150px;max-height:150px;border-radius:8px;border:2px solid var(--blue-pale)">
           <p style="font-size:11px;color:var(--gray-500);margin-top:8px">New picture selected ✓</p>
@@ -3743,24 +3841,24 @@ function editTeacher(teacherId){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function previewEditTeacherPicture(input){
+function previewEditTeacherPicture(input) {
   const preview = document.getElementById('edit-tchr-picture-preview');
   const img = document.getElementById('edit-tchr-pic-img');
-  
-  if(input.files && input.files[0]){
+
+  if (input.files && input.files[0]) {
     const file = input.files[0];
-    
-    if(file.size > 5242880){
+
+    if (file.size > 5242880) {
       showToast('<i class="fas fa-times-circle"></i> Picture must be less than 5MB', 'error');
       input.value = '';
       preview.style.display = 'none';
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       img.src = e.target.result;
@@ -3771,10 +3869,10 @@ function previewEditTeacherPicture(input){
   }
 }
 
-function saveTeacherChanges(teacherId){
-  const teacher = teachersData.find(t=>t.teacher_id===teacherId);
-  if(!teacher) return;
-  
+function saveTeacherChanges(teacherId) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
   const name = document.getElementById('edit-tchr-name')?.value.trim();
   const gender = document.getElementById('edit-tchr-gender')?.value;
   const dob = document.getElementById('edit-tchr-dob')?.value;
@@ -3787,12 +3885,12 @@ function saveTeacherChanges(teacherId){
   const hireDate = document.getElementById('edit-tchr-hiring-date')?.value;
   const pictureInput = document.getElementById('edit-tchr-picture');
   const newPicture = pictureInput?.dataset.base64;
-  
-  if(!name || !gender || !dob || !email || !phone || !subject || !department || !experience){
+
+  if (!name || !gender || !dob || !email || !phone || !subject || !department || !experience) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
-  
+
   teacher.name = name;
   teacher.gender = gender;
   teacher.dob = dob;
@@ -3803,16 +3901,16 @@ function saveTeacherChanges(teacherId){
   teacher.experience = experience;
   teacher.class_assigned = classAssignment;
   teacher.hiring_date = hireDate;
-  if(newPicture) teacher.picture = newPicture;
-  
-  showToast('<i class="fas fa-check-circle"></i> Teacher updated!<br/>Name: '+name, 'success', 3000);
-  
+  if (newPicture) teacher.picture = newPicture;
+
+  showToast('<i class="fas fa-check-circle"></i> Teacher updated!<br/>Name: ' + name, 'success', 3000);
+
   setTimeout(() => {
     navTo('teachers');
   }, 2000);
 }
 
-function importTeachersCSV(){
+function importTeachersCSV() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.csv';
@@ -3823,12 +3921,12 @@ function importTeachersCSV(){
       const csv = event.target.result;
       const lines = csv.split('\n');
       let imported = 0;
-      
-      for(let i=1; i<lines.length; i++) {
-        if(!lines[i].trim()) continue;
-        const [name,subject,dept,exp,classAsg,phone,email] = lines[i].split(',').map(x=>x.trim());
-        
-        if(name && subject && dept && exp) {
+
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const [name, subject, dept, exp, classAsg, phone, email] = lines[i].split(',').map(x => x.trim());
+
+        if (name && subject && dept && exp) {
           const teacherId = 'T' + String(teachersData.length + 1).padStart(3, '0');
           teachersData.push({
             teacher_id: teacherId,
@@ -3849,8 +3947,8 @@ function importTeachersCSV(){
           imported++;
         }
       }
-      
-      showToast('<i class="fas fa-check-circle"></i> Imported '+imported+' teachers from CSV!', 'success', 3000);
+
+      showToast('<i class="fas fa-check-circle"></i> Imported ' + imported + ' teachers from CSV!', 'success', 3000);
       navTo('teachers');
     };
     reader.readAsText(file);
@@ -3858,29 +3956,29 @@ function importTeachersCSV(){
   input.click();
 }
 
-function exportTeachersData(){
+function exportTeachersData() {
   let csv = 'Teacher ID,Name,Subject,Department,Experience,Class,Gender,Phone,Email,DOB,Hired Date,Status\n';
-  
+
   teachersData.forEach((t) => {
     csv += `${t.teacher_id},"${t.name}",${t.subject},${t.department},${t.experience},${t.class_assigned},${t.gender},${t.phone},${t.email},${t.dob},${t.hiring_date},${t.status}\n`;
   });
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'Teachers_Data_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'Teachers_Data_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-  showToast('<i class="fas fa-check-circle"></i> Teachers data exported!<br/>File: Teachers_Data_'+new Date().toISOString().slice(0,10)+'.csv', 'success', 3000);
+  showToast('<i class="fas fa-check-circle"></i> Teachers data exported!<br/>File: Teachers_Data_' + new Date().toISOString().slice(0, 10) + '.csv', 'success', 3000);
 }
 
 // Message a teacher (for students only)
-function messageTeacher(teacherId, teacherName){
-  const teacher = teachersData.find(t=>t.teacher_id===teacherId);
-  if(!teacher) return;
-  
-  let html = hdr('Message '+teacherName,'Send a message to your teacher','Teachers')+`
+function messageTeacher(teacherId, teacherName) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
+  let html = hdr('Message ' + teacherName, 'Send a message to your teacher', 'Teachers') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-envelope"></i> Send Message to ${teacherName}</span></div>
     <div style="margin-bottom:16px;padding:12px;background:var(--blue-xpale);border-radius:var(--radius);border:1px solid var(--blue-light)">
@@ -3905,55 +4003,55 @@ function messageTeacher(teacherId, teacherName){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
 // Send message to teacher (placeholder function)
-function sendTeacherMessage(teacherId, teacherName){
+function sendTeacherMessage(teacherId, teacherName) {
   const subject = document.getElementById('msg-subject').value.trim();
   const content = document.getElementById('msg-content').value.trim();
-  
-  if(!subject || !content){
+
+  if (!subject || !content) {
     showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error', 3000);
     return;
   }
-  
-  showToast('<i class="fas fa-check-circle"></i> Message sent to '+teacherName+'!<br/>Your teacher will respond soon.', 'success', 3000);
+
+  showToast('<i class="fas fa-check-circle"></i> Message sent to ' + teacherName + '!<br/>Your teacher will respond soon.', 'success', 3000);
   setTimeout(() => navTo('teachers'), 1500);
 }
 
-function filterTeachers(){
+function filterTeachers() {
   const searchInput = document.getElementById('teacher-search');
   const searchText = (searchInput ? searchInput.value : '').toLowerCase();
   const deptFilter = document.getElementById('teacher-dept-filter');
   const selectedDept = deptFilter ? deptFilter.value : 'All Departments';
-  
-  let filtered = teachersData.filter((t)=>{
-    const matchSearch = !searchText || t.name.toLowerCase().includes(searchText) || 
-                        t.subject.toLowerCase().includes(searchText) ||
-                        t.email.toLowerCase().includes(searchText);
+
+  let filtered = teachersData.filter((t) => {
+    const matchSearch = !searchText || t.name.toLowerCase().includes(searchText) ||
+      t.subject.toLowerCase().includes(searchText) ||
+      t.email.toLowerCase().includes(searchText);
     const matchDept = selectedDept === 'All Departments' || t.department === selectedDept;
-    
+
     return matchSearch && matchDept;
   });
-  
+
   updateTeacherCards(filtered);
 }
 
-function updateTeacherCards(teachers){
+function updateTeacherCards(teachers) {
   const container = document.querySelector('.g3');
-  if(!container) return;
-  
-  if(teachers.length === 0){
+  if (!container) return;
+
+  if (teachers.length === 0) {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">No teachers found</div>';
     return;
   }
-  
-  container.innerHTML = teachers.map((t)=>`
+
+  container.innerHTML = teachers.map((t) => `
     <div class="card" style="cursor:pointer">
       <div style="display:flex;gap:14px;margin-bottom:14px">
-        <div class="av av-lg av-${t.avatar_color}">${t.gender==='Female'?'<i class="fas fa-user"></i>':'<i class="fas fa-user"></i>'}</div>
+        <div class="av av-lg av-${t.avatar_color}">${t.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>'}</div>
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${t.name}</div>
           <div style="font-size:11px;color:var(--gray-500)">${t.subject}</div>
@@ -3971,10 +4069,10 @@ function updateTeacherCards(teachers){
 
 // TEACHERS MODULE
 // ═══════════════════════════════════
-function teachersModule(){
+function teachersModule() {
   const isStudent = currentRole === 'Student';
   const studentClass = isStudent ? 'JHS 1' : null;
-  
+
   // For students, filter teachers to only show:
   // 1. Teachers of subjects they're taking
   // 2. Their form class teacher
@@ -3983,7 +4081,7 @@ function teachersModule(){
     // Find the class teacher for student's class using classesData
     const classInfo = classesData.find(c => c.name === studentClass);
     const classTeacherId = classInfo ? classInfo.teacher_id : null;
-    
+
     // Find subject teacher IDs for classes that match student's class
     const subjectTeacherIds = new Set();
     subjectsData.forEach(s => {
@@ -3991,7 +4089,7 @@ function teachersModule(){
         // Check if class is compatible (handles "All Forms", "JHS 1-3", etc.)
         const classes = s.classes.toLowerCase();
         const classNum = parseInt(studentClass.split(' ')[1]) || 0;
-        
+
         let isMatch = false;
         if (classes === 'all forms') {
           isMatch = true;
@@ -4007,25 +4105,25 @@ function teachersModule(){
             isMatch = classes.includes(`${classNum}`);
           }
         }
-        
+
         if (isMatch) {
           subjectTeacherIds.add(s.teacher_id);
         }
       }
     });
-    
+
     filteredTeachers = teachersData.filter(t => {
       // Check if teacher is the class teacher for student's class
       const isClassTeacher = classTeacherId && t.teacher_id === classTeacherId;
-      
+
       // Check if teacher teaches a subject in student's class
       const teachesSubject = subjectTeacherIds.has(t.teacher_id);
-      
+
       return isClassTeacher || teachesSubject;
     });
   }
-  
-  return hdr('Teachers Module','Manage all teacher profiles and subject assignments','Teachers')+`
+
+  return hdr('Teachers Module', 'Manage all teacher profiles and subject assignments', 'Teachers') + `
   ${!isStudent ? `
   <div class="toolbar">
     <button class="btn btn-primary" onclick="showAddTeacherForm()" style="cursor:pointer">+ Add Teacher</button>
@@ -4040,10 +4138,10 @@ function teachersModule(){
   </div>
   `}
   <div class="g3">
-    ${filteredTeachers.map((t)=>`
+    ${filteredTeachers.map((t) => `
     <div class="card" style="cursor:pointer">
       <div style="display:flex;gap:14px;margin-bottom:14px">
-        <div class="av av-lg av-${t.avatar_color}">${t.gender==='Female'?'<i class="fas fa-user"></i>':'<i class="fas fa-user"></i>'}</div>
+        <div class="av av-lg av-${t.avatar_color}">${t.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>'}</div>
         <div>
           <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${t.name}</div>
           <div style="font-size:11px;color:var(--gray-500)">${t.subject}</div>
@@ -4063,8 +4161,8 @@ function teachersModule(){
 // ═══════════════════════════════════
 // PARENT MANAGEMENT FUNCTIONS
 // ═══════════════════════════════════
-function showAddParentForm(){
-  let html = hdr('Add Parent/Guardian','Register a new parent/guardian in the system','Parents')+`
+function showAddParentForm() {
+  let html = hdr('Add Parent/Guardian', 'Register a new parent/guardian in the system', 'Parents') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-users"></i> Parent/Guardian Registration Form</span></div>
     <div class="form-grid">
@@ -4110,11 +4208,11 @@ function showAddParentForm(){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function submitParentForm(){
+function submitParentForm() {
   const name = document.getElementById('parent-name')?.value.trim();
   const contactPerson = document.getElementById('parent-contact-person')?.value.trim();
   const gender = document.getElementById('parent-gender')?.value;
@@ -4124,19 +4222,19 @@ function submitParentForm(){
   const address = document.getElementById('parent-address')?.value.trim();
   const children = document.getElementById('parent-children')?.value.trim();
   const feesStatus = document.getElementById('parent-fees-status')?.value;
-  
-  if(!name || !contactPerson || !gender || !phone || !email || !children || !feesStatus){
+
+  if (!name || !contactPerson || !gender || !phone || !email || !children || !feesStatus) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
-  
+
   const parentId = 'P' + String(parentsData.length + 1).padStart(3, '0');
   const newParent = {
     parent_id: parentId,
     name: name,
     contact_person: contactPerson,
     gender: gender,
-    avatar_color: ['blue','gold','purple','green','teal'][Math.floor(Math.random()*5)],
+    avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][Math.floor(Math.random() * 5)],
     phone: phone,
     email: email,
     occupation: occupation || 'Not specified',
@@ -4145,25 +4243,25 @@ function submitParentForm(){
     fees_status: feesStatus,
     picture: null
   };
-  
+
   parentsData.push(newParent);
-  showToast('<i class="fas fa-check-circle"></i> Parent registered!<br/>ID: '+parentId+'<br/>Name: '+name, 'success', 4000);
-  
+  showToast('<i class="fas fa-check-circle"></i> Parent registered!<br/>ID: ' + parentId + '<br/>Name: ' + name, 'success', 4000);
+
   setTimeout(() => {
     navTo('parents');
   }, 2000);
 }
 
-function viewParentProfile(parentId){
-  const parent = parentsData.find(p=>p.parent_id===parentId);
-  if(!parent) return;
-  
-  let html = hdr('Parent Profile','View parent/guardian details','Parents')+`
+function viewParentProfile(parentId) {
+  const parent = parentsData.find(p => p.parent_id === parentId);
+  if (!parent) return;
+
+  let html = hdr('Parent Profile', 'View parent/guardian details', 'Parents') + `
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal Information</span></div>
       <div style="display:flex;gap:20px;margin-bottom:20px">
-        <div class="av av-xl av-${parent.avatar_color}">${parent.gender==='Female'?'<i class="fas fa-user"></i>':'<i class="fas fa-user"></i>'}</div>
+        <div class="av av-xl av-${parent.avatar_color}">${parent.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>'}</div>
         <div style="flex:1">
           <div style="font-size:18px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${parent.name}</div>
           <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Parent ID: <strong>${parent.parent_id}</strong></div>
@@ -4193,7 +4291,7 @@ function viewParentProfile(parentId){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-graduation-cap"></i> Children</span></div>
       <div style="display:grid;gap:10px">
-        ${parent.children.split(',').map(child=>'<div style="padding:10px;background:var(--blue-xpale);border-radius:var(--radius);font-size:12px;color:var(--gray-800)"><strong><i class="fas fa-book"></i></strong> '+child.trim()+'</div>').join('')}
+        ${parent.children.split(',').map(child => '<div style="padding:10px;background:var(--blue-xpale);border-radius:var(--radius);font-size:12px;color:var(--gray-800)"><strong><i class="fas fa-book"></i></strong> ' + child.trim() + '</div>').join('')}
       </div>
     </div>
   </div>
@@ -4203,7 +4301,7 @@ function viewParentProfile(parentId){
     <div style="display:flex;justify-content:space-between;font-size:12px">
       <div>
         <div style="color:var(--gray-500);margin-bottom:4px">Fees Status</div>
-        <span class="badge ${parent.fees_status==='All Paid'?'b-success':parent.fees_status==='Pending'?'b-danger':'b-warning'}">${parent.fees_status}</span>
+        <span class="badge ${parent.fees_status === 'All Paid' ? 'b-success' : parent.fees_status === 'Pending' ? 'b-danger' : 'b-warning'}">${parent.fees_status}</span>
       </div>
       <div style="flex:1;margin-left:20px">
         <div style="color:var(--gray-500);margin-bottom:4px">Address</div>
@@ -4217,15 +4315,15 @@ function viewParentProfile(parentId){
     <button class="btn btn-danger" onclick="deleteRecord('${parentId}', 'Parent')"><i class="fas fa-trash"></i> Delete</button>
     <button class="btn btn-secondary" onclick="navTo('parents')">Back</button>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function editParent(parentId){
-  const parent = parentsData.find(p=>p.parent_id===parentId);
-  if(!parent) return;
-  
-  let html = hdr('Edit Parent','Update parent/guardian information','Parents')+`
+function editParent(parentId) {
+  const parent = parentsData.find(p => p.parent_id === parentId);
+  if (!parent) return;
+
+  let html = hdr('Edit Parent', 'Update parent/guardian information', 'Parents') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Edit Parent Details</span></div>
     <div class="form-grid">
@@ -4239,7 +4337,7 @@ function editParent(parentId){
       </div>
       <div class="form-field">
         <label>Gender *</label>
-        <select id="edit-parent-gender"><option value="Male" ${parent.gender==='Male'?'selected':''}>Male</option><option value="Female" ${parent.gender==='Female'?'selected':''}>Female</option></select>
+        <select id="edit-parent-gender"><option value="Male" ${parent.gender === 'Male' ? 'selected' : ''}>Male</option><option value="Female" ${parent.gender === 'Female' ? 'selected' : ''}>Female</option></select>
       </div>
       <div class="form-field">
         <label>Phone *</label>
@@ -4263,7 +4361,7 @@ function editParent(parentId){
       </div>
       <div class="form-field" style="grid-column:1/-1">
         <label>Fees Status *</label>
-        <select id="edit-parent-fees-status"><option value="All Paid" ${parent.fees_status==='All Paid'?'selected':''}>All Paid</option><option value="Pending" ${parent.fees_status==='Pending'?'selected':''}>Pending</option><option value="Partial" ${parent.fees_status==='Partial'?'selected':''}>Partial</option></select>
+        <select id="edit-parent-fees-status"><option value="All Paid" ${parent.fees_status === 'All Paid' ? 'selected' : ''}>All Paid</option><option value="Pending" ${parent.fees_status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Partial" ${parent.fees_status === 'Partial' ? 'selected' : ''}>Partial</option></select>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="saveParentChanges('${parentId}')"><i class="fas fa-save"></i> Save Changes</button>
@@ -4271,14 +4369,14 @@ function editParent(parentId){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function saveParentChanges(parentId){
-  const parent = parentsData.find(p=>p.parent_id===parentId);
-  if(!parent) return;
-  
+function saveParentChanges(parentId) {
+  const parent = parentsData.find(p => p.parent_id === parentId);
+  if (!parent) return;
+
   const name = document.getElementById('edit-parent-name')?.value.trim();
   const contactPerson = document.getElementById('edit-parent-contact-person')?.value.trim();
   const gender = document.getElementById('edit-parent-gender')?.value;
@@ -4288,12 +4386,12 @@ function saveParentChanges(parentId){
   const address = document.getElementById('edit-parent-address')?.value.trim();
   const children = document.getElementById('edit-parent-children')?.value.trim();
   const feesStatus = document.getElementById('edit-parent-fees-status')?.value;
-  
-  if(!name || !contactPerson || !gender || !phone || !email || !children || !feesStatus){
+
+  if (!name || !contactPerson || !gender || !phone || !email || !children || !feesStatus) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
-  
+
   parent.name = name;
   parent.contact_person = contactPerson;
   parent.gender = gender;
@@ -4303,46 +4401,46 @@ function saveParentChanges(parentId){
   parent.address = address || 'Not provided';
   parent.children = children;
   parent.fees_status = feesStatus;
-  
-  showToast('<i class="fas fa-check-circle"></i> Parent updated!<br/>Name: '+name, 'success', 3000);
-  
+
+  showToast('<i class="fas fa-check-circle"></i> Parent updated!<br/>Name: ' + name, 'success', 3000);
+
   setTimeout(() => {
     navTo('parents');
   }, 2000);
 }
 
-function filterParents(){
+function filterParents() {
   const searchInput = document.getElementById('parent-search');
   const searchText = (searchInput ? searchInput.value : '').toLowerCase();
-  
-  let filtered = parentsData.filter((p)=>{
-    const matchSearch = !searchText || p.name.toLowerCase().includes(searchText) || 
-                        p.email.toLowerCase().includes(searchText) ||
-                        p.phone.toLowerCase().includes(searchText) ||
-                        p.contact_person.toLowerCase().includes(searchText);
-    
+
+  let filtered = parentsData.filter((p) => {
+    const matchSearch = !searchText || p.name.toLowerCase().includes(searchText) ||
+      p.email.toLowerCase().includes(searchText) ||
+      p.phone.toLowerCase().includes(searchText) ||
+      p.contact_person.toLowerCase().includes(searchText);
+
     return matchSearch;
   });
-  
+
   updateParentTable(filtered);
 }
 
-function updateParentTable(parents){
+function updateParentTable(parents) {
   const tbody = document.querySelector('table.tbl tbody');
-  if(!tbody) return;
-  
-  if(parents.length === 0){
+  if (!tbody) return;
+
+  if (parents.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--gray-400)">No parents found</td></tr>';
     return;
   }
-  
-  tbody.innerHTML = parents.map((p,i)=>'<tr><td style="color:var(--gray-400);font-size:11px">'+(i+1)+'</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-'+p.avatar_color+'">'+p.name[0]+'</div><strong>'+p.name+'</strong></div></td><td style="font-size:11px">'+p.children+'</td><td style="font-size:11px">'+p.phone+'</td><td style="color:var(--blue-main);font-size:11px">'+p.email+'</td><td><span class="badge '+(p.fees_status==='All Paid'?'b-success':(p.fees_status==='Pending'?'b-danger':'b-warning'))+'">'+p.fees_status+'</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\''+p.parent_id+'\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
+
+  tbody.innerHTML = parents.map((p, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
 }
 
 // PARENTS MODULE
 // ═══════════════════════════════════
-function parentsModule(){
-  return hdr('Parents Module','Parent/Guardian records and communication','Parents')+`
+function parentsModule() {
+  return hdr('Parents Module', 'Parent/Guardian records and communication', 'Parents') + `
   <div class="toolbar">
     <button class="btn btn-primary" onclick="showAddParentForm()" style="cursor:pointer">+ Add Parent</button>
     <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="parent-search" placeholder="Search parents..." onkeyup="filterParents()" style="cursor:text"></div>
@@ -4351,7 +4449,7 @@ function parentsModule(){
     <table class="tbl">
       <thead><tr><th>#</th><th>Parent/Guardian</th><th>Children</th><th>Contact</th><th>Email</th><th>Fees Status</th><th>Actions</th></tr></thead>
       <tbody>
-        ${parentsData.map((p,i)=>'<tr><td style="color:var(--gray-400);font-size:11px">'+(i+1)+'</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-'+p.avatar_color+'">'+p.name[0]+'</div><strong>'+p.name+'</strong></div></td><td style="font-size:11px">'+p.children+'</td><td style="font-size:11px">'+p.phone+'</td><td style="color:var(--blue-main);font-size:11px">'+p.email+'</td><td><span class="badge '+(p.fees_status==='All Paid'?'b-success':(p.fees_status==='Pending'?'b-danger':'b-warning'))+'">'+p.fees_status+'</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\''+p.parent_id+'\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('')}
+        ${parentsData.map((p, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('')}
       </tbody>
     </table>
   </div>`;
@@ -4360,14 +4458,14 @@ function parentsModule(){
 // ═══════════════════════════════════
 // CLASS MANAGEMENT FUNCTIONS
 // ═══════════════════════════════════
-function viewClassStudents(classId){
-  const classData = classesData.find(c=>c.class_id===classId);
-  if(!classData) return;
-  
+function viewClassStudents(classId) {
+  const classData = classesData.find(c => c.class_id === classId);
+  if (!classData) return;
+
   // Get students in this class
-  const classStudents = enrolledStudents.filter(s=>s.student_class===classData.name);
-  
-  let html = hdr('Class Students','View all students in '+classData.name,'Classes')+`
+  const classStudents = enrolledStudents.filter(s => s.student_class === classData.name);
+
+  let html = hdr('Class Students', 'View all students in ' + classData.name, 'Classes') + `
   <div class="card mb20">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-book"></i> Class: ${classData.name}</span></div>
     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:16px">
@@ -4395,7 +4493,7 @@ function viewClassStudents(classId){
     <table class="tbl">
       <thead><tr><th>#</th><th>Student</th><th>Roll No.</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>GPA</th><th>Fees</th><th>Status</th></tr></thead>
       <tbody>
-        ${classStudents.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No students in this class yet</td></tr>' : classStudents.map((s,i)=>'<tr><td style="color:var(--gray-400);font-size:11px">'+(i+1)+'</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-'+s.avatar_color+'">'+s.name[0]+'</div><strong>'+s.name+'</strong></div></td><td style="font-size:11px;color:var(--gray-400)">'+s.student_id+'</td><td><span class="badge '+((s.gender_abbr==='F')?'b-purple':'b-info')+'">'+s.gender+'</span></td><td style="font-size:11px;color:var(--gray-500)">'+s.dob+'</td><td style="font-weight:600;color:'+(parseFloat(s.attendance)>=90?'var(--success)':'var(--warning)')+'">'+(s.attendance)+'</td><td style="font-weight:700;color:var(--blue-dark)">'+s.gpa+'</td><td><span class="badge '+(s.fees_status==='Paid'?'b-success':(s.fees_status==='Pending'?'b-danger':'b-warning'))+'">'+s.fees_status+'</span></td><td><span class="badge b-success">'+s.status+'</span></td></tr>').join('')}
+        ${classStudents.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No students in this class yet</td></tr>' : classStudents.map((s, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + s.avatar_color + '">' + s.name[0] + '</div><strong>' + s.name + '</strong></div></td><td style="font-size:11px;color:var(--gray-400)">' + s.student_id + '</td><td><span class="badge ' + ((s.gender_abbr === 'F') ? 'b-purple' : 'b-info') + '">' + s.gender + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + s.dob + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + (s.attendance) + '</td><td style="font-weight:700;color:var(--blue-dark)">' + s.gpa + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + s.fees_status + '</span></td><td><span class="badge b-success">' + s.status + '</span></td></tr>').join('')}
       </tbody>
     </table>
   </div>
@@ -4404,15 +4502,15 @@ function viewClassStudents(classId){
     <button class="btn btn-primary" onclick="manageClass('${classId}')"><i class="fas fa-cog"></i> Manage Class</button>
     <button class="btn btn-secondary" onclick="navTo('classes')">Back</button>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function manageClass(classId){
-  const classData = classesData.find(c=>c.class_id===classId);
-  if(!classData) return;
-  
-  let html = hdr('Manage Class','Update class information and settings','Classes')+`
+function manageClass(classId) {
+  const classData = classesData.find(c => c.class_id === classId);
+  if (!classData) return;
+
+  let html = hdr('Manage Class', 'Update class information and settings', 'Classes') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-cog"></i> Class Settings</span></div>
     <div class="form-grid">
@@ -4422,17 +4520,17 @@ function manageClass(classId){
       </div>
       <div class="form-field">
         <label>Class Level *</label>
-        <select id="manage-class-level"><option value="Creche" ${classData.level==='Creche'?'selected':''}>Creche</option><option value="Nursery" ${classData.level==='Nursery'?'selected':''}>Nursery</option><option value="KG 1" ${classData.level==='KG 1'?'selected':''}>KG 1</option><option value="KG 2" ${classData.level==='KG 2'?'selected':''}>KG 2</option><option value="Basic" ${classData.level==='Basic'?'selected':''}>Basic</option><option value="JHS" ${classData.level==='JHS'?'selected':''}>JHS</option></select>
+        <select id="manage-class-level"><option value="Creche" ${classData.level === 'Creche' ? 'selected' : ''}>Creche</option><option value="Nursery" ${classData.level === 'Nursery' ? 'selected' : ''}>Nursery</option><option value="KG 1" ${classData.level === 'KG 1' ? 'selected' : ''}>KG 1</option><option value="KG 2" ${classData.level === 'KG 2' ? 'selected' : ''}>KG 2</option><option value="Basic" ${classData.level === 'Basic' ? 'selected' : ''}>Basic</option><option value="JHS" ${classData.level === 'JHS' ? 'selected' : ''}>JHS</option></select>
       </div>
       <div class="form-field">
         <label>Stream *</label>
-        <select id="manage-class-stream"><option value="General" ${classData.stream==='General'?'selected':''}>General</option><option value="Mixed" ${classData.stream==='Mixed'?'selected':''}>Mixed</option></select>
+        <select id="manage-class-stream"><option value="General" ${classData.stream === 'General' ? 'selected' : ''}>General</option><option value="Mixed" ${classData.stream === 'Mixed' ? 'selected' : ''}>Mixed</option></select>
       </div>
       <div class="form-field">
         <label>Class Teacher *</label>
         <select id="manage-class-teacher">
           <option>-- Select Teacher --</option>
-          ${teachersData.map(t=>'<option value="'+t.teacher_id+'" '+((t.teacher_id===classData.teacher_id)?'selected':'')+'> '+t.name+'</option>').join('')}
+          ${teachersData.map(t => '<option value="' + t.teacher_id + '" ' + ((t.teacher_id === classData.teacher_id) ? 'selected' : '') + '> ' + t.name + '</option>').join('')}
         </select>
       </div>
       <div class="form-field">
@@ -4453,14 +4551,14 @@ function manageClass(classId){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function saveClassChanges(classId){
-  const classData = classesData.find(c=>c.class_id===classId);
-  if(!classData) return;
-  
+function saveClassChanges(classId) {
+  const classData = classesData.find(c => c.class_id === classId);
+  if (!classData) return;
+
   const name = document.getElementById('manage-class-name')?.value.trim();
   const level = document.getElementById('manage-class-level')?.value;
   const stream = document.getElementById('manage-class-stream')?.value;
@@ -4468,14 +4566,14 @@ function saveClassChanges(classId){
   const students = document.getElementById('manage-class-students')?.value;
   const capacity = document.getElementById('manage-class-capacity')?.value;
   const subjectsStr = document.getElementById('manage-class-subjects')?.value.trim();
-  
-  if(!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr){
+
+  if (!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
-  
-  const teacher = teachersData.find(t=>t.teacher_id===teacherId);
-  
+
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+
   classData.name = name;
   classData.level = level;
   classData.stream = stream;
@@ -4483,37 +4581,37 @@ function saveClassChanges(classId){
   classData.teacher = teacher?.name || 'Not assigned';
   classData.students = parseInt(students);
   classData.capacity = parseInt(capacity);
-  classData.subjects = subjectsStr.split(',').map(s=>s.trim());
-  
-  showToast('<i class="fas fa-check-circle"></i> Class updated!<br/>Name: '+name, 'success', 3000);
-  
+  classData.subjects = subjectsStr.split(',').map(s => s.trim());
+
+  showToast('<i class="fas fa-check-circle"></i> Class updated!<br/>Name: ' + name, 'success', 3000);
+
   setTimeout(() => {
     navTo('classes');
   }, 2000);
 }
 
-function filterClasses(){
+function filterClasses() {
   const streamFilter = document.getElementById('class-stream-filter');
   const selectedStream = streamFilter ? streamFilter.value : 'All Streams';
-  
-  let filtered = classesData.filter((c)=>{
+
+  let filtered = classesData.filter((c) => {
     const matchStream = selectedStream === 'All Streams' || c.stream === selectedStream;
     return matchStream;
   });
-  
+
   updateClassCards(filtered);
 }
 
-function updateClassCards(classes){
+function updateClassCards(classes) {
   const container = document.querySelector('.g3');
-  if(!container) return;
-  
-  if(classes.length === 0){
+  if (!container) return;
+
+  if (classes.length === 0) {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">No classes found</div>';
     return;
   }
-  
-  container.innerHTML = classes.map((c)=>`
+
+  container.innerHTML = classes.map((c) => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
@@ -4534,23 +4632,23 @@ function updateClassCards(classes){
 
 // CLASSES MODULE
 // ═══════════════════════════════════
-function classesModule(){
+function classesModule() {
   const totalStudents = classesData.reduce((sum, c) => sum + c.students, 0);
   const avgClassSize = Math.round(totalStudents / classesData.length);
-  
-  return hdr('Classes Module','Manage classes, streams and assignments','Classes')+`
+
+  return hdr('Classes Module', 'Manage classes, streams and assignments', 'Classes') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-building"></i>',classesData.length,'Total Classes',classesData.filter(c=>c.level==='Form 1').length+' forms','neu','si-blue')}
-    ${statCard('<i class="fas fa-graduation-cap"></i>',totalStudents,'Total Students','All classes','neu','si-gold')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>',classesData.length,'Class Teachers','One per class','neu','si-green')}
-    ${statCard('<i class="fas fa-chart-bar"></i>',avgClassSize,'Avg Class Size','Balanced','neu','si-purple')}
+    ${statCard('<i class="fas fa-building"></i>', classesData.length, 'Total Classes', classesData.filter(c => c.level === 'Form 1').length + ' forms', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>', totalStudents, 'Total Students', 'All classes', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>', classesData.length, 'Class Teachers', 'One per class', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')}
   </div>
   <div style="margin-bottom:18px">
     <label style="font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block">Filter by Stream</label>
     <select id="class-stream-filter" class="select-sm" onchange="filterClasses()"><option value="All Streams">All Streams</option><option>General</option><option>Mixed</option></select>
   </div>
   <div class="g3 mb20">
-    ${classesData.map((c)=>`
+    ${classesData.map((c) => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
@@ -4572,20 +4670,20 @@ function classesModule(){
 }
 
 // SUBJECTS MODULE
-function subjectsModule(){
+function subjectsModule() {
   const filteredSubjects = updateSubjectCards(subjectsData);
   const isStudent = currentRole === 'Student';
-  
-  return hdr('Subjects Module','Curriculum management and subject assignments','Subjects')+`
+
+  return hdr('Subjects Module', 'Curriculum management and subject assignments', 'Subjects') + `
   ${!isStudent ? `
   <div class="toolbar">
-    <input type="text" id="subject-search" class="input-search" placeholder="<i class="fas fa-search"></i> Search subjects..." onkeyup="filterSubjects()">
+    <input type="text" id="subject-search" class="input-search" placeholder="Search subjects..." onkeyup="filterSubjects()">
     <button class="btn btn-primary" onclick="showAddSubjectForm()">+ Add Subject</button>
   </div>
   <div style="margin-bottom:18px">
     <label style="font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block">Filter by Type</label>
     <div class="mod-tabs">
-      ${['All Subjects','Core','Elective','Extracurricular'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="filterSubjectsByType('${t==='All Subjects'?'All':t}')">${t}</div>`).join('')}
+      ${['All Subjects', 'Core', 'Elective', 'Extracurricular'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="filterSubjectsByType('${t === 'All Subjects' ? 'All' : t}')">${t}</div>`).join('')}
     </div>
   </div>
   ` : `
@@ -4594,7 +4692,7 @@ function subjectsModule(){
   </div>
   `}
   <div class="g4">
-    ${filteredSubjects.map(s=>`
+    ${filteredSubjects.map(s => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:32px">${s.icon}</div>
@@ -4612,7 +4710,7 @@ function subjectsModule(){
       <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${s.name}</div>
       <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px"><i class="fas fa-chalkboard-user"></i> ${s.teacher}</div>
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        <span class="badge ${s.type==='Core'?'b-success':s.type==='Elective'?'b-warning':'b-info'}">${s.type}</span>
+        <span class="badge ${s.type === 'Core' ? 'b-success' : s.type === 'Elective' ? 'b-warning' : 'b-info'}">${s.type}</span>
         <span class="badge b-gray">${s.classes}</span>
       </div>
       <div style="font-size:11px;color:var(--gray-500)">${s.hours}</div>
@@ -4623,18 +4721,18 @@ function subjectsModule(){
 // SUBJECTS MODULE HELPER FUNCTIONS
 let currentSubjectType = 'All';
 
-function toggleSubjectMenu(event){
+function toggleSubjectMenu(event) {
   event.stopPropagation();
   const wrapper = event.target.closest('.subject-menu-wrapper');
   if (!wrapper) return;
-  
+
   // Close any other open menus
   document.querySelectorAll('.subject-menu-wrapper').forEach(w => {
     if (w !== wrapper) {
       w.classList.remove('active');
     }
   });
-  
+
   wrapper.classList.toggle('active');
 }
 
@@ -4645,7 +4743,7 @@ document.addEventListener('click', () => {
   });
 });
 
-function updateSubjectCards(subjects){
+function updateSubjectCards(subjects) {
   const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
   return subjects.filter(s => {
     const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
@@ -4654,13 +4752,13 @@ function updateSubjectCards(subjects){
   });
 }
 
-function filterSubjectsByType(type){
+function filterSubjectsByType(type) {
   currentSubjectType = type;
   document.querySelectorAll('.mod-tab').forEach((tab, i) => {
-    const tabName = i === 0 ? 'All' : ['Core','Elective','Extracurricular'][i-1];
+    const tabName = i === 0 ? 'All' : ['Core', 'Elective', 'Extracurricular'][i - 1];
     tab.classList.toggle('active', tabName === type);
   });
-  
+
   const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
   const filteredSubjects = subjectsData.filter(s => {
     const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
@@ -4670,7 +4768,7 @@ function filterSubjectsByType(type){
   updateSubjectDisplay(filteredSubjects);
 }
 
-function filterSubjects(){
+function filterSubjects() {
   const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
   const filteredSubjects = subjectsData.filter(s => {
     const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
@@ -4680,16 +4778,16 @@ function filterSubjects(){
   updateSubjectDisplay(filteredSubjects);
 }
 
-function updateSubjectDisplay(filteredSubjects){
+function updateSubjectDisplay(filteredSubjects) {
   const gridContainer = document.querySelector('.g4');
   if (!gridContainer) return;
-  
+
   if (filteredSubjects.length === 0) {
     gridContainer.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">No subjects found</div>';
     return;
   }
-  
-  gridContainer.innerHTML = filteredSubjects.map(s=>`
+
+  gridContainer.innerHTML = filteredSubjects.map(s => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:32px">${s.icon}</div>
@@ -4705,14 +4803,14 @@ function updateSubjectDisplay(filteredSubjects){
       <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${s.name}</div>
       <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px"><i class="fas fa-chalkboard-user"></i> ${s.teacher}</div>
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        <span class="badge ${s.type==='Core'?'b-success':s.type==='Elective'?'b-warning':'b-info'}">${s.type}</span>
+        <span class="badge ${s.type === 'Core' ? 'b-success' : s.type === 'Elective' ? 'b-warning' : 'b-info'}">${s.type}</span>
         <span class="badge b-gray">${s.classes}</span>
       </div>
       <div style="font-size:11px;color:var(--gray-500)">${s.hours}</div>
     </div>`).join('');
 }
 
-function showAddSubjectForm(){
+function showAddSubjectForm() {
   const form = `
   <div style="background:white;border-radius:8px;padding:20px;max-width:500px">
     <h3 style="margin:0 0 20px;color:var(--blue-dark)"><i class="fas fa-plus"></i> Add New Subject</h3>
@@ -4760,7 +4858,7 @@ function showAddSubjectForm(){
   openModal(form);
 }
 
-function submitSubjectForm(){
+function submitSubjectForm() {
   const icon = document.getElementById('add-subject-icon').value.trim() || '<i class="fas fa-book"></i>';
   const name = document.getElementById('add-subject-name').value.trim();
   const type = document.getElementById('add-subject-type').value;
@@ -4777,14 +4875,14 @@ function submitSubjectForm(){
 
   const newSubject = {
     subject_id: 'SUB' + String(subjectsData.length + 1).padStart(3, '0'),
-    icon, name, type, teacher: teacherName, teacher_id: teacherId, 
+    icon, name, type, teacher: teacherName, teacher_id: teacherId,
     classes, hours, description: desc
   };
 
   subjectsData.push(newSubject);
   closeModal();
   showToast(`Subject "${name}" added successfully`, 'success');
-  
+
   const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
   const filteredSubjects = subjectsData.filter(s => {
     const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
@@ -4794,7 +4892,7 @@ function submitSubjectForm(){
   updateSubjectDisplay(filteredSubjects);
 }
 
-function viewSubject(subjectId){
+function viewSubject(subjectId) {
   const subject = subjectsData.find(s => s.subject_id === subjectId);
   if (!subject) return;
 
@@ -4811,7 +4909,7 @@ function viewSubject(subjectId){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
         <div>
           <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">TYPE</div>
-          <span class="badge ${subject.type==='Core'?'b-success':subject.type==='Elective'?'b-warning':'b-info'}">${subject.type}</span>
+          <span class="badge ${subject.type === 'Core' ? 'b-success' : subject.type === 'Elective' ? 'b-warning' : 'b-info'}">${subject.type}</span>
         </div>
         <div>
           <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">HOURS</div>
@@ -4839,7 +4937,7 @@ function viewSubject(subjectId){
   openModal(view);
 }
 
-function editSubject(subjectId){
+function editSubject(subjectId) {
   const subject = subjectsData.find(s => s.subject_id === subjectId);
   if (!subject) return;
 
@@ -4858,15 +4956,15 @@ function editSubject(subjectId){
       <div class="form-field">
         <label>Subject Type</label>
         <select id="edit-subject-type">
-          <option value="Core" ${subject.type==='Core'?'selected':''}>Core</option>
-          <option value="Elective" ${subject.type==='Elective'?'selected':''}>Elective</option>
-          <option value="Extracurricular" ${subject.type==='Extracurricular'?'selected':''}>Extracurricular</option>
+          <option value="Core" ${subject.type === 'Core' ? 'selected' : ''}>Core</option>
+          <option value="Elective" ${subject.type === 'Elective' ? 'selected' : ''}>Elective</option>
+          <option value="Extracurricular" ${subject.type === 'Extracurricular' ? 'selected' : ''}>Extracurricular</option>
         </select>
       </div>
       <div class="form-field">
         <label>Teacher</label>
         <select id="edit-subject-teacher">
-          ${teachersData.map(t => `<option value="${t.teacher_id}" ${t.teacher_id===subject.teacher_id?'selected':''}>${t.name}</option>`).join('')}
+          ${teachersData.map(t => `<option value="${t.teacher_id}" ${t.teacher_id === subject.teacher_id ? 'selected' : ''}>${t.name}</option>`).join('')}
         </select>
       </div>
       <div class="form-field">
@@ -4890,7 +4988,7 @@ function editSubject(subjectId){
   openModal(form);
 }
 
-function saveSubjectChanges(subjectId){
+function saveSubjectChanges(subjectId) {
   const subject = subjectsData.find(s => s.subject_id === subjectId);
   if (!subject) return;
 
@@ -4919,7 +5017,7 @@ function saveSubjectChanges(subjectId){
 
   closeModal();
   showToast('Subject updated successfully', 'success');
-  
+
   const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
   const filteredSubjects = subjectsData.filter(s => {
     const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
@@ -4929,17 +5027,17 @@ function saveSubjectChanges(subjectId){
   updateSubjectDisplay(filteredSubjects);
 }
 
-function deleteSubject(subjectId){
+function deleteSubject(subjectId) {
   if (!confirm('Are you sure you want to delete this subject?')) return;
-  
+
   const subject = subjectsData.find(s => s.subject_id === subjectId);
   if (!subject) return;
 
   const index = subjectsData.indexOf(subject);
   subjectsData.splice(index, 1);
-  
+
   showToast(`Subject "${subject.name}" deleted`, 'success');
-  
+
   const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
   const filteredSubjects = subjectsData.filter(s => {
     const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
@@ -4951,393 +5049,499 @@ function deleteSubject(subjectId){
 
 
 // TIMETABLE MODULE
-function timetableModule(){
-  const classOptions = classesData.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
-  const selectedClass = localStorage.getItem('tt-selected-class') || classesData[0].name;
-  const selectedTerm = localStorage.getItem('tt-selected-term') || 'Term 1, 2025';
-  
-  const timetableHtml = getTimetableDisplay(selectedClass, selectedTerm);
-  
-  return hdr('Timetable Module','Class schedules and period management','Timetable')+`
-  <div class="toolbar">
-    <select id="tt-class-select" class="select-sm" onchange="saveTimetableSelection(); updateTimetableDisplay();">
-      ${classOptions}
-    </select>
-    <select id="tt-term-select" class="select-sm" onchange="saveTimetableSelection(); updateTimetableDisplay();">
-      <option value="Term 1, 2025">Term 1, 2025</option>
-      <option value="Term 2, 2025">Term 2, 2025</option>
-    </select>
-    <button class="btn btn-primary" onclick="openCreateTimetableForm()">+ Create Timetable</button>
-    <button class="btn btn-primary" onclick="openEditTimetableForm()">+ Edit Timetable</button>
-    <button class="btn btn-secondary" onclick="printDocument()">Print</button>
-    <button class="btn btn-secondary" onclick="exportTimetablePDF()">Export PDF</button>
-  </div>
-  ${timetableHtml}
-  <script>
-    setTimeout(() => {
-      const classSelect = document.getElementById('tt-class-select');
-      const termSelect = document.getElementById('tt-term-select');
-      if (classSelect) classSelect.value = '${selectedClass}';
-      if (termSelect) termSelect.value = '${selectedTerm}';
-    }, 0);
-  </script>`;
+// ═══════════════════════════════════
+// Period structure per class level:
+// ALL CLASSES: 7:00-7:30 Morning Assembly (Mon-Fri)
+// Basic 4 - JHS 3: 7:30-8:00 (Mon=Reading, Tue=Spellings, Wed=Dictation, Thu=Reading, Fri=PE/Preps)
+// P1: 8:00-8:50, P2: 8:50-9:40, P3: 9:40-10:30, P4: 10:30-11:20
+// BREAK: 11:20-11:40
+// P5: 11:40-12:25, P6: 12:25-1:05
+// BREAK: 1:05-1:35
+// P7: 1:35-2:35, P8: 2:35-3:30
+// P9: 3:30-4:00 (JHS 1-3 only; Basic 4-6 close at 3:30)
+// ═══════════════════════════════════
+
+// Get the correct period structure for a given class
+function getPeriodsForClass(className) {
+  const isUpper = ['Basic 4','Basic 5','Basic 6','JHS 1','JHS 2','JHS 3'].includes(className);
+  const isJHS = ['JHS 1','JHS 2','JHS 3'].includes(className);
+  const isLower = ['Creche','Nursery','KG 1','KG 2','Basic 1','Basic 2','Basic 3'].includes(className);
+
+  const periods = [];
+  // Morning Assembly for all
+  periods.push({ id: 'Assembly', label: 'Assembly · 7:00–7:30', type: 'assembly' });
+  // Special slot for upper classes
+  if (isUpper) {
+    periods.push({ id: 'Special', label: '7:30–8:00', type: 'special',
+      dayLabels: ['Reading','Spellings','Dictation','Reading', isJHS && className === 'JHS 3' ? 'Preps' : 'PE'] });
+  }
+  periods.push({ id: 'P1', label: 'P1 · 8:00–8:50', type: 'period' });
+  periods.push({ id: 'P2', label: 'P2 · 8:50–9:40', type: 'period' });
+  periods.push({ id: 'P3', label: 'P3 · 9:40–10:30', type: 'period' });
+  periods.push({ id: 'P4', label: 'P4 · 10:30–11:20', type: 'period' });
+  periods.push({ id: 'Break1', label: 'Break · 11:20–11:40', type: 'break' });
+  periods.push({ id: 'P5', label: 'P5 · 11:40–12:25', type: 'period' });
+  periods.push({ id: 'P6', label: 'P6 · 12:25–1:05', type: 'period' });
+  periods.push({ id: 'Break2', label: 'Break · 1:05–1:35', type: 'break' });
+  periods.push({ id: 'P7', label: 'P7 · 1:35–2:35', type: 'period' });
+  periods.push({ id: 'P8', label: 'P8 · 2:35–3:30', type: 'period' });
+  // P9 only for JHS
+  if (isJHS) {
+    periods.push({ id: 'P9', label: 'P9 · 3:30–4:00', type: 'period' });
+  } else if (['Basic 4','Basic 5','Basic 6'].includes(className)) {
+    periods.push({ id: 'Close', label: 'Closing · 3:30', type: 'close' });
+  }
+  return periods;
 }
 
+function timetableModule(){
+  const isAdmin = currentRole === 'Admin';
+  loadTimetablesFromStorage();
+
+  // Determine class to show
+  const allClasses = classesData.map(c => c.name);
+  let selectedClass;
+  if (isAdmin) {
+    selectedClass = localStorage.getItem('tt-selected-class') || allClasses[0];
+  } else {
+    selectedClass = localStorage.getItem('currentUserClass') || 'Basic 2';
+  }
+  const selectedTerm = localStorage.getItem('tt-selected-term') || 'Term 1, 2025';
+
+  // Build class tabs for admin
+  let classTabsHtml = '';
+  if (isAdmin) {
+    classTabsHtml = `<div class="tt-class-tabs" id="tt-class-tabs">
+      ${allClasses.map(c => `<button class="tt-class-tab${c === selectedClass ? ' active' : ''}" onclick="selectTimetableClass('${c}')">${c}</button>`).join('')}
+    </div>`;
+  }
+
+  const timetableHtml = getTimetableDisplay(selectedClass, selectedTerm);
+
+  // Stats
+  const totalClasses = allClasses.length;
+  const classesWithTT = allClasses.filter(c => timetablesData[c] && Object.keys(timetablesData[c]).length > 0).length;
+
+  return hdr('Timetable Module','Class schedules and period management','Timetable') + `
+  <div class="stats-row">
+    ${statCard('<i class="fas fa-building"></i>', totalClasses, 'Total Classes', 'All levels', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-calendar-check"></i>', classesWithTT, 'With Timetable', 'Configured', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-clock"></i>', '9', 'Periods/Day', 'Max (JHS)', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>', isAdmin ? 'Admin' : currentRole, 'Your Role', isAdmin ? 'Full Access' : 'Read Only', 'neu', 'si-purple')}
+  </div>
+
+  ${isAdmin ? `<div class="toolbar" style="flex-wrap:wrap;gap:10px">
+    <select id="tt-term-select" class="select-sm" onchange="saveTTTerm(); refreshTimetableView();">
+      <option value="Term 1, 2025" ${selectedTerm==='Term 1, 2025'?'selected':''}>Term 1, 2025</option>
+      <option value="Term 2, 2025" ${selectedTerm==='Term 2, 2025'?'selected':''}>Term 2, 2025</option>
+      <option value="Term 3, 2025" ${selectedTerm==='Term 3, 2025'?'selected':''}>Term 3, 2025</option>
+    </select>
+    <button class="btn btn-primary" onclick="openCreateTimetableForm()"><i class="fas fa-plus"></i> Create Timetable</button>
+    <button class="btn btn-primary" onclick="openEditTimetableForm()"><i class="fas fa-edit"></i> Edit Timetable</button>
+    <button class="btn btn-secondary" onclick="printTimetable()"><i class="fas fa-print"></i> Print</button>
+    <button class="btn btn-secondary" onclick="exportTimetablePDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteTimetable()"><i class="fas fa-trash"></i> Delete</button>
+  </div>` : `<div class="toolbar" style="flex-wrap:wrap;gap:10px">
+    <select id="tt-term-select" class="select-sm" onchange="saveTTTerm(); refreshTimetableView();">
+      <option value="Term 1, 2025" ${selectedTerm==='Term 1, 2025'?'selected':''}>Term 1, 2025</option>
+      <option value="Term 2, 2025" ${selectedTerm==='Term 2, 2025'?'selected':''}>Term 2, 2025</option>
+      <option value="Term 3, 2025" ${selectedTerm==='Term 3, 2025'?'selected':''}>Term 3, 2025</option>
+    </select>
+    <button class="btn btn-secondary" onclick="printTimetable()"><i class="fas fa-print"></i> Print</button>
+    <button class="btn btn-secondary" onclick="exportTimetablePDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+    <div style="flex:1"></div>
+    <div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(147,51,234,.08));border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--blue-dark)">
+      <i class="fas fa-eye"></i> Viewing: <strong>${selectedClass}</strong> (Read Only)
+    </div>
+  </div>`}
+
+  ${classTabsHtml}
+  <div id="tt-display-area">${timetableHtml}</div>`;
+}
+
+// ── localStorage persistence ──
+function loadTimetablesFromStorage() {
+  const saved = localStorage.getItem('gloryReginTimetables');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      Object.keys(parsed).forEach(cls => {
+        if (!timetablesData[cls]) timetablesData[cls] = {};
+        Object.keys(parsed[cls]).forEach(term => {
+          timetablesData[cls][term] = parsed[cls][term];
+        });
+      });
+    } catch(e) {}
+  }
+}
+function saveTimetablesToStorage() {
+  try { localStorage.setItem('gloryReginTimetables', JSON.stringify(timetablesData)); } catch(e) {}
+}
+function saveTTTerm() {
+  const el = document.getElementById('tt-term-select');
+  if (el) localStorage.setItem('tt-selected-term', el.value);
+}
+function selectTimetableClass(className) {
+  localStorage.setItem('tt-selected-class', className);
+  document.querySelectorAll('.tt-class-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.trim() === className);
+  });
+  refreshTimetableView();
+}
+function refreshTimetableView() {
+  const el = document.getElementById('tt-term-select');
+  const term = el ? el.value : (localStorage.getItem('tt-selected-term') || 'Term 1, 2025');
+  const cls = currentRole === 'Admin'
+    ? (localStorage.getItem('tt-selected-class') || classesData[0].name)
+    : (localStorage.getItem('currentUserClass') || 'Basic 2');
+  const area = document.getElementById('tt-display-area');
+  if (area) area.innerHTML = getTimetableDisplay(cls, term);
+}
+
+// ── Display ──
 function getTimetableDisplay(className, term) {
   const schedule = timetablesData[className] && timetablesData[className][term];
-  
   if (!schedule) {
-    return `<div class="card"><div style="padding:20px;color:var(--gray-500);">No timetable available for ${className} · ${term}</div></div>`;
+    return `<div class="card" style="text-align:center;padding:60px 30px">
+      <div style="font-size:64px;color:var(--gray-300);margin-bottom:16px"><i class="fas fa-calendar-xmark"></i></div>
+      <h3 style="color:var(--gray-500);font-size:16px;margin-bottom:8px">No Timetable Available</h3>
+      <p style="color:var(--gray-400);font-size:13px;margin-bottom:20px">No schedule for <strong>${className}</strong> · <strong>${term}</strong></p>
+      ${currentRole === 'Admin' ? '<button class="btn btn-primary" onclick="openCreateTimetableForm()"><i class="fas fa-plus"></i> Create Timetable Now</button>' : '<p style="color:var(--gray-400);font-size:12px">Contact your admin to set up the schedule.</p>'}
+    </div>`;
   }
-  
+
+  const subjectColors = {
+    'English':'#3b82f6','Mathematics':'#ef4444','Science':'#10b981','Dagaare':'#d97706',
+    'Computing':'#8b5cf6','History':'#f59e0b','RME':'#a855f7','Creative Art':'#f97316',
+    'Social Studies':'#06b6d4','Career Technology':'#ec4899','Numeracy':'#ef4444',
+    'Literacy':'#3b82f6','Writing':'#6366f1','Environmental Studies':'#10b981',
+    'Reading':'#3b82f6','Spellings':'#8b5cf6','Dictation':'#f59e0b','PE':'#06b6d4','Preps':'#64748b',
+    'Assembly':'#64748b'
+  };
+  function dot(subj) {
+    if (!subj || subj === '—') return '';
+    const e = Object.entries(subjectColors).find(([k]) => subj.toLowerCase().includes(k.toLowerCase()));
+    return `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${e?e[1]:'#94a3b8'};margin-right:5px"></span>`;
+  }
+
+  const ci = classesData.find(c => c.name === className);
+  const teacher = ci ? ci.teacher : 'N/A';
+  const students = ci ? ci.students : 0;
+
   return `<div class="card">
-    <div class="card-hdr"><span class="card-title">Weekly Timetable — ${className} · ${term}</span></div>
-    <table class="tt" style="width:100%">
-      <thead><tr><th>Period / Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead>
-      <tbody>
-        ${schedule.map(([period, subjects])=>`
-        <tr>
-          <td class="period">${period}</td>
-          ${subjects.map(s=>`<td class="${s==='—'?'break':'sub-cell'}">${s}</td>`).join('')}
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    <div style="margin-top:14px;display:flex;gap:16px;font-size:11px">
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:var(--blue-xpale);border-radius:3px;display:inline-block;border:1px solid var(--blue-pale)"></span>Periods</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:var(--gray-100);border-radius:3px;display:inline-block"></span>Break / Lunch</span>
+    <div class="card-hdr" style="flex-wrap:wrap;gap:10px">
+      <span class="card-title"><i class="fas fa-calendar-alt"></i> Weekly Timetable — ${className} · ${term}</span>
+      <div style="display:flex;gap:12px;align-items:center;font-size:11px;color:var(--gray-500)">
+        <span><i class="fas fa-chalkboard-user"></i> ${teacher}</span>
+        <span><i class="fas fa-users"></i> ${students} students</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tt" id="tt-table">
+        <thead><tr>
+          <th style="text-align:left;min-width:150px"><i class="fas fa-clock" style="margin-right:4px"></i> Period / Time</th>
+          <th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th>
+        </tr></thead>
+        <tbody>
+          ${schedule.map(([period, subjects]) => {
+            const pLow = period.toLowerCase();
+            const isBreak = pLow.includes('break') || pLow.includes('closing');
+            const isAssembly = pLow.includes('assembly');
+            const isSpecial = pLow.includes('7:30') && !pLow.includes('assembly');
+            const rowClass = isBreak ? 'tt-break-row' : (isAssembly ? 'tt-assembly-row' : '');
+            return `<tr class="${rowClass}">
+              <td class="period">${isBreak ? '<i class="fas fa-mug-hot" style="margin-right:4px;opacity:.6"></i>' : (isAssembly ? '<i class="fas fa-flag" style="margin-right:4px;opacity:.6"></i>' : '')}${period}</td>
+              ${subjects.map(s => {
+                if (s === '—' || isBreak) return `<td class="break">${s}</td>`;
+                if (isAssembly) return `<td style="background:rgba(100,116,139,.04);color:var(--gray-500);font-style:italic;font-size:10px">${s}</td>`;
+                return `<td class="sub-cell"><div style="display:flex;align-items:center;justify-content:center">${dot(s)}${s}</div></td>`;
+              }).join('')}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:14px;font-size:11px;padding:10px;background:var(--gray-50);border-radius:8px">
+      <span style="font-weight:600;color:var(--gray-600)"><i class="fas fa-palette"></i> Legend:</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--blue-xpale);border-radius:3px;border:1px solid var(--blue-pale)"></span>Periods</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--gray-200);border-radius:3px"></span>Break</span>
+      ${Object.entries(subjectColors).filter(([k]) => (SUBJECTS_BY_CLASS[className]||[]).includes(k)).map(([k,c]) =>
+        `<span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${c}"></span>${k}</span>`
+      ).join('')}
     </div>
   </div>`;
 }
 
-function updateTimetableDisplay() {
-  const classSelect = document.getElementById('tt-class-select');
-  const termSelect = document.getElementById('tt-term-select');
-  
-  if (!classSelect || !termSelect) return;
-  
-  const selectedClass = classSelect.value;
-  const selectedTerm = termSelect.value;
-  
-  const timetableDisplay = getTimetableDisplay(selectedClass, selectedTerm);
-  const cardContainer = document.querySelector('.card');
-  
-  if (cardContainer) {
-    cardContainer.outerHTML = timetableDisplay;
-  }
-}
-
-function saveTimetableSelection() {
-  const classSelect = document.getElementById('tt-class-select');
-  const termSelect = document.getElementById('tt-term-select');
-  
-  if (classSelect) localStorage.setItem('tt-selected-class', classSelect.value);
-  if (termSelect) localStorage.setItem('tt-selected-term', termSelect.value);
-}
-
+// ── Create Timetable (Admin) ──
 function openCreateTimetableForm() {
-  const classOptions = classesData.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-  
+  if (currentRole !== 'Admin') { showToast('<i class="fas fa-lock"></i> Admin only', 'error'); return; }
+  const selClass = localStorage.getItem('tt-selected-class') || classesData[0].name;
+  const classOpts = classesData.map(c => `<option value="${c.name}" ${c.name===selClass?'selected':''}>${c.name}</option>`).join('');
+  const periods = getPeriodsForClass(selClass);
+
   const form = `
-  <div style="padding:30px;width:100%;max-width:100vw;height:100vh;overflow-y:auto;display:flex;flex-direction:column">
-    <div style="margin-bottom:25px">
-      <h2 style="margin:0 0 15px 0;color:var(--gray-800);font-size:24px">Create New Timetable</h2>
-      <div style="display:grid;grid-template-columns:200px 200px 1fr;gap:20px">
-        <div>
-          <label style="font-weight:600;margin-bottom:8px;display:block;font-size:13px">Class</label>
-          <select id="create-tt-class" class="input-base" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;font-size:13px">
-            ${classOptions}
-          </select>
-        </div>
-        <div>
-          <label style="font-weight:600;margin-bottom:8px;display:block;font-size:13px">Term</label>
-          <select id="create-tt-term" class="input-base" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;font-size:13px">
-            <option value="Term 1, 2025">Term 1, 2025</option>
-            <option value="Term 2, 2025">Term 2, 2025</option>
-          </select>
-        </div>
-      </div>
+  <div style="background:white;border-radius:12px;padding:24px;width:95vw;max-width:1400px;overflow-y:auto;max-height:95vh;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#1e3a5f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px"><i class="fas fa-plus"></i></div>
+      <div><h2 style="margin:0;font-size:18px;font-weight:700;color:var(--gray-800)">Create New Timetable</h2>
+      <p style="margin:0;font-size:12px;color:var(--gray-500)">Set up a Termly schedule for a class</p></div>
     </div>
-    
-    <div style="flex:1;display:flex;flex-direction:column;margin-bottom:20px">
-      <label style="font-weight:600;margin-bottom:15px;display:block;font-size:14px">Weekly Timetable Schedule</label>
-      <div id="periods-container" style="overflow-y:auto;flex:1;padding-right:10px;border:1px solid var(--gray-200);border-radius:8px;background:white">
-        <table style="width:100%;border-collapse:collapse">
-          <thead style="position:sticky;top:0;background:var(--blue-light);z-index:10">
-            <tr>
-              <th style="padding:12px;border-bottom:2px solid var(--blue-main);text-align:left;font-weight:600;font-size:12px;min-width:130px">Period / Time</th>
-              <th style="padding:12px;border-bottom:2px solid var(--blue-main);text-align:center;font-weight:600;font-size:12px;width:14%">Monday</th>
-              <th style="padding:12px;border-bottom:2px solid var(--blue-main);text-align:center;font-weight:600;font-size:12px;width:14%">Tuesday</th>
-              <th style="padding:12px;border-bottom:2px solid var(--blue-main);text-align:center;font-weight:600;font-size:12px;width:14%">Wednesday</th>
-              <th style="padding:12px;border-bottom:2px solid var(--blue-main);text-align:center;font-weight:600;font-size:12px;width:14%">Thursday</th>
-              <th style="padding:12px;border-bottom:2px solid var(--blue-main);text-align:center;font-weight:600;font-size:12px;width:14%">Friday</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${['P1 · 7:30–8:20','P2 · 8:20–9:10','Break · 9:10–9:30','P3 · 9:30–10:20','P4 · 10:20–11:10','Lunch · 11:10–12:00','P5 · 12:00–12:50','P6 · 12:50–13:40'].map((period, idx) => {
-              const isBreak = period.includes('—');
-              return `<tr style="border-bottom:1px solid var(--gray-200)">
-                <td style="padding:12px;font-weight:500;font-size:12px;background:var(--gray-50);min-width:130px">${period}</td>
-                ${'Monday,Tuesday,Wednesday,Thursday,Friday'.split(',').map((day, dayIdx) => {
-                  return `<td style="padding:6px;text-align:center"><input type="text" id="create-period-${idx}-${dayIdx}" value="${isBreak ? '—' : ''}" placeholder="${isBreak ? '—' : 'Subject'}" ${isBreak ? 'readonly' : ''} style="width:100%;padding:8px;border:1.5px solid ${isBreak ? 'var(--gray-300)' : 'var(--gray-200)'};border-radius:4px;font-family:Poppins,sans-serif;font-size:12px;background:${isBreak ? 'var(--gray-100)' : 'white'};text-align:center" />` + '</td>';
-                }).join('')}
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="form-field"><label>Class *</label>
+        <select id="create-tt-class" onchange="updateCreateFormPeriods()" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:Poppins,sans-serif;font-size:13px">${classOpts}</select></div>
+      <div class="form-field"><label>Term *</label>
+        <select id="create-tt-term" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:Poppins,sans-serif;font-size:13px">
+          <option value="Term 1, 2025">Term 1, 2025</option><option value="Term 2, 2025">Term 2, 2025</option><option value="Term 3, 2025">Term 3, 2025</option>
+        </select></div>
     </div>
-    
-    <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px">
-      <button class="btn btn-secondary" onclick="closeModal()" style="padding:10px 20px">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewTimetable()" style="padding:10px 20px">Create Timetable</button>
+    <div id="create-periods-grid">${buildCreateGrid(selClass)}</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--gray-200)">
+      <button class="btn btn-secondary" onclick="closeModal()" style="padding:10px 24px">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewTimetable()" style="padding:10px 24px"><i class="fas fa-check"></i> Create Timetable</button>
     </div>
-  </div>
-  `;
-  
-  openModal(form);
+  </div>`;
+  openModal(form, true);
 }
 
-function removePeriodRow(btn) {
-  btn.closest('.period-row').remove();
+function buildCreateGrid(className) {
+  const periods = getPeriodsForClass(className);
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  let html = `<div style="overflow-x:auto;border:1.5px solid var(--gray-200);border-radius:10px;background:white;margin-bottom:16px">
+    <table style="width:100%;border-collapse:collapse" id="create-tt-table">
+      <thead><tr style="background:linear-gradient(135deg,#1e3a5f,#3b82f6)">
+        <th style="padding:12px 10px;color:white;font-size:11px;font-weight:600;text-align:left;min-width:150px;border-right:1px solid rgba(255,255,255,.15)">Period / Time</th>
+        ${days.map(d => `<th style="padding:12px 6px;color:white;font-size:11px;font-weight:600;text-align:center;border-right:1px solid rgba(255,255,255,.1)">${d}</th>`).join('')}
+      </tr></thead><tbody>`;
+
+  periods.forEach((p, idx) => {
+    const isBreak = p.type === 'break' || p.type === 'close';
+    const isAssembly = p.type === 'assembly';
+    const isSpecial = p.type === 'special';
+    const bgColor = isBreak ? 'var(--gray-100)' : (isAssembly ? 'rgba(100,116,139,.08)' : 'var(--blue-xpale)');
+    const txtColor = isBreak ? 'var(--gray-500)' : (isAssembly ? 'var(--gray-600)' : 'var(--blue-dark)');
+
+    html += `<tr style="border-bottom:1px solid var(--gray-200)${isBreak?';background:var(--gray-50)':''}">
+      <td style="padding:10px;font-weight:600;font-size:11px;background:${bgColor};color:${txtColor};border-right:1px solid var(--gray-200)">${p.label}</td>`;
+
+    for (let d = 0; d < 5; d++) {
+      let defaultVal = '';
+      let readonly = false;
+      if (isBreak) { defaultVal = '—'; readonly = true; }
+      else if (isAssembly) { defaultVal = 'Morning Assembly'; readonly = true; }
+      else if (isSpecial && p.dayLabels) { defaultVal = p.dayLabels[d]; readonly = true; }
+
+      html += `<td style="padding:4px;text-align:center">
+        <input type="text" id="create-p-${idx}-${d}" value="${defaultVal}" placeholder="${readonly?'':'Subject'}" ${readonly?'readonly':''}
+          style="width:100%;padding:8px 4px;border:1.5px solid ${readonly?'transparent':'var(--gray-200)'};border-radius:6px;font-family:Poppins,sans-serif;font-size:11px;background:${readonly?'transparent':'white'};text-align:center;box-sizing:border-box;transition:border-color .2s"
+          ${!readonly?'onfocus="this.style.borderColor=\'var(--blue-main)\'" onblur="this.style.borderColor=\'var(--gray-200)\'"':''} />
+      </td>`;
+    }
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function updateCreateFormPeriods() {
+  const cls = document.getElementById('create-tt-class');
+  if (!cls) return;
+  const grid = document.getElementById('create-periods-grid');
+  if (grid) grid.innerHTML = buildCreateGrid(cls.value);
 }
 
 function saveNewTimetable() {
-  const classSelect = document.getElementById('create-tt-class');
-  const termSelect = document.getElementById('create-tt-term');
-  
-  if (!classSelect || !termSelect) {
-    showToast('Class and term not found', 'error');
-    return;
+  const clsEl = document.getElementById('create-tt-class');
+  const termEl = document.getElementById('create-tt-term');
+  if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
+  const cls = clsEl.value, term = termEl.value;
+  if (timetablesData[cls] && timetablesData[cls][term]) {
+    if (!confirm('Timetable exists for ' + cls + ' · ' + term + '. Overwrite?')) return;
   }
-  
-  const selectedClass = classSelect.value;
-  const selectedTerm = termSelect.value;
-  
-  if (!selectedClass || !selectedTerm) {
-    showToast('Please select both class and term', 'error');
-    return;
-  }
-  
-  if (timetablesData[selectedClass]?.[selectedTerm]) {
-    showToast(`Timetable already exists for ${selectedClass} · ${selectedTerm}`, 'warning');
-    return;
-  }
-  
-  const periods = document.querySelectorAll('.period-row');
-  const newSchedule = [];
-  
-  periods.forEach((row, idx) => {
-    if (idx === 0) return; // Skip header row
-    
-    const periodLabel = row.querySelector('div:nth-child(1)').textContent.trim();
+  const periods = getPeriodsForClass(cls);
+  const schedule = [];
+  let hasContent = false;
+  periods.forEach((p, idx) => {
     const subjects = [];
-    
-    for (let dayIdx = 0; dayIdx < 5; dayIdx++) {
-      const input = document.getElementById(`create-period-${idx - 1}-${dayIdx}`);
-      subjects.push(input?.value?.trim() || '');
+    for (let d = 0; d < 5; d++) {
+      const input = document.getElementById('create-p-' + idx + '-' + d);
+      const val = input ? input.value.trim() : '';
+      subjects.push(val || '—');
+      if (val && val !== '—' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
     }
-    
-    if (periodLabel) {
-      newSchedule.push([periodLabel, subjects]);
-    }
+    schedule.push([p.label, subjects]);
   });
-  
-  if (newSchedule.length === 0) {
-    showToast('Please add at least one period', 'error');
-    return;
-  }
-  
-  // Create the timetable
-  if (!timetablesData[selectedClass]) {
-    timetablesData[selectedClass] = {};
-  }
-  
-  timetablesData[selectedClass][selectedTerm] = newSchedule;
-  
+  if (!hasContent) { showToast('Fill in at least one subject', 'error'); return; }
+  if (!timetablesData[cls]) timetablesData[cls] = {};
+  timetablesData[cls][term] = schedule;
+  saveTimetablesToStorage();
   closeModal();
-  
-  // Update display
-  const classSelect2 = document.getElementById('tt-class-select');
-  const termSelect2 = document.getElementById('tt-term-select');
-  if (classSelect2) classSelect2.value = selectedClass;
-  if (termSelect2) termSelect2.value = selectedTerm;
-  
-  updateTimetableDisplay();
-  showToast(`Timetable created for ${selectedClass} · ${selectedTerm}`, 'success');
+  localStorage.setItem('tt-selected-class', cls);
+  localStorage.setItem('tt-selected-term', term);
+  renderMain();
+  showToast('<i class="fas fa-check-circle"></i> Timetable created for ' + cls + ' · ' + term, 'success');
 }
 
-
+// ── Edit Timetable (Admin) ──
 function openEditTimetableForm() {
-  const classSelect = document.getElementById('tt-class-select');
-  const termSelect = document.getElementById('tt-term-select');
-  
-  if (!classSelect || !termSelect) {
-    showToast('Please select a class and term first', 'error');
-    return;
-  }
-  
-  const selectedClass = classSelect.value;
-  const selectedTerm = termSelect.value;
-  const schedule = timetablesData[selectedClass]?.[selectedTerm] || [];
-  
-  if (schedule.length === 0) {
-    showToast('No timetable found for this class and term', 'error');
-    return;
-  }
-  
-  const periodOptions = schedule.map(([p], idx) => `<option value="${idx}">${p}</option>`).join('');
-  const daysOfWeek = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-  const firstPeriodSubjects = schedule[0]?.[1] || [];
-  
+  if (currentRole !== 'Admin') { showToast('<i class="fas fa-lock"></i> Admin only', 'error'); return; }
+  const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
+  const termEl = document.getElementById('tt-term-select');
+  const term = termEl ? termEl.value : 'Term 1, 2025';
+  const schedule = timetablesData[cls] && timetablesData[cls][term];
+  if (!schedule) { showToast('No timetable for ' + cls + ' · ' + term, 'error'); return; }
+
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   const form = `
-  <div style="padding:20px;width:100%;max-width:600px">
-    <h3 style="margin:0 0 20px 0;color:var(--gray-800)">Edit Timetable — ${selectedClass} · ${selectedTerm}</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-      <div style="grid-column:1/-1">
-        <label style="font-weight:600;margin-bottom:6px;display:block;font-size:13px">Select Period to Edit</label>
-        <select id="edit-tt-period" class="input-base" onchange="updatePeriodInputs(this.value)" style="width:100%;padding:8px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif">
-          ${periodOptions}
-        </select>
-      </div>
-      <div style="grid-column:1/-1;height:1px;background:var(--gray-200);margin:8px 0"></div>
-      ${daysOfWeek.map((day, idx)=>`
-      <div>
-        <label style="font-size:12px;font-weight:500">${day}</label>
-        <input type="text" id="edit-tt-${day.toLowerCase()}" value="${firstPeriodSubjects[idx] || ''}" placeholder="Subject name" style="width:100%;padding:8px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;box-sizing:border-box" />
-      </div>`).join('')}
+  <div style="background:white;border-radius:12px;padding:24px;width:95vw;max-width:1400px;overflow-y:auto;max-height:95vh;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px"><i class="fas fa-edit"></i></div>
+      <div><h2 style="margin:0;font-size:18px;font-weight:700">Edit — ${cls} · ${term}</h2>
+      <p style="margin:0;font-size:12px;color:var(--gray-500)">Modify subjects for each period</p></div>
     </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
+    <div style="overflow-x:auto;border:1.5px solid var(--gray-200);border-radius:10px;background:white;margin-bottom:16px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:linear-gradient(135deg,#d97706,#f59e0b)">
+          <th style="padding:12px 10px;color:white;font-size:11px;font-weight:600;text-align:left;min-width:150px;border-right:1px solid rgba(255,255,255,.15)">Period / Time</th>
+          ${days.map(d => `<th style="padding:12px 6px;color:white;font-size:11px;font-weight:600;text-align:center;border-right:1px solid rgba(255,255,255,.1)">${d}</th>`).join('')}
+        </tr></thead><tbody>
+          ${schedule.map(([period, subjects], idx) => {
+            const pLow = period.toLowerCase();
+            const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
+            const bg = isFixed ? 'var(--gray-100)' : 'var(--blue-xpale)';
+            const color = isFixed ? 'var(--gray-500)' : 'var(--blue-dark)';
+            return `<tr style="border-bottom:1px solid var(--gray-200)">
+              <td style="padding:10px;font-weight:600;font-size:11px;background:${bg};color:${color};border-right:1px solid var(--gray-200)">${period}</td>
+              ${subjects.map((s, d) => `<td style="padding:4px;text-align:center">
+                <input type="text" id="edit-p-${idx}-${d}" value="${s}" ${isFixed?'readonly':''} placeholder="${isFixed?'':'Subject'}"
+                  style="width:100%;padding:8px 4px;border:1.5px solid ${isFixed?'transparent':'var(--gray-200)'};border-radius:6px;font-family:Poppins,sans-serif;font-size:11px;background:${isFixed?'transparent':'white'};text-align:center;box-sizing:border-box"
+                  ${!isFixed?'onfocus="this.style.borderColor=\'var(--gold)\'" onblur="this.style.borderColor=\'var(--gray-200)\'"':''} />
+              </td>`).join('')}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--gray-200)">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTimetableChanges('${selectedClass}', '${selectedTerm}')">Save Changes</button>
+      <button class="btn btn-primary" onclick="saveEditedTimetable('${cls}','${term}')"><i class="fas fa-save"></i> Save Changes</button>
     </div>
-  </div>
-  `;
-  
-  window.currentEditTimetableData = {
-    selectedClass,
-    selectedTerm,
-    schedule,
-    daysOfWeek
-  };
-  
-  openModal(form);
+  </div>`;
+  openModal(form, true);
 }
 
-function updatePeriodInputs(periodIndex) {
-  if (!window.currentEditTimetableData) return;
-  
-  const { schedule } = window.currentEditTimetableData;
-  const periodSubjects = schedule[parseInt(periodIndex)]?.[1] || [];
-  const daysOfWeek = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-  
-  daysOfWeek.forEach((day, idx) => {
-    const input = document.getElementById(`edit-tt-${day.toLowerCase()}`);
-    if (input) input.value = periodSubjects[idx] || '';
+function saveEditedTimetable(cls, term) {
+  const schedule = timetablesData[cls] && timetablesData[cls][term];
+  if (!schedule) return;
+  schedule.forEach(([period], idx) => {
+    const pLow = period.toLowerCase();
+    const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
+    if (isFixed) return;
+    for (let d = 0; d < 5; d++) {
+      const input = document.getElementById('edit-p-' + idx + '-' + d);
+      if (input) schedule[idx][1][d] = input.value.trim() || '—';
+    }
   });
-}
-
-function saveTimetableChanges(className, term) {
-  const periodSelect = document.getElementById('edit-tt-period');
-  const periodIndex = parseInt(periodSelect?.value) || 0;
-  
-  if (!timetablesData[className]?.[term]?.[periodIndex]) {
-    showToast('Error saving timetable changes', 'error');
-    return;
-  }
-  
-  const daysOfWeek = ['monday','tuesday','wednesday','thursday','friday'];
-  const newSubjects = daysOfWeek.map(day => {
-    const input = document.getElementById(`edit-tt-${day}`);
-    return input?.value?.trim() || timetablesData[className][term][periodIndex][1][daysOfWeek.indexOf(day)];
-  });
-  
-  timetablesData[className][term][periodIndex][1] = newSubjects;
-  
+  saveTimetablesToStorage();
   closeModal();
-  setTimeout(() => {
-    updateTimetableDisplay();
-    showToast(`Timetable updated for ${className} · ${term}`, 'success');
-  }, 100);
+  refreshTimetableView();
+  showToast('<i class="fas fa-check-circle"></i> Timetable updated for ' + cls, 'success');
 }
 
+// ── Delete ──
+function deleteTimetable() {
+  if (currentRole !== 'Admin') return;
+  const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
+  const termEl = document.getElementById('tt-term-select');
+  const term = termEl ? termEl.value : 'Term 1, 2025';
+  if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
+  if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
+  delete timetablesData[cls][term];
+  if (Object.keys(timetablesData[cls]).length === 0) delete timetablesData[cls];
+  saveTimetablesToStorage();
+  refreshTimetableView();
+  showToast('<i class="fas fa-trash"></i> Timetable deleted', 'success');
+}
+
+// ── Print ──
+function printTimetable() {
+  const table = document.getElementById('tt-table');
+  if (!table) { showToast('No timetable to print', 'error'); return; }
+  const cls = currentRole==='Admin' ? (localStorage.getItem('tt-selected-class')||classesData[0].name) : (localStorage.getItem('currentUserClass')||'Basic 2');
+  const termEl = document.getElementById('tt-term-select');
+  const term = termEl ? termEl.value : 'Term 1, 2025';
+  const ci = classesData.find(c => c.name === cls);
+  const teacher = ci ? ci.teacher : '';
+  const w = window.open('','','width=1000,height=800');
+  if (!w) { showToast('Pop-up blocked', 'error'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Timetable - ${cls}</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#333}
+    .header{text-align:center;margin-bottom:24px;border-bottom:3px solid #1e3a5f;padding-bottom:16px}
+    .header h1{font-size:22px;color:#1e3a5f;margin-bottom:4px}.header p{font-size:13px;color:#666}
+    .meta{display:flex;justify-content:space-between;margin-bottom:16px;font-size:12px;color:#555}
+    table{width:100%;border-collapse:collapse}th{background:#1e3a5f;color:white;padding:10px 8px;font-size:11px;font-weight:600;text-align:center}
+    th:first-child{text-align:left}td{border:1px solid #ddd;padding:8px 6px;text-align:center;font-size:11px}
+    .period{background:#e8f0fe;color:#1e3a5f;font-weight:600;text-align:left!important}
+    .brk td{background:#f5f5f5;color:#999;font-style:italic}
+    .footer{margin-top:20px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #ddd;padding-top:10px}
+    @media print{body{padding:15px}}</style></head><body>
+    <div class="header"><h1>Glory Regin Preparatory School</h1><p>Weekly Class Timetable</p></div>
+    <div class="meta"><span><strong>Class:</strong> ${cls}</span><span><strong>Term:</strong> ${term}</span><span><strong>Teacher:</strong> ${teacher}</span></div>
+    <table><thead><tr><th style="text-align:left">Period / Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead><tbody>
+    ${(timetablesData[cls][term]||[]).map(([p,s])=>{const brk=p.toLowerCase().includes('break')||p.toLowerCase().includes('closing');return'<tr class="'+(brk?'brk':'')+'"><td class="period">'+p+'</td>'+s.map(v=>'<td>'+v+'</td>').join('')+'</tr>';}).join('')}
+    </tbody></table>
+    <div class="footer">Generated on ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} · Glory Regin Preparatory School</div>
+    </body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 300);
+}
+
+// ── Export PDF ──
 function exportTimetablePDF() {
-  const classSelect = document.getElementById('tt-class-select');
-  const termSelect = document.getElementById('tt-term-select');
-  
-  if (!classSelect || !termSelect) {
-    showToast('Please select a class and term first', 'error');
-    return;
-  }
-  
-  const selectedClass = classSelect.value;
-  const selectedTerm = termSelect.value;
-  
-  const table = document.querySelector('.tt');
-  if (!table) {
-    showToast('Timetable not found. Please reload and try again.', 'error');
-    return;
-  }
-  
-  const printWindow = window.open('', '', 'width=900,height=700');
-  if (!printWindow) {
-    showToast('Pop-up blocked. Please allow pop-ups and try again.', 'error');
-    return;
-  }
-  
-  const tableHtml = table.outerHTML;
-  
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>${selectedClass} Timetable - ${selectedTerm}</title>
-        <style>
-          body { font-family: Arial; padding: 20px; }
-          h1 { text-align: center; color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-          th { background: #4a5bce; color: white; font-weight: bold; }
-          .break { background: #f0f0f0; }
-        </style>
-      </head>
-      <body>
-        <h1>${selectedClass} Timetable</h1>
-        <p style="text-align:center">${selectedTerm}</p>
-        ${tableHtml}
-        <p style="margin-top:30px;font-size:12px;color:#999;">Generated on ${new Date().toLocaleString()}</p>
-      </body>
-    </html>
-  `);
-  
-  printWindow.document.close();
-  printWindow.print();
-  
-  showToast(`Timetable PDF exported for ${selectedClass}`, 'success');
+  const cls = currentRole==='Admin' ? (localStorage.getItem('tt-selected-class')||classesData[0].name) : (localStorage.getItem('currentUserClass')||'Basic 2');
+  const termEl = document.getElementById('tt-term-select');
+  const term = termEl ? termEl.value : 'Term 1, 2025';
+  const schedule = timetablesData[cls] && timetablesData[cls][term];
+  if (!schedule) { showToast('No timetable to export', 'error'); return; }
+  const ci = classesData.find(c => c.name === cls);
+  const teacher = ci ? ci.teacher : '';
+  let h = '<html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;padding:30px;color:#333}h1{text-align:center;color:#1e3a5f;font-size:20px;margin-bottom:4px}h2{text-align:center;color:#666;font-size:13px;font-weight:normal;margin-bottom:20px}.info{display:flex;justify-content:space-between;margin-bottom:16px;font-size:12px;color:#555;border-bottom:2px solid #1e3a5f;padding-bottom:10px}table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#1e3a5f;color:white;padding:10px 8px;font-size:11px;font-weight:bold;text-align:center}th:first-child{text-align:left}td{border:1px solid #ccc;padding:8px 6px;text-align:center;font-size:11px}.period{background:#e8f0fe;color:#1e3a5f;font-weight:600;text-align:left}.brk{background:#f5f5f5;color:#999;font-style:italic}.footer{margin-top:24px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #ddd;padding-top:10px}</style></head><body>';
+  h += '<h1>Glory Regin Preparatory School</h1><h2>Weekly Class Timetable</h2>';
+  h += '<div class="info"><span><strong>Class:</strong> '+cls+'</span><span><strong>Term:</strong> '+term+'</span><span><strong>Teacher:</strong> '+teacher+'</span></div>';
+  h += '<table><thead><tr><th style="text-align:left">Period / Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead><tbody>';
+  schedule.forEach(function([p,s]){const brk=p.toLowerCase().includes('break')||p.toLowerCase().includes('closing');h+='<tr><td class="period">'+p+'</td>';s.forEach(function(v){h+='<td class="'+(brk?'brk':'')+'">'+v+'</td>';});h+='</tr>';});
+  h += '</tbody></table><div class="footer">Generated on '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+' · Glory Regin Preparatory School</div></body></html>';
+  const blob = new Blob([h], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'Timetable_'+cls.replace(/\s/g,'_')+'_'+term.replace(/[\s,]/g,'_')+'.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('<i class="fas fa-file-pdf"></i> Timetable exported for ' + cls, 'success');
 }
 
 // ATTENDANCE MODULE
-function attendanceModule(){
+function attendanceModule() {
   // Check if user is a teacher (only teachers can mark attendance)
   const canMarkAttendance = currentRole === 'Teacher';
-  
+
   // Calculate attendance stats
-  const attendanceData = [['Creche',28,26,2],['Nursery',32,31,1],['KG 1',35,33,2],['KG 2',36,35,1],['Basic 1',38,36,2],['Basic 2',40,38,2],['Basic 3',42,40,2],['Basic 4',38,35,3],['Basic 5',40,39,1],['Basic 6',36,34,2],['JHS 1',42,40,2],['JHS 2',40,37,3],['JHS 3',39,37,2]];
-  
-  const totalStudents = attendanceData.reduce((sum, [,total]) => sum + total, 0);
-  const presentCount = attendanceData.reduce((sum, [,,present]) => sum + present, 0);
-  const absentCount = attendanceData.reduce((sum, [,,,absent]) => sum + absent, 0);
+  const attendanceData = [['Creche', 28, 26, 2], ['Nursery', 32, 31, 1], ['KG 1', 35, 33, 2], ['KG 2', 36, 35, 1], ['Basic 1', 38, 36, 2], ['Basic 2', 40, 38, 2], ['Basic 3', 42, 40, 2], ['Basic 4', 38, 35, 3], ['Basic 5', 40, 39, 1], ['Basic 6', 36, 34, 2], ['JHS 1', 42, 40, 2], ['JHS 2', 40, 37, 3], ['JHS 3', 39, 37, 2]];
+
+  const totalStudents = attendanceData.reduce((sum, [, total]) => sum + total, 0);
+  const presentCount = attendanceData.reduce((sum, [, , present]) => sum + present, 0);
+  const absentCount = attendanceData.reduce((sum, [, , , absent]) => sum + absent, 0);
   const lateCount = totalStudents - presentCount - absentCount;
-  
+
   const presentPercent = ((presentCount / totalStudents) * 100).toFixed(1);
   const absentPercent = ((absentCount / totalStudents) * 100).toFixed(1);
   const latePercent = ((lateCount / totalStudents) * 100).toFixed(1);
   const monthlyAverage = 94.2;
-  
-  return hdr('Attendance Module','Daily attendance tracking and management','Attendance')+`
+
+  return hdr('Attendance Module', 'Daily attendance tracking and management', 'Attendance') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-check-circle"></i>',presentCount,'Present Today',presentPercent+'%','up','si-green')}
-    ${statCard('<i class="fas fa-times-circle"></i>',absentCount,'Absent Today',absentPercent+'%','dn','si-red')}
-    ${statCard('<i class="fas fa-clock"></i>',lateCount,'Late Today',latePercent+'%','dn','si-gold')}
-    ${statCard('<i class="fas fa-chart-bar"></i>',monthlyAverage+'%','Monthly Average','On track','up','si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', presentCount, 'Present Today', presentPercent + '%', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-times-circle"></i>', absentCount, 'Absent Today', absentPercent + '%', 'dn', 'si-red')}
+    ${statCard('<i class="fas fa-clock"></i>', lateCount, 'Late Today', latePercent + '%', 'dn', 'si-gold')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', monthlyAverage + '%', 'Monthly Average', 'On track', 'up', 'si-blue')}
   </div>
   <div class="g2">
     <div class="card">
@@ -5357,12 +5561,12 @@ function attendanceModule(){
         <table class="tbl">
           <thead><tr><th>Student</th><th style="text-align:center">Present</th><th style="text-align:center">Absent</th><th style="text-align:center">Late</th><th>Remark</th></tr></thead>
           <tbody>
-            ${[['Ama Serwaa','P'],['Kwame Asante','A'],['Abena Mensah','P'],['Kofi Boateng','L'],['Akosua Darko','P'],['Yaw Mensah','P'],['Adwoa Frimpong','P']].map(([n,s])=>`
+            ${[['Ama Serwaa', 'P'], ['Kwame Asante', 'A'], ['Abena Mensah', 'P'], ['Kofi Boateng', 'L'], ['Akosua Darko', 'P'], ['Yaw Mensah', 'P'], ['Adwoa Frimpong', 'P']].map(([n, s]) => `
             <tr>
               <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
-              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'')}" ${s==='P'?'checked':''}></td>
-              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'')}" ${s==='A'?'checked':''}></td>
-              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g,'')}" ${s==='L'?'checked':''}></td>
+              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '')}" ${s === 'P' ? 'checked' : ''}></td>
+              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '')}" ${s === 'A' ? 'checked' : ''}></td>
+              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '')}" ${s === 'L' ? 'checked' : ''}></td>
               <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..."></td>
             </tr>`).join('')}
           </tbody>
@@ -5373,10 +5577,10 @@ function attendanceModule(){
 }
 
 // EXAMS MODULE
-function examsModule(){
-  return hdr('Exams & Report Cards','Manage examinations, grading and report generation','Exams')+`
+function examsModule() {
+  return hdr('Exams & Report Cards', 'Manage examinations, grading and report generation', 'Exams') + `
   <div class="mod-tabs">
-    ${['Exam Schedule','Report Cards','Results Analysis'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="switchExamTab(${i})">${t}</div>`).join('')}
+    ${['Exam Schedule', 'Report Cards', 'Results Analysis'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchExamTab(${i})">${t}</div>`).join('')}
   </div>
   
   <!-- TAB 1: EXAM SCHEDULE -->
@@ -5392,7 +5596,7 @@ function examsModule(){
       <table class="tbl">
         <thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th><th>Actions</th></tr></thead>
         <tbody id="exam-table-body">
-          ${[['Mathematics','JHS 3','Apr 1','2 hrs','Hall A','Mr. Amponsah'],['English Language','JHS 3','Apr 2','2 hrs','Hall A','Mrs. Asante'],['Integrated Science','JHS 3','Apr 3','1.5 hrs','Hall B','Mr. Oduro'],['ICT','JHS 3','Apr 4','1 hr','Lab 1','Ms. Frimpong'],['Social Studies','JHS 3','Apr 5','1.5 hrs','Hall B','Mr. Boateng']].map(([s,c,d,du,v,inv])=>`
+          ${[['Mathematics', 'JHS 3', 'Apr 1', '2 hrs', 'Hall A', 'Mr. Amponsah'], ['English Language', 'JHS 3', 'Apr 2', '2 hrs', 'Hall A', 'Mrs. Asante'], ['Integrated Science', 'JHS 3', 'Apr 3', '1.5 hrs', 'Hall B', 'Mr. Oduro'], ['ICT', 'JHS 3', 'Apr 4', '1 hr', 'Lab 1', 'Ms. Frimpong'], ['Social Studies', 'JHS 3', 'Apr 5', '1.5 hrs', 'Hall B', 'Mr. Boateng']].map(([s, c, d, du, v, inv]) => `
           <tr class="exam-row" data-subject="${s.toLowerCase()}" data-class="${c.toLowerCase()}">
             <td style="font-weight:600">${s}</td>
             <td>${c}</td>
@@ -5455,7 +5659,7 @@ function examsModule(){
       <table class="tbl">
         <thead><tr><th style="width:25%">Student Name</th><th style="width:15%">Class</th><th style="width:15%">Total Marks</th><th style="width:15%">Average</th><th style="width:12%">Grade</th><th style="width:12%">Position</th><th style="width:15%">Action</th></tr></thead>
         <tbody id="report-cards-body">
-          ${[['Ama Serwaa','JHS 1','590','84%','B','8th'],['Kwame Asante','Basic 6','455','76%','C','8th'],['Abena Mensah','Basic 6','546','91%','A','2nd'],['Kofi Boateng','Basic 6','384','64%','C','18th'],['Akosua Darko','JHS 1','570','95%','A','1st'],['Yaw Mensah','Basic 5','492','82%','B','5th'],['Adwoa Frimpong','Basic 5','522','87%','A','3rd'],['Kweku Ofori','JHS 2','378','63%','C','22nd']].map(([name,cls,total,avg,grade,pos])=>'<tr class="report-row" data-student="'+name.toLowerCase()+'" data-class="'+cls+'"><td style="font-weight:600">'+name+'</td><td>'+cls+'</td><td style="color:var(--blue-main);font-weight:600">'+total+'</td><td>'+avg+'</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:'+(grade==='A'?'var(--success)':grade==='B'?'var(--info)':grade==='C'?'var(--warning)':'var(--danger)')+'">'+grade+'</span></td><td>'+pos+'</td><td><button class="btn btn-sm" style="padding:4px 8px;background:var(--blue-main);color:white;border:none;border-radius:4px;cursor:pointer" onclick="viewReportCard(\''+name+'\')"><i class="fas fa-file"></i> View Report</button></td></tr>').join('')}
+          ${[['Ama Serwaa', 'JHS 1', '590', '84%', 'B', '8th'], ['Kwame Asante', 'Basic 6', '455', '76%', 'C', '8th'], ['Abena Mensah', 'Basic 6', '546', '91%', 'A', '2nd'], ['Kofi Boateng', 'Basic 6', '384', '64%', 'C', '18th'], ['Akosua Darko', 'JHS 1', '570', '95%', 'A', '1st'], ['Yaw Mensah', 'Basic 5', '492', '82%', 'B', '5th'], ['Adwoa Frimpong', 'Basic 5', '522', '87%', 'A', '3rd'], ['Kweku Ofori', 'JHS 2', '378', '63%', 'C', '22nd']].map(([name, cls, total, avg, grade, pos]) => '<tr class="report-row" data-student="' + name.toLowerCase() + '" data-class="' + cls + '"><td style="font-weight:600">' + name + '</td><td>' + cls + '</td><td style="color:var(--blue-main);font-weight:600">' + total + '</td><td>' + avg + '</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : grade === 'C' ? 'var(--warning)' : 'var(--danger)') + '">' + grade + '</span></td><td>' + pos + '</td><td><button class="btn btn-sm" style="padding:4px 8px;background:var(--blue-main);color:white;border:none;border-radius:4px;cursor:pointer" onclick="viewReportCard(\'' + name + '\')"><i class="fas fa-file"></i> View Report</button></td></tr>').join('')}
         </tbody>
       </table>
     </div>
@@ -5512,8 +5716,8 @@ function examsModule(){
 }
 
 // GRADES ENTRY MODULE
-function gradesModule(){
-  return hdr('Enter Student Grades','Record class and exam scores for all students','Grade Entry')+`
+function gradesModule() {
+  return hdr('Enter Student Grades', 'Record class and exam scores for all students', 'Grade Entry') + `
   <div class="card mb20">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-file-alt"></i> Grade Entry Form</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px">
@@ -5522,8 +5726,8 @@ function gradesModule(){
         <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
           <option>Form 1A</option>
           <option>Form 1B</option>
-          <3: RESULTS ANALYSIS -->
-  <div id="exam-tab-2m 2B</option>
+          <option>Form 2A</option>
+          <option>Form 2B</option>
           <option>Form 3A</option>
           <option>Form 3B</option>
         </select>
@@ -5572,11 +5776,11 @@ function gradesModule(){
         </tr>
       </thead>
       <tbody>
-        ${[['1','Ama Serwaa','45','43','88','A','Complete'],['2','Kwame Asante','38','34','72','B','Complete'],['3','Abena Mensah','48','43','91','A','Complete'],['4','Kofi Boateng','32','32','64','C','Pending'],['5','Akosua Darko','48','47','95','A','Complete'],['6','Yaw Mensah','42','40','82','B','Complete'],['7','Adwoa Frimpong','45','42','87','A','Complete'],['8','Kweku Ofori','35','28','63','C','Pending']].map(([idx,name,cls,exam,total,grade,status])=>'<tr><td style="text-align:center;color:var(--gray-400)">'+idx+'</td><td style="font-weight:600">'+name+'</td><td><input type="number" value="'+cls+'" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td><input type="number" value="'+exam+'" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td style="font-weight:700;color:var(--blue-dark)">'+total+'</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:'+(grade==='A'?'var(--success)':grade==='B'?'var(--info)':'var(--warning)')+'">'+grade+'</span></td><td><span class="badge '+(status==='Complete'?'b-success':'b-warning')+'">'+status+'</span></td></tr>').join('')}
+        ${[['1', 'Ama Serwaa', '45', '43', '88', 'A', 'Complete'], ['2', 'Kwame Asante', '38', '34', '72', 'B', 'Complete'], ['3', 'Abena Mensah', '48', '43', '91', 'A', 'Complete'], ['4', 'Kofi Boateng', '32', '32', '64', 'C', 'Pending'], ['5', 'Akosua Darko', '48', '47', '95', 'A', 'Complete'], ['6', 'Yaw Mensah', '42', '40', '82', 'B', 'Complete'], ['7', 'Adwoa Frimpong', '45', '42', '87', 'A', 'Complete'], ['8', 'Kweku Ofori', '35', '28', '63', 'C', 'Pending']].map(([idx, name, cls, exam, total, grade, status]) => '<tr><td style="text-align:center;color:var(--gray-400)">' + idx + '</td><td style="font-weight:600">' + name + '</td><td><input type="number" value="' + cls + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td><input type="number" value="' + exam + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td style="font-weight:700;color:var(--blue-dark)">' + total + '</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : 'var(--warning)') + '">' + grade + '</span></td><td><span class="badge ' + (status === 'Complete' ? 'b-success' : 'b-warning') + '">' + status + '</span></td></tr>').join('')}
       </tbody>
     </table>
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-primary" onclick="showToast('<i class="fas fa-check-circle"></i> Grades saved! You can now generate report cards.', 'success')" style="flex:1"><i class="fas fa-check-circle"></i> Save All Grades</button>
+      <button class="btn btn-primary" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Grades saved! You can now generate report cards.', 'success')" style="flex:1"><i class="fas fa-check-circle"></i> Save All Grades</button>
       <button class="btn btn-secondary" onclick="alert('Draft saved')" style="flex:1"><i class="fas fa-clipboard-list"></i> Save as Draft</button>
       <button class="btn btn-secondary" onclick="navTo('reportcards')" style="flex:1"><i class="fas fa-file"></i> View Report Cards</button>
     </div>
@@ -5591,282 +5795,7 @@ function viewClassTimetable(className) {
 }
 
 // TIMETABLES DATA
-const timetablesData = {
-  'Creche': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['Play Time','English','Arts','Play Time','Assembly']],
-      ['Break · 8:20–9:00',['—','—','—','—','—']],
-      ['P2 · 9:00–10:20',['Numeracy','Play Time','Numeracy','Arts','Numeracy']],
-      ['P3 · 10:20–11:00',['English','Numeracy','Play Time','Numeracy','English']],
-      ['Lunch · 11:00–12:00',['—','—','—','—','—']],
-      ['P4 · 12:00–13:00',['Arts','English','English','Play Time','Play Time']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Numeracy','Arts','Play Time','English','Assembly']],
-      ['Break · 8:20–9:00',['—','—','—','—','—']],
-      ['P2 · 9:00–10:20',['English','Numeracy','Arts','Play Time','English']],
-      ['P3 · 10:20–11:00',['Play Time','English','Numeracy','Arts','Numeracy']],
-      ['Lunch · 11:00–12:00',['—','—','—','—','—']],
-      ['P4 · 12:00–13:00',['Arts','Play Time','English','Numeracy','Play Time']],
-    ]
-  },
-  'Nursery': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English','Numeracy','Science','English','Assembly']],
-      ['Break · 8:20–9:00',['—','—','—','—','—']],
-      ['P2 · 9:00–10:20',['Numeracy','English','Arts','Science','English']],
-      ['P3 · 10:20–11:00',['Science','Arts','Numeracy','Arts','Science']],
-      ['Lunch · 11:00–12:00',['—','—','—','—','—']],
-      ['P4 · 12:00–13:00',['Arts','Science','English','Numeracy','Social Studies']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Science','English','Numeracy','Arts','Assembly']],
-      ['Break · 8:20–9:00',['—','—','—','—','—']],
-      ['P2 · 9:00–10:20',['English','Science','Arts','Numeracy','Science']],
-      ['P3 · 10:20–11:00',['Arts','Numeracy','English','Science','Numeracy']],
-      ['Lunch · 11:00–12:00',['—','—','—','—','—']],
-      ['P4 · 12:00–13:00',['Numeracy','Arts','Science','English','Arts']],
-    ]
-  },
-  'KG 1': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Environmental Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','Arts & Crafts','Environmental Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Environmental Science','Music','Mathematics','English','Environmental Science']],
-      ['P4 · 10:20–11:10',['Music','Arts & Crafts','English','Music','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Arts & Crafts','Environmental Science','English','Mathematics','Mathematics']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','Music','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Environmental Science','Arts & Crafts','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Music','Arts & Crafts','Mathematics','English','Music']],
-      ['P4 · 10:20–11:10',['Environmental Science','English','Arts & Crafts','Music','Environmental Science']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['English','Music','Environmental Science','English','Mathematics']],
-    ]
-  },
-  'KG 2': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','Physical Education','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Physical Education','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Physical Education','English','Social Studies','Physical Education','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','Science','English','Mathematics','Social Studies']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','Physical Education','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Science','Physical Education','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Physical Education','English','English','Science','Physical Education']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','Mathematics','Science','English','Mathematics']],
-    ]
-  },
-  'Basic 1': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','ICT','Social Studies','English','Science']],
-      ['P4 · 10:20–11:10',['ICT','Science','Mathematics','Social Studies','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','English','English','ICT','Social Studies']],
-      ['P6 · 12:50–13:40',['Physical Education','Science','Social Studies','Physical Education','Physical Education']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','Physics','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Chemistry','Physics','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Physics','Chemistry','Biology','English','Physics']],
-      ['P4 · 10:20–11:10',['Chemistry','English','Mathematics','Biology','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Biology','ICT','English','Mathematics','Biology']],
-      ['P6 · 12:50–13:40',['Physical Education','Biology','ICT','Physical Education','Physical Education']],
-    ]
-  },
-  'Basic 2': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Integrated Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','Physical Education','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Mathematics','Social Studies']],
-      ['P6 · 12:50–13:40',['Physical Education','Social Studies','ICT','Physical Education','ICT']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','Science','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','ICT','Science','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','ICT','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','English','Social Studies']],
-      ['P6 · 12:50–13:40',['Physical Education','ICT','Science','Physical Education','Physical Education']],
-    ]
-  },
-  'Basic 3': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','ICT','French Language','English','Science']],
-      ['P4 · 10:20–11:10',['French Language','Science','Mathematics','French Language','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','English','English','ICT','Social Studies']],
-      ['P6 · 12:50–13:40',['ICT','French Language','Social Studies','Physical Education','French Language']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','French Language','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Science','French Language','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Mathematics','Social Studies']],
-      ['P6 · 12:50–13:40',['French Language','ICT','French Language','Physical Education','ICT']],
-    ]
-  },
-  'Basic 4': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Integrated Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','Physical Education','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Mathematics','Social Studies']],
-      ['P6 · 12:50–13:40',['Physical Education','ICT','ICT','Physical Education','Physical Education']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','Science','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','ICT','Science','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','ICT','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','English','Social Studies']],
-      ['P6 · 12:50–13:40',['Physical Education','ICT','Science','Physical Education','Physical Education']],
-    ]
-  },
-  'Basic 5': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Integrated Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','French Language','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['French Language','Science','English','French Language','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','English','Social Studies','ICT','Social Studies']],
-      ['P6 · 12:50–13:40',['ICT','French Language','ICT','Physical Education','French Language']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','French Language','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Science','French Language','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Mathematics','Social Studies']],
-      ['P6 · 12:50–13:40',['French Language','ICT','French Language','Physical Education','ICT']],
-    ]
-  },
-  'Basic 6': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Geography','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['History','Science','English','History','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Geography','English','Social Studies','ICT','Geography']],
-      ['P6 · 12:50–13:40',['ICT','History','Geography','Physical Education','History']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','History','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Geography','History','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Geography','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['History','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Mathematics','Geography']],
-      ['P6 · 12:50–13:40',['Geography','ICT','History','Physical Education','ICT']],
-    ]
-  },
-  'JHS 1': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Integrated Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','ICT','Social Studies','English','Science']],
-      ['P4 · 10:20–11:10',['ICT','Science','Mathematics','Social Studies','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','English','English','ICT','Social Studies']],
-      ['P6 · 12:50–13:40',['French Language','Science','Social Studies','Physical Education','French Language']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','French Language','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Science','French Language','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Mathematics','Social Studies']],
-      ['P6 · 12:50–13:40',['French Language','ICT','French Language','Physical Education','ICT']],
-    ]
-  },
-  'JHS 2': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','History & Social Studies','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','History & Social Studies','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Integrated Science','ICT','Mathematics','English','Integrated Science']],
-      ['P4 · 10:20–11:10',['ICT','Integrated Science','English','French Language','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['History & Social Studies','English','English','ICT','History & Social Studies']],
-      ['P6 · 12:50–13:40',['Physical Education','History & Social Studies','French Language','Physical Education','French Language']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','French Language','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Integrated Science','French Language','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Integrated Science','History & Social Studies','Mathematics','English','Integrated Science']],
-      ['P4 · 10:20–11:10',['History & Social Studies','English','English','Integrated Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Integrated Science','History & Social Studies','Mathematics','History & Social Studies']],
-      ['P6 · 12:50–13:40',['French Language','ICT','French Language','Physical Education','ICT']],
-    ]
-  },
-  'JHS 3': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20',['English Language','Mathematics','Integrated Science','English','Assembly']],
-      ['P2 · 8:20–9:10',['Mathematics','English','ICT','Science','Mathematics']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','ICT','Social Studies','English','Science']],
-      ['P4 · 10:20–11:10',['ICT','Science','Mathematics','Social Studies','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['Social Studies','English','English','ICT','Social Studies']],
-      ['P6 · 12:50–13:40',['Elective Mathematics','Science','French Language','Physical Education','French Language']],
-    ],
-    'Term 2, 2025': [
-      ['P1 · 7:30–8:20',['Mathematics','English','French Language','Mathematics','Assembly']],
-      ['P2 · 8:20–9:10',['English','Mathematics','Science','French Language','English']],
-      ['Break · 9:10–9:30',['—','—','—','—','—']],
-      ['P3 · 9:30–10:20',['Science','Social Studies','Elective Mathematics','English','Science']],
-      ['P4 · 10:20–11:10',['Social Studies','English','English','Science','English']],
-      ['Lunch · 11:10–12:00',['—','—','—','—','—']],
-      ['P5 · 12:00–12:50',['ICT','Science','Social Studies','Elective Mathematics','Social Studies']],
-      ['P6 · 12:50–13:40',['French Language','ICT','French Language','Physical Education','ICT']],
-    ]
-  },
-};
+const timetablesData = {};
 
 // REPORT CARDS MODULE
 // ═══════════════════════════════════
@@ -5875,73 +5804,73 @@ const timetablesData = {
 
 // Admissions data
 const admissionsData = [
-  {adm_id:'ADM2025-001',name:'Kofi Mensah',dob:'2014-03-15',gender:'Male',address:'Accra',phone:'0244567890',school:'Presec JHS',class_applying:'JHS 1',academic_year:'2025/2026',status:'Pending',parent_name:'Mr. Mensah',parent_phone:'0244567890',parent_occupation:'Trader',picture:null,created:'2025-03-20'},
-  {adm_id:'ADM2025-002',name:'Ama Boateng',dob:'2014-06-22',gender:'Female',address:'Tema',phone:'0245678901',school:'Achimota JHS',class_applying:'JHS 1',academic_year:'2025/2026',status:'Approved',parent_name:'Mrs. Boateng',parent_phone:'0245678901',parent_occupation:'Teacher',picture:null,created:'2025-03-18'},
-  {adm_id:'ADM2025-003',name:'Yaw Osei',dob:'2014-01-10',gender:'Male',address:'Kumasi',phone:'0246789012',school:'Adum JHS',class_applying:'JHS 2',academic_year:'2025/2026',status:'Pending',parent_name:'Mr. Osei',parent_phone:'0246789012',parent_occupation:'Engineer',picture:null,created:'2025-03-19'},
-  {adm_id:'ADM2025-004',name:'Abena Nyarko',dob:'2013-11-05',gender:'Female',address:'Cape Coast',phone:'0247890123',school:'Aggrey JHS',class_applying:'JHS 2',academic_year:'2025/2026',status:'Rejected',parent_name:'Mrs. Nyarko',parent_phone:'0247890123',parent_occupation:'Nurse',picture:null,created:'2025-03-15'},
-  {adm_id:'ADM2025-005',name:'Kwame Asare',dob:'2014-08-30',gender:'Male',address:'Accra',phone:'0248901234',school:'Osu JHS',class_applying:'JHS 1',academic_year:'2025/2026',status:'Approved',parent_name:'Mr. Asare',parent_phone:'0248901234',parent_occupation:'Banker',picture:null,created:'2025-03-17'},
+  { adm_id: 'ADM2025-001', name: 'Kofi Mensah', dob: '2014-03-15', gender: 'Male', address: 'Accra', phone: '0244567890', school: 'Presec JHS', class_applying: 'JHS 1', academic_year: '2025/2026', status: 'Pending', parent_name: 'Mr. Mensah', parent_phone: '0244567890', parent_occupation: 'Trader', picture: null, created: '2025-03-20' },
+  { adm_id: 'ADM2025-002', name: 'Ama Boateng', dob: '2014-06-22', gender: 'Female', address: 'Tema', phone: '0245678901', school: 'Achimota JHS', class_applying: 'JHS 1', academic_year: '2025/2026', status: 'Approved', parent_name: 'Mrs. Boateng', parent_phone: '0245678901', parent_occupation: 'Teacher', picture: null, created: '2025-03-18' },
+  { adm_id: 'ADM2025-003', name: 'Yaw Osei', dob: '2014-01-10', gender: 'Male', address: 'Kumasi', phone: '0246789012', school: 'Adum JHS', class_applying: 'JHS 2', academic_year: '2025/2026', status: 'Pending', parent_name: 'Mr. Osei', parent_phone: '0246789012', parent_occupation: 'Engineer', picture: null, created: '2025-03-19' },
+  { adm_id: 'ADM2025-004', name: 'Abena Nyarko', dob: '2013-11-05', gender: 'Female', address: 'Cape Coast', phone: '0247890123', school: 'Aggrey JHS', class_applying: 'JHS 2', academic_year: '2025/2026', status: 'Rejected', parent_name: 'Mrs. Nyarko', parent_phone: '0247890123', parent_occupation: 'Nurse', picture: null, created: '2025-03-15' },
+  { adm_id: 'ADM2025-005', name: 'Kwame Asare', dob: '2014-08-30', gender: 'Male', address: 'Accra', phone: '0248901234', school: 'Osu JHS', class_applying: 'JHS 1', academic_year: '2025/2026', status: 'Approved', parent_name: 'Mr. Asare', parent_phone: '0248901234', parent_occupation: 'Banker', picture: null, created: '2025-03-17' },
 ];
 
 // Enrolled Students Data
 const enrolledStudents = [
-  {student_id:'2024-0042',name:'Ama Serwaa',student_class:'Form 3A',gender:'Female',dob:'2008-04-15',attendance:'96%',gpa:'3.8',fees_status:'Paid',status:'Active',avatar_color:'blue',gender_abbr:'F'},
-  {student_id:'2024-0043',name:'Kwame Asante',student_class:'Form 2B',gender:'Male',dob:'2009-06-10',attendance:'88%',gpa:'3.2',fees_status:'Pending',status:'Active',avatar_color:'gold',gender_abbr:'M'},
-  {student_id:'2024-0044',name:'Abena Mensah',student_class:'Form 1C',gender:'Female',dob:'2010-01-05',attendance:'93%',gpa:'3.5',fees_status:'Paid',status:'Active',avatar_color:'purple',gender_abbr:'F'},
-  {student_id:'2024-0045',name:'Kofi Boateng',student_class:'JHS 3',gender:'Male',dob:'2007-09-20',attendance:'81%',gpa:'3.0',fees_status:'Partial',status:'Active',avatar_color:'blue',gender_abbr:'M'},
-  {student_id:'2024-0046',name:'Akosua Darko',student_class:'JHS 2',gender:'Female',dob:'2009-03-08',attendance:'97%',gpa:'3.9',fees_status:'Paid',status:'Active',avatar_color:'green',gender_abbr:'F'},
-  {student_id:'2024-0047',name:'Yaw Mensah',student_class:'Form 1A',gender:'Male',dob:'2010-07-03',attendance:'85%',gpa:'3.3',fees_status:'Paid',status:'Active',avatar_color:'blue',gender_abbr:'M'},
-  {student_id:'2024-0048',name:'Adwoa Frimpong',student_class:'Form 3A',gender:'Female',dob:'2007-12-12',attendance:'94%',gpa:'3.7',fees_status:'Paid',status:'Active',avatar_color:'purple',gender_abbr:'F'},
-  {student_id:'2024-0049',name:'Kweku Ofori',student_class:'Form 2B',gender:'Male',dob:'2009-02-28',attendance:'79%',gpa:'2.9',fees_status:'Pending',status:'Active',avatar_color:'gold',gender_abbr:'M'},
+  { student_id: '2024-0042', name: 'Ama Serwaa', student_class: 'Form 3A', gender: 'Female', dob: '2008-04-15', attendance: '96%', gpa: '3.8', fees_status: 'Paid', status: 'Active', avatar_color: 'blue', gender_abbr: 'F' },
+  { student_id: '2024-0043', name: 'Kwame Asante', student_class: 'Form 2B', gender: 'Male', dob: '2009-06-10', attendance: '88%', gpa: '3.2', fees_status: 'Pending', status: 'Active', avatar_color: 'gold', gender_abbr: 'M' },
+  { student_id: '2024-0044', name: 'Abena Mensah', student_class: 'Form 1C', gender: 'Female', dob: '2010-01-05', attendance: '93%', gpa: '3.5', fees_status: 'Paid', status: 'Active', avatar_color: 'purple', gender_abbr: 'F' },
+  { student_id: '2024-0045', name: 'Kofi Boateng', student_class: 'JHS 3', gender: 'Male', dob: '2007-09-20', attendance: '81%', gpa: '3.0', fees_status: 'Partial', status: 'Active', avatar_color: 'blue', gender_abbr: 'M' },
+  { student_id: '2024-0046', name: 'Akosua Darko', student_class: 'JHS 2', gender: 'Female', dob: '2009-03-08', attendance: '97%', gpa: '3.9', fees_status: 'Paid', status: 'Active', avatar_color: 'green', gender_abbr: 'F' },
+  { student_id: '2024-0047', name: 'Yaw Mensah', student_class: 'Form 1A', gender: 'Male', dob: '2010-07-03', attendance: '85%', gpa: '3.3', fees_status: 'Paid', status: 'Active', avatar_color: 'blue', gender_abbr: 'M' },
+  { student_id: '2024-0048', name: 'Adwoa Frimpong', student_class: 'Form 3A', gender: 'Female', dob: '2007-12-12', attendance: '94%', gpa: '3.7', fees_status: 'Paid', status: 'Active', avatar_color: 'purple', gender_abbr: 'F' },
+  { student_id: '2024-0049', name: 'Kweku Ofori', student_class: 'Form 2B', gender: 'Male', dob: '2009-02-28', attendance: '79%', gpa: '2.9', fees_status: 'Pending', status: 'Active', avatar_color: 'gold', gender_abbr: 'M' },
 ];
 
 // TEACHERS DATA
 const teachersData = [
-  {teacher_id:'T001',name:'Mr. Kweku Amponsah',subject:'Mathematics',department:'Science',experience:'12',class_assigned:'JHS 2',gender:'Male',avatar_color:'blue',phone:'+233 24 111 0001',email:'amponsah@school.edu.gh',dob:'1985-03-15',schedule:'Mon/Tue/Thu',hiring_date:'2012-08-01',status:'Active'},
-  {teacher_id:'T002',name:'Mrs. Akua Asante',subject:'English Language',department:'Languages',experience:'8',class_assigned:'JHS 3',gender:'Female',avatar_color:'purple',phone:'+233 24 111 0002',email:'asante@school.edu.gh',dob:'1990-07-22',schedule:'Mon/Wed/Fri',hiring_date:'2016-01-15',status:'Active'},
-  {teacher_id:'T003',name:'Mr. Samuel Oduro',subject:'Integrated Science',department:'Science',experience:'6',class_assigned:'JHS 1',gender:'Male',avatar_color:'blue',phone:'+233 24 111 0003',email:'oduro@school.edu.gh',dob:'1992-11-10',schedule:'Tue/Thu/Fri',hiring_date:'2018-06-01',status:'Active'},
-  {teacher_id:'T004',name:'Ms. Grace Frimpong',subject:'ICT & Computing',department:'Science',experience:'4',class_assigned:'Not Assigned',gender:'Female',avatar_color:'green',phone:'+233 24 111 0004',email:'frimpong@school.edu.gh',dob:'1994-05-03',schedule:'Mon/Wed/Fri',hiring_date:'2020-08-01',status:'Active'},
-  {teacher_id:'T005',name:'Mr. Kofi Boateng Sr.',subject:'History & Social Studies',department:'Languages',experience:'15',class_assigned:'Not Assigned',gender:'Male',avatar_color:'gold',phone:'+233 24 111 0005',email:'boateng@school.edu.gh',dob:'1982-09-17',schedule:'Mon-Fri',hiring_date:'2009-01-01',status:'Active'},
-  {teacher_id:'T006',name:'Mrs. Esi Aidoo',subject:'French Language',department:'Languages',experience:'10',class_assigned:'Not Assigned',gender:'Female',avatar_color:'teal',phone:'+233 24 111 0006',email:'aidoo@school.edu.gh',dob:'1988-02-08',schedule:'Tue/Thu',hiring_date:'2014-03-15',status:'Active'},
+  { teacher_id: 'T001', name: 'Mr. Kweku Amponsah', subject: 'Mathematics', department: 'Science', experience: '12', class_assigned: 'JHS 2', gender: 'Male', avatar_color: 'blue', phone: '+233 24 111 0001', email: 'amponsah@school.edu.gh', dob: '1985-03-15', schedule: 'Mon/Tue/Thu', hiring_date: '2012-08-01', status: 'Active' },
+  { teacher_id: 'T002', name: 'Mrs. Akua Asante', subject: 'English Language', department: 'Languages', experience: '8', class_assigned: 'JHS 3', gender: 'Female', avatar_color: 'purple', phone: '+233 24 111 0002', email: 'asante@school.edu.gh', dob: '1990-07-22', schedule: 'Mon/Wed/Fri', hiring_date: '2016-01-15', status: 'Active' },
+  { teacher_id: 'T003', name: 'Mr. Samuel Oduro', subject: 'Integrated Science', department: 'Science', experience: '6', class_assigned: 'JHS 1', gender: 'Male', avatar_color: 'blue', phone: '+233 24 111 0003', email: 'oduro@school.edu.gh', dob: '1992-11-10', schedule: 'Tue/Thu/Fri', hiring_date: '2018-06-01', status: 'Active' },
+  { teacher_id: 'T004', name: 'Ms. Grace Frimpong', subject: 'ICT & Computing', department: 'Science', experience: '4', class_assigned: 'Not Assigned', gender: 'Female', avatar_color: 'green', phone: '+233 24 111 0004', email: 'frimpong@school.edu.gh', dob: '1994-05-03', schedule: 'Mon/Wed/Fri', hiring_date: '2020-08-01', status: 'Active' },
+  { teacher_id: 'T005', name: 'Mr. Kofi Boateng Sr.', subject: 'History & Social Studies', department: 'Languages', experience: '15', class_assigned: 'Not Assigned', gender: 'Male', avatar_color: 'gold', phone: '+233 24 111 0005', email: 'boateng@school.edu.gh', dob: '1982-09-17', schedule: 'Mon-Fri', hiring_date: '2009-01-01', status: 'Active' },
+  { teacher_id: 'T006', name: 'Mrs. Esi Aidoo', subject: 'French Language', department: 'Languages', experience: '10', class_assigned: 'Not Assigned', gender: 'Female', avatar_color: 'teal', phone: '+233 24 111 0006', email: 'aidoo@school.edu.gh', dob: '1988-02-08', schedule: 'Tue/Thu', hiring_date: '2014-03-15', status: 'Active' },
 ];
 
 // CLASSES DATA
 const classesData = [
-  {class_id:'C001',name:'Creche',level:'Creche',stream:'General',teacher:'Mrs. Esi Aidoo',teacher_id:'T006',students:25,attendance:'88%',capacity:30,subjects:['Play & Learn','Basic English','Basic Numeracy','Arts']},
-  {class_id:'C002',name:'Nursery',level:'Nursery',stream:'General',teacher:'Mr. Samuel Oduro',teacher_id:'T003',students:28,attendance:'90%',capacity:35,subjects:['English','Numeracy','Science','Social Studies','Arts']},
-  {class_id:'C003',name:'KG 1',level:'KG 1',stream:'General',teacher:'Ms. Grace Frimpong',teacher_id:'T004',students:32,attendance:'92%',capacity:40,subjects:['English Language','Mathematics','Environmental Science','Arts & Crafts','Music']},
-  {class_id:'C004',name:'KG 2',level:'KG 2',stream:'General',teacher:'Mr. Kofi Boateng Sr.',teacher_id:'T005',students:35,attendance:'94%',capacity:40,subjects:['English Language','Mathematics','Science','Social Studies','Physical Education']},
-  {class_id:'C005',name:'Basic 1',level:'Basic',stream:'General',teacher:'Mrs. Akua Asante',teacher_id:'T002',students:38,attendance:'93%',capacity:45,subjects:['English Language','Mathematics','Science','Social Studies','ICT']},
-  {class_id:'C006',name:'Basic 2',level:'Basic',stream:'General',teacher:'Mr. Amponsah',teacher_id:'T001',students:40,attendance:'95%',capacity:45,subjects:['English Language','Mathematics','Integrated Science','Social Studies','Physical Education']},
-  {class_id:'C007',name:'Basic 3',level:'Basic',stream:'General',teacher:'Mrs. Esi Aidoo',teacher_id:'T006',students:42,attendance:'92%',capacity:45,subjects:['English Language','Mathematics','Science','Social Studies','ICT','French Language']},
-  {class_id:'C008',name:'Basic 4',level:'Basic',stream:'General',teacher:'Mr. Oduro',teacher_id:'T003',students:38,attendance:'90%',capacity:45,subjects:['English Language','Mathematics','Integrated Science','Social Studies','Physical Education','ICT']},
-  {class_id:'C009',name:'Basic 5',level:'Basic',stream:'General',teacher:'Ms. Frimpong',teacher_id:'T004',students:40,attendance:'91%',capacity:45,subjects:['English Language','Mathematics','Integrated Science','Social Studies','ICT','French Language']},
-  {class_id:'C010',name:'Basic 6',level:'Basic',stream:'General',teacher:'Mr. Boateng Sr.',teacher_id:'T005',students:36,attendance:'89%',capacity:45,subjects:['English Language','Mathematics','Science','Geography','History','ICT']},
-  {class_id:'C011',name:'JHS 1',level:'JHS',stream:'Mixed',teacher:'Mr. Amponsah',teacher_id:'T001',students:42,attendance:'87%',capacity:50,subjects:['English Language','Mathematics','Integrated Science','Social Studies','ICT','Physical Education','French Language']},
-  {class_id:'C012',name:'JHS 2',level:'JHS',stream:'Mixed',teacher:'Mrs. Asante',teacher_id:'T002',students:40,attendance:'89%',capacity:50,subjects:['English Language','Mathematics','Integrated Science','History & Social Studies','ICT','Physical Education','French Language']},
-  {class_id:'C013',name:'JHS 3',level:'JHS',stream:'Mixed',teacher:'Mr. Oduro',teacher_id:'T003',students:38,attendance:'91%',capacity:50,subjects:['English Language','Mathematics','Integrated Science','Social Studies','ICT','Physical Education','French Language','Elective Mathematics']},
+  { class_id: 'C001', name: 'Creche', level: 'Creche', stream: 'General', teacher: 'Mrs. Esi Aidoo', teacher_id: 'T006', students: 25, attendance: '88%', capacity: 30, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
+  { class_id: 'C002', name: 'Nursery', level: 'Nursery', stream: 'General', teacher: 'Mr. Samuel Oduro', teacher_id: 'T003', students: 28, attendance: '90%', capacity: 35, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
+  { class_id: 'C003', name: 'KG 1', level: 'KG 1', stream: 'General', teacher: 'Ms. Grace Frimpong', teacher_id: 'T004', students: 32, attendance: '92%', capacity: 40, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
+  { class_id: 'C004', name: 'KG 2', level: 'KG 2', stream: 'General', teacher: 'Mr. Kofi Boateng Sr.', teacher_id: 'T005', students: 35, attendance: '94%', capacity: 40, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
+  { class_id: 'C005', name: 'Basic 1', level: 'Basic', stream: 'General', teacher: 'Mrs. Akua Asante', teacher_id: 'T002', students: 38, attendance: '93%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
+  { class_id: 'C006', name: 'Basic 2', level: 'Basic', stream: 'General', teacher: 'Mr. Amponsah', teacher_id: 'T001', students: 40, attendance: '95%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
+  { class_id: 'C007', name: 'Basic 3', level: 'Basic', stream: 'General', teacher: 'Mrs. Esi Aidoo', teacher_id: 'T006', students: 42, attendance: '92%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
+  { class_id: 'C008', name: 'Basic 4', level: 'Basic', stream: 'General', teacher: 'Mr. Oduro', teacher_id: 'T003', students: 38, attendance: '90%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
+  { class_id: 'C009', name: 'Basic 5', level: 'Basic', stream: 'General', teacher: 'Ms. Frimpong', teacher_id: 'T004', students: 40, attendance: '91%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
+  { class_id: 'C010', name: 'Basic 6', level: 'Basic', stream: 'General', teacher: 'Mr. Boateng Sr.', teacher_id: 'T005', students: 36, attendance: '89%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
+  { class_id: 'C011', name: 'JHS 1', level: 'JHS', stream: 'Mixed', teacher: 'Mr. Amponsah', teacher_id: 'T001', students: 42, attendance: '87%', capacity: 50, subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'] },
+  { class_id: 'C012', name: 'JHS 2', level: 'JHS', stream: 'Mixed', teacher: 'Mrs. Asante', teacher_id: 'T002', students: 40, attendance: '89%', capacity: 50, subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'] },
+  { class_id: 'C013', name: 'JHS 3', level: 'JHS', stream: 'Mixed', teacher: 'Mr. Oduro', teacher_id: 'T003', students: 38, attendance: '91%', capacity: 50, subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'] },
 ];
 
 // SUBJECTS DATA
 let subjectsData = [
-  {subject_id:'SUB001',icon:'<i class="fas fa-ruler-combined"></i>',name:'Mathematics',teacher:'Mr. Amponsah',teacher_id:'T001',type:'Core',classes:'All Forms',hours:'8 hrs/wk',description:'Core mathematics covering algebra, geometry, and calculus'},
-  {subject_id:'SUB002',icon:'<i class="fas fa-book-open"></i>',name:'English Language',teacher:'Mrs. Asante',teacher_id:'T002',type:'Core',classes:'All Forms',hours:'8 hrs/wk',description:'English language skills including grammar, comprehension, and composition'},
-  {subject_id:'SUB003',icon:'<i class="fas fa-flask-vial"></i>',name:'Integrated Science',teacher:'Mr. Oduro',teacher_id:'T003',type:'Core',classes:'All Forms',hours:'6 hrs/wk',description:'Science covering biology, chemistry, and physics'},
-  {subject_id:'SUB004',icon:'<i class="fas fa-laptop"></i>',name:'ICT & Computing',teacher:'Ms. Frimpong',teacher_id:'T004',type:'Core',classes:'All Forms',hours:'4 hrs/wk',description:'Information and Communication Technology skills'},
-  {subject_id:'SUB005',icon:'<i class="fas fa-scroll"></i>',name:'Social Studies',teacher:'Mr. Boateng',teacher_id:'T005',type:'Core',classes:'All Forms',hours:'4 hrs/wk',description:'History, geography, and social science studies'},
-  {subject_id:'SUB006',icon:'<i class="fas fa-flag"></i>',name:'French Language',teacher:'Mrs. Aidoo',teacher_id:'T006',type:'Elective',classes:'JHS 1-3',hours:'4 hrs/wk',description:'French language proficiency for advanced learners'},
-  {subject_id:'SUB007',icon:'<i class="fas fa-masks"></i>',name:'Literature-in-English',teacher:'Mrs. Asante',teacher_id:'T002',type:'Elective',classes:'JHS 2-3',hours:'3 hrs/wk',description:'Analysis of literary works and creative writing'},
-  {subject_id:'SUB008',icon:'<i class="fas fa-calculator"></i>',name:'Elective Mathematics',teacher:'Mr. Amponsah',teacher_id:'T001',type:'Elective',classes:'JHS 3',hours:'5 hrs/wk',description:'Advanced mathematics for science stream students'},
-  {subject_id:'SUB009',icon:'<i class="fas fa-palette"></i>',name:'Visual Arts',teacher:'Mr. Boateng',teacher_id:'T005',type:'Extracurricular',classes:'All Forms',hours:'2 hrs/wk',description:'Art and design including painting and sculpture'},
-  {subject_id:'SUB010',icon:'<i class="fas fa-music"></i>',name:'Music',teacher:'Mrs. Aidoo',teacher_id:'T006',type:'Extracurricular',classes:'All Forms',hours:'2 hrs/wk',description:'Music theory and practical skills'},
+  { subject_id: 'SUB001', icon: '<i class="fas fa-ruler-combined"></i>', name: 'Mathematics', teacher: 'Mr. Amponsah', teacher_id: 'T001', type: 'Core', classes: 'All Forms', hours: '8 hrs/wk', description: 'Core mathematics covering algebra, geometry, and calculus' },
+  { subject_id: 'SUB002', icon: '<i class="fas fa-book-open"></i>', name: 'English Language', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Core', classes: 'All Forms', hours: '8 hrs/wk', description: 'English language skills including grammar, comprehension, and composition' },
+  { subject_id: 'SUB003', icon: '<i class="fas fa-flask-vial"></i>', name: 'Integrated Science', teacher: 'Mr. Oduro', teacher_id: 'T003', type: 'Core', classes: 'All Forms', hours: '6 hrs/wk', description: 'Science covering biology, chemistry, and physics' },
+  { subject_id: 'SUB004', icon: '<i class="fas fa-laptop"></i>', name: 'ICT & Computing', teacher: 'Ms. Frimpong', teacher_id: 'T004', type: 'Core', classes: 'All Forms', hours: '4 hrs/wk', description: 'Information and Communication Technology skills' },
+  { subject_id: 'SUB005', icon: '<i class="fas fa-scroll"></i>', name: 'Social Studies', teacher: 'Mr. Boateng', teacher_id: 'T005', type: 'Core', classes: 'All Forms', hours: '4 hrs/wk', description: 'History, geography, and social science studies' },
+  { subject_id: 'SUB006', icon: '<i class="fas fa-flag"></i>', name: 'French Language', teacher: 'Mrs. Aidoo', teacher_id: 'T006', type: 'Elective', classes: 'JHS 1-3', hours: '4 hrs/wk', description: 'French language proficiency for advanced learners' },
+  { subject_id: 'SUB007', icon: '<i class="fas fa-masks"></i>', name: 'Literature-in-English', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'JHS 2-3', hours: '3 hrs/wk', description: 'Analysis of literary works and creative writing' },
+  { subject_id: 'SUB008', icon: '<i class="fas fa-calculator"></i>', name: 'Elective Mathematics', teacher: 'Mr. Amponsah', teacher_id: 'T001', type: 'Elective', classes: 'JHS 3', hours: '5 hrs/wk', description: 'Advanced mathematics for science stream students' },
+  { subject_id: 'SUB009', icon: '<i class="fas fa-palette"></i>', name: 'Visual Arts', teacher: 'Mr. Boateng', teacher_id: 'T005', type: 'Extracurricular', classes: 'All Forms', hours: '2 hrs/wk', description: 'Art and design including painting and sculpture' },
+  { subject_id: 'SUB010', icon: '<i class="fas fa-music"></i>', name: 'Music', teacher: 'Mrs. Aidoo', teacher_id: 'T006', type: 'Extracurricular', classes: 'All Forms', hours: '2 hrs/wk', description: 'Music theory and practical skills' },
 ];
 
 
 // PARENTS DATA
 const parentsData = [
-  {parent_id:'P001',name:'Mr. & Mrs. Serwaa',contact_person:'Mr. Joseph Serwaa',gender:'Male',avatar_color:'gold',phone:'+233 24 000 0001',email:'serwaa@email.com',address:'Accra, Ghana',children:'Ama Serwaa (JHS 1), Kweku Serwaa (Basic 3)',fees_status:'All Paid',occupation:'Businessman',picture:null},
-  {parent_id:'P002',name:'Mr. Asante',contact_person:'Mr. David Asante',gender:'Male',avatar_color:'blue',phone:'+233 24 000 0002',email:'asante@email.com',address:'Kumasi, Ghana',children:'Kwame Asante (Basic 6)',fees_status:'Pending',occupation:'Teacher',picture:null},
-  {parent_id:'P003',name:'Mrs. Mensah',contact_person:'Mrs. Ama Mensah',gender:'Female',avatar_color:'purple',phone:'+233 24 000 0003',email:'mensah@email.com',address:'Takoradi, Ghana',children:'Abena Mensah (Basic 1)',fees_status:'All Paid',occupation:'Healthcare Worker',picture:null},
-  {parent_id:'P004',name:'Mr. Boateng',contact_person:'Mr. Eric Boateng',gender:'Male',avatar_color:'green',phone:'+233 24 000 0004',email:'boateng@email.com',address:'Cape Coast, Ghana',children:'Kofi Boateng (JHS 2)',fees_status:'Partial',occupation:'Engineer',picture:null},
+  { parent_id: 'P001', name: 'Mr. & Mrs. Serwaa', contact_person: 'Mr. Joseph Serwaa', gender: 'Male', avatar_color: 'gold', phone: '+233 24 000 0001', email: 'serwaa@email.com', address: 'Accra, Ghana', children: 'Ama Serwaa (JHS 1), Kweku Serwaa (Basic 3)', fees_status: 'All Paid', occupation: 'Businessman', picture: null },
+  { parent_id: 'P002', name: 'Mr. Asante', contact_person: 'Mr. David Asante', gender: 'Male', avatar_color: 'blue', phone: '+233 24 000 0002', email: 'asante@email.com', address: 'Kumasi, Ghana', children: 'Kwame Asante (Basic 6)', fees_status: 'Pending', occupation: 'Teacher', picture: null },
+  { parent_id: 'P003', name: 'Mrs. Mensah', contact_person: 'Mrs. Ama Mensah', gender: 'Female', avatar_color: 'purple', phone: '+233 24 000 0003', email: 'mensah@email.com', address: 'Takoradi, Ghana', children: 'Abena Mensah (Basic 1)', fees_status: 'All Paid', occupation: 'Healthcare Worker', picture: null },
+  { parent_id: 'P004', name: 'Mr. Boateng', contact_person: 'Mr. Eric Boateng', gender: 'Male', avatar_color: 'green', phone: '+233 24 000 0004', email: 'boateng@email.com', address: 'Cape Coast, Ghana', children: 'Kofi Boateng (JHS 2)', fees_status: 'Partial', occupation: 'Engineer', picture: null },
 ];
 
 // Student scores data
@@ -5956,13 +5885,13 @@ const studentScores = {
     term: '1st',
     year: '2024/2025',
     scores: [
-      {subject: 'Mathematics', classScore: 45, examScore: 43, totalMarks: 100},
-      {subject: 'English Language', classScore: 48, examScore: 44, totalMarks: 100},
-      {subject: 'Integrated Science', classScore: 42, examScore: 43, totalMarks: 100},
-      {subject: 'ICT & Computing', classScore: 48, examScore: 47, totalMarks: 100},
-      {subject: 'Social Studies', classScore: 40, examScore: 38, totalMarks: 100},
-      {subject: 'French Language', classScore: 38, examScore: 34, totalMarks: 100},
-      {subject: 'Religious Studies', classScore: 42, examScore: 38, totalMarks: 100}
+      { subject: 'Mathematics', classScore: 45, examScore: 43, totalMarks: 100 },
+      { subject: 'English Language', classScore: 48, examScore: 44, totalMarks: 100 },
+      { subject: 'Integrated Science', classScore: 42, examScore: 43, totalMarks: 100 },
+      { subject: 'ICT & Computing', classScore: 48, examScore: 47, totalMarks: 100 },
+      { subject: 'Social Studies', classScore: 40, examScore: 38, totalMarks: 100 },
+      { subject: 'French Language', classScore: 38, examScore: 34, totalMarks: 100 },
+      { subject: 'Religious Studies', classScore: 42, examScore: 38, totalMarks: 100 }
     ]
   },
   '2024-0043': {
@@ -5975,12 +5904,12 @@ const studentScores = {
     term: '1st',
     year: '2024/2025',
     scores: [
-      {subject: 'Mathematics', classScore: 35, examScore: 32, totalMarks: 100},
-      {subject: 'English Language', classScore: 42, examScore: 40, totalMarks: 100},
-      {subject: 'History', classScore: 44, examScore: 42, totalMarks: 100},
-      {subject: 'Geography', classScore: 40, examScore: 38, totalMarks: 100},
-      {subject: 'ICT', classScore: 38, examScore: 36, totalMarks: 100},
-      {subject: 'French Language', classScore: 35, examScore: 33, totalMarks: 100}
+      { subject: 'Mathematics', classScore: 35, examScore: 32, totalMarks: 100 },
+      { subject: 'English Language', classScore: 42, examScore: 40, totalMarks: 100 },
+      { subject: 'History', classScore: 44, examScore: 42, totalMarks: 100 },
+      { subject: 'Geography', classScore: 40, examScore: 38, totalMarks: 100 },
+      { subject: 'ICT', classScore: 38, examScore: 36, totalMarks: 100 },
+      { subject: 'French Language', classScore: 35, examScore: 33, totalMarks: 100 }
     ]
   }
 };
@@ -6122,12 +6051,11 @@ function generateReportCard(studentId) {
               <td style="padding:12px;text-align:center;color:var(--gray-600)">${s.examScore}</td>
               <td style="padding:12px;text-align:center;font-weight:700;color:var(--blue-dark);font-size:14px">${s.total}</td>
               <td style="padding:12px;text-align:center">
-                <span style="display:inline-block;padding:4px 12px;border-radius:6px;font-weight:700;color:white;background:${
-                  s.grade === 'A' ? 'var(--success)' : 
-                  s.grade === 'B' ? 'var(--info)' : 
-                  s.grade === 'C' ? 'var(--warning)' : 
-                  'var(--danger)'
-                }">${s.grade}</span>
+                <span style="display:inline-block;padding:4px 12px;border-radius:6px;font-weight:700;color:white;background:${s.grade === 'A' ? 'var(--success)' :
+      s.grade === 'B' ? 'var(--info)' :
+        s.grade === 'C' ? 'var(--warning)' :
+          'var(--danger)'
+    }">${s.grade}</span>
               </td>
             </tr>
             `).join('')}
@@ -6209,8 +6137,8 @@ function downloadReportCardPDF(studentId) {
   window.print();
 }
 
-function reportCardsModule(){
-  return hdr('Report Cards','View and generate student report cards','Report Cards')+`
+function reportCardsModule() {
+  return hdr('Report Cards', 'View and generate student report cards', 'Report Cards') + `
   <div class="g21 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Select Student Report Card</span></div>
@@ -6243,8 +6171,8 @@ function reportCardsModule(){
         <thead><tr><th>Student</th><th>Class</th><th>Total Marks</th><th>Average</th><th>Grade</th><th>Position</th><th>Action</th></tr></thead>
         <tbody>
           ${Object.entries(studentScores).map(([id, student]) => {
-            const processed = processStudentScores(id);
-            return `
+    const processed = processStudentScores(id);
+    return `
             <tr>
               <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${student.picture}</div><strong>${student.name}</strong></div></td>
               <td>${student.class}</td>
@@ -6255,7 +6183,7 @@ function reportCardsModule(){
               <td><button class="btn btn-primary btn-xs" onclick="document.getElementById('student-report-container').innerHTML = generateReportCard('${id}'); document.querySelector('.main-wrap').scrollTop = 800;"><i class="fas fa-file"></i> View Report</button></td>
             </tr>
             `;
-          }).join('')}
+  }).join('')}
         </tbody>
       </table>
     </div>
@@ -6264,41 +6192,41 @@ function reportCardsModule(){
 }
 
 // ASSIGNMENTS MODULE
-function assignmentsModule(){
+function assignmentsModule() {
   const isTeacher = currentRole === 'Teacher';
   const isAdmin = currentRole === 'Admin';
   const isStudent = currentRole === 'Student';
   const studentClass = 'JHS 1'; // Student's class
-  
+
   let assignmentsList = Object.values(ASSIGNMENTS_DATA);
-  
+
   // Filter assignments for students - only show assignments for their class
-  if(isStudent) {
+  if (isStudent) {
     assignmentsList = assignmentsList.filter(assignment => assignment.class === studentClass);
   }
-  
+
   const submitCount = (assignment) => Object.keys(assignment.submissions).length;
   const totalStudents = 38; // Average class size
-  
+
   const createButtonHTML = isTeacher ? `<button class="btn btn-primary btn-sm" onclick="openCreateAssignmentForm()">+ New Assignment</button>` : '';
-  
-  let html = hdr('Assignments Module','Create and manage class assignments','Assignments')+`
+
+  let html = hdr('Assignments Module', 'Create and manage class assignments', 'Assignments') + `
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> ${isStudent ? 'My Assignments' : 'All Assignments'}</span>${createButtonHTML}</div>
       <table class="tbl">
         <thead><tr><th>Title</th><th>Subject</th>${!isStudent ? '<th>Class</th>' : ''}<th>Due Date</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>`;
-  
-  if(assignmentsList.length === 0) {
+
+  if (assignmentsList.length === 0) {
     html += `<tr><td colspan="${!isStudent ? '7' : '6'}" style="text-align:center;padding:20px;color:var(--gray-600)"><i class="fas fa-inbox"></i> No assignments available</td></tr>`;
   } else {
     assignmentsList.forEach(assignment => {
-    const submittedCount = submitCount(assignment);
-    const dueDate = new Date(assignment.dueDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
-    const statusBadge = assignment.status === 'Active' ? 'b-success' : 'b-info';
-    
-    html += `
+      const submittedCount = submitCount(assignment);
+      const dueDate = new Date(assignment.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      const statusBadge = assignment.status === 'Active' ? 'b-success' : 'b-info';
+
+      html += `
       <tr>
         <td style="font-weight:600">${assignment.title}</td>
         <td>${assignment.subject}</td>
@@ -6313,11 +6241,11 @@ function assignmentsModule(){
       </tr>`;
     });
   }
-  
+
   html += `</tbody></table></div>`;
-  
+
   // Create Assignment Form (only for Teachers)
-  if(isTeacher) {
+  if (isTeacher) {
     html += `
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Create New Assignment</span></div>
@@ -6377,15 +6305,15 @@ function assignmentsModule(){
       </form>
     </div>`;
   }
-  
+
   html += `</div>`;
   return html;
 }
 
 function openCreateAssignmentForm() {
   const form = document.getElementById('create-assignment-form');
-  if(form) {
-    form.scrollIntoView({behavior: 'smooth'});
+  if (form) {
+    form.scrollIntoView({ behavior: 'smooth' });
   } else {
     showToast('<i class="fas fa-times-circle"></i> Form not available', 'error');
   }
@@ -6393,11 +6321,11 @@ function openCreateAssignmentForm() {
 
 function viewAssignment(assignmentId) {
   const assignment = ASSIGNMENTS_DATA[assignmentId];
-  if(!assignment) {
+  if (!assignment) {
     showToast('<i class="fas fa-times-circle"></i> Assignment not found', 'error');
     return;
   }
-  
+
   const html = `
     <div style="background:var(--blue-main);color:white;padding:40px 20px;margin-bottom:30px;border-radius:8px">
       <div style="max-width:1200px;margin:0 auto">
@@ -6441,29 +6369,29 @@ function viewAssignment(assignmentId) {
       </div>
     </div>
   `;
-  
+
   document.getElementById('main-content').innerHTML = html;
   document.getElementById('main-content').scrollTop = 0;
 }
 
 function gradeAssignment(assignmentId) {
   const assignment = ASSIGNMENTS_DATA[assignmentId];
-  if(!assignment) {
+  if (!assignment) {
     showToast('<i class="fas fa-times-circle"></i> Assignment not found', 'error');
     return;
   }
-  
+
   // Check if user is teacher
-  if(currentRole !== 'Teacher') {
+  if (currentRole !== 'Teacher') {
     showToast('<i class="fas fa-times-circle"></i> Only teachers can grade assignments', 'error');
     return;
   }
-  
+
   const ungraded = [
     { student: 'Kofi Boateng', submitted: '2025-03-16' },
     { student: 'Theresa Mensah', submitted: '2025-03-15' }
   ];
-  
+
   let gradingHTML = `
     <div style="max-width:900px;background:white;border-radius:12px">
       <div style="padding:20px;background:var(--blue-main);color:white">
@@ -6511,30 +6439,30 @@ function gradeAssignment(assignmentId) {
       </div>
     </div>
   `;
-  
+
   openModal(gradingHTML);
 }
 
 function createAssignment(event) {
   event.preventDefault();
-  
-  if(currentRole !== 'Teacher') {
+
+  if (currentRole !== 'Teacher') {
     showToast('<i class="fas fa-times-circle"></i> Only teachers can create assignments', 'error');
     return;
   }
-  
+
   const title = document.getElementById('asg-title').value;
   const subject = document.getElementById('asg-subject').value;
   const classVal = document.getElementById('asg-class').value;
   const dueDate = document.getElementById('asg-duedate').value;
   const maxScore = document.getElementById('asg-maxscore').value;
   const instructions = document.getElementById('asg-instructions').value;
-  
-  if(!title || !subject || !classVal || !dueDate || !maxScore || !instructions) {
+
+  if (!title || !subject || !classVal || !dueDate || !maxScore || !instructions) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields', 'error');
     return;
   }
-  
+
   const newId = String(Math.max(...Object.keys(ASSIGNMENTS_DATA).map(Number)) + 1);
   ASSIGNMENTS_DATA[newId] = {
     id: newId,
@@ -6550,12 +6478,12 @@ function createAssignment(event) {
     attachment: document.getElementById('asg-attachment').files.length > 0 ? document.getElementById('asg-attachment').files[0].name : null,
     submissions: {}
   };
-  
+
   // Clear form
   document.getElementById('create-assignment-form').reset();
-  
+
   showToast('<i class="fas fa-check-circle"></i> Assignment created and published successfully!', 'success');
-  
+
   // Refresh the page  
   setTimeout(() => {
     renderMain();
@@ -6572,7 +6500,7 @@ function editGrade(assignmentId, student) {
 
 function openGradeSubmissionForm(assignmentId, student, index) {
   const assignment = ASSIGNMENTS_DATA[assignmentId];
-  
+
   const formHTML = `
     <div style="max-width:600px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
@@ -6607,48 +6535,48 @@ function openGradeSubmissionForm(assignmentId, student, index) {
       </form>
     </div>
   `;
-  
+
   openModal(formHTML);
 }
 
 function submitGrade(event, assignmentId, student) {
   event.preventDefault();
-  
+
   const score = parseInt(document.getElementById('grade-score').value);
   const feedback = document.getElementById('grade-feedback').value;
   const assignment = ASSIGNMENTS_DATA[assignmentId];
-  
-  if(score < 0 || score > assignment.maxScore) {
+
+  if (score < 0 || score > assignment.maxScore) {
     showToast('<i class="fas fa-times-circle"></i> Score must be between 0 and ' + assignment.maxScore, 'error');
     return;
   }
-  
+
   // Update submission
   assignment.submissions[student] = {
     submitted: new Date().toISOString().split('T')[0],
     score,
     feedback
   };
-  
+
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> Grade submitted and feedback sent to student!', 'success');
-  
+
   setTimeout(() => {
     gradeAssignment(assignmentId);
   }, 1500);
 }
 
 // FEES MODULE
-function feesModule(){
+function feesModule() {
   const isAdmin = currentRole === 'Admin';
   const recordPaymentBtn = isAdmin ? '' : `<button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button>`;
-  
-  let html = hdr('Fees & Payments','Student fee management and payment records','Fees')+`
+
+  let html = hdr('Fees & Payments', 'Student fee management and payment records', 'Fees') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-money-bill"></i>','GH₵248K','Total Collected','88.6% of target','up','si-blue')}
-    ${statCard('<i class="fas fa-hourglass-half"></i>','GH₵32K','Outstanding','37 students','dn','si-red')}
-    ${statCard('<i class="fas fa-check-circle"></i>','805','Paid Students','95.6%','up','si-green')}
-    ${statCard('<i class="fas fa-exclamation-triangle"></i>','37','Defaulters','Action needed','dn','si-gold')}
+    ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵248K', 'Total Collected', '88.6% of target', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵32K', 'Outstanding', '37 students', 'dn', 'si-red')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '805', 'Paid Students', '95.6%', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-exclamation-triangle"></i>', '37', 'Defaulters', 'Action needed', 'dn', 'si-gold')}
   </div>
   <div class="g21">
     <div class="card">
@@ -6679,7 +6607,7 @@ function feesModule(){
       <table class="tbl">
         <thead><tr><th>Student</th><th>Class</th><th>Term Fee</th><th>Paid</th><th>Balance</th><th>Date</th><th>Receipt</th><th>Status</th></tr></thead>
         <tbody id="fee-records-table">`;
-  
+
   // Fee records data
   const feeRecords = [
     { name: 'Ama Serwaa', class: 'JHS 1', termFee: 'GH₵2,500', paid: 'GH₵2,500', balance: 'GH₵0', date: 'Mar 15', receipt: '#R-0482', status: 'Paid' },
@@ -6693,7 +6621,7 @@ function feesModule(){
     { name: 'Theresa Mensah', class: 'Basic 4', termFee: 'GH₵2,300', paid: 'GH₵2,300', balance: 'GH₵0', date: 'Mar 10', receipt: '#R-0476', status: 'Paid' },
     { name: 'Samuel Boateng', class: 'JHS 2', termFee: 'GH₵2,600', paid: 'GH₵1,300', balance: 'GH₵1,300', date: 'Mar 9', receipt: '#R-0475', status: 'Partial' }
   ];
-  
+
   feeRecords.forEach((record, idx) => {
     const statusColor = record.status === 'Paid' ? 'b-success' : record.status === 'Pending' ? 'b-danger' : 'b-warning';
     html += `
@@ -6708,7 +6636,7 @@ function feesModule(){
         <td><span class="badge ${statusColor}">${record.status}</span></td>
       </tr>`;
   });
-  
+
   html += `</tbody>
       </table>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--gray-200)">
@@ -6769,28 +6697,28 @@ function filterFeeRecords() {
   const searchVal = document.getElementById('fee-search').value.toLowerCase();
   const classVal = document.getElementById('fee-class-filter').value.toLowerCase();
   const statusVal = document.getElementById('fee-status-filter').value.toLowerCase();
-  
+
   document.querySelectorAll('.fee-row').forEach(row => {
     const student = row.getAttribute('data-student');
     const feeClass = row.getAttribute('data-class').toLowerCase();
     const status = row.getAttribute('data-status').toLowerCase();
-    
+
     const matchesSearch = student.includes(searchVal);
     const matchesClass = !classVal || feeClass === classVal;
     const matchesStatus = !statusVal || status === statusVal;
-    
+
     row.style.display = (matchesSearch && matchesClass && matchesStatus) ? '' : 'none';
   });
-  
+
   showToast('<i class="fas fa-check-circle"></i> Records filtered', 'success');
 }
 
 function exportPaymentData() {
   const records = document.querySelectorAll('.fee-row');
   let csv = 'Student,Class,Term Fee,Paid,Balance,Date,Receipt,Status\n';
-  
+
   records.forEach(row => {
-    if(row.style.display !== 'none') {
+    if (row.style.display !== 'none') {
       const cells = row.querySelectorAll('td');
       const data = [
         cells[0].textContent.trim(),
@@ -6805,7 +6733,7 @@ function exportPaymentData() {
       csv += data.map(d => `"${d}"`).join(',') + '\n';
     }
   });
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
   element.setAttribute('download', 'payment-records-' + new Date().toISOString().slice(0, 10) + '.csv');
@@ -6813,7 +6741,7 @@ function exportPaymentData() {
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-  
+
   showToast('<i class="fas fa-check-circle"></i> Payment records exported as CSV', 'success');
 }
 
@@ -6822,8 +6750,8 @@ function goToPage(page) {
 }
 
 // PAYMENTS MODULE (Accountant)
-function paymentsModule(){
-  return hdr('Cash Payments','Record and manage cash fee payments','Payments')+`
+function paymentsModule() {
+  return hdr('Cash Payments', 'Record and manage cash fee payments', 'Payments') + `
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-dollar-sign"></i> Record Cash Payment</span></div>
@@ -6868,7 +6796,7 @@ function paymentsModule(){
         <div class="amount">GH₵ 12,800</div>
         <div class="sub">14 payments processed today</div>
       </div>
-      ${[['8:30 AM','Ama Serwaa','GH₵2,400','#R-0482'],['9:15 AM','Kwame Asante','GH₵1,200','#R-0481'],['10:00 AM','Theresa Mensah','GH₵2,400','#R-0480'],['11:30 AM','Abena Mensah','GH₵2,200','#R-0479']].map(([t,n,a,r])=>`
+      ${[['8:30 AM', 'Ama Serwaa', 'GH₵2,400', '#R-0482'], ['9:15 AM', 'Kwame Asante', 'GH₵1,200', '#R-0481'], ['10:00 AM', 'Theresa Mensah', 'GH₵2,400', '#R-0480'], ['11:30 AM', 'Abena Mensah', 'GH₵2,200', '#R-0479']].map(([t, n, a, r]) => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
         <div style="font-size:11px;color:var(--gray-400);min-width:55px">${t}</div>
         <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${n}</div><div style="font-size:10px;color:var(--gray-400)">${r}</div></div>
@@ -6880,39 +6808,39 @@ function paymentsModule(){
 
 function recordPayment(event) {
   event.preventDefault();
-  
+
   const student = document.getElementById('pay-student').value;
   const classVal = document.getElementById('pay-class').value;
   const amount = document.getElementById('pay-amount').value;
   const term = document.getElementById('pay-term').value;
   const date = document.getElementById('pay-date').value;
   const remarks = document.getElementById('pay-remarks').value;
-  
-  if(!student || !amount || amount <= 0) {
+
+  if (!student || !amount || amount <= 0) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields correctly', 'error');
     return;
   }
-  
+
   const receiptNum = '#R-' + String(Math.floor(Math.random() * 9999)).padStart(4, '0');
-  
+
   showToast(`<i class="fas fa-check-circle"></i> Payment processed! Receipt ${receiptNum} issued`, 'success');
-  
+
   // Clear form
   event.target.reset();
   document.getElementById('pay-date').value = '2025-03-17';
-  
+
   setTimeout(() => {
     navTo('fees');
   }, 1500);
 }
 
 // EVENTS MODULE
-function eventsModule(){
-  return hdr('Events & Calendar','School events, holidays and important dates','Events')+`
+function eventsModule() {
+  return hdr('Events & Calendar', 'School events, holidays and important dates', 'Events') + `
   <div class="g21">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span>${currentRole==='Visitor'?'':`<button class="btn btn-primary btn-sm" onclick="alert('Opening event creation form...')">+ Add Event</button>`}</div>
-      ${[['<i class="fas fa-running"></i>','Sports Day','March 24, 2025','All Students & Staff','Full-day sports competition. Students must wear house colors. Attendance compulsory. Parents welcome.','All Day','success'],['<i class="fas fa-users"></i>','PTA Meeting','March 20, 2025','Parents & Teachers','End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.','3:00 PM','info'],['<i class="fas fa-file-alt"></i>','Term 1 Exams Begin','April 1, 2025','Form 1–3','Final examinations for Term 1. Detailed timetable available on the portal.','7:30 AM','warning'],['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','April 15, 2025','All','Annual prize-giving and graduation ceremony. Smart attire required for all.','10:00 AM','success'],['<img src="Logo.png" alt="Logo" style="width:24px;height:24px;object-fit:contain">','Open Day','April 20, 2025','Prospective Parents','School open day for prospective students and parents. Tours from 9AM.','9:00 AM','info']].map(([i,t,d,aud,desc,time,type])=>`
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span>${currentRole === 'Visitor' ? '' : `<button class="btn btn-primary btn-sm" onclick="alert('Opening event creation form...')">+ Add Event</button>`}</div>
+      ${[['<i class="fas fa-running"></i>', 'Sports Day', 'March 24, 2025', 'All Students & Staff', 'Full-day sports competition. Students must wear house colors. Attendance compulsory. Parents welcome.', 'All Day', 'success'], ['<i class="fas fa-users"></i>', 'PTA Meeting', 'March 20, 2025', 'Parents & Teachers', 'End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.', '3:00 PM', 'info'], ['<i class="fas fa-file-alt"></i>', 'Term 1 Exams Begin', 'April 1, 2025', 'Form 1–3', 'Final examinations for Term 1. Detailed timetable available on the portal.', '7:30 AM', 'warning'], ['<i class="fas fa-graduation-cap"></i>', 'Prize Giving Ceremony', 'April 15, 2025', 'All', 'Annual prize-giving and graduation ceremony. Smart attire required for all.', '10:00 AM', 'success'], ['<img src="Logo.png" alt="Logo" style="width:24px;height:24px;object-fit:contain">', 'Open Day', 'April 20, 2025', 'Prospective Parents', 'School open day for prospective students and parents. Tours from 9AM.', '9:00 AM', 'info']].map(([i, t, d, aud, desc, time, type]) => `
       <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--gray-100)">
         <div style="width:54px;background:var(--blue-xpale);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;padding:8px">${i}</div>
         <div style="flex:1">
@@ -6930,7 +6858,7 @@ function eventsModule(){
         <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Calendar</span></div>
         ${mini_cal()}
       </div>
-      ${currentRole==='Visitor'?'':`<div class="card">
+      ${currentRole === 'Visitor' ? '' : `<div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Add Event</span></div>
         <div class="f-field" style="margin-bottom:10px"><label>Event Title</label><input placeholder="Event name..."></div>
         <div class="f-row">
@@ -6939,7 +6867,7 @@ function eventsModule(){
         </div>
         <div class="f-field" style="margin-bottom:10px"><label>Audience</label><select><option>All</option><option>Students</option><option>Teachers</option><option>Parents</option></select></div>
         <div class="f-field" style="margin-bottom:12px"><label>Description</label><textarea placeholder="Event description..."></textarea></div>
-        <button class="btn btn-primary" style="width:100%" onclick="showToast('<i class="fas fa-check-circle"></i> Event created!', 'success')">Create Event</button>
+        <button class="btn btn-primary" style="width:100%" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Event created!', 'success')">Create Event</button>
       </div>`}
     </div>
   </div>`;
@@ -6956,12 +6884,12 @@ const NOTICES_DATA = [
 ];
 
 // NOTICES MODULE
-function noticesModule(){
+function noticesModule() {
   const isAdmin = currentRole === 'Admin';
   const isTeacher = currentRole === 'Teacher';
   const canPost = isAdmin || isTeacher;
-  
-  let html = hdr('Notices & Announcements','Post and manage school-wide notices','Notices')+`
+
+  let html = hdr('Notices & Announcements', 'Post and manage school-wide notices', 'Notices') + `
   <div class="g21">
     <div>
     
@@ -6983,11 +6911,11 @@ function noticesModule(){
       
       <!-- NOTICES LIST -->
       <div id="notices-list">`;
-  
+
   NOTICES_DATA.forEach(notice => {
     const priorityColor = notice.priority === 'Urgent' ? 'danger' : notice.priority === 'Important' ? 'warning' : 'info';
     const noticeDate = new Date(notice.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    
+
     html += `
       <div class="card mb16 notice-item" data-audience="${notice.audience}" data-title="${notice.title.toLowerCase()}">
         <div style="display:flex;gap:14px">
@@ -7007,7 +6935,7 @@ function noticesModule(){
         </div>
       </div>`;
   });
-  
+
   html += `</div>
     </div>
     
@@ -7052,23 +6980,23 @@ function noticesModule(){
       </form>
     </div>` : ''}
   </div>`;
-  
+
   return html;
 }
 
 function filterNotices() {
   const searchTerm = document.getElementById('notice-search').value.toLowerCase();
   const noticeItems = document.querySelectorAll('.notice-item');
-  
+
   noticeItems.forEach(item => {
     const title = item.dataset.title;
     const audience = item.dataset.audience;
     const activeFilter = document.querySelector('.filter-btn.active');
     const audienceFilter = activeFilter ? activeFilter.dataset.audience : 'All';
-    
+
     const matchesSearch = title.includes(searchTerm);
     const matchesAudience = audienceFilter === 'All' || audience === audienceFilter;
-    
+
     item.style.display = matchesSearch && matchesAudience ? 'block' : 'none';
   });
 }
@@ -7076,7 +7004,7 @@ function filterNotices() {
 function filterByAudience(audience) {
   // Update active button
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  if(audience !== 'All') {
+  if (audience !== 'All') {
     event.target.classList.add('active');
   }
   filterNotices();
@@ -7084,20 +7012,20 @@ function filterByAudience(audience) {
 
 function publishNotice(event) {
   event.preventDefault();
-  
+
   const title = document.getElementById('notice-title').value;
   const audience = document.getElementById('notice-audience').value;
   const priority = document.getElementById('notice-priority').value;
   const message = document.getElementById('notice-message').value;
-  
-  if(!title || !message) {
+
+  if (!title || !message) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
-  
+
   const newId = Math.max(...NOTICES_DATA.map(n => n.id), 0) + 1;
   const today = new Date().toISOString().split('T')[0];
-  
+
   NOTICES_DATA.unshift({
     id: newId,
     icon: '<i class="fas fa-thumbtack"></i>',
@@ -7109,12 +7037,12 @@ function publishNotice(event) {
     priority,
     attachment: null
   });
-  
+
   // Reset form
   event.target.reset();
-  
+
   showToast(`<i class="fas fa-check-circle"></i> Notice "${title}" published successfully!`, 'success');
-  
+
   setTimeout(() => {
     renderMain();
   }, 1500);
@@ -7122,23 +7050,23 @@ function publishNotice(event) {
 
 function draftNotice() {
   const title = document.getElementById('notice-title').value;
-  
-  if(!title) {
+
+  if (!title) {
     showToast('<i class="fas fa-times-circle"></i> Please enter a title for your draft', 'error');
     return;
   }
-  
+
   showToast(`<i class="fas fa-file-alt"></i> Draft "${title}" saved to your account`, 'info');
   document.querySelector('form[onsubmit="publishNotice(event)"]').reset();
 }
 
 function editNotice(noticeId) {
   const notice = NOTICES_DATA.find(n => n.id === noticeId);
-  if(!notice) {
+  if (!notice) {
     showToast('<i class="fas fa-times-circle"></i> Notice not found', 'error');
     return;
   }
-  
+
   const formHTML = `
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
@@ -7185,27 +7113,27 @@ function editNotice(noticeId) {
       </form>
     </div>
   `;
-  
+
   openModal(formHTML);
 }
 
 function saveEditNotice(event, noticeId) {
   event.preventDefault();
-  
+
   const notice = NOTICES_DATA.find(n => n.id === noticeId);
-  if(!notice) {
+  if (!notice) {
     showToast('<i class="fas fa-times-circle"></i> Notice not found', 'error');
     return;
   }
-  
+
   notice.title = document.getElementById('edit-notice-title').value;
   notice.audience = document.getElementById('edit-notice-audience').value;
   notice.priority = document.getElementById('edit-notice-priority').value;
   notice.message = document.getElementById('edit-notice-message').value;
-  
+
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> Notice updated successfully!', 'success');
-  
+
   setTimeout(() => {
     renderMain();
   }, 1500);
@@ -7213,15 +7141,15 @@ function saveEditNotice(event, noticeId) {
 
 function deleteNotice(noticeId) {
   const notice = NOTICES_DATA.find(n => n.id === noticeId);
-  if(!notice) {
+  if (!notice) {
     showToast('<i class="fas fa-times-circle"></i> Notice not found', 'error');
     return;
   }
-  
-  if(confirm(`Are you sure you want to delete "${notice.title}"? This action cannot be undone.`)) {
+
+  if (confirm(`Are you sure you want to delete "${notice.title}"? This action cannot be undone.`)) {
     NOTICES_DATA.splice(NOTICES_DATA.indexOf(notice), 1);
     showToast('<i class="fas fa-check-circle"></i> Notice deleted successfully!', 'success');
-    
+
     setTimeout(() => {
       renderMain();
     }, 1500);
@@ -7229,40 +7157,40 @@ function deleteNotice(noticeId) {
 }
 
 // MESSAGING MODULE
-function messagingModule(){
+function messagingModule() {
   // Route to role-specific messaging interface
-  if(currentRole === 'Student') return studentMessagingModule();
-  if(currentRole === 'Parent') return parentMessagingModule();
-  if(currentRole === 'Teacher') return teacherMessagingModule();
-  if(currentRole === 'Admin') return adminMessagingModule();
-  
+  if (currentRole === 'Student') return studentMessagingModule();
+  if (currentRole === 'Parent') return parentMessagingModule();
+  if (currentRole === 'Teacher') return teacherMessagingModule();
+  if (currentRole === 'Admin') return adminMessagingModule();
+
   // Default fallback
   return defaultMessagingModule();
 }
 
 // GET CONTACT INFO 
 const contactInfo = {
-  'Ama Osei': {name: 'Ama Osei', role: 'Student', avatar: 'purple', status: 'Online'},
-  'Mr. Amponsah': {name: 'Mr. Kweku Amponsah', role: 'Teacher', avatar: 'blue', status: 'Online'},
-  'Mrs. Asante': {name: 'Mrs. Adwoa Asante', role: 'Teacher', avatar: 'purple', status: 'Away'},
-  'Mr. Oduro': {name: 'Mr. Samuel Oduro', role: 'Teacher', avatar: 'green', status: 'Offline'},
-  'Parent Serwaa': {name: 'Parent Serwaa', role: 'Parent', avatar: 'gold', status: 'Offline'},
-  'Admin Office': {name: 'Admin Office', role: 'Admin', avatar: 'blue', status: 'Online'}
+  'Ama Osei': { name: 'Ama Osei', role: 'Student', avatar: 'purple', status: 'Online' },
+  'Mr. Amponsah': { name: 'Mr. Kweku Amponsah', role: 'Teacher', avatar: 'blue', status: 'Online' },
+  'Mrs. Asante': { name: 'Mrs. Adwoa Asante', role: 'Teacher', avatar: 'purple', status: 'Away' },
+  'Mr. Oduro': { name: 'Mr. Samuel Oduro', role: 'Teacher', avatar: 'green', status: 'Offline' },
+  'Parent Serwaa': { name: 'Parent Serwaa', role: 'Parent', avatar: 'gold', status: 'Offline' },
+  'Admin Office': { name: 'Admin Office', role: 'Admin', avatar: 'blue', status: 'Online' }
 };
 
 // STUDENT MESSAGING MODULE
-function studentMessagingModule(){
+function studentMessagingModule() {
   // Students can only see messages from teachers
-  const relevantMsgs = allMessages.filter(m => 
+  const relevantMsgs = allMessages.filter(m =>
     (m.sender === 'Ama Osei' && m.recipient !== 'Ama Osei') ||
     (m.recipient === 'Ama Osei')
   );
-  
+
   // Get unique conversations
   const conversations = {};
   relevantMsgs.forEach(msg => {
     const otherPerson = msg.sender === 'Ama Osei' ? msg.recipient : msg.sender;
-    if(!conversations[otherPerson]) {
+    if (!conversations[otherPerson]) {
       conversations[otherPerson] = {
         name: otherPerson,
         info: contactInfo[otherPerson],
@@ -7274,29 +7202,29 @@ function studentMessagingModule(){
       conversations[otherPerson].time = msg.time;
     }
   });
-  
-  if(!currentChat) currentChat = Object.keys(conversations)[0];
-  
-  const chatMessages = relevantMsgs.filter(m => 
+
+  if (!currentChat) currentChat = Object.keys(conversations)[0];
+
+  const chatMessages = relevantMsgs.filter(m =>
     (m.sender === 'Ama Osei' && m.recipient === currentChat) ||
     (m.sender === currentChat && m.recipient === 'Ama Osei')
-  ).sort((a,b) => a.id - b.id);
-  
+  ).sort((a, b) => a.id - b.id);
+
   const conversationsList = Object.entries(conversations).map(([name, conv]) => {
     const isActive = name === currentChat;
     return `
-      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive?'var(--blue-main)':'transparent'};margin-bottom:3px;transition:all .2s" 
+      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px;transition:all .2s" 
            onclick="currentChat='${name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${name[0]}</div>
-          <span style="font-size:12px;font-weight:600;flex:1;color:${isActive?'white':'var(--gray-700)'}">${name}</span>
-          <span style="font-size:10px;color:${isActive?'rgba(255,255,255,.7)':'var(--gray-400)'}">${conv.time}</span>
+          <span style="font-size:12px;font-weight:600;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}</span>
+          <span style="font-size:10px;color:${isActive ? 'rgba(255,255,255,.7)' : 'var(--gray-400)'}">${conv.time}</span>
         </div>
-        <div style="font-size:11px;color:${isActive?'rgba(255,255,255,.8)':'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
+        <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
       </div>
     `;
   }).join('');
-  
+
   const currentContact = contactInfo[currentChat];
   const messagesHTML = chatMessages.map(msg => {
     const isSender = msg.sender === 'Ama Osei';
@@ -7312,8 +7240,8 @@ function studentMessagingModule(){
       </div>
     `;
   }).join('');
-  
-  return hdr('Messages','Internal school communication system','Messages')+`
+
+  return hdr('Messages', 'Internal school communication system', 'Messages') + `
   <div class="g21">
     <div class="card">
       <div style="display:flex;gap:0;height:440px">
@@ -7345,16 +7273,16 @@ function studentMessagingModule(){
 }
 
 // PARENT MESSAGING MODULE
-function parentMessagingModule(){
+function parentMessagingModule() {
   // Parents can message Admin and Teachers about their children
-  const relevantMsgs = allMessages.filter(m => 
+  const relevantMsgs = allMessages.filter(m =>
     (m.sender === 'Parent Serwaa') || (m.recipient === 'Parent Serwaa')
   );
-  
+
   const conversations = {};
   relevantMsgs.forEach(msg => {
     const otherPerson = msg.sender === 'Parent Serwaa' ? msg.recipient : msg.sender;
-    if(!conversations[otherPerson]) {
+    if (!conversations[otherPerson]) {
       conversations[otherPerson] = {
         name: otherPerson,
         info: contactInfo[otherPerson],
@@ -7366,28 +7294,28 @@ function parentMessagingModule(){
       conversations[otherPerson].time = msg.time;
     }
   });
-  
-  if(!currentChat) currentChat = Object.keys(conversations)[0];
-  
-  const chatMessages = relevantMsgs.filter(m => 
+
+  if (!currentChat) currentChat = Object.keys(conversations)[0];
+
+  const chatMessages = relevantMsgs.filter(m =>
     (m.sender === 'Parent Serwaa' && m.recipient === currentChat) ||
     (m.sender === currentChat && m.recipient === 'Parent Serwaa')
-  ).sort((a,b) => a.id - b.id);
-  
+  ).sort((a, b) => a.id - b.id);
+
   const conversationsList = Object.entries(conversations).map(([name, conv]) => {
     const isActive = name === currentChat;
     return `
-      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive?'var(--blue-main)':'transparent'};margin-bottom:3px" 
+      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px" 
            onclick="currentChat='${name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${name[0]}</div>
-          <span style="font-size:12px;flex:1;color:${isActive?'white':'var(--gray-700)'}">${name}</span>
+          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}</span>
         </div>
-        <div style="font-size:11px;color:${isActive?'rgba(255,255,255,.8)':'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
+        <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
       </div>
     `;
   }).join('');
-  
+
   const currentContact = contactInfo[currentChat];
   const messagesHTML = chatMessages.map(msg => {
     const isSender = msg.sender === 'Parent Serwaa';
@@ -7403,8 +7331,8 @@ function parentMessagingModule(){
       </div>
     `;
   }).join('');
-  
-  return hdr('Messages','Connect with teachers and administration','Messages')+`
+
+  return hdr('Messages', 'Connect with teachers and administration', 'Messages') + `
   <div class="g21">
     <div class="card">
       <div style="display:flex;gap:0;height:440px">
@@ -7436,16 +7364,16 @@ function parentMessagingModule(){
 }
 
 // TEACHER MESSAGING MODULE
-function teacherMessagingModule(){
+function teacherMessagingModule() {
   // Teachers can see messages from students and parents
-  const relevantMsgs = allMessages.filter(m => 
+  const relevantMsgs = allMessages.filter(m =>
     m.recipient === 'Mr. Amponsah' || m.sender === 'Mr. Amponsah'
   );
-  
+
   const conversations = {};
   relevantMsgs.forEach(msg => {
     const otherPerson = msg.sender === 'Mr. Amponsah' ? msg.recipient : msg.sender;
-    if(!conversations[otherPerson]) {
+    if (!conversations[otherPerson]) {
       conversations[otherPerson] = {
         name: otherPerson,
         info: contactInfo[otherPerson],
@@ -7457,28 +7385,28 @@ function teacherMessagingModule(){
       conversations[otherPerson].time = msg.time;
     }
   });
-  
-  if(!currentChat) currentChat = Object.keys(conversations)[0];
-  
-  const chatMessages = relevantMsgs.filter(m => 
+
+  if (!currentChat) currentChat = Object.keys(conversations)[0];
+
+  const chatMessages = relevantMsgs.filter(m =>
     (m.sender === 'Mr. Amponsah' && m.recipient === currentChat) ||
     (m.sender === currentChat && m.recipient === 'Mr. Amponsah')
-  ).sort((a,b) => a.id - b.id);
-  
+  ).sort((a, b) => a.id - b.id);
+
   const conversationsList = Object.entries(conversations).map(([name, conv]) => {
     const isActive = name === currentChat;
     return `
-      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive?'var(--blue-main)':'transparent'};margin-bottom:3px" 
+      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px" 
            onclick="currentChat='${name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${name[0]}</div>
-          <span style="font-size:12px;flex:1;color:${isActive?'white':'var(--gray-700)'}">${name}</span>
+          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}</span>
         </div>
-        <div style="font-size:11px;color:${isActive?'rgba(255,255,255,.8)':'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
+        <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
       </div>
     `;
   }).join('');
-  
+
   const currentContact = contactInfo[currentChat];
   const messagesHTML = chatMessages.map(msg => {
     const isSender = msg.sender === 'Mr. Amponsah';
@@ -7494,8 +7422,8 @@ function teacherMessagingModule(){
       </div>
     `;
   }).join('');
-  
-  return hdr('Messages','Communicate with students and parents','Messages')+`
+
+  return hdr('Messages', 'Communicate with students and parents', 'Messages') + `
   <div class="g21">
     <div class="card">
       <div style="display:flex;gap:0;height:440px">
@@ -7527,14 +7455,14 @@ function teacherMessagingModule(){
 }
 
 // ADMIN MESSAGING MODULE
-function adminMessagingModule(){
+function adminMessagingModule() {
   // Admin sees all messages
   const allConversations = {};
   allMessages.forEach(msg => {
     const key = [msg.sender, msg.recipient].sort().join('|');
     const otherPerson = msg.sender === 'Admin Office' ? msg.recipient : msg.sender;
-    
-    if(!allConversations[key]) {
+
+    if (!allConversations[key]) {
       allConversations[key] = {
         name: otherPerson,
         info: contactInfo[otherPerson],
@@ -7544,29 +7472,29 @@ function adminMessagingModule(){
       };
     }
   });
-  
-  if(!currentChat) currentChat = Object.values(allConversations)[0]?.name;
-  
-  const chatMessages = allMessages.filter(m => 
+
+  if (!currentChat) currentChat = Object.values(allConversations)[0]?.name;
+
+  const chatMessages = allMessages.filter(m =>
     (m.sender === 'Admin Office' && m.recipient === currentChat) ||
     (m.sender === currentChat && m.recipient === 'Admin Office')
-  ).sort((a,b) => a.id - b.id);
-  
+  ).sort((a, b) => a.id - b.id);
+
   const conversationsList = Object.entries(allConversations).map(([key, conv]) => {
     const isActive = conv.name === currentChat;
     return `
-      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive?'var(--blue-main)':'transparent'};margin-bottom:3px" 
+      <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px" 
            onclick="currentChat='${conv.name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${conv.name[0]}</div>
-          <span style="font-size:12px;flex:1;color:${isActive?'white':'var(--gray-700)'}">${conv.name}</span>
+          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${conv.name}</span>
           ${conv.unread ? '<span style="background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">1</span>' : ''}
         </div>
-        <div style="font-size:11px;color:${isActive?'rgba(255,255,255,.8)':'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
+        <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
       </div>
     `;
   }).join('');
-  
+
   const currentContact = contactInfo[currentChat];
   const messagesHTML = chatMessages.map(msg => {
     const isSender = msg.sender === 'Admin Office';
@@ -7582,8 +7510,8 @@ function adminMessagingModule(){
       </div>
     `;
   }).join('');
-  
-  return hdr('Messages','Manage all school communications','Messages')+`
+
+  return hdr('Messages', 'Manage all school communications', 'Messages') + `
   <div class="g21">
     <div class="card">
       <div style="display:flex;gap:0;height:440px">
@@ -7615,8 +7543,8 @@ function adminMessagingModule(){
 }
 
 // DEFAULT MESSAGING MODULE
-function defaultMessagingModule(){
-  return hdr('Messages','Communication system','Messages')+`
+function defaultMessagingModule() {
+  return hdr('Messages', 'Communication system', 'Messages') + `
   <div class="card" style="text-align:center;padding:40px">
     <div style="font-size:48px;margin-bottom:16px"><i class="fas fa-inbox" style="color:var(--gray-300)"></i></div>
     <p style="color:var(--gray-400);font-size:14px">Messaging module is not available for your role.</p>
@@ -7624,15 +7552,15 @@ function defaultMessagingModule(){
 }
 
 // SEND CHAT MESSAGE
-function sendChatMessage(sender, recipient, message){
-  if(!message.trim()){
-    showToast('<i class="fas fa-times-circle"></i> Please type a message','error');
+function sendChatMessage(sender, recipient, message) {
+  if (!message.trim()) {
+    showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
     return;
   }
-  
+
   const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-  
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
   allMessages.push({
     id: allMessages.length + 1,
     sender: sender,
@@ -7644,13 +7572,13 @@ function sendChatMessage(sender, recipient, message){
     time: timeStr,
     date: now.toLocaleDateString()
   });
-  
-  showToast('<i class="fas fa-check-circle"></i> Message sent!','success');
+
+  showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
   renderMain();
 }
 
 // SWITCH BETWEEN CONVERSATIONS
-function switchChat(chatName){
+function switchChat(chatName) {
   currentChat = chatName;
   renderMain();
 }
@@ -7659,19 +7587,19 @@ function switchChat(chatName){
 function sendMessage(btn) {
   const input = btn.previousElementSibling;
   const message = input.value.trim();
-  
+
   if (!message) {
     showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
     return;
   }
-  
+
   sendChatMessage(currentRole, currentChat, message);
   input.value = '';
   input.focus();
 }
 
 // CONTACT MESSAGES MODULE
-function contactMessagesModule(){
+function contactMessagesModule() {
   const unreadCount = contactMessages.filter(m => !m.read).length;
   const messagesHTML = contactMessages.length === 0 ? `
     <div style="text-align:center;padding:40px 20px;color:var(--gray-400)">
@@ -7700,7 +7628,7 @@ function contactMessagesModule(){
       </div>
     </div>
   `).join('');
-  
+
   return hdr('Contact Messages', `${contactMessages.length} total • ${unreadCount} unread`, 'Contact Messages') + `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <div style="display:flex;gap:8px">
@@ -7712,9 +7640,9 @@ function contactMessagesModule(){
   ${messagesHTML}`;
 }
 
-function markMessageAs(id, read){
+function markMessageAs(id, read) {
   const msg = contactMessages.find(m => m.id === id);
-  if(msg) {
+  if (msg) {
     msg.read = read;
     renderSidebar();
     renderMain();
@@ -7722,15 +7650,15 @@ function markMessageAs(id, read){
   }
 }
 
-function markAllAsRead(){
+function markAllAsRead() {
   contactMessages.forEach(m => m.read = true);
   renderSidebar();
   renderMain();
   showToast('<i class="fas fa-check-circle"></i> All messages marked as read', 'success');
 }
 
-function deleteContactMessage(id){
-  if(confirm('Delete this message?')){
+function deleteContactMessage(id) {
+  if (confirm('Delete this message?')) {
     contactMessages = contactMessages.filter(m => m.id !== id);
     renderSidebar();
     renderMain();
@@ -7738,12 +7666,12 @@ function deleteContactMessage(id){
   }
 }
 
-function deleteAllMessages(){
-  if(contactMessages.length === 0) {
+function deleteAllMessages() {
+  if (contactMessages.length === 0) {
     showToast('<i class="fas fa-times-circle"></i> No messages to delete', 'warning');
     return;
   }
-  if(confirm(`Delete all ${contactMessages.length} messages? This cannot be undone.`)){
+  if (confirm(`Delete all ${contactMessages.length} messages? This cannot be undone.`)) {
     contactMessages = [];
     renderSidebar();
     renderMain();
@@ -7751,10 +7679,10 @@ function deleteAllMessages(){
   }
 }
 
-function replyToMessage(id){
+function replyToMessage(id) {
   const msg = contactMessages.find(m => m.id === id);
-  if(!msg) return;
-  
+  if (!msg) return;
+
   openModal(`
     <div style="padding:20px;min-width:500px">
       <div style="font-size:16px;font-weight:700;margin-bottom:16px">Reply to ${msg.name}</div>
@@ -7775,36 +7703,41 @@ function replyToMessage(id){
   `);
 }
 
-function sendReply(msgId, recipientEmail){
+function sendReply(msgId, recipientEmail) {
   const textarea = document.querySelector('.reply-textarea');
   const reply = textarea?.value.trim();
-  
-  if(!reply) {
+
+  if (!reply) {
     showToast('<i class="fas fa-times-circle"></i> Please type a reply', 'error');
     return;
   }
-  
-  showToast(`<i class="fas fa-check-circle"></i> Reply sent to ${recipientEmail}!`, 'success');
-  closeModal();
-  
-  // Mark original message as read
+
   const msg = contactMessages.find(m => m.id == msgId);
-  if(msg) msg.read = true;
+  if (msg) {
+    const subject = encodeURIComponent("Re: " + msg.subject);
+    const body = encodeURIComponent(reply + "\n\n---\nOriginal Message from " + msg.name + ":\n" + msg.message);
+    window.location.href = `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
+    msg.read = true;
+  }
+
+  showToast(`<i class="fas fa-envelope-open-text"></i> Opening email client to reply to ${recipientEmail}...`, 'success');
+  closeModal();
+
   renderSidebar();
   renderMain();
 }
 
 // REPORTS MODULE
-function reportsModule(){
-  return hdr('Reports & Analytics','School performance data and comprehensive reports','Reports')+`
+function reportsModule() {
+  return hdr('Reports & Analytics', 'School performance data and comprehensive reports', 'Reports') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-chart-bar"></i>','88.7%','Avg Pass Rate','This term','up','si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>','94.2%','Avg Attendance','Monthly','up','si-green')}
-    ${statCard('<i class="fas fa-money-bill"></i>','88.6%','Fees Collection','Of target','up','si-gold')}
-    ${statCard('<i class="fas fa-trophy"></i>','3.6','Average GPA','All students','up','si-purple')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', '88.7%', 'Avg Pass Rate', 'This term', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '94.2%', 'Avg Attendance', 'Monthly', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-money-bill"></i>', '88.6%', 'Fees Collection', 'Of target', 'up', 'si-gold')}
+    ${statCard('<i class="fas fa-trophy"></i>', '3.6', 'Average GPA', 'All students', 'up', 'si-purple')}
   </div>
   <div class="mod-tabs" id="report-tabs">
-    ${['Overview','Academic','Attendance','Financial','Enrollment'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="switchReportTab(this,${i})">${t}</div>`).join('')}
+    ${['Overview', 'Academic', 'Attendance', 'Financial', 'Enrollment'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchReportTab(this,${i})">${t}</div>`).join('')}
   </div>
 
   <!-- OVERVIEW TAB -->
@@ -7813,20 +7746,20 @@ function reportsModule(){
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> 12-Month Performance Trend</span></div>
         <div style="display:flex;gap:5px;align-items:flex-end;height:150px;padding:10px 0">
-          ${[[70,80],[72,82],[68,79],[75,85],[78,88],[80,90],[82,88],[85,91],[83,89],[86,92],[88,93],[87,92]].map(([t,e])=>`
+          ${[[70, 80], [72, 82], [68, 79], [75, 85], [78, 88], [80, 90], [82, 88], [85, 91], [83, 89], [86, 92], [88, 93], [87, 92]].map(([t, e]) => `
           <div style="flex:1;display:flex;gap:2px;align-items:flex-end">
-            <div style="flex:1;background:var(--blue-main);opacity:.8;border-radius:3px 3px 0 0;height:${t*1.4}px"></div>
-            <div style="flex:1;background:var(--gold);opacity:.75;border-radius:3px 3px 0 0;height:${e*1.4}px"></div>
+            <div style="flex:1;background:var(--blue-main);opacity:.8;border-radius:3px 3px 0 0;height:${t * 1.4}px"></div>
+            <div style="flex:1;background:var(--gold);opacity:.75;border-radius:3px 3px 0 0;height:${e * 1.4}px"></div>
           </div>`).join('')}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);padding:0 2px">
-          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>`<span>${m}</span>`).join('')}
+          ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => `<span>${m}</span>`).join('')}
         </div>
       </div>
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Quick Reports</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${[['Academic','<i class="fas fa-chart-bar"></i>'],['Attendance','<i class="fas fa-check-circle"></i>'],['Financial','<i class="fas fa-money-bill"></i>'],['Enrollment','<i class="fas fa-graduation-cap"></i>'],['Exam Results','<i class="fas fa-chart-line"></i>'],['Top Performers','<i class="fas fa-trophy"></i>']].map(([name,icon])=>`
+          ${[['Academic', '<i class="fas fa-chart-bar"></i>'], ['Attendance', '<i class="fas fa-check-circle"></i>'], ['Financial', '<i class="fas fa-money-bill"></i>'], ['Enrollment', '<i class="fas fa-graduation-cap"></i>'], ['Exam Results', '<i class="fas fa-chart-line"></i>'], ['Top Performers', '<i class="fas fa-trophy"></i>']].map(([name, icon]) => `
           <button class="btn btn-secondary" style="font-size:11px;padding:12px" onclick="generateReportPDF('${name}')"><span style="font-size:14px;margin-right:4px">${icon}</span>${name}</button>`).join('')}
         </div>
       </div>
@@ -7957,7 +7890,7 @@ function reportsModule(){
 }
 
 // REPORT TAB SWITCHING
-function switchReportTab(element, tabIndex){
+function switchReportTab(element, tabIndex) {
   document.querySelectorAll('#report-tabs .mod-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.report-tab-content').forEach(c => c.classList.remove('active'));
   element.classList.add('active');
@@ -7965,8 +7898,8 @@ function switchReportTab(element, tabIndex){
 }
 
 // FILTER REPORTS
-function filterReportTab(tabType){
-  if(tabType === 'academic'){
+function filterReportTab(tabType) {
+  if (tabType === 'academic') {
     const search = document.getElementById('academic-search').value.toLowerCase();
     const filter = document.getElementById('academic-filter').value;
     document.querySelectorAll('.academic-row').forEach(row => {
@@ -7974,7 +7907,7 @@ function filterReportTab(tabType){
       row.style.display = matches ? '' : 'none';
     });
   }
-  else if(tabType === 'attendance'){
+  else if (tabType === 'attendance') {
     const search = document.getElementById('attendance-search').value.toLowerCase();
     const filter = document.getElementById('attendance-filter').value;
     document.querySelectorAll('.attendance-row').forEach(row => {
@@ -7982,7 +7915,7 @@ function filterReportTab(tabType){
       row.style.display = matches ? '' : 'none';
     });
   }
-  else if(tabType === 'enrollment'){
+  else if (tabType === 'enrollment') {
     const classFilter = document.getElementById('enrollment-class-filter').value;
     const genderFilter = document.getElementById('enrollment-gender-filter').value;
     document.querySelectorAll('.enrollment-row').forEach(row => {
@@ -7993,9 +7926,9 @@ function filterReportTab(tabType){
 }
 
 // GENERATE REPORT PDF
-function generateReportPDF(reportType){
+function generateReportPDF(reportType) {
   showToast('Generating ' + reportType + ' Report...', 'info');
-  
+
   let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + reportType + ' Report</title><style>';
   html += 'body{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5}';
   html += '.header{text-align:center;margin-bottom:30px;border-bottom:3px solid #1a56db;padding-bottom:15px}';
@@ -8017,8 +7950,8 @@ function generateReportPDF(reportType){
   html += '</style></head><body>';
   html += '<div class="header"><h1><img src="Logo.png" alt="Logo" style="width:30px;height:30px;object-fit:contain;margin-right:8px;display:inline-block;color:#1a56db"> Glory Regin Preparatory School</h1><p>' + reportType + ' Report</p><p>Generated: ' + new Date().toLocaleString() + '</p></div>';
   html += '<div class="content">';
-  
-  if(reportType === 'Academic'){
+
+  if (reportType === 'Academic') {
     html += '<div class="section"><div class="section-title"><i class="fas fa-chart-bar"></i> Academic Performance Report</div>';
     html += '<div class="stat"><div class="stat-value">88.7%</div><div class="stat-label">Pass Rate</div></div>';
     html += '<div class="stat"><div class="stat-value">75.3</div><div class="stat-label">Avg Score</div></div>';
@@ -8033,7 +7966,7 @@ function generateReportPDF(reportType){
     });
     html += '</table></div>';
   }
-  else if(reportType === 'Attendance'){
+  else if (reportType === 'Attendance') {
     html += '<div class="section"><div class="section-title"><i class="fas fa-clipboard-list"></i> Attendance Summary Report</div>';
     html += '<div class="stat"><div class="stat-value">94.2%</div><div class="stat-label">Avg Attendance</div></div>';
     html += '<div class="stat"><div class="stat-value">4,856</div><div class="stat-label">Present Days</div></div></div>';
@@ -8047,7 +7980,7 @@ function generateReportPDF(reportType){
     });
     html += '</table></div>';
   }
-  else if(reportType === 'Financial'){
+  else if (reportType === 'Financial') {
     html += '<div class="section"><div class="section-title"><i class="fas fa-money-bill"></i> Financial Summary Report</div>';
     html += '<div class="stat"><div class="stat-value">GHS 245,800</div><div class="stat-label">Total Income</div></div>';
     html += '<div class="stat"><div class="stat-value">GHS 156,400</div><div class="stat-label">Expenditure</div></div>';
@@ -8058,7 +7991,7 @@ function generateReportPDF(reportType){
     html += '<tr><td>Donations</td><td>GHS 57,300</td><td>23.2%</td></tr>';
     html += '</table></div>';
   }
-  else if(reportType === 'Enrollment'){
+  else if (reportType === 'Enrollment') {
     html += '<div class="section"><div class="section-title"><i class="fas fa-users"></i> Enrollment Statistics Report</div>';
     html += '<div class="stat"><div class="stat-value">400</div><div class="stat-label">Total Students</div></div>';
     html += '<div class="stat"><div class="stat-value">193</div><div class="stat-label">Male</div></div>';
@@ -8068,16 +8001,16 @@ function generateReportPDF(reportType){
     document.querySelectorAll('.enrollment-row:not([style*="display: none"])').forEach(row => {
       const cells = row.querySelectorAll('td');
       html += '<tr>';
-      for(let i=0; i<Math.min(6, cells.length); i++) html += '<td>' + cells[i].innerText + '</td>';
+      for (let i = 0; i < Math.min(6, cells.length); i++) html += '<td>' + cells[i].innerText + '</td>';
       html += '</tr>';
     });
     html += '</table></div>';
   }
-  
+
   html += '</div><div class="footer"><p>This report was automatically generated by Glory Regin School Management System</p>';
   html += '<p>© 2026 Glory Regin Preparatory School. All rights reserved.</p></div></body></html>';
-  
-  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = reportType.replace(/ /g, '_') + '_Report_' + new Date().toISOString().split('T')[0] + '.html';
@@ -8135,23 +8068,23 @@ const SETTINGS_DATA = {
 };
 
 // SETTINGS PERSISTENCE - Save/Load from localStorage
-function saveSettingsToStorage(){
+function saveSettingsToStorage() {
   try {
     localStorage.setItem('gloryReginSettings', JSON.stringify(SETTINGS_DATA));
-  } catch(e) {
+  } catch (e) {
     console.log('Could not save settings to storage:', e);
   }
 }
 
-function loadSettingsFromStorage(){
+function loadSettingsFromStorage() {
   try {
     const saved = localStorage.getItem('gloryReginSettings');
-    if(saved) {
+    if (saved) {
       const savedData = JSON.parse(saved);
       // Merge saved data with SETTINGS_DATA
       Object.assign(SETTINGS_DATA, savedData);
     }
-  } catch(e) {
+  } catch (e) {
     console.log('Could not load settings from storage:', e);
   }
 }
@@ -8159,10 +8092,10 @@ function loadSettingsFromStorage(){
 // Load settings on initialization
 loadSettingsFromStorage();
 
-function settingsModule(){
-  return hdr('System Settings','Configure school information and system preferences','Settings')+`
+function settingsModule() {
+  return hdr('System Settings', 'Configure school information and system preferences', 'Settings') + `
   <div class="mod-tabs" id="settings-tabs">
-    ${['School Info','Academic','System','Security','Appearance','Notifications'].map((t,i)=>`<div class="mod-tab ${i===0?'active':''}" onclick="switchSettingsTab(${i})">${t}</div>`).join('')}
+    ${['School Info', 'Academic', 'System', 'Security', 'Appearance', 'Notifications'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchSettingsTab(${i})">${t}</div>`).join('')}
   </div>
 
   <!-- SCHOOL INFO TAB -->
@@ -8189,7 +8122,7 @@ function settingsModule(){
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> School Information</span></div>
         <div class="f-row"><div class="f-field"><label>School Name</label><input id="school-name" value="${SETTINGS_DATA.schoolInfo.schoolName}"></div><div class="f-field"><label>School Code</label><input id="school-code" value="${SETTINGS_DATA.schoolInfo.schoolCode}" readonly></div></div>
-        <div class="f-row"><div class="f-field"><label>Region</label><select id="school-region">${['Greater Accra','Ashanti','Western','Northern','Upper West','Upper East','Volta','Eastern','Central','Oti','Savannah','North East'].map(r=>`<option ${r===SETTINGS_DATA.schoolInfo.region?'selected':''}>${r}</option>`).join('')}</select></div><div class="f-field"><label>District</label><input id="school-district" value="${SETTINGS_DATA.schoolInfo.district}"></div></div>
+        <div class="f-row"><div class="f-field"><label>Region</label><select id="school-region">${['Greater Accra', 'Ashanti', 'Western', 'Northern', 'Upper West', 'Upper East', 'Volta', 'Eastern', 'Central', 'Oti', 'Savannah', 'North East'].map(r => `<option ${r === SETTINGS_DATA.schoolInfo.region ? 'selected' : ''}>${r}</option>`).join('')}</select></div><div class="f-field"><label>District</label><input id="school-district" value="${SETTINGS_DATA.schoolInfo.district}"></div></div>
         <div class="f-row"><div class="f-field"><label>Phone Number</label><input id="school-phone" value="${SETTINGS_DATA.schoolInfo.phone}"></div><div class="f-field"><label>Email Address</label><input id="school-email" value="${SETTINGS_DATA.schoolInfo.email}"></div></div>
         <div class="f-field" style="margin-bottom:14px"><label>Physical Address</label><textarea id="school-address" style="min-height:60px">${SETTINGS_DATA.schoolInfo.address}</textarea></div>
         <div class="f-field" style="margin-bottom:14px"><label>School Website</label><input id="school-website" value="${SETTINGS_DATA.schoolInfo.website}"></div>
@@ -8202,7 +8135,7 @@ function settingsModule(){
         <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="2025-01-13"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="2025-04-11"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
-          ${[['A','80–100','Excellent'],['B','70–79','Very Good'],['C','60–69','Good'],['D','50–59','Average'],['F','0–49','Fail']].map(([g,r,l])=>`
+          ${[['A', '80–100', 'Excellent'], ['B', '70–79', 'Very Good'], ['C', '60–69', 'Good'], ['D', '50–59', 'Average'], ['F', '0–49', 'Fail']].map(([g, r, l]) => `
           <div style="display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
             <div class="grade-pill g${g}">${g}</div>
             <span style="font-size:12px;flex:1">${r}</span>
@@ -8367,17 +8300,17 @@ function settingsModule(){
 }
 
 // SETTINGS FUNCTIONS
-function switchSettingsTab(tabIndex){
+function switchSettingsTab(tabIndex) {
   document.querySelectorAll('#settings-tabs .mod-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('#settings-tabs .mod-tab')[tabIndex].classList.add('active');
   document.querySelector(`.settings-tab-content[data-tab="${tabIndex}"]`).classList.add('active');
 }
 
-function previewSchoolLogo(){
+function previewSchoolLogo() {
   const input = document.getElementById('school-logo-input');
-  if(!input.files[0]) return;
-  
+  if (!input.files[0]) return;
+
   const reader = new FileReader();
   reader.onload = (e) => {
     const display = document.getElementById('school-logo-display');
@@ -8387,15 +8320,15 @@ function previewSchoolLogo(){
   reader.readAsDataURL(input.files[0]);
 }
 
-function saveSchoolBrand(){
+function saveSchoolBrand() {
   SETTINGS_DATA.schoolInfo.schoolMotto = document.getElementById('school-motto').value;
   saveSettingsToStorage();
   showToast('✓ School logo and motto saved successfully!', 'success');
 }
 
-function resetBrandForm(){
+function resetBrandForm() {
   document.getElementById('school-motto').value = SETTINGS_DATA.schoolInfo.schoolMotto;
-  if(SETTINGS_DATA.schoolInfo.schoolLogo){
+  if (SETTINGS_DATA.schoolInfo.schoolLogo) {
     document.getElementById('school-logo-display').innerHTML = `<img src="${SETTINGS_DATA.schoolInfo.schoolLogo}" style="width:100%;height:100%;object-fit:cover">`;
   } else {
     document.getElementById('school-logo-display').innerHTML = `<div style="text-align:center"><div style="font-size:40px"><i class="fas fa-image"></i></div><div style="font-size:10px;color:var(--gray-400);margin-top:6px">No logo</div></div>`;
@@ -8404,7 +8337,7 @@ function resetBrandForm(){
   showToast('Form reset to saved values', 'info');
 }
 
-function saveSchoolInfo(){
+function saveSchoolInfo() {
   SETTINGS_DATA.schoolInfo = {
     schoolName: document.getElementById('school-name').value,
     schoolCode: document.getElementById('school-code').value,
@@ -8419,7 +8352,7 @@ function saveSchoolInfo(){
   showToast('✓ School information saved successfully!', 'success');
 }
 
-function resetSchoolForm(){
+function resetSchoolForm() {
   document.getElementById('school-name').value = SETTINGS_DATA.schoolInfo.schoolName;
   document.getElementById('school-region').value = SETTINGS_DATA.schoolInfo.region;
   document.getElementById('school-district').value = SETTINGS_DATA.schoolInfo.district;
@@ -8430,7 +8363,7 @@ function resetSchoolForm(){
   showToast('Form reset to saved values', 'info');
 }
 
-function saveAcademicCalendar(){
+function saveAcademicCalendar() {
   SETTINGS_DATA.academic = {
     academicYear: document.getElementById('academic-year').value,
     currentTerm: document.getElementById('current-term').value,
@@ -8441,7 +8374,7 @@ function saveAcademicCalendar(){
   showToast('✓ Academic calendar updated successfully!', 'success');
 }
 
-function resetAcademicForm(){
+function resetAcademicForm() {
   document.getElementById('academic-year').value = SETTINGS_DATA.academic.academicYear;
   document.getElementById('current-term').value = SETTINGS_DATA.academic.currentTerm;
   document.getElementById('term-start-date').value = SETTINGS_DATA.academic.termStartDate;
@@ -8449,7 +8382,7 @@ function resetAcademicForm(){
   showToast('Form reset to saved values', 'info');
 }
 
-function saveSystemSettings(){
+function saveSystemSettings() {
   SETTINGS_DATA.system = {
     maintenanceMode: document.getElementById('maintenance-mode').value === 'true',
     backupFrequency: document.getElementById('backup-frequency').value,
@@ -8460,7 +8393,7 @@ function saveSystemSettings(){
   showToast('✓ System settings saved successfully!', 'success');
 }
 
-function resetSystemForm(){
+function resetSystemForm() {
   document.getElementById('maintenance-mode').value = SETTINGS_DATA.system.maintenanceMode;
   document.getElementById('backup-frequency').value = SETTINGS_DATA.system.backupFrequency;
   document.getElementById('max-upload').value = SETTINGS_DATA.system.maxUploadSize;
@@ -8468,7 +8401,7 @@ function resetSystemForm(){
   showToast('Form reset to saved values', 'info');
 }
 
-function saveSecuritySettings(){
+function saveSecuritySettings() {
   SETTINGS_DATA.security = {
     passwordPolicy: document.getElementById('password-policy').value,
     sessionTimeout: document.getElementById('session-timeout').value,
@@ -8479,7 +8412,7 @@ function saveSecuritySettings(){
   showToast('✓ Security settings saved successfully!', 'success');
 }
 
-function resetSecurityForm(){
+function resetSecurityForm() {
   document.getElementById('password-policy').value = SETTINGS_DATA.security.passwordPolicy;
   document.getElementById('session-timeout').value = SETTINGS_DATA.security.sessionTimeout;
   document.getElementById('two-factor').value = SETTINGS_DATA.security.twoFactorAuth;
@@ -8487,7 +8420,7 @@ function resetSecurityForm(){
   showToast('Form reset to saved values', 'info');
 }
 
-function saveAppearanceSettings(){
+function saveAppearanceSettings() {
   const selectedTheme = document.getElementById('theme-select').value;
   SETTINGS_DATA.appearance = {
     theme: selectedTheme,
@@ -8503,7 +8436,7 @@ function saveAppearanceSettings(){
   showToast('✓ Appearance settings saved successfully!', 'success');
 }
 
-function resetAppearanceForm(){
+function resetAppearanceForm() {
   document.getElementById('theme-select').value = SETTINGS_DATA.appearance.theme;
   document.getElementById('accent-color').value = SETTINGS_DATA.appearance.accentColor;
   document.getElementById('font-size').value = SETTINGS_DATA.appearance.fontSize;
@@ -8511,7 +8444,7 @@ function resetAppearanceForm(){
   showToast('Form reset to saved values', 'info');
 }
 
-function saveNotificationSettings(){
+function saveNotificationSettings() {
   SETTINGS_DATA.notifications = {
     emailNotifications: document.getElementById('email-notif').checked,
     smsNotifications: document.getElementById('sms-notif').checked,
@@ -8522,7 +8455,7 @@ function saveNotificationSettings(){
   showToast('✓ Notification preferences saved successfully!', 'success');
 }
 
-function resetNotificationForm(){
+function resetNotificationForm() {
   document.getElementById('email-notif').checked = SETTINGS_DATA.notifications.emailNotifications;
   document.getElementById('sms-notif').checked = SETTINGS_DATA.notifications.smsNotifications;
   document.getElementById('push-notif').checked = SETTINGS_DATA.notifications.pushNotifications;
@@ -8531,15 +8464,15 @@ function resetNotificationForm(){
 }
 
 // ROLES MODULE
-function rolesModule(){
-  return hdr('Roles & Permissions','Manage user roles and access control','Roles')+`
+function rolesModule() {
+  return hdr('Roles & Permissions', 'Manage user roles and access control', 'Roles') + `
   <div class="g2">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-shield"></i> System Roles</span><button class="btn btn-primary btn-sm" onclick="alert('Opening role creation form...')">+ Add Role</button></div>
       <table class="tbl">
         <thead><tr><th>Role</th><th>Users</th><th>Access Level</th><th>Dashboard</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-          ${[['Admin','3','Full System Access','Admin','Active','danger'],['Accountant','2','Financial Modules','Accountant','Active','warning'],['Teacher','64','Academic Modules','Teacher','Active','info'],['Student','842','Student View Only','Student','Active','success'],['Parent','520','Parent View Only','Parent','Active','info'],['Alumni','1,240','Alumni Portal','Alumni','Active','purple'],['Visitor','–','Public Pages Only','Visitor','Active','gray']].map(([r,u,a,d,s,c])=>`
+          ${[['Admin', '3', 'Full System Access', 'Admin', 'Active', 'danger'], ['Accountant', '2', 'Financial Modules', 'Accountant', 'Active', 'warning'], ['Teacher', '64', 'Academic Modules', 'Teacher', 'Active', 'info'], ['Student', '842', 'Student View Only', 'Student', 'Active', 'success'], ['Parent', '520', 'Parent View Only', 'Parent', 'Active', 'info'], ['Alumni', '1,240', 'Alumni Portal', 'Alumni', 'Active', 'purple'], ['Visitor', '–', 'Public Pages Only', 'Visitor', 'Active', 'gray']].map(([r, u, a, d, s, c]) => `
           <tr>
             <td style="font-weight:700">${r}</td>
             <td>${u}</td>
@@ -8556,10 +8489,10 @@ function rolesModule(){
       <table class="tbl">
         <thead><tr><th>Module</th><th style="text-align:center">View</th><th style="text-align:center">Create</th><th style="text-align:center">Edit</th><th style="text-align:center">Delete</th></tr></thead>
         <tbody>
-          ${['Students','Teachers','Classes','Fees','Reports','Settings','Users','Notices','Events'].map(m=>`
+          ${['Students', 'Teachers', 'Classes', 'Fees', 'Reports', 'Settings', 'Users', 'Notices', 'Events'].map(m => `
           <tr>
             <td style="font-weight:600">${m}</td>
-            ${[true,true,true,m!=='Settings'&&m!=='Reports'].map(p=>`<td style="text-align:center;font-size:16px;color:${p?'var(--success)':'var(--danger)'}">${p?'✓':'✗'}</td>`).join('')}
+            ${[true, true, true, m !== 'Settings' && m !== 'Reports'].map(p => `<td style="text-align:center;font-size:16px;color:${p ? 'var(--success)' : 'var(--danger)'}">${p ? '✓' : '✗'}</td>`).join('')}
           </tr>`).join('')}
         </tbody>
       </table>
@@ -8568,26 +8501,26 @@ function rolesModule(){
 }
 
 // USERS MODULE
-function usersModule(){
+function usersModule() {
   let filteredUsers = Object.values(USERS_DATA);
   const searchTerm = document.getElementById('user-search')?.value?.toLowerCase() || '';
   const roleFilter = document.getElementById('user-role-filter')?.value || 'All Roles';
-  
-  if(searchTerm){
-    filteredUsers = filteredUsers.filter(u => 
-      u.name.toLowerCase().includes(searchTerm) || 
-      u.username.toLowerCase().includes(searchTerm) || 
+
+  if (searchTerm) {
+    filteredUsers = filteredUsers.filter(u =>
+      u.name.toLowerCase().includes(searchTerm) ||
+      u.username.toLowerCase().includes(searchTerm) ||
       u.email.toLowerCase().includes(searchTerm)
     );
   }
-  
-  if(roleFilter !== 'All Roles'){
+
+  if (roleFilter !== 'All Roles') {
     filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
   }
-  
-  const roleColors = {Admin:'danger',Teacher:'info',Student:'success',Accountant:'warning',Parent:'purple',Alumni:'teal',Visitor:'gray'};
-  
-  return hdr('User Accounts','Manage all system user accounts','User Accounts')+`
+
+  const roleColors = { Admin: 'danger', Teacher: 'info', Student: 'success', Accountant: 'warning', Parent: 'purple', Alumni: 'teal', Visitor: 'gray' };
+
+  return hdr('User Accounts', 'Manage all system user accounts', 'User Accounts') + `
   <div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
     <button class="btn btn-primary" onclick="toggleUserForm()"><i class="fas fa-plus"></i> Create Account</button>
     <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="user-search" placeholder="Search by name, username, or email..." onkeyup="filterUsers()"></div>
@@ -8652,9 +8585,9 @@ function usersModule(){
     <table class="tbl">
       <thead><tr><th>#</th><th>User</th><th>Username</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
-        ${filteredUsers.length > 0 ? filteredUsers.map((u,i)=>`
+        ${filteredUsers.length > 0 ? filteredUsers.map((u, i) => `
         <tr>
-          <td style="color:var(--gray-400)">${i+1}</td>
+          <td style="color:var(--gray-400)">${i + 1}</td>
           <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${u.role.toLowerCase()}">${u.avatar}</div><strong>${u.name}</strong></div></td>
           <td style="color:var(--blue-main)">@${u.username}</td>
           <td style="font-size:11px;color:var(--gray-600)">${u.email}</td>
@@ -8672,9 +8605,9 @@ function usersModule(){
 }
 
 // USER MANAGEMENT FUNCTIONS
-function toggleUserForm(){
+function toggleUserForm() {
   const form = document.getElementById('user-form-wrap');
-  if(form.style.display === 'none'){
+  if (form.style.display === 'none') {
     document.getElementById('user-name').value = '';
     document.getElementById('user-username').value = '';
     document.getElementById('user-email').value = '';
@@ -8687,38 +8620,38 @@ function toggleUserForm(){
   form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-function filterUsers(){
+function filterUsers() {
   currentMod = 'users';
   renderMain();
 }
 
-function saveUser(){
+function saveUser() {
   const name = document.getElementById('user-name').value.trim();
   const username = document.getElementById('user-username').value.trim();
   const email = document.getElementById('user-email').value.trim();
   const role = document.getElementById('user-role').value;
   const password = document.getElementById('user-password').value;
-  
-  if(!name || !username || !email || !password){
+
+  if (!name || !username || !email || !password) {
     showToast('Please fill in all required fields', 'warning');
     return;
   }
-  
-  if(email.indexOf('@') === -1){
+
+  if (email.indexOf('@') === -1) {
     showToast('Please enter a valid email address', 'warning');
     return;
   }
-  
+
   // Check if username already exists (for new users)
   const saveBtn = document.getElementById('save-user-btn');
   const isEdit = saveBtn.textContent === 'Update Account';
-  
-  if(!isEdit && Object.values(USERS_DATA).some(u => u.username === username)){
+
+  if (!isEdit && Object.values(USERS_DATA).some(u => u.username === username)) {
     showToast('Username already exists', 'warning');
     return;
   }
-  
-  if(isEdit){
+
+  if (isEdit) {
     // Update existing user
     const userId = document.getElementById('user-form-wrap').dataset.userId;
     USERS_DATA[userId] = {
@@ -8747,16 +8680,16 @@ function saveUser(){
     };
     showToast('✓ User account created successfully!', 'success');
   }
-  
+
   toggleUserForm();
   currentMod = 'users';
   renderMain();
 }
 
-function editUser(userId){
+function editUser(userId) {
   const user = USERS_DATA[userId];
-  if(!user) return;
-  
+  if (!user) return;
+
   document.getElementById('user-name').value = user.name;
   document.getElementById('user-username').value = user.username;
   document.getElementById('user-email').value = user.email;
@@ -8769,32 +8702,32 @@ function editUser(userId){
   document.getElementById('user-name').focus();
 }
 
-function toggleUserStatus(userId, currentStatus){
-  if(!userId || !USERS_DATA[userId]) return;
-  
+function toggleUserStatus(userId, currentStatus) {
+  if (!userId || !USERS_DATA[userId]) return;
+
   USERS_DATA[userId].status = currentStatus === 'Active' ? 'Disabled' : 'Active';
   const newStatus = USERS_DATA[userId].status;
-  
+
   showToast(`✓ User ${newStatus === 'Active' ? 'enabled' : 'disabled'} successfully!`, 'success');
   currentMod = 'users';
   renderMain();
 }
 
 // STAFF MODULE
-function staffModule(){
+function staffModule() {
   // Calculate statistics
   const totalStaff = Object.keys(STAFF_DATA).length;
-  const teachingStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Teaching').length;
-  const adminStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Admin').length;
-  const supportStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Support').length;
-  const activeStaff = Object.values(STAFF_DATA).filter(s=>s.status==='Active').length;
+  const teachingStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Teaching').length;
+  const adminStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Admin').length;
+  const supportStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Support').length;
+  const activeStaff = Object.values(STAFF_DATA).filter(s => s.status === 'Active').length;
 
-  return hdr('Staff Management','Manage school staff - teaching, admin and support personnel','Staff')+`
+  return hdr('Staff Management', 'Manage school staff - teaching, admin and support personnel', 'Staff') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-users"></i>',''+totalStaff,'Total Staff','All categories','neu','si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>',''+teachingStaff,'Teaching Staff','Academic staff','neu','si-gold')}
-    ${statCard('<i class="fas fa-building"></i>',''+adminStaff,'Admin Staff','Administrative team','neu','si-green')}
-    ${statCard('<i class="fas fa-wrench"></i>',''+supportStaff,'Support Staff','Support services','neu','si-purple')}
+    ${statCard('<i class="fas fa-users"></i>', '' + totalStaff, 'Total Staff', 'All categories', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>', '' + teachingStaff, 'Teaching Staff', 'Academic staff', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-building"></i>', '' + adminStaff, 'Admin Staff', 'Administrative team', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-wrench"></i>', '' + supportStaff, 'Support Staff', 'Support services', 'neu', 'si-purple')}
   </div>
   
   <div class="toolbar" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap">
@@ -8897,24 +8830,24 @@ function staffModule(){
         </tr>
       </thead>
       <tbody id="staff-list-body">
-        ${Object.values(STAFF_DATA).map((staff,i)=>`
+        ${Object.values(STAFF_DATA).map((staff, i) => `
         <tr class="staff-row" data-category="${staff.category}" data-name="${staff.name.toLowerCase()}">
-          <td style="color:var(--gray-400);font-size:11px">${i+1}</td>
+          <td style="color:var(--gray-400);font-size:11px">${i + 1}</td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
-              <div class="av av-sm av-${['blue','purple','gold','green','teal'][i%5]}">${staff.avatar}</div>
+              <div class="av av-sm av-${['blue', 'purple', 'gold', 'green', 'teal'][i % 5]}">${staff.avatar}</div>
               <div>
                 <div style="font-weight:600;font-size:12px">${staff.name}</div>
                 <div style="font-size:10px;color:var(--gray-500)">${staff.id}</div>
               </div>
             </div>
           </td>
-          <td><span class="badge ${staff.category==='Teaching'?'b-info':(staff.category==='Admin'?'b-success':'b-warning')}">${staff.category}</span></td>
+          <td><span class="badge ${staff.category === 'Teaching' ? 'b-info' : (staff.category === 'Admin' ? 'b-success' : 'b-warning')}">${staff.category}</span></td>
           <td style="font-size:11px">${staff.department}</td>
           <td style="font-size:11px;color:var(--gray-600)">${staff.position}</td>
           <td style="font-size:10px">${staff.phone}</td>
           <td style="font-size:10px;color:var(--gray-500)">${new Date(staff.joinDate).toLocaleDateString()}</td>
-          <td><span class="badge ${staff.status==='Active'?'b-success':'b-danger'}">${staff.status}</span></td>
+          <td><span class="badge ${staff.status === 'Active' ? 'b-success' : 'b-danger'}">${staff.status}</span></td>
           <td>
             <div style="display:flex;gap:3px;justify-content:center">
               <button class="btn btn-secondary btn-xs" onclick="viewStaffDetail('${staff.id}')" title="View details"><i class="fas fa-eye"></i></button>
@@ -8929,12 +8862,12 @@ function staffModule(){
 }
 
 // STAFF MANAGEMENT FUNCTIONS
-function toggleStaffForm(){
+function toggleStaffForm() {
   const form = document.getElementById('staff-form-wrap');
-  if(form) form.style.display = form.style.display==='none'?'block':'none';
+  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-function submitStaffForm(){
+function submitStaffForm() {
   const name = document.getElementById('staff-name')?.value.trim();
   const email = document.getElementById('staff-email')?.value.trim();
   const phone = document.getElementById('staff-phone')?.value.trim();
@@ -8949,17 +8882,17 @@ function submitStaffForm(){
   const address = document.getElementById('staff-address')?.value.trim();
   const emergencyContact = document.getElementById('staff-emergency-contact')?.value.trim();
   const emergencyPhone = document.getElementById('staff-emergency-phone')?.value.trim();
-  const assignments = document.getElementById('staff-assignments')?.value.split(',').map(s=>s.trim()).filter(s=>s) || [];
-  
-  if(!name || !email || !phone || !gender || !dob || !category || !department || !position || !qualifications || !salaryGrade || !joinDate){
+  const assignments = document.getElementById('staff-assignments')?.value.split(',').map(s => s.trim()).filter(s => s) || [];
+
+  if (!name || !email || !phone || !gender || !dob || !category || !department || !position || !qualifications || !salaryGrade || !joinDate) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields (marked with *)', 'error');
     return;
   }
-  
+
   // Generate staff ID
-  const categoryPrefix = category.slice(0,3).toUpperCase();
-  const staffId = categoryPrefix + String(Object.keys(STAFF_DATA).length + 1).padStart(3,'0');
-  
+  const categoryPrefix = category.slice(0, 3).toUpperCase();
+  const staffId = categoryPrefix + String(Object.keys(STAFF_DATA).length + 1).padStart(3, '0');
+
   const newStaff = {
     id: staffId,
     name: name,
@@ -8979,13 +8912,13 @@ function submitStaffForm(){
     assignments: assignments,
     status: 'Active',
     performance: '4.0/5',
-    avatar: name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()
+    avatar: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
   };
-  
+
   STAFF_DATA[staffId] = newStaff;
-  
-  showToast('<i class="fas fa-check-circle"></i> Staff member added successfully!<br/>Name: '+name+'<br/>ID: '+staffId, 'success', 4000);
-  
+
+  showToast('<i class="fas fa-check-circle"></i> Staff member added successfully!<br/>Name: ' + name + '<br/>ID: ' + staffId, 'success', 4000);
+
   // Clear form
   document.getElementById('staff-form-wrap').style.display = 'none';
   document.getElementById('staff-name').value = '';
@@ -9003,16 +8936,16 @@ function submitStaffForm(){
   document.getElementById('staff-emergency-contact').value = '';
   document.getElementById('staff-emergency-phone').value = '';
   document.getElementById('staff-assignments').value = '';
-  
+
   // Refresh
   renderMain();
 }
 
-function viewStaffDetail(staffId){
+function viewStaffDetail(staffId) {
   const staff = STAFF_DATA[staffId];
-  if(!staff) return;
-  
-  let html = hdr('Staff Profile','View complete staff member details','Staff')+`
+  if (!staff) return;
+
+  let html = hdr('Staff Profile', 'View complete staff member details', 'Staff') + `
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal Information</span></div>
@@ -9022,7 +8955,7 @@ function viewStaffDetail(staffId){
           <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${staff.name}</div>
           <div style="font-size:12px;color:var(--gray-500);margin-top:4px">ID: ${staff.id}</div>
           <div style="margin-top:8px;display:flex;gap:8px">
-            <span class="badge ${staff.category==='Teaching'?'b-info':(staff.category==='Admin'?'b-success':'b-warning')}">${staff.category}</span>
+            <span class="badge ${staff.category === 'Teaching' ? 'b-info' : (staff.category === 'Admin' ? 'b-success' : 'b-warning')}">${staff.category}</span>
             <span class="badge b-success">${staff.status}</span>
           </div>
         </div>
@@ -9035,7 +8968,7 @@ function viewStaffDetail(staffId){
           </div>
           <div>
             <div style="color:var(--gray-500);font-size:11px">Date of Birth</div>
-            <div style="font-weight:600;margin-top:4px">${new Date(staff.dob).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+            <div style="font-weight:600;margin-top:4px">${new Date(staff.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
           </div>
           <div>
             <div style="color:var(--gray-500);font-size:11px">Email Address</div>
@@ -9078,7 +9011,7 @@ function viewStaffDetail(staffId){
         </div>
         <div>
           <div style="color:var(--gray-500);font-size:11px">Tenure</div>
-          <div style="font-weight:600;margin-top:4px">${Math.floor((new Date()-new Date(staff.joinDate))/(365*24*60*60*1000))} years</div>
+          <div style="font-weight:600;margin-top:4px">${Math.floor((new Date() - new Date(staff.joinDate)) / (365 * 24 * 60 * 60 * 1000))} years</div>
         </div>
         <div style="grid-column:1/-1">
           <div style="color:var(--gray-500);font-size:11px">Qualifications</div>
@@ -9109,7 +9042,7 @@ function viewStaffDetail(staffId){
         <div style="color:var(--gray-500);font-size:11px;margin-bottom:4px">Performance Rating</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="flex:1">
-            <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${parseFloat(staff.performance)*20}%"></div></div>
+            <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${parseFloat(staff.performance) * 20}%"></div></div>
           </div>
           <div style="font-weight:700;color:var(--blue-main)">${staff.performance}</div>
         </div>
@@ -9117,7 +9050,7 @@ function viewStaffDetail(staffId){
       <div style="border-top:1px solid var(--gray-200);padding-top:12px">
         <div style="color:var(--gray-500);font-size:11px;margin-bottom:8px">Current Assignments/Roles</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${staff.assignments.map(a=>'<span class="badge b-info" style="font-size:11px">'+a+'</span>').join('')}
+          ${staff.assignments.map(a => '<span class="badge b-info" style="font-size:11px">' + a + '</span>').join('')}
         </div>
       </div>
     </div>
@@ -9127,15 +9060,15 @@ function viewStaffDetail(staffId){
     <button class="btn btn-primary" onclick="editStaff('${staff.id}')"><i class="fas fa-edit"></i> Edit Staff</button>
     <button class="btn btn-secondary" onclick="navTo('staff')"><i class="fas fa-arrow-left"></i> Back to List</button>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function editStaff(staffId){
+function editStaff(staffId) {
   const staff = STAFF_DATA[staffId];
-  if(!staff) return;
-  
-  let html = hdr('Edit Staff Member','Update staff information','Staff')+`
+  if (!staff) return;
+
+  let html = hdr('Edit Staff Member', 'Update staff information', 'Staff') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Edit Staff Details</span></div>
     <div class="form-grid">
@@ -9153,7 +9086,7 @@ function editStaff(staffId){
       </div>
       <div class="form-field">
         <label>Category *</label>
-        <select id="edit-staff-category"><option value="Teaching" ${staff.category==='Teaching'?'selected':''}>Teaching</option><option value="Admin" ${staff.category==='Admin'?'selected':''}>Admin</option><option value="Support" ${staff.category==='Support'?'selected':''}>Support</option></select>
+        <select id="edit-staff-category"><option value="Teaching" ${staff.category === 'Teaching' ? 'selected' : ''}>Teaching</option><option value="Admin" ${staff.category === 'Admin' ? 'selected' : ''}>Admin</option><option value="Support" ${staff.category === 'Support' ? 'selected' : ''}>Support</option></select>
       </div>
       <div class="form-field">
         <label>Department *</label>
@@ -9169,7 +9102,7 @@ function editStaff(staffId){
       </div>
       <div class="form-field">
         <label>Status</label>
-        <select id="edit-staff-status"><option value="Active" ${staff.status==='Active'?'selected':''}>Active</option><option value="On Leave">On Leave</option><option value="Retired">Retired</option></select>
+        <select id="edit-staff-status"><option value="Active" ${staff.status === 'Active' ? 'selected' : ''}>Active</option><option value="On Leave">On Leave</option><option value="Retired">Retired</option></select>
       </div>
       <div class="form-field" style="grid-column:1/-1">
         <label>Assignments/Roles (comma-separated)</label>
@@ -9181,14 +9114,14 @@ function editStaff(staffId){
       </div>
     </div>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function submitEditStaff(staffId){
+function submitEditStaff(staffId) {
   const staff = STAFF_DATA[staffId];
-  if(!staff) return;
-  
+  if (!staff) return;
+
   staff.name = document.getElementById('edit-staff-name')?.value.trim();
   staff.email = document.getElementById('edit-staff-email')?.value.trim();
   staff.phone = document.getElementById('edit-staff-phone')?.value.trim();
@@ -9197,62 +9130,62 @@ function submitEditStaff(staffId){
   staff.position = document.getElementById('edit-staff-position')?.value.trim();
   staff.salaryGrade = document.getElementById('edit-staff-salary-grade')?.value.trim();
   staff.status = document.getElementById('edit-staff-status')?.value;
-  staff.assignments = document.getElementById('edit-staff-assignments')?.value.split(',').map(s=>s.trim()).filter(s=>s);
-  
-  showToast('<i class="fas fa-check-circle"></i> Staff information updated!<br/>Name: '+staff.name, 'success', 4000);
-  
+  staff.assignments = document.getElementById('edit-staff-assignments')?.value.split(',').map(s => s.trim()).filter(s => s);
+
+  showToast('<i class="fas fa-check-circle"></i> Staff information updated!<br/>Name: ' + staff.name, 'success', 4000);
+
   setTimeout(() => { navTo('staff'); }, 2000);
 }
 
-function deleteStaff(staffId){
+function deleteStaff(staffId) {
   const staff = STAFF_DATA[staffId];
-  if(!staff) return;
-  
-  if(confirm('Are you sure you want to delete '+staff.name+'? This action cannot be undone.')){
+  if (!staff) return;
+
+  if (confirm('Are you sure you want to delete ' + staff.name + '? This action cannot be undone.')) {
     delete STAFF_DATA[staffId];
     showToast('<i class="fas fa-check-circle"></i> Staff member deleted successfully', 'success', 3000);
     renderMain();
   }
 }
 
-function filterStaffList(){
+function filterStaffList() {
   const searchTerm = document.getElementById('staff-search')?.value.toLowerCase() || '';
   const categoryFilter = document.getElementById('staff-category-filter')?.value || '';
-  
+
   const rows = document.querySelectorAll('.staff-row');
-  rows.forEach(row=>{
+  rows.forEach(row => {
     const name = row.dataset.name || '';
     const category = row.dataset.category || '';
-    
+
     const matchesSearch = name.includes(searchTerm);
     const matchesCategory = !categoryFilter || category === categoryFilter;
-    
+
     row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
   });
 }
 
-function showStaffStatistics(){
+function showStaffStatistics() {
   const totalStaff = Object.keys(STAFF_DATA).length;
-  const teachingStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Teaching').length;
-  const adminStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Admin').length;
-  const supportStaff = Object.values(STAFF_DATA).filter(s=>s.category==='Support').length;
-  const activeStaff = Object.values(STAFF_DATA).filter(s=>s.status==='Active').length;
-  
+  const teachingStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Teaching').length;
+  const adminStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Admin').length;
+  const supportStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Support').length;
+  const activeStaff = Object.values(STAFF_DATA).filter(s => s.status === 'Active').length;
+
   // Calculate average performance
-  const avgPerformance = (Object.values(STAFF_DATA).reduce((sum,s)=>sum+parseFloat(s.performance),0)/totalStaff).toFixed(1);
-  
+  const avgPerformance = (Object.values(STAFF_DATA).reduce((sum, s) => sum + parseFloat(s.performance), 0) / totalStaff).toFixed(1);
+
   // Get departments
   const depts = {};
-  Object.values(STAFF_DATA).forEach(s=>{
-    depts[s.department] = (depts[s.department]||0)+1;
+  Object.values(STAFF_DATA).forEach(s => {
+    depts[s.department] = (depts[s.department] || 0) + 1;
   });
-  
-  let html = hdr('Staff Statistics & Reports','Comprehensive staff analysis','Staff')+`
+
+  let html = hdr('Staff Statistics & Reports', 'Comprehensive staff analysis', 'Staff') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-users"></i>',''+totalStaff,'Total Staff','All staff','neu','si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>',''+activeStaff,'Active Staff','Currently employed','neu','si-green')}
-    ${statCard('<i class="fas fa-star"></i>',''+avgPerformance,'Avg Performance','Overall rating','neu','si-gold')}
-    ${statCard('<i class="fas fa-building"></i>',''+Object.keys(depts).length,'Departments','Total categories','neu','si-purple')}
+    ${statCard('<i class="fas fa-users"></i>', '' + totalStaff, 'Total Staff', 'All staff', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '' + activeStaff, 'Active Staff', 'Currently employed', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-star"></i>', '' + avgPerformance, 'Avg Performance', 'Overall rating', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-building"></i>', '' + Object.keys(depts).length, 'Departments', 'Total categories', 'neu', 'si-purple')}
   </div>
   
   <div class="g3 mb20">
@@ -9286,13 +9219,13 @@ function showStaffStatistics(){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Staff by Department</span></div>
       <div style="font-size:12px">
-        ${Object.entries(depts).sort((a,b)=>b[1]-a[1]).map(([dept,count])=>`
+        ${Object.entries(depts).sort((a, b) => b[1] - a[1]).map(([dept, count]) => `
         <div style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
             <span style="font-weight:600">${dept}</span>
             <span style="color:var(--blue-main);font-weight:700">${count}</span>
           </div>
-          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(count/totalStaff)*100}%"></div></div>
+          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(count / totalStaff) * 100}%"></div></div>
         </div>`).join('')}
       </div>
     </div>
@@ -9300,16 +9233,16 @@ function showStaffStatistics(){
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-rankings"></i> Salary Grades Distribution</span></div>
       ${(() => {
-        const salaryGrades = {};
-        Object.values(STAFF_DATA).forEach(s=>{
-          salaryGrades[s.salaryGrade] = (salaryGrades[s.salaryGrade]||0)+1;
-        });
-        return Object.entries(salaryGrades).sort((a,b)=>b[1]-a[1]).map(([grade,count])=>`
+      const salaryGrades = {};
+      Object.values(STAFF_DATA).forEach(s => {
+        salaryGrades[s.salaryGrade] = (salaryGrades[s.salaryGrade] || 0) + 1;
+      });
+      return Object.entries(salaryGrades).sort((a, b) => b[1] - a[1]).map(([grade, count]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:12px">
           <span style="font-weight:600">${grade}</span>
           <span style="padding:4px 10px;background:var(--blue-main);color:white;border-radius:12px;font-size:11px">${count}</span>
         </div>`).join('');
-      })()}
+    })()}
     </div>
   </div>
   
@@ -9330,22 +9263,22 @@ function showStaffStatistics(){
         </tr>
       </thead>
       <tbody>
-        ${Object.values(STAFF_DATA).map(s=>`
+        ${Object.values(STAFF_DATA).map(s => `
         <tr>
           <td style="font-weight:600">${s.name}</td>
-          <td><span class="badge ${s.category==='Teaching'?'b-info':(s.category==='Admin'?'b-success':'b-warning')}">${s.category}</span></td>
+          <td><span class="badge ${s.category === 'Teaching' ? 'b-info' : (s.category === 'Admin' ? 'b-success' : 'b-warning')}">${s.category}</span></td>
           <td>${s.department}</td>
           <td>${s.position}</td>
           <td>${s.salaryGrade}</td>
           <td>${new Date(s.joinDate).toLocaleDateString()}</td>
-          <td>${Math.floor((new Date()-new Date(s.joinDate))/(365*24*60*60*1000))} yrs</td>
+          <td>${Math.floor((new Date() - new Date(s.joinDate)) / (365 * 24 * 60 * 60 * 1000))} yrs</td>
           <td>
             <div style="display:flex;align-items:center;gap:4px">
-              <div style="flex:1;height:6px;background:var(--gray-200);border-radius:3px"><div style="width:${parseFloat(s.performance)*20}%;height:100%;background:var(--blue-main);border-radius:3px"></div></div>
+              <div style="flex:1;height:6px;background:var(--gray-200);border-radius:3px"><div style="width:${parseFloat(s.performance) * 20}%;height:100%;background:var(--blue-main);border-radius:3px"></div></div>
               <span style="font-weight:600;font-size:10px;color:var(--blue-main)">${s.performance}</span>
             </div>
           </td>
-          <td><span class="badge ${s.status==='Active'?'b-success':'b-danger'}">${s.status}</span></td>
+          <td><span class="badge ${s.status === 'Active' ? 'b-success' : 'b-danger'}">${s.status}</span></td>
         </tr>`).join('')}
       </tbody>
     </table>
@@ -9354,22 +9287,22 @@ function showStaffStatistics(){
   <div style="display:flex;gap:10px">
     <button class="btn btn-secondary" onclick="navTo('staff')"><i class="fas fa-arrow-left"></i> Back to Staff List</button>
   </div>`;
-  
+
   document.getElementById('main-content').innerHTML = html;
 }
 
-function exportStaffToCSV(){
+function exportStaffToCSV() {
   let csv = 'Staff Directory Export\n';
-  csv += 'Generated: '+new Date().toLocaleDateString()+'\n\n';
-  
+  csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
+
   csv += 'ID,Name,Category,Department,Position,Email,Phone,Salary Grade,Join Date,Status,Performance\n';
-  Object.values(STAFF_DATA).forEach(s=>{
+  Object.values(STAFF_DATA).forEach(s => {
     csv += `"${s.id}","${s.name}","${s.category}","${s.department}","${s.position}","${s.email}","${s.phone}","${s.salaryGrade}","${s.joinDate}","${s.status}","${s.performance}"\n`;
   });
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'Staff_Directory_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'Staff_Directory_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -9377,16 +9310,16 @@ function exportStaffToCSV(){
   showToast('<i class="fas fa-check-circle"></i> Staff directory exported to CSV', 'success', 3000);
 }
 
-function exportStaffToExcel(){
+function exportStaffToExcel() {
   let html = '<table border="1"><tr><th>ID</th><th>Name</th><th>Category</th><th>Department</th><th>Position</th><th>Email</th><th>Phone</th><th>Salary Grade</th><th>Join Date</th><th>Status</th><th>Performance</th></tr>';
-  Object.values(STAFF_DATA).forEach(s=>{
-    html += '<tr><td>'+s.id+'</td><td>'+s.name+'</td><td>'+s.category+'</td><td>'+s.department+'</td><td>'+s.position+'</td><td>'+s.email+'</td><td>'+s.phone+'</td><td>'+s.salaryGrade+'</td><td>'+s.joinDate+'</td><td>'+s.status+'</td><td>'+s.performance+'</td></tr>';
+  Object.values(STAFF_DATA).forEach(s => {
+    html += '<tr><td>' + s.id + '</td><td>' + s.name + '</td><td>' + s.category + '</td><td>' + s.department + '</td><td>' + s.position + '</td><td>' + s.email + '</td><td>' + s.phone + '</td><td>' + s.salaryGrade + '</td><td>' + s.joinDate + '</td><td>' + s.status + '</td><td>' + s.performance + '</td></tr>';
   });
   html += '</table>';
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:application/vnd.ms-excel,' + encodeURIComponent(html));
-  element.setAttribute('download', 'Staff_Directory_'+new Date().toISOString().slice(0,10)+'.xls');
+  element.setAttribute('download', 'Staff_Directory_' + new Date().toISOString().slice(0, 10) + '.xls');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -9395,40 +9328,40 @@ function exportStaffToExcel(){
 }
 
 // ALUMNI MODULE (Admin view)
-function alumniModule(){
-  return hdr('Alumni Module','Manage alumni records and engagement','Alumni')+`
+function alumniModule() {
+  return hdr('Alumni Module', 'Manage alumni records and engagement', 'Alumni') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-medal"></i>','1,240','Total Alumni','Class 1985–2024','neu','si-blue')}
-    ${statCard('<i class="fas fa-globe"></i>','48','Countries','Alumni worldwide','neu','si-gold')}
-    ${statCard('<i class="fas fa-handshake"></i>','GH₵42K','Donations','This year','up','si-green')}
-    ${statCard('<i class="fas fa-file-alt"></i>','14','Pending Requests','Certificates etc','dn','si-red')}
+    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985–2024', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-globe"></i>', '48', 'Countries', 'Alumni worldwide', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Donations', 'This year', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-file-alt"></i>', '14', 'Pending Requests', 'Certificates etc', 'dn', 'si-red')}
   </div>
   ${alumniDirectory()}`;
 }
 
 // ALUMNI MODULE FUNCTIONS
-function toggleAddAlumniForm(){
+function toggleAddAlumniForm() {
   const form = document.getElementById('alumni-form-wrap');
   form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-function submitAlumni(){
+function submitAlumni() {
   const name = document.getElementById('alumni-name').value;
   const year = document.getElementById('alumni-year').value;
   const profession = document.getElementById('alumni-profession').value;
   const location = document.getElementById('alumni-location').value;
   const email = document.getElementById('alumni-email').value;
   const phone = document.getElementById('alumni-phone').value;
-  
-  if(!name || !year || !profession || !location || !email || !phone){
+
+  if (!name || !year || !profession || !location || !email || !phone) {
     showToast('Please fill in all required fields', 'error');
     return;
   }
-  
+
   const id = 'ALM' + String(Object.keys(ALUMNI_DATA).length + 1).padStart(3, '0');
   ALUMNI_DATA[id] = {
-    id, name, classYear: parseInt(year), profession, location, avatar: name.substring(0,2).toUpperCase(),
-    avatarColor: ['purple','blue','green','gold','teal','orange','pink'][Object.keys(ALUMNI_DATA).length % 7],
+    id, name, classYear: parseInt(year), profession, location, avatar: name.substring(0, 2).toUpperCase(),
+    avatarColor: ['purple', 'blue', 'green', 'gold', 'teal', 'orange', 'pink'][Object.keys(ALUMNI_DATA).length % 7],
     bio: document.getElementById('alumni-bio').value || 'Alumni member',
     email, phone,
     instagram: document.getElementById('alumni-instagram').value,
@@ -9436,34 +9369,34 @@ function submitAlumni(){
     twitter: document.getElementById('alumni-twitter').value,
     facebook: document.getElementById('alumni-facebook').value
   };
-  
+
   showToast('Alumni member added successfully!', 'success');
   toggleAddAlumniForm();
   navTo('alumni');
 }
 
-function filterAlumni(){
+function filterAlumni() {
   const search = document.getElementById('alumni-search').value.toLowerCase();
   const yearFilter = document.getElementById('alumni-year-filter').value;
   const profFilter = document.getElementById('alumni-profession-filter').value.toLowerCase();
-  
+
   document.querySelectorAll('.alumni-card').forEach(card => {
     const name = card.getAttribute('data-name');
     const year = card.getAttribute('data-year');
     const prof = card.getAttribute('data-profession');
-    
+
     const matchesSearch = name.includes(search);
     const matchesYear = !yearFilter || year === yearFilter;
     const matchesProf = !profFilter || prof.includes(profFilter);
-    
+
     card.style.display = (matchesSearch && matchesYear && matchesProf) ? '' : 'none';
   });
 }
 
-function showAlumniProfile(alumniId){
+function showAlumniProfile(alumniId) {
   const alumni = ALUMNI_DATA[alumniId];
-  if(!alumni) return;
-  
+  if (!alumni) return;
+
   const modalHtml = `
     <div class="modal-overlay" onclick="document.querySelector('.modal-overlay')?.remove()">
       <div class="card" style="max-width:600px;margin:auto" onclick="event.stopPropagation()">
@@ -9496,14 +9429,14 @@ function showAlumniProfile(alumniId){
         </div>
       </div>
     </div>`;
-  
+
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-function showConnectModal(alumniId){
+function showConnectModal(alumniId) {
   const alumni = ALUMNI_DATA[alumniId];
-  if(!alumni) return;
-  
+  if (!alumni) return;
+
   const modalHtml = `
     <div class="modal-overlay" onclick="document.querySelector('.modal-overlay')?.remove()">
       <div class="card" style="max-width:600px;margin:auto" onclick="event.stopPropagation()">
@@ -9515,8 +9448,8 @@ function showConnectModal(alumniId){
           <div style="margin-bottom:20px">
             <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Social Media Handles</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              ${alumni.instagram ? `<a href="https://instagram.com/${alumni.instagram.replace('@','')}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-instagram"></i> ${alumni.instagram}</a>` : ''}
-              ${alumni.twitter ? `<a href="https://twitter.com/${alumni.twitter.replace('@','')}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-twitter"></i> ${alumni.twitter}</a>` : ''}
+              ${alumni.instagram ? `<a href="https://instagram.com/${alumni.instagram.replace('@', '')}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-instagram"></i> ${alumni.instagram}</a>` : ''}
+              ${alumni.twitter ? `<a href="https://twitter.com/${alumni.twitter.replace('@', '')}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-twitter"></i> ${alumni.twitter}</a>` : ''}
               ${alumni.linkedin ? `<a href="https://${alumni.linkedin}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-linkedin"></i> LinkedIn</a>` : ''}
               ${alumni.facebook ? `<a href="https://${alumni.facebook}" target="_blank" class="btn btn-secondary" style="text-align:center"><i class="fab fa-facebook"></i> Facebook</a>` : ''}
             </div>
@@ -9534,31 +9467,31 @@ function showConnectModal(alumniId){
         </div>
       </div>
     </div>`;
-  
+
   const existing = document.querySelector('.modal-overlay');
-  if(existing) existing.remove();
+  if (existing) existing.remove();
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-function sendMessageToAlumni(alumniId){
+function sendMessageToAlumni(alumniId) {
   const alumni = ALUMNI_DATA[alumniId];
   const message = document.getElementById('alumni-message').value;
-  
-  if(!message.trim()){
+
+  if (!message.trim()) {
     showToast('Please type a message', 'error');
     return;
   }
-  
+
   showToast('Message sent to ' + alumni.name + '!', 'success');
-  
+
   // Store message in messaging system (would connect to backend in real app)
   const msgId = 'MSG' + Date.now();
   const timestamp = new Date().toLocaleString();
-  
+
   console.log('Message sent to:', alumni.name);
   console.log('Message:', message);
   console.log('Time:', timestamp);
-  
+
   document.querySelector('.modal-overlay')?.remove();
 }
 
@@ -9566,29 +9499,29 @@ function sendMessageToAlumni(alumniId){
 // BACKUP MODULE
 // BACKUPS DATA
 const BACKUPS_DATA = [
-  {date: 'Mar 17, 2025 2:00 AM', size: '2.4 GB', type: 'Auto', status: 'Success', id: 'BK001'},
-  {date: 'Mar 16, 2025 2:00 AM', size: '2.3 GB', type: 'Auto', status: 'Success', id: 'BK002'},
-  {date: 'Mar 15, 2025 2:00 AM', size: '2.3 GB', type: 'Manual', status: 'Success', id: 'BK003'},
-  {date: 'Mar 14, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK004'},
-  {date: 'Mar 13, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK005'},
-  {date: 'Mar 12, 2025 2:00 AM', size: '2.1 GB', type: 'Auto', status: 'Success', id: 'BK006'}
+  { date: 'Mar 17, 2025 2:00 AM', size: '2.4 GB', type: 'Auto', status: 'Success', id: 'BK001' },
+  { date: 'Mar 16, 2025 2:00 AM', size: '2.3 GB', type: 'Auto', status: 'Success', id: 'BK002' },
+  { date: 'Mar 15, 2025 2:00 AM', size: '2.3 GB', type: 'Manual', status: 'Success', id: 'BK003' },
+  { date: 'Mar 14, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK004' },
+  { date: 'Mar 13, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK005' },
+  { date: 'Mar 12, 2025 2:00 AM', size: '2.1 GB', type: 'Auto', status: 'Success', id: 'BK006' }
 ];
 
 const SYSTEM_LOGS = [
-  {level: 'INFO', message: 'User admin logged in', time: '2025-03-17 08:00:12', type: 'login'},
-  {level: 'INFO', message: 'Student enrollment: Ama Serwaa', time: '2025-03-17 08:05:33', type: 'enrollment'},
-  {level: 'WARNING', message: 'Failed login attempt', time: '2025-03-17 08:10:45', type: 'security'},
-  {level: 'INFO', message: 'Fee payment recorded - GHS 5,000', time: '2025-03-17 08:30:12', type: 'payment'},
-  {level: 'INFO', message: 'Notice published: School Holiday', time: '2025-03-17 09:00:00', type: 'admin'},
-  {level: 'ERROR', message: 'Backup storage 80% full', time: '2025-03-17 09:15:22', type: 'system'},
-  {level: 'INFO', message: 'Timetable updated for Form 3', time: '2025-03-17 10:00:00', type: 'academic'},
-  {level: 'INFO', message: 'Academic Report generated', time: '2025-03-17 10:30:00', type: 'report'},
-  {level: 'WARNING', message: 'Database query slow - 5.2s', time: '2025-03-17 11:00:00', type: 'performance'},
-  {level: 'INFO', message: 'User Teacher logged in', time: '2025-03-17 11:15:00', type: 'login'}
+  { level: 'INFO', message: 'User admin logged in', time: '2025-03-17 08:00:12', type: 'login' },
+  { level: 'INFO', message: 'Student enrollment: Ama Serwaa', time: '2025-03-17 08:05:33', type: 'enrollment' },
+  { level: 'WARNING', message: 'Failed login attempt', time: '2025-03-17 08:10:45', type: 'security' },
+  { level: 'INFO', message: 'Fee payment recorded - GHS 5,000', time: '2025-03-17 08:30:12', type: 'payment' },
+  { level: 'INFO', message: 'Notice published: School Holiday', time: '2025-03-17 09:00:00', type: 'admin' },
+  { level: 'ERROR', message: 'Backup storage 80% full', time: '2025-03-17 09:15:22', type: 'system' },
+  { level: 'INFO', message: 'Timetable updated for Form 3', time: '2025-03-17 10:00:00', type: 'academic' },
+  { level: 'INFO', message: 'Academic Report generated', time: '2025-03-17 10:30:00', type: 'report' },
+  { level: 'WARNING', message: 'Database query slow - 5.2s', time: '2025-03-17 11:00:00', type: 'performance' },
+  { level: 'INFO', message: 'User Teacher logged in', time: '2025-03-17 11:15:00', type: 'login' }
 ];
 
-function backupModule(){
-  return hdr('Backup & System Logs','Data backup management and activity logs','Backup & Logs')+`
+function backupModule() {
+  return hdr('Backup & System Logs', 'Data backup management and activity logs', 'Backup & Logs') + `
   <div class="g2">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-save"></i> Database Backup</span></div>
@@ -9610,11 +9543,11 @@ function backupModule(){
       <table class="tbl" id="backups-table">
         <thead><tr><th>Date</th><th>Size</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="backups-tbody">
-          ${BACKUPS_DATA.map(b=>`
+          ${BACKUPS_DATA.map(b => `
           <tr class="backup-row" data-date="${b.date.toLowerCase()}" data-size="${b.size.toLowerCase()}">
             <td>${b.date}</td>
             <td>${b.size}</td>
-            <td><span class="badge ${b.type==='Auto'?'b-info':'b-warning'}">${b.type}</span></td>
+            <td><span class="badge ${b.type === 'Auto' ? 'b-info' : 'b-warning'}">${b.type}</span></td>
             <td><span class="badge b-success">${b.status}</span></td>
             <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="downloadBackup('${b.id}')"><i class="fas fa-download"></i> Download</button></div></td>
           </tr>`).join('')}
@@ -9647,51 +9580,51 @@ function backupModule(){
       </div>
       
       <div style="max-height:400px;overflow-y:auto" id="logs-container">
-        ${SYSTEM_LOGS.map((log,i)=>{
-          const color = log.level === 'INFO' ? 'b-info' : (log.level === 'WARNING' ? 'b-warning' : 'b-danger');
-          return `<div class="system-log" data-level="${log.level}" data-type="${log.type}" data-message="${log.message.toLowerCase()}" style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100);font-size:11px;align-items:flex-start">
+        ${SYSTEM_LOGS.map((log, i) => {
+    const color = log.level === 'INFO' ? 'b-info' : (log.level === 'WARNING' ? 'b-warning' : 'b-danger');
+    return `<div class="system-log" data-level="${log.level}" data-type="${log.type}" data-message="${log.message.toLowerCase()}" style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100);font-size:11px;align-items:flex-start">
             <span class="badge ${color}" style="font-size:9px;height:fit-content;white-space:nowrap">${log.level}</span>
             <div style="flex:1">
               <div style="font-weight:600;color:var(--gray-700);margin-bottom:4px">${log.message}</div>
               <div style="color:var(--gray-400)">${log.time}</div>
             </div>
           </div>`;
-        }).join('')}
+  }).join('')}
       </div>
     </div>
   </div>`;
 }
 
 // BACKUP FUNCTIONS
-function performBackup(){
+function performBackup() {
   showToast('Starting backup process...', 'info');
   const loader = setTimeout(() => {
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-GB', {year: 'numeric', month: 'short', day: '2-digit'}) + ', ' + now.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
-    
+    const dateStr = now.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) + ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
     BACKUPS_DATA.unshift({
       date: dateStr + ' AM',
       size: Math.random() > 0.5 ? '2.5 GB' : '2.4 GB',
       type: 'Manual',
       status: 'Success',
-      id: 'BK' + String(Math.random()).slice(2,5)
+      id: 'BK' + String(Math.random()).slice(2, 5)
     });
-    
+
     showToast('✓ Backup completed successfully!', 'success');
     navTo('backup');
   }, 2000);
 }
 
-function downloadLatestBackup(){
+function downloadLatestBackup() {
   const latest = BACKUPS_DATA[0];
-  if(!latest) return;
+  if (!latest) return;
   downloadBackup(latest.id);
 }
 
-function downloadBackup(backupId){
+function downloadBackup(backupId) {
   const backup = BACKUPS_DATA.find(b => b.id === backupId);
-  if(!backup) return;
-  
+  if (!backup) return;
+
   showToast('Downloading backup: ' + backup.date, 'info');
   setTimeout(() => {
     const link = document.createElement('a');
@@ -9702,14 +9635,14 @@ function downloadBackup(backupId){
   }, 1000);
 }
 
-function syncToCloud(){
+function syncToCloud() {
   showToast('Syncing to cloud...', 'info');
   setTimeout(() => {
     showToast('✓ Cloud sync completed! All backups synced to cloud storage.', 'success');
   }, 2000);
 }
 
-function filterBackups(){
+function filterBackups() {
   const search = document.getElementById('backup-search').value.toLowerCase();
   document.querySelectorAll('.backup-row').forEach(row => {
     const date = row.getAttribute('data-date');
@@ -9719,25 +9652,25 @@ function filterBackups(){
   });
 }
 
-function filterLogs(){
+function filterLogs() {
   const search = document.getElementById('logs-search').value.toLowerCase();
   const levelFilter = document.getElementById('logs-filter').value;
   const typeFilter = document.getElementById('logs-type-filter').value;
-  
+
   document.querySelectorAll('.system-log').forEach(log => {
     const level = log.getAttribute('data-level');
     const type = log.getAttribute('data-type');
     const message = log.getAttribute('data-message');
-    
+
     const matchesSearch = message.includes(search);
     const matchesLevel = !levelFilter || level === levelFilter;
     const matchesType = !typeFilter || type === typeFilter;
-    
+
     log.style.display = (matchesSearch && matchesLevel && matchesType) ? '' : 'none';
   });
 }
 
-function exportLogs(){
+function exportLogs() {
   const logs = SYSTEM_LOGS.map(l => `[${l.time}] ${l.level}: ${l.message}`).join('\n');
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(logs));
@@ -9750,8 +9683,8 @@ function exportLogs(){
 }
 
 // PROFILE MODULE
-function profileModule(){
-  return hdr('My Profile','View and update your personal information','Profile')+`
+function profileModule() {
+  return hdr('My Profile', 'View and update your personal information', 'Profile') + `
   <div class="g21">
     <div class="card">
       <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:22px;padding-bottom:18px;border-bottom:1.5px solid var(--gray-200)">
@@ -9783,7 +9716,7 @@ function profileModule(){
       </div>
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Academic Summary</span></div>
-        ${[['GPA','3.8 / 4.0','↑'],['Attendance','96%','↑'],['Class Rank','3 / 40','↑'],['Current Term','Term 1, 2025','—']].map(([l,v,t])=>`
+        ${[['GPA', '3.8 / 4.0', '↑'], ['Attendance', '96%', '↑'], ['Class Rank', '3 / 40', '↑'], ['Current Term', 'Term 1, 2025', '—']].map(([l, v, t]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--gray-50);border-radius:var(--radius);margin-bottom:8px">
           <span style="font-size:12px;color:var(--gray-600)">${l}</span>
           <span style="font-size:14px;font-weight:800;color:var(--blue-dark)">${v} <span style="color:var(--success);font-size:11px">${t}</span></span>
@@ -9794,15 +9727,15 @@ function profileModule(){
 }
 
 // LESSON NOTES MODULE
-function lessonNotesModule(){
-  return hdr('Lesson Notes Upload','Upload and manage lesson resources','Lesson Notes')+`
+function lessonNotesModule() {
+  return hdr('Lesson Notes Upload', 'Upload and manage lesson resources', 'Lesson Notes') + `
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-file"></i> My Lesson Notes</span></div>
       <table class="tbl">
         <thead><tr><th>Title</th><th>Subject</th><th>Class</th><th>Date</th><th>Type</th><th>Downloads</th><th>Actions</th></tr></thead>
         <tbody>
-          ${[['Chapter 5: Quadratic Equations','Mathematics','JHS 2','Mar 15','PDF',24],['English Essay Writing Guide','English','Form 3A','Mar 12','DOCX',18],['Science Lab Safety Rules','Science','Form 1C','Mar 10','PDF',32],['ICT Database Notes','ICT','Form 2B','Mar 8','PPTX',15]].map(([t,s,c,d,ty,dl])=>`
+          ${[['Chapter 5: Quadratic Equations', 'Mathematics', 'JHS 2', 'Mar 15', 'PDF', 24], ['English Essay Writing Guide', 'English', 'Form 3A', 'Mar 12', 'DOCX', 18], ['Science Lab Safety Rules', 'Science', 'Form 1C', 'Mar 10', 'PDF', 32], ['ICT Database Notes', 'ICT', 'Form 2B', 'Mar 8', 'PPTX', 15]].map(([t, s, c, d, ty, dl]) => `
           <tr>
             <td style="font-weight:600">${t}</td><td>${s}</td><td>${c}</td><td>${d}</td>
             <td><span class="badge b-info">${ty}</span></td>
@@ -9829,16 +9762,16 @@ function lessonNotesModule(){
           <input type="file" style="display:none">
         </div>
       </div>
-      <button class="btn btn-primary" style="width:100%" onclick="showToast('<i class="fas fa-check-circle"></i> File uploaded!', 'success')"><i class="fas fa-upload"></i> Upload</button>
+      <button class="btn btn-primary" style="width:100%" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> File uploaded!', 'success')"><i class="fas fa-upload"></i> Upload</button>
     </div>
   </div>`;
 }
 
 // CHILDREN MODULE (Parent)
-function childrenModule(){
-  return hdr('My Children','Monitor your children\'s school activities','My Children')+`
+function childrenModule() {
+  return hdr('My Children', 'Monitor your children\'s school activities', 'My Children') + `
   <div class="g2">
-    ${[['Ama Serwaa','Form 3A','2024-0042',['96% Attendance','GPA 3.8','Fees: Paid','Rank: 3/40'],'blue','Science Stream'],['Kweku Serwaa','Form 1B','2024-0143',['91% Attendance','GPA 3.5','Fees: Paid','Rank: 8/38'],'purple','General Stream']].map(([n,c,r,stats,av,st])=>`
+    ${[['Ama Serwaa', 'Form 3A', '2024-0042', ['96% Attendance', 'GPA 3.8', 'Fees: Paid', 'Rank: 3/40'], 'blue', 'Science Stream'], ['Kweku Serwaa', 'Form 1B', '2024-0143', ['91% Attendance', 'GPA 3.5', 'Fees: Paid', 'Rank: 8/38'], 'purple', 'General Stream']].map(([n, c, r, stats, av, st]) => `
     <div class="card">
       <div style="display:flex;gap:16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--gray-200)">
         <div class="av av-xl av-${av}">${n[0]}</div>
@@ -9849,7 +9782,7 @@ function childrenModule(){
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-        ${stats.map(s=>`<div style="padding:10px;background:var(--gray-50);border-radius:var(--radius);font-size:12px;font-weight:600;text-align:center;color:var(--blue-dark)">${s}</div>`).join('')}
+        ${stats.map(s => `<div style="padding:10px;background:var(--gray-50);border-radius:var(--radius);font-size:12px;font-weight:600;text-align:center;color:var(--blue-dark)">${s}</div>`).join('')}
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" style="flex:1" onclick="navTo('reportcards')"><i class="fas fa-scroll"></i> Report Card</button>
@@ -9861,13 +9794,13 @@ function childrenModule(){
 }
 
 // SALARY MODULE
-function salaryModule(){
-  return hdr('Salary & Payroll','Staff salary management and payroll processing','Payroll')+`
+function salaryModule() {
+  return hdr('Salary & Payroll', 'Staff salary management and payroll processing', 'Payroll') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-briefcase"></i>','94','Total Staff','For payroll','neu','si-blue')}
-    ${statCard('<i class="fas fa-money-bill"></i>','GH₵148K','Monthly Payroll','Total outgoing','neu','si-gold')}
-    ${statCard('<i class="fas fa-check-circle"></i>','0','Pending','All current','up','si-green')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>','Mar 28','Next Pay Date','In 11 days','neu','si-purple')}
+    ${statCard('<i class="fas fa-briefcase"></i>', '94', 'Total Staff', 'For payroll', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵148K', 'Monthly Payroll', 'Total outgoing', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-check-circle"></i>', '0', 'Pending', 'All current', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-calendar-alt"></i>', 'Mar 28', 'Next Pay Date', 'In 11 days', 'neu', 'si-purple')}
   </div>
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-users"></i> Staff Payroll — March 2025</span>
@@ -9879,7 +9812,7 @@ function salaryModule(){
     <table class="tbl">
       <thead><tr><th>Staff Member</th><th>Role</th><th>Grade</th><th>Basic (GH₵)</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
-        ${[['Mr. Amponsah','Teacher','Grade 8','3,200','800','320','3,680','Paid'],['Mrs. Asante','Teacher','Grade 7','3,000','750','300','3,450','Paid'],['Ms. Frimpong','Teacher','Grade 6','2,800','700','280','3,220','Pending'],['Mr. Kojo','Accountant','Admin A','4,500','1,000','450','5,050','Paid'],['Mrs. Ofori','Secretary','Admin B','2,200','500','220','2,480','Paid']].map(([n,r,g,b,al,d,net,s])=>`
+        ${[['Mr. Amponsah', 'Teacher', 'Grade 8', '3,200', '800', '320', '3,680', 'Paid'], ['Mrs. Asante', 'Teacher', 'Grade 7', '3,000', '750', '300', '3,450', 'Paid'], ['Ms. Frimpong', 'Teacher', 'Grade 6', '2,800', '700', '280', '3,220', 'Pending'], ['Mr. Kojo', 'Accountant', 'Admin A', '4,500', '1,000', '450', '5,050', 'Paid'], ['Mrs. Ofori', 'Secretary', 'Admin B', '2,200', '500', '220', '2,480', 'Paid']].map(([n, r, g, b, al, d, net, s]) => `
         <tr>
           <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
           <td>${r}</td><td><span class="badge b-gray">${g}</span></td>
@@ -9887,7 +9820,7 @@ function salaryModule(){
           <td style="color:var(--success);font-weight:600">+GH₵${al}</td>
           <td style="color:var(--danger);font-weight:600">-GH₵${d}</td>
           <td style="font-weight:800;color:var(--blue-dark)">GH₵${net}</td>
-          <td><span class="badge ${s==='Paid'?'b-success':'b-warning'}">${s}</span></td>
+          <td><span class="badge ${s === 'Paid' ? 'b-success' : 'b-warning'}">${s}</span></td>
           <td><button class="btn btn-secondary btn-xs" onclick="alert('Generating payslip...')">🧾 Slip</button></td>
         </tr>`).join('')}
       </tbody>
@@ -9911,11 +9844,11 @@ const FEE_STRUCTURE_DATA = {
 };
 
 // FEE STRUCTURE MODULE
-function feeStructModule(){
+function feeStructModule() {
   const isAdmin = currentRole === 'Admin';
   const addItemBtn = isAdmin ? `<button class="btn btn-primary btn-sm" onclick="openAddFeeItemForm()">+ Add Item</button>` : '';
-  
-  let html = hdr('Fee Structure','Configure and manage school fee schedules','Fee Structure')+`
+
+  let html = hdr('Fee Structure', 'Configure and manage school fee schedules', 'Fee Structure') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Fee Schedule — Academic Year 2024/2025</span>
       <div style="display:flex;gap:8px">
@@ -9927,7 +9860,7 @@ function feeStructModule(){
       <table class="tbl">
         <thead><tr><th>Fee Item</th><th>Basic 4 (GH₵)</th><th>Basic 5 (GH₵)</th><th>Basic 6 (GH₵)</th><th>JHS 1 (GH₵)</th><th>JHS 2 (GH₵)</th><th>JHS 3 (GH₵)</th><th>Frequency</th><th>Mandatory</th><th>Actions</th></tr></thead>
         <tbody id="fee-items-table">`;
-  
+
   FEE_STRUCTURE_DATA.items.forEach(item => {
     html += `
       <tr class="fee-item-row" data-id="${item.id}">
@@ -9946,7 +9879,7 @@ function feeStructModule(){
         </div></td>
       </tr>`;
   });
-  
+
   // Calculate totals for per-term items
   const termItems = FEE_STRUCTURE_DATA.items.filter(i => i.frequency === 'Per Term');
   const totalBasic4 = termItems.reduce((sum, item) => sum + item.basic4, 0);
@@ -9955,7 +9888,7 @@ function feeStructModule(){
   const totalJHS1 = termItems.reduce((sum, item) => sum + item.jhs1, 0);
   const totalJHS2 = termItems.reduce((sum, item) => sum + item.jhs2, 0);
   const totalJHS3 = termItems.reduce((sum, item) => sum + item.jhs3, 0);
-  
+
   html += `
         <tr style="background:var(--blue-xpale)">
           <td style="font-weight:800">Total (Per Term)</td>
@@ -9971,9 +9904,9 @@ function feeStructModule(){
     </table>
     </div>
   </div>`;
-  
+
   // Add form for admins only
-  if(isAdmin) {
+  if (isAdmin) {
     html += `
     <div class="card" style="margin-top:20px">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Add New Fee Item</span></div>
@@ -10016,14 +9949,14 @@ function feeStructModule(){
       </form>
     </div>`;
   }
-  
+
   return html;
 }
 
 function openAddFeeItemForm() {
   const form = document.querySelector('form[onsubmit="addNewFeeItem(event)"]');
-  if(form) {
-    form.scrollIntoView({behavior: 'smooth'});
+  if (form) {
+    form.scrollIntoView({ behavior: 'smooth' });
   } else {
     showToast('<i class="fas fa-times-circle"></i> Form not available', 'error');
   }
@@ -10031,7 +9964,7 @@ function openAddFeeItemForm() {
 
 function addNewFeeItem(event) {
   event.preventDefault();
-  
+
   const name = document.getElementById('fee-item-name').value;
   const basic4 = parseInt(document.getElementById('fee-basic4').value) || 0;
   const basic5 = parseInt(document.getElementById('fee-basic5').value) || 0;
@@ -10041,14 +9974,14 @@ function addNewFeeItem(event) {
   const jhs3 = parseInt(document.getElementById('fee-jhs3').value) || 0;
   const frequency = document.getElementById('fee-frequency').value;
   const mandatory = document.getElementById('fee-mandatory').value === 'true';
-  
-  if(!name) {
+
+  if (!name) {
     showToast('<i class="fas fa-times-circle"></i> Please enter fee item name', 'error');
     return;
   }
-  
+
   const newId = Math.max(...FEE_STRUCTURE_DATA.items.map(i => i.id)) + 1;
-  
+
   FEE_STRUCTURE_DATA.items.push({
     id: newId,
     name,
@@ -10061,12 +9994,12 @@ function addNewFeeItem(event) {
     frequency,
     mandatory
   });
-  
+
   showToast(`<i class="fas fa-check-circle"></i> Fee item "${name}" added successfully!`, 'success');
-  
+
   // Clear form
   event.target.reset();
-  
+
   // Refresh page
   setTimeout(() => {
     renderMain();
@@ -10080,11 +10013,11 @@ function resetFeeForm() {
 
 function editFeeItem(itemId) {
   const item = FEE_STRUCTURE_DATA.items.find(i => i.id === itemId);
-  if(!item) {
+  if (!item) {
     showToast('<i class="fas fa-times-circle"></i> Item not found', 'error');
     return;
   }
-  
+
   const formHTML = `
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
@@ -10137,16 +10070,16 @@ function editFeeItem(itemId) {
       </form>
     </div>
   `;
-  
+
   openModal(formHTML);
 }
 
 function saveEditedFeeItem(event, itemId) {
   event.preventDefault();
-  
+
   const item = FEE_STRUCTURE_DATA.items.find(i => i.id === itemId);
-  if(!item) return;
-  
+  if (!item) return;
+
   item.name = document.getElementById('edit-fee-name').value;
   item.basic4 = parseInt(document.getElementById('edit-basic4').value) || 0;
   item.basic5 = parseInt(document.getElementById('edit-basic5').value) || 0;
@@ -10156,10 +10089,10 @@ function saveEditedFeeItem(event, itemId) {
   item.jhs3 = parseInt(document.getElementById('edit-jhs3').value) || 0;
   item.frequency = document.getElementById('edit-frequency').value;
   item.mandatory = document.getElementById('edit-mandatory').value === 'true';
-  
+
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> Fee item updated successfully!', 'success');
-  
+
   setTimeout(() => {
     renderMain();
   }, 1500);
@@ -10167,15 +10100,15 @@ function saveEditedFeeItem(event, itemId) {
 
 function deleteFeeItem(itemId) {
   const item = FEE_STRUCTURE_DATA.items.find(i => i.id === itemId);
-  if(!item) {
+  if (!item) {
     showToast('<i class="fas fa-times-circle"></i> Item not found', 'error');
     return;
   }
-  
-  if(confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
+
+  if (confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
     FEE_STRUCTURE_DATA.items = FEE_STRUCTURE_DATA.items.filter(i => i.id !== itemId);
     showToast('<i class="fas fa-check-circle"></i> Fee item deleted successfully!', 'success');
-    
+
     setTimeout(() => {
       renderMain();
     }, 1500);
@@ -10184,11 +10117,11 @@ function deleteFeeItem(itemId) {
 
 function exportFeeStructure() {
   let csv = 'Fee Item,Basic 4 (GH₵),Basic 5 (GH₵),Basic 6 (GH₵),JHS 1 (GH₵),JHS 2 (GH₵),JHS 3 (GH₵),Frequency,Mandatory\n';
-  
+
   FEE_STRUCTURE_DATA.items.forEach(item => {
     csv += `"${item.name}",${item.basic4},${item.basic5},${item.basic6},${item.jhs1},${item.jhs2},${item.jhs3},"${item.frequency}","${item.mandatory ? 'Yes' : 'No'}"\n`;
   });
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
   element.setAttribute('download', 'fee-structure-' + new Date().toISOString().slice(0, 10) + '.csv');
@@ -10196,7 +10129,7 @@ function exportFeeStructure() {
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-  
+
   showToast('<i class="fas fa-check-circle"></i> Fee structure exported as CSV', 'success');
 }
 
@@ -10210,14 +10143,14 @@ const EVENTS_DATA = [
 ];
 
 // EVENTS MODULE
-function eventsModule(){
-  const isTeacherOrAdmin = ['Teacher','Admin'].includes(currentRole);
+function eventsModule() {
+  const isTeacherOrAdmin = ['Teacher', 'Admin'].includes(currentRole);
   const addEventBtn = isTeacherOrAdmin ? `<button class="btn btn-primary btn-sm" onclick="openAddEventForm()">+ Add Event</button>` : '';
-  
+
   // Sort events by date
-  const sortedEvents = [...EVENTS_DATA].sort((a,b) => new Date(a.date) - new Date(b.date));
-  
-  let html = hdr('Events & Calendar','School events, holidays and important dates','Events & Calendar')+`
+  const sortedEvents = [...EVENTS_DATA].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  let html = hdr('Events & Calendar', 'School events, holidays and important dates', 'Events & Calendar') + `
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span>
       <div style="display:flex;gap:8px">
@@ -10225,12 +10158,12 @@ function eventsModule(){
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:12px" id="upcoming-events">`;
-  
+
   sortedEvents.forEach(event => {
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const timeStr = event.allDay ? 'All Day' : new Date(`${event.date}T${event.time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    
+
     html += `
       <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:rgba(26,86,219,0.03)" onclick="viewEvent(${event.id})">
         <div style="display:flex;justify-content:space-between;align-items:start">
@@ -10247,7 +10180,7 @@ function eventsModule(){
         </div>
       </div>`;
   });
-  
+
   html += `</div>
   </div>
   
@@ -10263,61 +10196,61 @@ function eventsModule(){
       <div id="calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px"></div>
     </div>
   </div>`;
-  
+
   return html;
 }
 
 function renderCalendar(year = 2026, month = 2) { // month is 0-indexed, so 2 = March
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   document.getElementById('calendar-month').textContent = monthNames[month] + ' ' + year;
-  
+
   let grid = '';
-  const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  
+  const dayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
   // Day labels
   dayLabels.forEach(label => {
     grid += `<div style="text-align:center;font-weight:600;padding:8px;font-size:12px;color:var(--gray-600)">${label}</div>`;
   });
-  
+
   // Empty cells before first day
-  for(let i=0;i<firstDay;i++) {
+  for (let i = 0; i < firstDay; i++) {
     grid += `<div></div>`;
   }
-  
+
   // Days of month
   const today = new Date();
-  for(let day=1;day<=daysInMonth;day++) {
+  for (let day = 1; day <= daysInMonth; day++) {
     const cellDate = new Date(year, month, day);
-    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`);
+    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
     const isToday = cellDate.toDateString() === today.toDateString();
-    
+
     let cellStyle = 'padding:8px;border-radius:8px;text-align:center;cursor:pointer;border:1px solid transparent;font-weight:500;';
-    if(hasEvent) cellStyle += 'background:var(--blue-xpale);border-color:var(--blue-main);color:var(--blue-dark);font-weight:700;';
-    if(isToday) cellStyle += 'background:var(--blue-main);color:white;';
-    
+    if (hasEvent) cellStyle += 'background:var(--blue-xpale);border-color:var(--blue-main);color:var(--blue-dark);font-weight:700;';
+    if (isToday) cellStyle += 'background:var(--blue-main);color:white;';
+
     grid += `<div style="${cellStyle};">${day}</div>`;
   }
-  
+
   document.getElementById('calendar-grid').innerHTML = grid;
 }
 
 let currentCalendarYear = 2026, currentCalendarMonth = 2; // Start at March 2026
 
-function nextMonth(){
+function nextMonth() {
   currentCalendarMonth++;
-  if(currentCalendarMonth > 11) {
+  if (currentCalendarMonth > 11) {
     currentCalendarMonth = 0;
     currentCalendarYear++;
   }
   renderCalendar(currentCalendarYear, currentCalendarMonth);
 }
 
-function prevMonth(){
+function prevMonth() {
   currentCalendarMonth--;
-  if(currentCalendarMonth < 0) {
+  if (currentCalendarMonth < 0) {
     currentCalendarMonth = 11;
     currentCalendarYear--;
   }
@@ -10370,27 +10303,27 @@ function openAddEventForm() {
       </form>
     </div>
   `;
-  
+
   openModal(formHTML);
 }
 
 function addNewEvent(event) {
   event.preventDefault();
-  
+
   const title = document.getElementById('event-title').value;
   const date = document.getElementById('event-date').value;
   const time = document.getElementById('event-time').value;
   const allDay = document.getElementById('event-allday').checked;
   const audience = document.getElementById('event-audience').value;
   const description = document.getElementById('event-description').value;
-  
-  if(!title || !date || !time || !audience || !description) {
+
+  if (!title || !date || !time || !audience || !description) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all fields', 'error');
     return;
   }
-  
+
   const newId = Math.max(...EVENTS_DATA.map(e => e.id), 0) + 1;
-  
+
   EVENTS_DATA.push({
     id: newId,
     title,
@@ -10400,10 +10333,10 @@ function addNewEvent(event) {
     audience,
     description
   });
-  
+
   closeModal();
   showToast(`<i class="fas fa-check-circle"></i> Event "${title}" created successfully!`, 'success');
-  
+
   setTimeout(() => {
     renderMain();
     renderCalendar(currentCalendarYear, currentCalendarMonth);
@@ -10412,15 +10345,15 @@ function addNewEvent(event) {
 
 function viewEvent(eventId) {
   const event = EVENTS_DATA.find(e => e.id === eventId);
-  if(!event) {
+  if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
-  
+
   const eventDate = new Date(event.date);
   const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const timeStr = event.allDay ? 'All Day' : new Date(`${event.date}T${event.time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  
+
   const detailHTML = `
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
@@ -10444,7 +10377,7 @@ function viewEvent(eventId) {
         </div>
         
         <div style="display:flex;gap:8px;margin-top:24px;justify-content:flex-end">
-          ${['Teacher','Admin'].includes(currentRole) ? `
+          ${['Teacher', 'Admin'].includes(currentRole) ? `
             <button class="btn btn-secondary" onclick="closeModal();editEvent(${event.id})">Edit</button>
             <button class="btn btn-danger" onclick="closeModal();deleteEvent(${event.id})">Delete</button>
           ` : ''}
@@ -10453,17 +10386,17 @@ function viewEvent(eventId) {
       </div>
     </div>
   `;
-  
+
   openModal(detailHTML);
 }
 
 function editEvent(eventId) {
   const event = EVENTS_DATA.find(e => e.id === eventId);
-  if(!event) {
+  if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
-  
+
   const formHTML = `
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
@@ -10509,31 +10442,31 @@ function editEvent(eventId) {
       </form>
     </div>
   `;
-  
+
   openModal(formHTML);
 }
 
 function saveEditEvent(eventElement, eventId) {
-  if(eventElement && eventElement.preventDefault) {
+  if (eventElement && eventElement.preventDefault) {
     eventElement.preventDefault();
   }
-  
+
   const event = EVENTS_DATA.find(e => e.id === eventId);
-  if(!event) {
+  if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
-  
+
   event.title = document.getElementById('edit-event-title').value;
   event.date = document.getElementById('edit-event-date').value;
   event.time = document.getElementById('edit-event-time').value;
   event.allDay = document.getElementById('edit-event-allday').checked;
   event.audience = document.getElementById('edit-event-audience').value;
   event.description = document.getElementById('edit-event-description').value;
-  
+
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> Event updated successfully!', 'success');
-  
+
   setTimeout(() => {
     renderMain();
     renderCalendar(currentCalendarYear, currentCalendarMonth);
@@ -10542,16 +10475,16 @@ function saveEditEvent(eventElement, eventId) {
 
 function deleteEvent(eventId) {
   const event = EVENTS_DATA.find(e => e.id === eventId);
-  if(!event) {
+  if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
-  
-  if(confirm(`Are you sure you want to delete "${event.title}"? This action cannot be undone.`)) {
+
+  if (confirm(`Are you sure you want to delete "${event.title}"? This action cannot be undone.`)) {
     EVENTS_DATA.splice(EVENTS_DATA.indexOf(event), 1);
     closeModal();
     showToast('<i class="fas fa-check-circle"></i> Event deleted successfully!', 'success');
-    
+
     setTimeout(() => {
       renderMain();
       renderCalendar(currentCalendarYear, currentCalendarMonth);
@@ -10560,8 +10493,8 @@ function deleteEvent(eventId) {
 }
 
 // RECEIPTS MODULE
-function receiptsModule(){
-  return hdr('Receipts','Generate and manage payment receipts','Receipts')+`
+function receiptsModule() {
+  return hdr('Receipts', 'Generate and manage payment receipts', 'Receipts') + `
   <div class="card">
     <div class="toolbar">
       <button class="btn btn-gold" onclick="alert('Opening receipt issuance form...')">+ Issue New Receipt</button>
@@ -10570,7 +10503,7 @@ function receiptsModule(){
     <table class="tbl">
       <thead><tr><th>Receipt No.</th><th>Student</th><th>Class</th><th>Amount</th><th>Term</th><th>Date</th><th>Issued By</th><th>Actions</th></tr></thead>
       <tbody>
-        ${[['#R-0482','Ama Serwaa','Form 3A','GH₵2,400','Term 1','Mar 15','Mr. Kojo'],['#R-0481','Kwame Asante','Form 2B','GH₵1,200','Term 1','Mar 15','Mr. Kojo'],['#R-0480','Abena Mensah','Form 1C','GH₵2,200','Term 1','Mar 14','Mr. Kojo'],['#R-0479','Akosua Darko','JHS 2','GH₵2,300','Term 1','Mar 13','Mr. Kojo']].map(([r,n,c,a,t,d,ib])=>`
+        ${[['#R-0482', 'Ama Serwaa', 'Form 3A', 'GH₵2,400', 'Term 1', 'Mar 15', 'Mr. Kojo'], ['#R-0481', 'Kwame Asante', 'Form 2B', 'GH₵1,200', 'Term 1', 'Mar 15', 'Mr. Kojo'], ['#R-0480', 'Abena Mensah', 'Form 1C', 'GH₵2,200', 'Term 1', 'Mar 14', 'Mr. Kojo'], ['#R-0479', 'Akosua Darko', 'JHS 2', 'GH₵2,300', 'Term 1', 'Mar 13', 'Mr. Kojo']].map(([r, n, c, a, t, d, ib]) => `
         <tr>
           <td style="color:var(--blue-main);font-weight:700">${r}</td>
           <td>${n}</td><td>${c}</td>
@@ -10584,13 +10517,13 @@ function receiptsModule(){
 }
 
 // EXPENSES MODULE
-function expensesModule(){
-  return hdr('Expenses','Record and manage school expenditure','Expenses')+`
+function expensesModule() {
+  return hdr('Expenses', 'Record and manage school expenditure', 'Expenses') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-chart-line"></i>','GH₵89K','Total Expenses','This term','neu','si-red')}
-    ${statCard('<i class="fas fa-briefcase"></i>','GH₵59K','Staff Salaries','63% of expenses','neu','si-blue')}
-    ${statCard('<i class="fas fa-wrench"></i>','GH₵18K','Operations','20%','neu','si-gold')}
-    ${statCard('<i class="fas fa-chart-bar"></i>','GH₵12K','Other','13%','neu','si-green')}
+    ${statCard('<i class="fas fa-chart-line"></i>', 'GH₵89K', 'Total Expenses', 'This term', 'neu', 'si-red')}
+    ${statCard('<i class="fas fa-briefcase"></i>', 'GH₵59K', 'Staff Salaries', '63% of expenses', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-wrench"></i>', 'GH₵18K', 'Operations', '20%', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', 'GH₵12K', 'Other', '13%', 'neu', 'si-green')}
   </div>
   <div class="g21">
     <div class="card">
@@ -10598,13 +10531,13 @@ function expensesModule(){
       <table class="tbl">
         <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Approved By</th><th>Status</th></tr></thead>
         <tbody>
-          ${[['Mar 17','Electricity Bill — March','Utilities','GH₵4,200','Principal','Paid'],['Mar 15','Stationery Supplies','Admin','GH₵1,800','Accountant','Paid'],['Mar 12','Sports Equipment','Athletics','GH₵3,500','HOD Sports','Paid'],['Mar 10','Lab Chemicals Restock','Science','GH₵2,100','HOD Science','Pending'],['Mar 8','Maintenance Repair','Facilities','GH₵850','Admin','Paid']].map(([d,desc,c,a,ap,s])=>`
+          ${[['Mar 17', 'Electricity Bill — March', 'Utilities', 'GH₵4,200', 'Principal', 'Paid'], ['Mar 15', 'Stationery Supplies', 'Admin', 'GH₵1,800', 'Accountant', 'Paid'], ['Mar 12', 'Sports Equipment', 'Athletics', 'GH₵3,500', 'HOD Sports', 'Paid'], ['Mar 10', 'Lab Chemicals Restock', 'Science', 'GH₵2,100', 'HOD Science', 'Pending'], ['Mar 8', 'Maintenance Repair', 'Facilities', 'GH₵850', 'Admin', 'Paid']].map(([d, desc, c, a, ap, s]) => `
           <tr>
             <td>${d}</td><td>${desc}</td>
             <td><span class="badge b-info">${c}</span></td>
             <td style="font-weight:700;color:var(--danger)">${a}</td>
             <td>${ap}</td>
-            <td><span class="badge ${s==='Paid'?'b-success':'b-warning'}">${s}</span></td>
+            <td><span class="badge ${s === 'Paid' ? 'b-success' : 'b-warning'}">${s}</span></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -10627,15 +10560,15 @@ function expensesModule(){
 }
 
 // BALANCE SHEET
-function balanceSheetModule(){
-  return hdr('Balance Sheet','Financial position of the school','Balance Sheet')+`
+function balanceSheetModule() {
+  return hdr('Balance Sheet', 'Financial position of the school', 'Balance Sheet') + `
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Income — Term 1, 2025</span></div>
       <table class="tbl">
         <thead><tr><th>Source</th><th>Amount (GH₵)</th><th>%</th></tr></thead>
         <tbody>
-          ${[['School Fees','248,000','82%'],['Examination Fees','18,000','6%'],['Sports Levy','9,600','3%'],['Lab Fees','12,800','4%'],['Donations','5,000','2%'],['Other Income','3,600','1%']].map(([s,a,p])=>`
+          ${[['School Fees', '248,000', '82%'], ['Examination Fees', '18,000', '6%'], ['Sports Levy', '9,600', '3%'], ['Lab Fees', '12,800', '4%'], ['Donations', '5,000', '2%'], ['Other Income', '3,600', '1%']].map(([s, a, p]) => `
           <tr><td>${s}</td><td style="font-weight:700;color:var(--success)">GH₵${a}</td><td><span class="badge b-info">${p}</span></td></tr>`).join('')}
           <tr style="background:var(--blue-xpale)"><td style="font-weight:800">TOTAL INCOME</td><td style="font-weight:800;color:var(--blue-dark)">GH₵297,000</td><td>100%</td></tr>
         </tbody>
@@ -10646,7 +10579,7 @@ function balanceSheetModule(){
       <table class="tbl">
         <thead><tr><th>Category</th><th>Amount (GH₵)</th><th>%</th></tr></thead>
         <tbody>
-          ${[['Staff Salaries','148,000','66%'],['Utilities','12,000','5%'],['Maintenance','8,500','4%'],['Stationery','5,200','2%'],['Sports Equipment','4,800','2%'],['Other Expenses','9,500','4%']].map(([c,a,p])=>`
+          ${[['Staff Salaries', '148,000', '66%'], ['Utilities', '12,000', '5%'], ['Maintenance', '8,500', '4%'], ['Stationery', '5,200', '2%'], ['Sports Equipment', '4,800', '2%'], ['Other Expenses', '9,500', '4%']].map(([c, a, p]) => `
           <tr><td>${c}</td><td style="font-weight:700;color:var(--danger)">GH₵${a}</td><td><span class="badge b-gray">${p}</span></td></tr>`).join('')}
           <tr style="background:#fff1f2"><td style="font-weight:800">TOTAL EXPENDITURE</td><td style="font-weight:800;color:var(--danger)">GH₵188,000</td><td>100%</td></tr>
         </tbody>
@@ -10673,7 +10606,7 @@ function balanceSheetModule(){
 }
 
 // ALUMNI DIRECTORY
-function alumniDirectory(){
+function alumniDirectory() {
   return `<div class="toolbar">
     <button class="btn btn-primary" onclick="toggleAddAlumniForm()"><i class="fas fa-plus"></i> Add Alumni</button>
     <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="alumni-search" placeholder="Search alumni..." onkeyup="filterAlumni()"></div>
@@ -10706,7 +10639,7 @@ function alumniDirectory(){
   </div>
 
   <div class="g3" id="alumni-grid">
-    ${Object.values(ALUMNI_DATA).map(a=>`
+    ${Object.values(ALUMNI_DATA).map(a => `
     <div class="card alumni-card" data-name="${a.name.toLowerCase()}" data-year="${a.classYear}" data-profession="${a.profession.toLowerCase()}">
       <div style="display:flex;gap:12px;margin-bottom:14px">
         <div class="av av-lg av-${a.avatarColor}">${a.avatar}</div>
@@ -10724,20 +10657,20 @@ function alumniDirectory(){
 }
 
 // DONATIONS MODULE
-function donationsModule(){
-  return hdr('Donations','Alumni and external donations to the school','Donations')+`
+function donationsModule() {
+  return hdr('Donations', 'Alumni and external donations to the school', 'Donations') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-handshake"></i>','GH₵42K','Total Donations','This year','up','si-blue')}
-    ${statCard('<i class="fas fa-users"></i>','48','Total Donors','Alumni donors','up','si-gold')}
-    ${statCard('<i class="fas fa-target"></i>','GH₵100K','Annual Target','42% achieved','neu','si-green')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>','3','Active Campaigns','Current drives','neu','si-purple')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Total Donations', 'This year', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-users"></i>', '48', 'Total Donors', 'Alumni donors', 'up', 'si-gold')}
+    ${statCard('<i class="fas fa-target"></i>', 'GH₵100K', 'Annual Target', '42% achieved', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Active Campaigns', 'Current drives', 'neu', 'si-purple')}
   </div>
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-handshake"></i> Donation Records</span><button class="btn btn-primary btn-sm">+ Record Donation</button></div>
     <table class="tbl">
       <thead><tr><th>Donor</th><th>Class</th><th>Amount</th><th>Campaign</th><th>Date</th><th>Status</th></tr></thead>
       <tbody>
-        ${[['Abena Owusu','Class 2018','GH₵5,000','Library Fund','Mar 10','Received'],['Kwabena Asare','Class 2016','GH₵10,000','Scholarship Fund','Mar 5','Received'],['Anonymous Alumni','—','GH₵2,000','General Fund','Feb 28','Received'],['Kofi Antwi','Class 2014','GH₵3,500','ICT Lab','Feb 20','Received']].map(([n,c,a,camp,d,s])=>`
+        ${[['Abena Owusu', 'Class 2018', 'GH₵5,000', 'Library Fund', 'Mar 10', 'Received'], ['Kwabena Asare', 'Class 2016', 'GH₵10,000', 'Scholarship Fund', 'Mar 5', 'Received'], ['Anonymous Alumni', '—', 'GH₵2,000', 'General Fund', 'Feb 28', 'Received'], ['Kofi Antwi', 'Class 2014', 'GH₵3,500', 'ICT Lab', 'Feb 20', 'Received']].map(([n, c, a, camp, d, s]) => `
         <tr>
           <td><strong>${n}</strong></td>
           <td><span class="badge b-info">${c}</span></td>
@@ -10751,15 +10684,15 @@ function donationsModule(){
 }
 
 // JOB BOARD
-function jobBoardModule(){
-  return hdr('Job Board','Career opportunities from the alumni network','Job Board')+`
+function jobBoardModule() {
+  return hdr('Job Board', 'Career opportunities from the alumni network', 'Job Board') + `
   <div class="toolbar">
     <button class="btn btn-primary">+ Post Job</button>
     <div class="search-bar"><span><i class="fas fa-search"></i></span><input placeholder="Search jobs..."></div>
     <select class="select-sm"><option>All Industries</option><option>Tech</option><option>Health</option><option>Education</option></select>
   </div>
   <div style="display:flex;flex-direction:column;gap:14px">
-    ${[['Software Developer Intern','Accra · Remote possible','0–2 years','Technology','GH₵1,500/mo','Today','Abena Owusu (Class 2018)'],['Medical Resident','Korle Bu Teaching Hospital, Accra','Graduate','Healthcare','Competitive','2 days ago','Kwabena Asare (Class 2016)'],['Junior Secondary School Teacher','Kumasi · Full Time','PGDE required','Education','GH₵2,800/mo','1 week ago','Esi Mensah (Class 2020)'],['Civil Engineering Graduate Trainee','Takoradi · Full Time','0–2 years','Engineering','GH₵4,000/mo','2 weeks ago','Kofi Antwi (Class 2014)']].map(([t,l,exp,ind,sal,d,poster])=>`
+    ${[['Software Developer Intern', 'Accra · Remote possible', '0–2 years', 'Technology', 'GH₵1,500/mo', 'Today', 'Abena Owusu (Class 2018)'], ['Medical Resident', 'Korle Bu Teaching Hospital, Accra', 'Graduate', 'Healthcare', 'Competitive', '2 days ago', 'Kwabena Asare (Class 2016)'], ['Junior Secondary School Teacher', 'Kumasi · Full Time', 'PGDE required', 'Education', 'GH₵2,800/mo', '1 week ago', 'Esi Mensah (Class 2020)'], ['Civil Engineering Graduate Trainee', 'Takoradi · Full Time', '0–2 years', 'Engineering', 'GH₵4,000/mo', '2 weeks ago', 'Kofi Antwi (Class 2014)']].map(([t, l, exp, ind, sal, d, poster]) => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
         <div style="flex:1">
@@ -10782,19 +10715,19 @@ function jobBoardModule(){
 }
 
 // CERTIFICATES MODULE
-function certificatesModule(){
-  return hdr('Certificate Requests','Request and track official school certificates','Certificates')+`
+function certificatesModule() {
+  return hdr('Certificate Requests', 'Request and track official school certificates', 'Certificates') + `
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-scroll"></i> My Requests</span></div>
       <table class="tbl">
         <thead><tr><th>Certificate Type</th><th>Purpose</th><th>Date Requested</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>
-          ${[['WASSCE Result Slip','Job Application','Mar 10, 2025','Ready','download'],['Transcript','University Admission','Mar 5, 2025','Processing','—'],['Character Reference','Visa Application','Feb 28, 2025','Ready','download']].map(([t,p,d,s,a])=>`
+          ${[['WASSCE Result Slip', 'Job Application', 'Mar 10, 2025', 'Ready', 'download'], ['Transcript', 'University Admission', 'Mar 5, 2025', 'Processing', '—'], ['Character Reference', 'Visa Application', 'Feb 28, 2025', 'Ready', 'download']].map(([t, p, d, s, a]) => `
           <tr>
             <td style="font-weight:600">${t}</td><td>${p}</td><td>${d}</td>
-            <td><span class="badge ${s==='Ready'?'b-success':'b-warning'}">${s}</span></td>
-            <td>${a==='download'?`<button class="btn btn-primary btn-xs"><i class="fas fa-download"></i> Download</button>`:'Awaiting'}</td>
+            <td><span class="badge ${s === 'Ready' ? 'b-success' : 'b-warning'}">${s}</span></td>
+            <td>${a === 'download' ? `<button class="btn btn-primary btn-xs"><i class="fas fa-download"></i> Download</button>` : 'Awaiting'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -10811,7 +10744,7 @@ function certificatesModule(){
 }
 
 // ALUMNI PUBLIC MODULE
-function alumniPubModule(){
+function alumniPubModule() {
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1><i class="fas fa-medal"></i> Our Distinguished Alumni</h1>
     <p>Glory Regin Preparatory school alumni are making their mark across Ghana and around the world. Join our growing network of over 5,200 graduates.</p>
@@ -10819,19 +10752,19 @@ function alumniPubModule(){
       <button class="hero-btn-gold">Connect with Alumni</button>
       <button class="hero-btn-outline">Alumni Association</button>
     </div>
-  </div>`+alumniDirectory();
+  </div>`+ alumniDirectory();
 }
 
 // VISITOR PAGES
-function visitorAbout(){
+function visitorAbout() {
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1>About Glory Regin Preparatory school</h1>
     <p>Established in 1985, nurturing leaders for over 40 years</p>
   </div>
   <div class="g3 mb24">
-    ${[['<i class="fas fa-compass"></i>','Our Mission','To provide a Gracious, Caring, Disciplined and serene Environment that will help build up the Ghanaian Child to Excel academically, Morally, Spiritually and Socially.'],
-      ['<i class="fas fa-eye"></i>','Our Vision','To be an exceptional educational facility that will provide a strong and excellent foundation for the Ghanaian child to become a great future leader.'],
-      ['<i class="fas fa-gem"></i>','Our Values','Excellence, Integrity, Innovation, Teamwork, Service and Respect for diversity and human dignity.']].map(([i,t,d])=>`
+    ${[['<i class="fas fa-compass"></i>', 'Our Mission', 'To provide a Gracious, Caring, Disciplined and serene Environment that will help build up the Ghanaian Child to Excel academically, Morally, Spiritually and Socially.'],
+    ['<i class="fas fa-eye"></i>', 'Our Vision', 'To be an exceptional educational facility that will provide a strong and excellent foundation for the Ghanaian child to become a great future leader.'],
+    ['<i class="fas fa-gem"></i>', 'Our Values', 'Excellence, Integrity, Innovation, Teamwork, Service and Respect for diversity and human dignity.']].map(([i, t, d]) => `
     <div class="card" style="text-align:center">
       <div style="font-size:40px;margin-bottom:14px">${i}</div>
       <h3 style="font-size:15px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${t}</h3>
@@ -10844,7 +10777,7 @@ function visitorAbout(){
   </div>`;
 }
 
-function visitorAdmission(){
+function visitorAdmission() {
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1>Admissions 2025/2026</h1>
     <p>Applications for the new academic year are now open. Join a legacy of excellence.</p>
@@ -10853,7 +10786,7 @@ function visitorAdmission(){
   <div class="g2">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Entry Requirements</span></div>
-      ${[['Age Requirement','Not more than 18 years at time of admission'],['Medical Certificate','Current health status from a certified physician'],['Character Reference','Letter from primary school headteacher'],['Passport Photographs','2 recent passport-sized photographs'],['Birth Certificate','Original and photocopy']].map(([t,d])=>`
+      ${[['Age Requirement', 'Not more than 18 years at time of admission'], ['Medical Certificate', 'Current health status from a certified physician'], ['Character Reference', 'Letter from primary school headteacher'], ['Passport Photographs', '2 recent passport-sized photographs'], ['Birth Certificate', 'Original and photocopy']].map(([t, d]) => `
       <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
         <span style="color:var(--success);font-weight:800;font-size:16px;flex-shrink:0">✓</span>
         <div><div style="font-size:13px;font-weight:600">${t}</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px">${d}</div></div>
@@ -10870,7 +10803,7 @@ function visitorAdmission(){
   </div>`;
 }
 
-function visitorNews(){
+function visitorNews() {
   const articlesHTML = newsArticles
     .filter(article => article.status === 'Published')
     .map(article => `
@@ -10890,7 +10823,7 @@ function visitorNews(){
   </div>`;
 }
 
-function showNewsArticle(title, content){
+function showNewsArticle(title, content) {
   const modal = `
     <div style="padding:30px;max-width:600px">
       <h2 style="font-size:20px;font-weight:700;color:var(--blue-dark);margin-bottom:16px">${title}</h2>
@@ -10910,22 +10843,22 @@ let allMessages = [];    // Global messages array
 // Sample messages for different scenarios
 allMessages = [
   // Student -> Teacher conversations
-  {id:1, sender:'Ama Osei', senderRole:'student', recipient:'Mr. Amponsah', recipientRole:'teacher', subject:'Test Score', text:'Ama, great work on your last test! You scored 88/100.', time:'9:00 AM', date:'Mar 20'},
-  {id:2, sender:'Ama Osei', senderRole:'student', recipient:'Mr. Amponsah', recipientRole:'teacher', subject:'Test Score', text:'Thank you sir! I will work harder for the next exam.', time:'9:15 AM', date:'Mar 20'},
-  {id:3, sender:'Mr. Amponsah', senderRole:'teacher', recipient:'Ama Osei', recipientRole:'student', subject:'Test Score', text:'That\'s the spirit! Focus on Chapter 6 for the next exam.', time:'9:17 AM', date:'Mar 20'},
-  
+  { id: 1, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Ama, great work on your last test! You scored 88/100.', time: '9:00 AM', date: 'Mar 20' },
+  { id: 2, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Thank you sir! I will work harder for the next exam.', time: '9:15 AM', date: 'Mar 20' },
+  { id: 3, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Test Score', text: 'That\'s the spirit! Focus on Chapter 6 for the next exam.', time: '9:17 AM', date: 'Mar 20' },
+
   // Parent -> Teacher conversations
-  {id:4, sender:'Parent Serwaa', senderRole:'parent', recipient:'Mr. Amponsah', recipientRole:'teacher', subject:'Progress Update', text:'Hello Sir, how is Ama doing in your class?', time:'2:30 PM', date:'Mar 19'},
-  {id:5, sender:'Mr. Amponsah', senderRole:'teacher', recipient:'Parent Serwaa', recipientRole:'parent', subject:'Progress Update', text:'She is doing very well! Her test scores are excellent.', time:'3:45 PM', date:'Mar 19'},
-  {id:6, sender:'Parent Serwaa', senderRole:'parent', recipient:'Mr. Amponsah', recipientRole:'teacher', subject:'Progress Update', text:'Thank you for the update! We really appreciate your support.', time:'4:00 PM', date:'Mar 19'},
-  
+  { id: 4, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Hello Sir, how is Ama doing in your class?', time: '2:30 PM', date: 'Mar 19' },
+  { id: 5, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Progress Update', text: 'She is doing very well! Her test scores are excellent.', time: '3:45 PM', date: 'Mar 19' },
+  { id: 6, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Thank you for the update! We really appreciate your support.', time: '4:00 PM', date: 'Mar 19' },
+
   // Parent -> Admin
-  {id:7, sender:'Parent Serwaa', senderRole:'parent', recipient:'Admin Office', recipientRole:'admin', subject:'Fee Payment', text:'Good morning, I want to inquire about the school fees payment.', time:'8:15 AM', date:'Mar 20'},
-  {id:8, sender:'Admin Office', senderRole:'admin', recipient:'Parent Serwaa', recipientRole:'parent', subject:'Fee Payment', text:'The fees are due by the end of this month. Please visit the office with your receipt.', time:'9:30 AM', date:'Mar 20'},
-  
+  { id: 7, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Fee Payment', text: 'Good morning, I want to inquire about the school fees payment.', time: '8:15 AM', date: 'Mar 20' },
+  { id: 8, sender: 'Admin Office', senderRole: 'admin', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Fee Payment', text: 'The fees are due by the end of this month. Please visit the office with your receipt.', time: '9:30 AM', date: 'Mar 20' },
+
   // Teacher -> Admin
-  {id:9, sender:'Mrs. Asante', senderRole:'teacher', recipient:'Admin Office', recipientRole:'admin', subject:'Exam Schedule', text:'When will the final exams start?', time:'10:00 AM', date:'Mar 20'},
-  {id:10, sender:'Admin Office', senderRole:'admin', recipient:'Mrs. Asante', recipientRole:'teacher', subject:'Exam Schedule', text:'Exams start on April 5th. Detailed schedule will be shared by Friday.', time:'10:45 AM', date:'Mar 20'}
+  { id: 9, sender: 'Mrs. Asante', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Exam Schedule', text: 'When will the final exams start?', time: '10:00 AM', date: 'Mar 20' },
+  { id: 10, sender: 'Admin Office', senderRole: 'admin', recipient: 'Mrs. Asante', recipientRole: 'teacher', subject: 'Exam Schedule', text: 'Exams start on April 5th. Detailed schedule will be shared by Friday.', time: '10:45 AM', date: 'Mar 20' }
 ];
 
 let messageChats = {};  // Dynamic - will be populated based on current user conversations
@@ -10937,16 +10870,16 @@ let contactMessages = [];
 // NEWS & BLOG ARTICLES STORAGE
 
 let newsArticles = [
-  {id:1,icon:'<i class="fas fa-trophy"></i>',title:'Students Win National Science Competition',date:'Mar 15, 2025',desc:'Our students achieved outstanding results at the national competition.',content:'Our brilliant students from Forms 2 and 3 participated in the National Science Competition held in Accra last week. They demonstrated exceptional knowledge and critical thinking skills, winning three awards across different categories. Congratulations to the Science Department and all participating students!',category:'Student Achievement',status:'Published'},
-  {id:2,icon:'<i class="fas fa-book"></i>',title:'New Library Wing Inaugurated',date:'Mar 10, 2025',desc:'State-of-the-art library facility now open to all students.',content:'Our brand new library wing, featuring over 5,000 new volumes and modern study spaces, was officially inaugurated by the Minister of Education. The facility includes computer labs, reading rooms, and a digital archive. Students now have access to one of the most comprehensive library systems in the region.',category:'Infrastructure',status:'Published'},
-  {id:3,icon:'<i class="fas fa-graduation-cap"></i>',title:'Top BECE Results 2024',date:'Feb 28, 2025',desc:'Excellence Academy secures best results in the region.',content:'We are proud to announce that our students achieved the highest BECE pass rate in the region for 2024. With a 98% pass rate and over 60 distinctions, our students have set a new benchmark for academic excellence. Special recognition goes to the teaching staff and parents for their unwavering support.',category:'Academic',status:'Published'},
-  {id:4,icon:'<i class="fas fa-leaf"></i>',title:'Tree Planting Initiative',date:'Feb 20, 2025',desc:'School launches environmental conservation program.',content:'In celebration of Environment Day, Glory Regin Preparatory school launched a tree-planting initiative with students and staff planting over 500 trees around the campus. This initiative is part of our commitment to environmental sustainability and creating a greener campus for future generations.',category:'Community',status:'Published'},
-  {id:5,icon:'<i class="fas fa-theater-masks"></i>',title:'Annual Cultural Day Celebrated',date:'Feb 14, 2025',desc:'Students showcase diverse talents at packed auditorium.',content:'The annual cultural day was a spectacular showcase of the diverse talents within our school community. Students performed traditional dances, musical pieces, and theatrical performances representing different cultures. Parents and staff filled the auditorium to capacity, celebrating our rich cultural heritage.',category:'Events',status:'Published'},
-  {id:6,icon:'<i class="fas fa-laptop"></i>',title:'ICT Lab Upgrade Complete',date:'Jan 30, 2025',desc:'New computers and software installed in Information Technology lab.',content:'Our Information Technology laboratory has been upgraded with 40 new computers, high-speed internet connectivity, and the latest software packages. This upgrade will enable students to gain practical skills in coding, graphic design, and digital media production. The lab is now equipped to meet international standards.',category:'Infrastructure',status:'Published'}
+  { id: 1, icon: '<i class="fas fa-trophy"></i>', title: 'Students Win National Science Competition', date: 'Mar 15, 2025', desc: 'Our students achieved outstanding results at the national competition.', content: 'Our brilliant students from Forms 2 and 3 participated in the National Science Competition held in Accra last week. They demonstrated exceptional knowledge and critical thinking skills, winning three awards across different categories. Congratulations to the Science Department and all participating students!', category: 'Student Achievement', status: 'Published' },
+  { id: 2, icon: '<i class="fas fa-book"></i>', title: 'New Library Wing Inaugurated', date: 'Mar 10, 2025', desc: 'State-of-the-art library facility now open to all students.', content: 'Our brand new library wing, featuring over 5,000 new volumes and modern study spaces, was officially inaugurated by the Minister of Education. The facility includes computer labs, reading rooms, and a digital archive. Students now have access to one of the most comprehensive library systems in the region.', category: 'Infrastructure', status: 'Published' },
+  { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Top BECE Results 2024', date: 'Feb 28, 2025', desc: 'Excellence Academy secures best results in the region.', content: 'We are proud to announce that our students achieved the highest BECE pass rate in the region for 2024. With a 98% pass rate and over 60 distinctions, our students have set a new benchmark for academic excellence. Special recognition goes to the teaching staff and parents for their unwavering support.', category: 'Academic', status: 'Published' },
+  { id: 4, icon: '<i class="fas fa-leaf"></i>', title: 'Tree Planting Initiative', date: 'Feb 20, 2025', desc: 'School launches environmental conservation program.', content: 'In celebration of Environment Day, Glory Regin Preparatory school launched a tree-planting initiative with students and staff planting over 500 trees around the campus. This initiative is part of our commitment to environmental sustainability and creating a greener campus for future generations.', category: 'Community', status: 'Published' },
+  { id: 5, icon: '<i class="fas fa-theater-masks"></i>', title: 'Annual Cultural Day Celebrated', date: 'Feb 14, 2025', desc: 'Students showcase diverse talents at packed auditorium.', content: 'The annual cultural day was a spectacular showcase of the diverse talents within our school community. Students performed traditional dances, musical pieces, and theatrical performances representing different cultures. Parents and staff filled the auditorium to capacity, celebrating our rich cultural heritage.', category: 'Events', status: 'Published' },
+  { id: 6, icon: '<i class="fas fa-laptop"></i>', title: 'ICT Lab Upgrade Complete', date: 'Jan 30, 2025', desc: 'New computers and software installed in Information Technology lab.', content: 'Our Information Technology laboratory has been upgraded with 40 new computers, high-speed internet connectivity, and the latest software packages. This upgrade will enable students to gain practical skills in coding, graphic design, and digital media production. The lab is now equipped to meet international standards.', category: 'Infrastructure', status: 'Published' }
 ];
 
 // NEWS MANAGEMENT MODULE
-function newsModule(){
+function newsModule() {
   const articlesHTML = newsArticles.map(article => `
     <div class="card mb16">
       <div style="display:flex;gap:14px">
@@ -10954,7 +10887,7 @@ function newsModule(){
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
             <h4 style="font-size:13px;font-weight:700;color:var(--blue-dark)">${article.title}</h4>
-            <span class="badge b-${article.status==='Published'?'success':'warning'}">${article.status}</span>
+            <span class="badge b-${article.status === 'Published' ? 'success' : 'warning'}">${article.status}</span>
           </div>
           <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px">${article.date} · ${article.category}</div>
           <p style="font-size:12px;color:var(--gray-600);line-height:1.6;margin-bottom:10px">${article.desc}</p>
@@ -10967,7 +10900,7 @@ function newsModule(){
     </div>
   `).join('');
 
-  return hdr('News & Blog Management', 'Create, edit and publish school news and blog posts', 'News')+`
+  return hdr('News & Blog Management', 'Create, edit and publish school news and blog posts', 'News') + `
   <div class="g21">
     <div>
       <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-newspaper"></i> Published Articles (${newsArticles.length})</div>
@@ -11023,7 +10956,7 @@ function newsModule(){
   </div>`;
 }
 
-function publishNews(){
+function publishNews() {
   const title = document.getElementById('blogTitle')?.value?.trim() || '';
   const icon = document.getElementById('blogIcon')?.value?.trim() || '';
   const date = document.getElementById('blogDate')?.value || '';
@@ -11032,12 +10965,12 @@ function publishNews(){
   const content = document.getElementById('blogContent')?.value?.trim() || '';
   const status = document.getElementById('blogStatus')?.value || 'Published';
 
-  if(!title || !icon || !date || !category || !desc || !content) {
+  if (!title || !icon || !date || !category || !desc || !content) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please fill in all required fields (*)', 'warning');
     return;
   }
 
-  if(desc.length < 20) {
+  if (desc.length < 20) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Description must be at least 20 characters', 'warning');
     return;
   }
@@ -11059,7 +10992,7 @@ function publishNews(){
   renderMain('news');
 }
 
-function clearNewsForm(){
+function clearNewsForm() {
   document.getElementById('blogTitle').value = '';
   document.getElementById('blogIcon').value = '<i class="fas fa-newspaper"></i>';
   document.getElementById('blogDate').value = '';
@@ -11069,9 +11002,9 @@ function clearNewsForm(){
   document.getElementById('blogStatus').value = 'Published';
 }
 
-function editArticleModal(articleId){
+function editArticleModal(articleId) {
   const article = newsArticles.find(a => a.id === articleId);
-  if(!article) return;
+  if (!article) return;
 
   const modal = `
     <div style="padding:30px;max-width:850px;max-height:90vh;overflow-y:auto">
@@ -11095,11 +11028,11 @@ function editArticleModal(articleId){
         <div class="f-field">
           <label>Category</label>
           <select id="editCategory">
-            <option ${article.category==='Academic'?'selected':''}>Academic</option>
-            <option ${article.category==='Events'?'selected':''}>Events</option>
-            <option ${article.category==='Infrastructure'?'selected':''}>Infrastructure</option>
-            <option ${article.category==='Student Achievement'?'selected':''}>Student Achievement</option>
-            <option ${article.category==='Community'?'selected':''}>Community</option>
+            <option ${article.category === 'Academic' ? 'selected' : ''}>Academic</option>
+            <option ${article.category === 'Events' ? 'selected' : ''}>Events</option>
+            <option ${article.category === 'Infrastructure' ? 'selected' : ''}>Infrastructure</option>
+            <option ${article.category === 'Student Achievement' ? 'selected' : ''}>Student Achievement</option>
+            <option ${article.category === 'Community' ? 'selected' : ''}>Community</option>
           </select>
         </div>
       </div>
@@ -11117,8 +11050,8 @@ function editArticleModal(articleId){
       <div class="f-field" style="margin-bottom:16px">
         <label>Status</label>
         <select id="editStatus">
-          <option ${article.status==='Draft'?'selected':''}>Draft</option>
-          <option ${article.status==='Published'?'selected':''}>Published</option>
+          <option ${article.status === 'Draft' ? 'selected' : ''}>Draft</option>
+          <option ${article.status === 'Published' ? 'selected' : ''}>Published</option>
         </select>
       </div>
       
@@ -11131,9 +11064,9 @@ function editArticleModal(articleId){
   openModal(modal);
 }
 
-function saveArticleChanges(articleId){
+function saveArticleChanges(articleId) {
   const article = newsArticles.find(a => a.id === articleId);
-  if(!article) return;
+  if (!article) return;
 
   const title = document.getElementById('editTitle')?.value?.trim() || '';
   const icon = document.getElementById('editIcon')?.value?.trim() || '';
@@ -11143,7 +11076,7 @@ function saveArticleChanges(articleId){
   const content = document.getElementById('editContent')?.value?.trim() || '';
   const status = document.getElementById('editStatus')?.value || 'Published';
 
-  if(!title || !icon || !date || !category || !desc || !content) {
+  if (!title || !icon || !date || !category || !desc || !content) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please fill in all required fields', 'warning');
     return;
   }
@@ -11161,11 +11094,11 @@ function saveArticleChanges(articleId){
   renderMain('news');
 }
 
-function deleteArticle(articleId){
-  if(!confirm('<i class="fas fa-trash"></i> Are you sure you want to delete this article? This action cannot be undone.')) return;
-  
+function deleteArticle(articleId) {
+  if (!confirm('<i class="fas fa-trash"></i> Are you sure you want to delete this article? This action cannot be undone.')) return;
+
   const index = newsArticles.findIndex(a => a.id === articleId);
-  if(index > -1) {
+  if (index > -1) {
     const deletedTitle = newsArticles[index].title;
     newsArticles.splice(index, 1);
     showToast('<i class="fas fa-check-circle"></i> Article deleted successfully!', 'success');
@@ -11173,32 +11106,32 @@ function deleteArticle(articleId){
   }
 }
 
-function saveDraft(){
+function saveDraft() {
   const title = document.getElementById('blogTitle')?.value || '';
-  if(!title) {
+  if (!title) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please enter a title', 'warning');
     return;
   }
   showToast('<i class="fas fa-save"></i> Draft saved successfully!', 'success');
 }
 
-function sendContactMessage(){
+function sendContactMessage() {
   const nameInput = document.querySelector('.contact-form input[placeholder="Full name"]');
   const emailInput = document.querySelector('.contact-form input[placeholder="your@email.com"]');
   const subjectInput = document.querySelector('.contact-form input[placeholder="What is this about?"]');
   const messageInput = document.querySelector('.contact-form textarea');
-  
+
   const name = nameInput?.value.trim();
   const email = emailInput?.value.trim();
   const subject = subjectInput?.value.trim();
   const message = messageInput?.value.trim();
-  
+
   // Validation
-  if(!name){showToast('<i class="fas fa-times-circle"></i> Please enter your name','error');return;}
-  if(!email || !email.includes('@')){showToast('<i class="fas fa-times-circle"></i> Please enter a valid email','error');return;}
-  if(!subject){showToast('<i class="fas fa-times-circle"></i> Please enter a subject','error');return;}
-  if(!message){showToast('<i class="fas fa-times-circle"></i> Please enter your message','error');return;}
-  
+  if (!name) { showToast('<i class="fas fa-times-circle"></i> Please enter your name', 'error'); return; }
+  if (!email || !email.includes('@')) { showToast('<i class="fas fa-times-circle"></i> Please enter a valid email', 'error'); return; }
+  if (!subject) { showToast('<i class="fas fa-times-circle"></i> Please enter a subject', 'error'); return; }
+  if (!message) { showToast('<i class="fas fa-times-circle"></i> Please enter your message', 'error'); return; }
+
   // Create message object
   const newMessage = {
     id: Date.now(),
@@ -11206,41 +11139,41 @@ function sendContactMessage(){
     email,
     subject,
     message,
-    date: new Date().toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}),
-    time: new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'}),
+    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     status: 'New',
     read: false
   };
-  
+
   // Store message
   contactMessages.push(newMessage);
-  
+
   // Clear form
   nameInput.value = '';
   emailInput.value = '';
   subjectInput.value = '';
   messageInput.value = '';
-  
+
   // Notify admin
-  showToast('<i class="fas fa-check-circle"></i> Message sent successfully! The admin will respond soon.','success');
-  
+  showToast('<i class="fas fa-check-circle"></i> Message sent successfully! The admin will respond soon.', 'success');
+
   // Update admin notification
   const newMessagesCount = contactMessages.filter(m => !m.read).length;
   const badge = document.querySelector('[data-contact-badge]');
-  if(badge) badge.textContent = newMessagesCount;
+  if (badge) badge.textContent = newMessagesCount;
 }
 
-function visitorContact(){
+function visitorContact() {
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1>Contact Us</h1>
     <p>We would love to hear from you. Get in touch with Glory Regin Preparatory school.</p>
   </div>
   <div class="g2">
     <div>
-      ${[['<i class="fas fa-map-pin"></i>','Address','P.O. Box 42, Jirapa\nUpper West Region, Ghana'],
-        ['<i class="fas fa-phone"></i>','Phone','0243611971 /\n0205096091'],
-        ['<i class="fas fa-envelope"></i>','Email','info@excellence.edu.gh\nadmissions@excellence.edu.gh'],
-        ['<i class="fas fa-clock"></i>','Office Hours','Monday–Friday: 7:00 AM – 5:00 PM']].map(([i,l,v])=>`
+      ${[['<i class="fas fa-map-pin"></i>', 'Address', 'P.O. Box 42, Jirapa\nUpper West Region, Ghana'],
+    ['<i class="fas fa-phone"></i>', 'Phone', '0243611971 /\n0205096091'],
+    ['<i class="fas fa-envelope"></i>', 'Email', 'info@excellence.edu.gh\nadmissions@excellence.edu.gh'],
+    ['<i class="fas fa-clock"></i>', 'Office Hours', 'Monday–Friday: 7:00 AM – 5:00 PM']].map(([i, l, v]) => `
       <div class="card mb16" style="display:flex;gap:16px;align-items:flex-start">
         <div class="notice-icon" style="background:var(--blue-xpale)">${i}</div>
         <div>
@@ -11261,19 +11194,19 @@ function visitorContact(){
   </div>`;
 }
 
-function visitorGallery(){
-  return hdr('School Gallery','A visual journey through life at Glory Regin Preparatory school','Gallery')+`
+function visitorGallery() {
+  return hdr('School Gallery', 'A visual journey through life at Glory Regin Preparatory school', 'Gallery') + `
   <div class="gal-grid">
-    ${[['<i class="fas fa-running"></i>','Sports Day 2024','#dbeafe'],
-      ['<i class="fas fa-graduation-cap"></i>','Prize Giving Ceremony','#fef3c7'],
-      ['<i class="fas fa-book"></i>','School Library','#ede9fe'],
-      ['<i class="fas fa-theater-masks"></i>','Drama & Arts Club','#e0f2fe'],
-      ['<i class="fas fa-leaf"></i>','Beautiful Campus','#d1fae5'],
-      ['<i class="fas fa-user"></i>‍<i class="fas fa-laptop"></i>','ICT Laboratory','#dbeafe'],
-      ['<i class="fas fa-palette"></i>','Art Exhibition','#fef3c7'],
-      ['<i class="fas fa-trophy"></i>','Champions Cup 2024','#fef3c7'],
-      ['<i class="fas fa-music"></i>','School Choir','#ede9fe'],
-      ['<i class="fas fa-globe"></i>','Field Trip','#d1fae5']].map(([icon,label,bg])=>`
+    ${[['<i class="fas fa-running"></i>', 'Sports Day 2024', '#dbeafe'],
+    ['<i class="fas fa-graduation-cap"></i>', 'Prize Giving Ceremony', '#fef3c7'],
+    ['<i class="fas fa-book"></i>', 'School Library', '#ede9fe'],
+    ['<i class="fas fa-theater-masks"></i>', 'Drama & Arts Club', '#e0f2fe'],
+    ['<i class="fas fa-leaf"></i>', 'Beautiful Campus', '#d1fae5'],
+    ['<i class="fas fa-user"></i>‍<i class="fas fa-laptop"></i>', 'ICT Laboratory', '#dbeafe'],
+    ['<i class="fas fa-palette"></i>', 'Art Exhibition', '#fef3c7'],
+    ['<i class="fas fa-trophy"></i>', 'Champions Cup 2024', '#fef3c7'],
+    ['<i class="fas fa-music"></i>', 'School Choir', '#ede9fe'],
+    ['<i class="fas fa-globe"></i>', 'Field Trip', '#d1fae5']].map(([icon, label, bg]) => `
     <div class="gal-item" style="background:${bg}">
       <div class="gi-icon">${icon}</div>
       <div class="gi-label">${label}</div>
@@ -11297,19 +11230,19 @@ function saveAttendance() {
     showToast('<i class="fas fa-times-circle"></i> Only class teachers can mark attendance', 'error');
     return;
   }
-  
+
   const data = {};
   let count = 0;
   document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
     data[input.name] = input.value;
     count++;
   });
-  
-  if(count === 0) {
+
+  if (count === 0) {
     showToast('<i class="fas fa-times-circle"></i> Please mark attendance for at least one student', 'error');
     return;
   }
-  
+
   console.log('Attendance saved:', data);
   showToast('<i class="fas fa-check-circle"></i> Attendance for ' + count + ' students saved!', 'success');
 }
@@ -11346,16 +11279,16 @@ function saveClassNotes(subject, className) {
 
 function viewStatDetail(statType) {
   let content = '';
-  if(statType === 'students') {
+  if (statType === 'students') {
     content = '<h3>My Students (38)</h3><p>2 new students joined this term</p><button class="btn btn-primary" style="margin-top:10px">View All Students</button>';
-  } else if(statType === 'subjects') {
+  } else if (statType === 'subjects') {
     content = '<h3>Subjects Teaching (5)</h3><p>This semester</p><ul style="list-style:none;padding:0"><li>✓ Mathematics</li><li>✓ Further Maths</li><li>✓ Core Maths</li><li>✓ Statistics</li><li>✓ Algebra</li></ul>';
-  } else if(statType === 'attendance') {
+  } else if (statType === 'attendance') {
     content = '<h3>Attendance Rate (94%)</h3><p>Above average performance</p><div class="prog-bar"><div class="prog-fill pf-green" style="width:94%"></div></div>';
-  } else if(statType === 'grades') {
+  } else if (statType === 'grades') {
     content = '<h3>Pending Grades (8)</h3><p>Need grading this week</p><button class="btn btn-warning" style="margin-top:10px">Grade Now</button>';
   }
-  
+
   openModal(`<div style="padding:20px;text-align:center">${content}</div>`);
 }
 
@@ -11366,10 +11299,10 @@ function viewAssignmentSubmissions(assignmentName) {
       <table class="tbl" style="font-size:12px">
         <thead><tr><th>Student</th><th>Status</th><th>Submitted</th><th>Grade</th><th>Action</th></tr></thead>
         <tbody>
-          ${[['Ama Serwaa','Submitted','Mar 15','A','Review'],['Kwame Asante','Submitted','Mar 15','B+','Review'],['Abena Mensah','Pending','-','-','N/A'],['Kofi Boateng','Submitted','Mar 14','A-','Review']].map(([s,st,d,g,a]) => `
+          ${[['Ama Serwaa', 'Submitted', 'Mar 15', 'A', 'Review'], ['Kwame Asante', 'Submitted', 'Mar 15', 'B+', 'Review'], ['Abena Mensah', 'Pending', '-', '-', 'N/A'], ['Kofi Boateng', 'Submitted', 'Mar 14', 'A-', 'Review']].map(([s, st, d, g, a]) => `
           <tr>
             <td style="font-weight:600">${s}</td>
-            <td><span class="badge ${st==='Submitted'?'b-success':'b-warning'}">${st}</span></td>
+            <td><span class="badge ${st === 'Submitted' ? 'b-success' : 'b-warning'}">${st}</span></td>
             <td>${d}</td>
             <td>${g}</td>
             <td><button class="btn btn-secondary btn-xs" onclick="gradeAssignmentSubmission('${s}', '${assignmentName}')">${a}</button></td>
@@ -11420,12 +11353,12 @@ function gradeAssignmentSubmission(studentName, assignmentName) {
 function submitGradeForStudent(studentName) {
   const gradeSelect = document.getElementById('grade-select');
   const grade = gradeSelect?.value;
-  
-  if(!grade) {
+
+  if (!grade) {
     showToast('<i class="fas fa-times-circle"></i> Please select a grade', 'error');
     return;
   }
-  
+
   showToast(`<i class="fas fa-check-circle"></i> Grade ${grade} submitted for ${studentName}`, 'success');
   renderMain();
 }
@@ -11476,12 +11409,12 @@ function createNewAssignment() {
   const dueDate = document.getElementById('assign-duedate')?.value;
   const points = document.getElementById('assign-points')?.value;
   const desc = document.getElementById('assign-desc')?.value.trim();
-  
-  if(!title || !className || !dueDate || !desc) {
+
+  if (!title || !className || !dueDate || !desc) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields', 'error');
     return;
   }
-  
+
   showToast(`<i class="fas fa-check-circle"></i> Assignment "${title}" created for ${className}!`, 'success');
   closeModal();
   renderMain();
@@ -11490,12 +11423,12 @@ function createNewAssignment() {
 function sendChatMessage() {
   const input = document.querySelector('.chat-inp');
   const message = input?.value.trim();
-  
-  if(!message) {
+
+  if (!message) {
     showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
     return;
   }
-  
+
   showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
   input.value = '';
   renderMain();
@@ -11561,7 +11494,7 @@ function openScheduleExamForm() {
             </tr>
           </thead>
           <tbody>
-            ${['Monday','Tuesday','Wednesday','Thursday','Friday'].map((day,i)=>'<tr style="border:1px solid var(--gray-200)"><td style="padding:10px;border-right:1px solid var(--gray-200);font-weight:600;background:var(--gray-100)">'+day+'</td><td style="padding:10px;border-right:1px solid var(--gray-200)"><select class="exam-paper-select" style="width:100%;padding:6px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"><option>Mathematics</option><option>English</option><option>Science</option><option>ICT</option><option>Social Studies</option></select></td><td style="padding:10px;border-right:1px solid var(--gray-200)"><input type="text" placeholder="Venue, Time" style="width:100%;padding:6px 8px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"></td><td style="padding:10px;border-right:1px solid var(--gray-200)"><select class="exam-paper-select" style="width:100%;padding:6px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"><option>French</option><option>CRK/Islamic</option><option>Physical Ed</option><option>Arts</option><option>Music</option></select></td><td style="padding:10px"><input type="text" placeholder="Venue, Time" style="width:100%;padding:6px 8px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"></td></tr>').join('')}
+            ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day, i) => '<tr style="border:1px solid var(--gray-200)"><td style="padding:10px;border-right:1px solid var(--gray-200);font-weight:600;background:var(--gray-100)">' + day + '</td><td style="padding:10px;border-right:1px solid var(--gray-200)"><select class="exam-paper-select" style="width:100%;padding:6px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"><option>Mathematics</option><option>English</option><option>Science</option><option>ICT</option><option>Social Studies</option></select></td><td style="padding:10px;border-right:1px solid var(--gray-200)"><input type="text" placeholder="Venue, Time" style="width:100%;padding:6px 8px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"></td><td style="padding:10px;border-right:1px solid var(--gray-200)"><select class="exam-paper-select" style="width:100%;padding:6px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"><option>French</option><option>CRK/Islamic</option><option>Physical Ed</option><option>Arts</option><option>Music</option></select></td><td style="padding:10px"><input type="text" placeholder="Venue, Time" style="width:100%;padding:6px 8px;border:1px solid var(--gray-300);border-radius:4px;font-family:Poppins,sans-serif;font-size:11px"></td></tr>').join('')}
           </tbody>
         </table>
       </div>
@@ -11582,28 +11515,28 @@ function saveNewExam() {
   const duration = document.getElementById('new-exam-duration').value;
   const venue = document.getElementById('new-exam-venue').value;
   const invigilator = document.getElementById('new-exam-invigilator').value;
-  
+
   if (!date || !duration || !venue || !invigilator) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please fill all fields', 'warning');
     return;
   }
-  
+
   closeModal();
-  showToast('<i class="fas fa-check-circle"></i> Exam scheduled: '+subject+' on '+date, 'success');
+  showToast('<i class="fas fa-check-circle"></i> Exam scheduled: ' + subject + ' on ' + date, 'success');
 }
 
 function saveExamTimetable() {
   const classVal = document.getElementById('exam-tt-class').value;
   const startDate = document.getElementById('exam-tt-start-date').value;
   const duration = document.getElementById('exam-tt-duration').value;
-  
+
   if (!classVal || !startDate || !duration) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please fill all fields', 'warning');
     return;
   }
-  
+
   closeModal();
-  showToast('<i class="fas fa-check-circle"></i> Exam timetable created for '+classVal+' starting '+startDate+' ('+duration+' days)', 'success');
+  showToast('<i class="fas fa-check-circle"></i> Exam timetable created for ' + classVal + ' starting ' + startDate + ' (' + duration + ' days)', 'success');
 }
 
 function editExam(subject, classVal) {
@@ -11654,18 +11587,18 @@ function editExam(subject, classVal) {
 
 function saveEditedExam(subject) {
   closeModal();
-  showToast('<i class="fas fa-check-circle"></i> Exam updated: '+subject, 'success');
+  showToast('<i class="fas fa-check-circle"></i> Exam updated: ' + subject, 'success');
 }
 
 function deleteExam(subject) {
-  if (confirm('Are you sure you want to delete the exam: '+subject+'? This action cannot be undone.')) {
-    showToast('<i class="fas fa-check-circle"></i> Exam deleted: '+subject, 'success');
+  if (confirm('Are you sure you want to delete the exam: ' + subject + '? This action cannot be undone.')) {
+    showToast('<i class="fas fa-check-circle"></i> Exam deleted: ' + subject, 'success');
   }
 }
 
 function loadStudentsForGrades() {
   const selectedClass = document.getElementById('grades-class').value;
-  showToast('<i class="fas fa-book"></i> Loaded students from '+selectedClass, 'info');
+  showToast('<i class="fas fa-book"></i> Loaded students from ' + selectedClass, 'info');
 }
 
 function saveExamGrades() {
@@ -11673,18 +11606,18 @@ function saveExamGrades() {
     showToast('<i class="fas fa-times-circle"></i> Only teachers can save grades', 'error');
     return;
   }
-  
+
   const subject = document.getElementById('grades-subject').value;
   const classVal = document.getElementById('grades-class').value;
   const scores = [];
-  
+
   document.querySelectorAll('.score-input').forEach(input => {
     scores.push(input.value);
   });
-  
+
   // Send to class teacher for review
-  showToast('<i class="fas fa-upload"></i> Submitting '+subject+' scores for '+classVal+' to class teacher...', 'info');
-  
+  showToast('<i class="fas fa-upload"></i> Submitting ' + subject + ' scores for ' + classVal + ' to class teacher...', 'info');
+
   setTimeout(() => {
     showToast('<i class="fas fa-check-circle"></i> Scores submitted! Class teacher will review and generate report cards', 'success');
   }, 1500);
@@ -11695,7 +11628,7 @@ function generateExamsReport(type) {
     <div style="padding:20px;max-width:900px">
       <div style="text-align:center;margin-bottom:20px">
         <h2 style="margin:0;color:var(--blue-dark)"><i class="fas fa-chart-bar"></i> '+type+' Report</h2>
-        <p style="margin:5px 0;color:var(--gray-600);font-size:12px">${new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</p>
+        <p style="margin:5px 0;color:var(--gray-600);font-size:12px">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
       
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
@@ -11729,17 +11662,17 @@ function generateExamsReport(type) {
 
 function downloadGradesCSV() {
   let csv = 'Grades Report\n';
-  csv += 'Generated: '+new Date().toLocaleDateString()+'\n\n';
+  csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
   csv += 'Student Name,Subject,Score,Grade\n';
   csv += 'Ama Serwaa,Mathematics,88,A\n';
   csv += 'Kwame Asante,Mathematics,72,B\n';
   csv += 'Abena Mensah,Mathematics,91,A\n';
   csv += 'Kofi Boateng,Mathematics,64,C\n';
   csv += 'Akosua Darko,Mathematics,95,A\n';
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'grades_report_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'grades_report_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -11755,14 +11688,14 @@ function exportGradesData() {
 function filterReportCards() {
   const classFilter = document.getElementById('report-class-filter').value.toLowerCase();
   const searchValue = document.getElementById('report-student-search').value.toLowerCase();
-  
+
   document.querySelectorAll('.report-row').forEach(row => {
     const student = row.getAttribute('data-student');
     const classVal = row.getAttribute('data-class').toLowerCase();
-    
+
     const matchesClass = !classFilter || classVal.includes(classFilter);
     const matchesStudent = student.includes(searchValue);
-    
+
     row.style.display = (matchesClass && matchesStudent) ? '' : 'none';
   });
 }
@@ -11788,7 +11721,7 @@ function viewReportCard(studentName) {
       <td style="padding:6px;text-align:center;border-bottom:1px solid var(--gray-300);color:var(--gray-700);font-weight:600;font-size:11px">${scores.classScore}</td>
       <td style="padding:6px;text-align:center;border-bottom:1px solid var(--gray-300);color:var(--gray-700);font-weight:600;font-size:11px">${scores.examScore}</td>
       <td style="padding:6px;text-align:center;border-bottom:1px solid var(--gray-300);color:var(--blue-main);font-weight:700;font-size:12px">${scores.total}</td>
-      <td style="padding:6px;text-align:center;border-bottom:1px solid var(--gray-300)"><span style="padding:2px 6px;background:${scores.grade==='A'?'var(--success)':scores.grade==='B'?'var(--info)':scores.grade==='C'?'var(--warning)':'var(--danger)'};color:white;border-radius:4px;font-weight:700;font-size:10px">${scores.grade}</span></td>
+      <td style="padding:6px;text-align:center;border-bottom:1px solid var(--gray-300)"><span style="padding:2px 6px;background:${scores.grade === 'A' ? 'var(--success)' : scores.grade === 'B' ? 'var(--info)' : scores.grade === 'C' ? 'var(--warning)' : 'var(--danger)'};color:white;border-radius:4px;font-weight:700;font-size:10px">${scores.grade}</span></td>
     </tr>
   `).join('');
 
@@ -11845,7 +11778,7 @@ function viewReportCard(studentName) {
             <tbody>
               <tr><td style="padding:4px;font-weight:600;color:var(--gray-600);width:40%">Term:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${term}</td></tr>
               <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Academic Year:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.academicYear}</td></tr>
-              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Attendance:</td><td style="padding:4px;color:${student.attendance>=90?'var(--success)':student.attendance>=80?'var(--info)':'var(--warning)'};font-weight:700">${student.attendance}%</td></tr>
+              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Attendance:</td><td style="padding:4px;color:${student.attendance >= 90 ? 'var(--success)' : student.attendance >= 80 ? 'var(--info)' : 'var(--warning)'};font-weight:700">${student.attendance}%</td></tr>
               <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Status:</td><td style="padding:4px;color:var(--success);font-weight:700">✓ Promoted</td></tr>
             </tbody>
           </table>
@@ -11881,9 +11814,9 @@ function viewReportCard(studentName) {
           <div style="font-size:18px;font-weight:700;color:var(--info)">${average}%</div>
           <div style="font-size:8px;color:var(--gray-600);margin-top:2px">Class Performance</div>
         </div>
-        <div style="padding:10px;background:${overallGrade==='A'?'var(--success-light)':overallGrade==='B'?'var(--info-light)':overallGrade==='C'?'var(--warning-light)':'var(--danger-light)'};border-radius:8px;border-left:4px solid ${overallGrade==='A'?'var(--success)':overallGrade==='B'?'var(--info)':overallGrade==='C'?'var(--warning)':'var(--danger)'};text-align:center">
+        <div style="padding:10px;background:${overallGrade === 'A' ? 'var(--success-light)' : overallGrade === 'B' ? 'var(--info-light)' : overallGrade === 'C' ? 'var(--warning-light)' : 'var(--danger-light)'};border-radius:8px;border-left:4px solid ${overallGrade === 'A' ? 'var(--success)' : overallGrade === 'B' ? 'var(--info)' : overallGrade === 'C' ? 'var(--warning)' : 'var(--danger)'};text-align:center">
           <div style="font-size:9px;color:var(--gray-600);margin-bottom:3px;font-weight:600">GRADE</div>
-          <div style="font-size:22px;font-weight:700;color:${overallGrade==='A'?'var(--success)':overallGrade==='B'?'var(--info)':overallGrade==='C'?'var(--warning)':'var(--danger)'}">${overallGrade}</div>
+          <div style="font-size:22px;font-weight:700;color:${overallGrade === 'A' ? 'var(--success)' : overallGrade === 'B' ? 'var(--info)' : overallGrade === 'C' ? 'var(--warning)' : 'var(--danger)'}">${overallGrade}</div>
           <div style="font-size:8px;color:var(--gray-600);margin-top:2px">Overall Grade</div>
         </div>
         <div style="padding:10px;background:var(--warning-light);border-radius:8px;border-left:4px solid var(--warning);text-align:center">
@@ -11935,7 +11868,7 @@ function viewReportCard(studentName) {
       <button class="btn btn-secondary" onclick="closeModal()" style="padding:8px 16px;font-weight:600;font-size:11px">Close</button>
     </div>
   `;
-  
+
   openModal(reportContent);
 }
 
@@ -11943,12 +11876,12 @@ function onStudentSelected() {
   const studentName = document.getElementById('report-student-selector').value;
   const previewSection = document.getElementById('selected-report-preview');
   const summarySection = document.getElementById('report-summary-section');
-  
+
   if (studentName && STUDENTS_DATA[studentName]) {
     const student = STUDENTS_DATA[studentName];
     const average = calculateAverage(student.scores);
     const { position, totalInClass } = calculateClassPosition(studentName, student.class);
-    
+
     previewSection.innerHTML = `
       <div style="display:flex;gap:20px;align-items:center;padding:15px;background:var(--blue-xpale);border-radius:8px">
         <div style="flex:1">
@@ -11973,7 +11906,7 @@ function onStudentSelected() {
 
 function printReportCard(studentName) {
   const reportContent = document.getElementById('report-card-content');
-  
+
   if (!reportContent) {
     showToast('<i class="fas fa-times-circle"></i> Report card not found', 'error');
     return;
@@ -11981,7 +11914,7 @@ function printReportCard(studentName) {
 
   // Create a new window for printing
   const printWindow = window.open('', '', 'height=900,width=1200');
-  
+
   // Add print styles
   const printStyles = `
     <style>
@@ -12038,7 +11971,7 @@ function printReportCard(studentName) {
 
 function downloadReportCardPDF(studentName) {
   const reportContent = document.getElementById('report-card-content');
-  
+
   if (!reportContent) {
     showToast('<i class="fas fa-times-circle"></i> Report card not found', 'error');
     return;
@@ -12046,7 +11979,7 @@ function downloadReportCardPDF(studentName) {
 
   // Create a new window for PDF-ready format
   const pdfWindow = window.open('', '', 'height=900,width=1200');
-  
+
   const pdfStyles = `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12100,7 +12033,7 @@ function downloadReportCardPDF(studentName) {
 function updateAnalysis() {
   const subject = document.getElementById('analysis-subject').value;
   const classVal = document.getElementById('analysis-class').value || 'All Classes';
-  
+
   // Update statistics based on selection
   const stats = {
     average: subject === 'All Subjects' || subject === 'Mathematics' ? '92.5%' : subject === 'English Language' ? '88.3%' : '85.6%',
@@ -12110,7 +12043,7 @@ function updateAnalysis() {
     belowAvg: subject === 'All Subjects' || subject === 'Mathematics' ? '22%' : '25%'
   };
 
-  showToast('<i class="fas fa-chart-bar"></i> Analysis updated for '+subject+' - '+classVal, 'info');
+  showToast('<i class="fas fa-chart-bar"></i> Analysis updated for ' + subject + ' - ' + classVal, 'info');
 }
 
 // Generate attendance report
@@ -12119,7 +12052,7 @@ function generateAttendanceReport() {
     <div style="padding:20px;max-width:800px">
       <div style="text-align:center;margin-bottom:20px">
         <h2 style="margin:0;color:var(--blue-dark)"><i class="fas fa-chart-bar"></i> Daily Attendance Report</h2>
-        <p style="margin:5px 0;color:var(--gray-600);font-size:12px">${new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</p>
+        <p style="margin:5px 0;color:var(--gray-600);font-size:12px">${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
       
       <div style="background:var(--blue-xpale);padding:15px;border-radius:8px;margin-bottom:20px">
@@ -12150,10 +12083,10 @@ function generateAttendanceReport() {
           </tr>
         </thead>
         <tbody>
-          ${[['Creche',26,28,2],['Nursery',31,32,1],['KG 1',33,35,2],['KG 2',35,36,1],['Basic 1',36,38,2],['Basic 2',38,40,2],['Basic 3',40,42,2],['Basic 4',35,38,3],['Basic 5',39,40,1],['Basic 6',34,36,2],['JHS 1',40,42,2],['JHS 2',37,40,3],['JHS 3',37,39,2]].map(([c,p,t,a])=>{
-            const pct = Math.round(p/t*100);
-            return '<tr style="border-bottom:1px solid var(--gray-200)"><td style="padding:10px">'+c+'</td><td style="padding:10px;text-align:center;font-weight:600;color:var(--success)">'+p+'</td><td style="padding:10px;text-align:center">'+t+'</td><td style="padding:10px;text-align:center;color:var(--danger)">'+a+'</td><td style="padding:10px;text-align:center;font-weight:600">'+pct+'%</td></tr>';
-          }).join('')}
+          ${[['Creche', 26, 28, 2], ['Nursery', 31, 32, 1], ['KG 1', 33, 35, 2], ['KG 2', 35, 36, 1], ['Basic 1', 36, 38, 2], ['Basic 2', 38, 40, 2], ['Basic 3', 40, 42, 2], ['Basic 4', 35, 38, 3], ['Basic 5', 39, 40, 1], ['Basic 6', 34, 36, 2], ['JHS 1', 40, 42, 2], ['JHS 2', 37, 40, 3], ['JHS 3', 37, 39, 2]].map(([c, p, t, a]) => {
+    const pct = Math.round(p / t * 100);
+    return '<tr style="border-bottom:1px solid var(--gray-200)"><td style="padding:10px">' + c + '</td><td style="padding:10px;text-align:center;font-weight:600;color:var(--success)">' + p + '</td><td style="padding:10px;text-align:center">' + t + '</td><td style="padding:10px;text-align:center;color:var(--danger)">' + a + '</td><td style="padding:10px;text-align:center;font-weight:600">' + pct + '%</td></tr>';
+  }).join('')}
         </tbody>
       </table>
       
@@ -12170,26 +12103,26 @@ function generateAttendanceReport() {
 // Download attendance report as CSV
 function downloadAttendanceReportCSV() {
   let csv = 'Attendance Report\n';
-  csv += 'Generated: '+new Date().toLocaleDateString()+'\n\n';
+  csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
   csv += 'Class,Present,Total,Absent,Percentage\n';
-  
-  const classData = [['Creche',26,28,2],['Nursery',31,32,1],['KG 1',33,35,2],['KG 2',35,36,1],['Basic 1',36,38,2],['Basic 2',38,40,2],['Basic 3',40,42,2],['Basic 4',35,38,3],['Basic 5',39,40,1],['Basic 6',34,36,2],['JHS 1',40,42,2],['JHS 2',37,40,3],['JHS 3',37,39,2]];
-  
-  classData.forEach(([c,p,t,a]) => {
-    const pct = Math.round(p/t*100);
-    csv += c+','+p+','+t+','+a+','+pct+'%\n';
+
+  const classData = [['Creche', 26, 28, 2], ['Nursery', 31, 32, 1], ['KG 1', 33, 35, 2], ['KG 2', 35, 36, 1], ['Basic 1', 36, 38, 2], ['Basic 2', 38, 40, 2], ['Basic 3', 40, 42, 2], ['Basic 4', 35, 38, 3], ['Basic 5', 39, 40, 1], ['Basic 6', 34, 36, 2], ['JHS 1', 40, 42, 2], ['JHS 2', 37, 40, 3], ['JHS 3', 37, 39, 2]];
+
+  classData.forEach(([c, p, t, a]) => {
+    const pct = Math.round(p / t * 100);
+    csv += c + ',' + p + ',' + t + ',' + a + ',' + pct + '%\n';
   });
-  
+
   csv += '\n\nSummary\n';
   csv += 'Total Students,842\n';
   csv += 'Present,798\n';
   csv += 'Absent,37\n';
   csv += 'Late,7\n';
   csv += 'Average Attendance,94.2%\n';
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'attendance_report_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'attendance_report_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -12212,7 +12145,7 @@ function updatePassword() {
   const currentPass = document.querySelector('input[placeholder="Current password"]')?.value;
   const newPass = document.querySelector('input[placeholder="••••••••"]')?.value;
   const confirmPass = document.querySelectorAll('input[placeholder="••••••••"]')[1]?.value;
-  
+
   if (!currentPass || !newPass || !confirmPass) {
     alert('Please fill all password fields');
     return;
@@ -12248,26 +12181,26 @@ function editRecord(id, type) {
 // Delete record with confirmation
 function deleteRecord(id, type) {
   if (confirm(`Are you sure you want to delete this ${type}?`)) {
-    if(type === 'Teacher') {
-      const index = teachersData.findIndex(t=>t.teacher_id===id);
-      if(index !== -1) teachersData.splice(index, 1);
+    if (type === 'Teacher') {
+      const index = teachersData.findIndex(t => t.teacher_id === id);
+      if (index !== -1) teachersData.splice(index, 1);
       showToast('<i class="fas fa-check-circle"></i> Teacher deleted!', 'success', 3000);
-    } else if(type === 'Student') {
-      const index = enrolledStudents.findIndex(s=>s.student_id===id);
-      if(index !== -1) enrolledStudents.splice(index, 1);
+    } else if (type === 'Student') {
+      const index = enrolledStudents.findIndex(s => s.student_id === id);
+      if (index !== -1) enrolledStudents.splice(index, 1);
       showToast('<i class="fas fa-check-circle"></i> Student deleted!', 'success', 3000);
-    } else if(type === 'Parent') {
-      const index = parentsData.findIndex(p=>p.parent_id===id);
-      if(index !== -1) parentsData.splice(index, 1);
+    } else if (type === 'Parent') {
+      const index = parentsData.findIndex(p => p.parent_id === id);
+      if (index !== -1) parentsData.splice(index, 1);
       showToast('<i class="fas fa-check-circle"></i> Parent deleted!', 'success', 3000);
-    } else if(type === 'Admission') {
-      const index = admissionsData.findIndex(a=>a.adm_id===id);
-      if(index !== -1) admissionsData.splice(index, 1);
+    } else if (type === 'Admission') {
+      const index = admissionsData.findIndex(a => a.adm_id === id);
+      if (index !== -1) admissionsData.splice(index, 1);
       showToast('<i class="fas fa-check-circle"></i> Admission record deleted!', 'success', 3000);
     } else {
       showToast('<i class="fas fa-check-circle"></i> Record deleted!', 'success', 3000);
     }
-    
+
     setTimeout(() => {
       navTo(type.toLowerCase() + 's');
     }, 1500);
@@ -12284,24 +12217,24 @@ function generateReport(type) {
 // ═══════════════════════════════════
 // ADMISSIONS EXPORT FUNCTIONS
 // ═══════════════════════════════════
-function exportAdmissionsToCSV(){
+function exportAdmissionsToCSV() {
   let csv = 'Admissions Data Report\n';
-  csv += 'Generated: '+new Date().toLocaleDateString()+'\n\n';
-  
+  csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
+
   csv += 'Application ID,Student Name,DOB,Gender,Phone,Address,School,Class Applying,Academic Year,Status,Parent Name,Parent Phone,Occupation,Applied Date\n';
-  admissionsData.forEach((a)=>{
-    csv += a.adm_id+','+a.name+','+a.dob+','+a.gender+','+a.phone+','+a.address+','+a.school+','+a.class_applying+','+a.academic_year+','+a.status+','+a.parent_name+','+a.parent_phone+','+a.parent_occupation+','+a.created+'\n';
+  admissionsData.forEach((a) => {
+    csv += a.adm_id + ',' + a.name + ',' + a.dob + ',' + a.gender + ',' + a.phone + ',' + a.address + ',' + a.school + ',' + a.class_applying + ',' + a.academic_year + ',' + a.status + ',' + a.parent_name + ',' + a.parent_phone + ',' + a.parent_occupation + ',' + a.created + '\n';
   });
-  
+
   csv += '\n\nSummary\n';
-  csv += 'Total Applications,'+(admissionsData.length)+'\n';
-  csv += 'Pending,'+(admissionsData.filter(a=>a.status==='Pending').length)+'\n';
-  csv += 'Approved,'+(admissionsData.filter(a=>a.status==='Approved').length)+'\n';
-  csv += 'Rejected,'+(admissionsData.filter(a=>a.status==='Rejected').length)+'\n';
-  
+  csv += 'Total Applications,' + (admissionsData.length) + '\n';
+  csv += 'Pending,' + (admissionsData.filter(a => a.status === 'Pending').length) + '\n';
+  csv += 'Approved,' + (admissionsData.filter(a => a.status === 'Approved').length) + '\n';
+  csv += 'Rejected,' + (admissionsData.filter(a => a.status === 'Rejected').length) + '\n';
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'Admissions_Data_'+new Date().toISOString().slice(0,10)+'.csv');
+  element.setAttribute('download', 'Admissions_Data_' + new Date().toISOString().slice(0, 10) + '.csv');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -12309,15 +12242,15 @@ function exportAdmissionsToCSV(){
   showToast('<i class="fas fa-check-circle"></i> Admissions data exported to CSV!', 'success', 3000);
 }
 
-function exportAdmissionsToExcel(){
+function exportAdmissionsToExcel() {
   let csv = 'Application ID\tStudent Name\tDOB\tGender\tPhone\tAddress\tSchool\tClass Applying\tAcademic Year\tStatus\tParent Name\tParent Phone\tOccupation\tApplied Date\n';
-  admissionsData.forEach((a)=>{
-    csv += a.adm_id+'\t'+a.name+'\t'+a.dob+'\t'+a.gender+'\t'+a.phone+'\t'+a.address+'\t'+a.school+'\t'+a.class_applying+'\t'+a.academic_year+'\t'+a.status+'\t'+a.parent_name+'\t'+a.parent_phone+'\t'+a.parent_occupation+'\t'+a.created+'\n';
+  admissionsData.forEach((a) => {
+    csv += a.adm_id + '\t' + a.name + '\t' + a.dob + '\t' + a.gender + '\t' + a.phone + '\t' + a.address + '\t' + a.school + '\t' + a.class_applying + '\t' + a.academic_year + '\t' + a.status + '\t' + a.parent_name + '\t' + a.parent_phone + '\t' + a.parent_occupation + '\t' + a.created + '\n';
   });
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:application/vnd.ms-excel;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'Admissions_Data_'+new Date().toISOString().slice(0,10)+'.xls');
+  element.setAttribute('download', 'Admissions_Data_' + new Date().toISOString().slice(0, 10) + '.xls');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
@@ -12325,7 +12258,7 @@ function exportAdmissionsToExcel(){
   showToast('<i class="fas fa-check-circle"></i> Admissions data exported to Excel!', 'success', 3000);
 }
 
-function downloadAdmissionsPDF(){
+function downloadAdmissionsPDF() {
   let html = '<html><head><meta charset="UTF-8"><style>';
   html += 'body{font-family:Arial,sans-serif;margin:15px;color:#333;font-size:12px}';
   html += 'h1{font-size:18px;margin:0 0 8px 0;color:#0066cc}h2{font-size:13px;margin:12px 0 8px 0;border-bottom:2px solid #0066cc;padding-bottom:4px}';
@@ -12334,64 +12267,64 @@ function downloadAdmissionsPDF(){
   html += '.stat-box{padding:10px;border:1px solid #ddd;text-align:center;border-radius:4px}.stat-num{font-size:18px;font-weight:bold;color:#0066cc}';
   html += '.page-break{page-break-after:always;margin:20px 0}';
   html += '</style></head><body>';
-  
+
   html += '<h1><i class="fas fa-clipboard-list"></i> Admissions Data Report</h1>';
-  html += '<div style="color:#666;font-size:10px;margin-bottom:15px">Generated on '+new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})+'</div>';
-  
-  const pending = admissionsData.filter(a=>a.status==='Pending').length;
-  const approved = admissionsData.filter(a=>a.status==='Approved').length;
-  const rejected = admissionsData.filter(a=>a.status==='Rejected').length;
-  const enrolled = admissionsData.filter(a=>a.status==='Enrolled').length;
-  
+  html += '<div style="color:#666;font-size:10px;margin-bottom:15px">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</div>';
+
+  const pending = admissionsData.filter(a => a.status === 'Pending').length;
+  const approved = admissionsData.filter(a => a.status === 'Approved').length;
+  const rejected = admissionsData.filter(a => a.status === 'Rejected').length;
+  const enrolled = admissionsData.filter(a => a.status === 'Enrolled').length;
+
   html += '<div class="summary">';
-  html += '<div class="stat-box"><div class="stat-num">'+admissionsData.length+'</div><div>Total Applications</div></div>';
-  html += '<div class="stat-box"><div class="stat-num">'+pending+'</div><div>Pending</div></div>';
-  html += '<div class="stat-box"><div class="stat-num">'+approved+'</div><div>Approved</div></div>';
-  html += '<div class="stat-box"><div class="stat-num">'+rejected+'</div><div>Rejected</div></div>';
+  html += '<div class="stat-box"><div class="stat-num">' + admissionsData.length + '</div><div>Total Applications</div></div>';
+  html += '<div class="stat-box"><div class="stat-num">' + pending + '</div><div>Pending</div></div>';
+  html += '<div class="stat-box"><div class="stat-num">' + approved + '</div><div>Approved</div></div>';
+  html += '<div class="stat-box"><div class="stat-num">' + rejected + '</div><div>Rejected</div></div>';
   html += '</div>';
-  
+
   html += '<h2>All Applications</h2>';
   html += '<table>';
   html += '<tr><th>App No.</th><th>Student Name</th><th>DOB</th><th>Gender</th><th>Class</th><th>School</th><th>Parent</th><th>Status</th><th>Date</th></tr>';
-  admissionsData.forEach((a)=>{
-    const statusColor = a.status==='Pending'?'#f59e0b':(a.status==='Approved'?'#10b981':(a.status==='Enrolled'?'#3b82f6':'#ef4444'));
-    html += '<tr><td><strong>'+a.adm_id+'</strong></td><td>'+a.name+'</td><td>'+a.dob+'</td><td>'+a.gender+'</td><td>'+a.class_applying+'</td><td>'+a.school+'</td><td>'+a.parent_name+'</td><td style="color:white;background:'+statusColor+';font-weight:bold;text-align:center;padding:4px">'+a.status+'</td><td>'+a.created+'</td></tr>';
+  admissionsData.forEach((a) => {
+    const statusColor = a.status === 'Pending' ? '#f59e0b' : (a.status === 'Approved' ? '#10b981' : (a.status === 'Enrolled' ? '#3b82f6' : '#ef4444'));
+    html += '<tr><td><strong>' + a.adm_id + '</strong></td><td>' + a.name + '</td><td>' + a.dob + '</td><td>' + a.gender + '</td><td>' + a.class_applying + '</td><td>' + a.school + '</td><td>' + a.parent_name + '</td><td style="color:white;background:' + statusColor + ';font-weight:bold;text-align:center;padding:4px">' + a.status + '</td><td>' + a.created + '</td></tr>';
   });
   html += '</table>';
-  
+
   html += '<div class="page-break"></div>';
   html += '<h2>Pending Applications</h2>';
   html += '<table>';
   html += '<tr><th>App No.</th><th>Student</th><th>Class</th><th>Parent</th><th>Phone</th><th>Applied</th></tr>';
-  admissionsData.filter(a=>a.status==='Pending').forEach((a)=>{
-    html += '<tr><td>'+a.adm_id+'</td><td>'+a.name+'</td><td>'+a.class_applying+'</td><td>'+a.parent_name+'</td><td>'+a.parent_phone+'</td><td>'+a.created+'</td></tr>';
+  admissionsData.filter(a => a.status === 'Pending').forEach((a) => {
+    html += '<tr><td>' + a.adm_id + '</td><td>' + a.name + '</td><td>' + a.class_applying + '</td><td>' + a.parent_name + '</td><td>' + a.parent_phone + '</td><td>' + a.created + '</td></tr>';
   });
   html += '</table>';
-  
+
   html += '<div class="page-break"></div>';
   html += '<h2>Approved Applications</h2>';
   html += '<table>';
   html += '<tr><th>App No.</th><th>Student</th><th>Class</th><th>Parent</th><th>Phone</th><th>Status</th></tr>';
-  admissionsData.filter(a=>a.status==='Approved').forEach((a)=>{
-    html += '<tr><td>'+a.adm_id+'</td><td>'+a.name+'</td><td>'+a.class_applying+'</td><td>'+a.parent_name+'</td><td>'+a.parent_phone+'</td><td>Ready for Enrollment</td></tr>';
+  admissionsData.filter(a => a.status === 'Approved').forEach((a) => {
+    html += '<tr><td>' + a.adm_id + '</td><td>' + a.name + '</td><td>' + a.class_applying + '</td><td>' + a.parent_name + '</td><td>' + a.parent_phone + '</td><td>Ready for Enrollment</td></tr>';
   });
   html += '</table>';
-  
+
   html += '</body></html>';
-  
+
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(html));
-  element.setAttribute('download', 'Admissions_Data_'+new Date().toISOString().slice(0,10)+'.pdf.html');
+  element.setAttribute('download', 'Admissions_Data_' + new Date().toISOString().slice(0, 10) + '.pdf.html');
   element.style.display = 'none';
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-  showToast('<i class="fas fa-check-circle"></i> PDF generated!<br/>File: Admissions_Data_'+new Date().toISOString().slice(0,10)+'.pdf.html', 'success', 3000);
+  showToast('<i class="fas fa-check-circle"></i> PDF generated!<br/>File: Admissions_Data_' + new Date().toISOString().slice(0, 10) + '.pdf.html', 'success', 3000);
 }
 
 function exportData(type = 'admissions') {
-  if(type === 'admissions'){
-    if(confirm('How would you like to export admissions data?\n\nOK = CSV\nCancel = Show menu')){
+  if (type === 'admissions') {
+    if (confirm('How would you like to export admissions data?\n\nOK = CSV\nCancel = Show menu')) {
       exportAdmissionsToCSV();
     } else {
       alert('Export options:\n1. Click Export again for CSV\n2. Use admissions statistics for detailed analysis');
@@ -12432,14 +12365,14 @@ function initButtonHandlers() {
 
   // Chat send buttons
   document.querySelectorAll('.chat-send').forEach(btn => {
-    btn.onclick = function() { sendMessage(this); };
+    btn.onclick = function () { sendMessage(this); };
   });
 
   // Generic save buttons
   document.querySelectorAll('.btn').forEach(btn => {
     const text = btn.innerHTML;
     if (text.includes('Save') && !btn.onclick && !btn.parentElement.innerHTML.includes('onclick')) {
-      btn.onclick = function() { 
+      btn.onclick = function () {
         if (text.includes('Attendance')) saveAttendance();
         else if (text.includes('Grades')) saveGrades();
         else if (text.includes('Profile')) updateProfile();
@@ -12447,10 +12380,10 @@ function initButtonHandlers() {
       };
     }
     if (text.includes('Publish') && !btn.onclick) {
-      btn.onclick = function() { showToast('<i class="fas fa-check-circle"></i> Published!', 'success'); };
+      btn.onclick = function () { showToast('<i class="fas fa-check-circle"></i> Published!', 'success'); };
     }
     if (text.includes('Cancel') && !btn.onclick) {
-      btn.onclick = function() { location.reload(); };
+      btn.onclick = function () { location.reload(); };
     }
     if (text.includes('Update') && text.includes('Password') && !btn.onclick) {
       btn.onclick = updatePassword;
@@ -12459,17 +12392,17 @@ function initButtonHandlers() {
       btn.onclick = printDocument;
     }
     if (text.includes('Upload') && !btn.onclick) {
-      btn.onclick = function() { showToast('<i class="fas fa-check-circle"></i> File uploaded!', 'success'); };
+      btn.onclick = function () { showToast('<i class="fas fa-check-circle"></i> File uploaded!', 'success'); };
     }
     if (text.includes('Create') && !btn.onclick) {
-      btn.onclick = function() { showToast('<i class="fas fa-check-circle"></i> Record created!', 'success'); };
+      btn.onclick = function () { showToast('<i class="fas fa-check-circle"></i> Record created!', 'success'); };
     }
   });
 
   // Pagination buttons
   document.querySelectorAll('.pg-btn').forEach(btn => {
     if (!btn.onclick) {
-      btn.onclick = function() { goToPage(this.innerHTML); };
+      btn.onclick = function () { goToPage(this.innerHTML); };
     }
   });
 
@@ -12478,43 +12411,43 @@ function initButtonHandlers() {
     if (!btn.onclick && !btn.parentElement.innerHTML.includes('onclick')) {
       const text = btn.innerHTML;
       if (text.includes('View')) {
-        btn.onclick = function() { alert('Viewing record...'); };
+        btn.onclick = function () { alert('Viewing record...'); };
       }
       if (text.includes('Edit')) {
-        btn.onclick = function() { alert('Editing record...'); };
+        btn.onclick = function () { alert('Editing record...'); };
       }
       if (text.includes('Delete') || text.includes('Del')) {
-        btn.onclick = function() { deleteRecord(1, 'Record'); };
+        btn.onclick = function () { deleteRecord(1, 'Record'); };
       }
       if (text.includes('Message')) {
-        btn.onclick = function() { navTo('messaging'); };
+        btn.onclick = function () { navTo('messaging'); };
       }
       if (text.includes('Grade')) {
-        btn.onclick = function() { alert('Opening grading interface...'); };
+        btn.onclick = function () { alert('Opening grading interface...'); };
       }
       if (text.includes('Connect')) {
-        btn.onclick = function() { alert('Connection request sent!'); };
+        btn.onclick = function () { alert('Connection request sent!'); };
       }
       if (text.includes('Apply')) {
-        btn.onclick = function() { alert('Application submitted!'); };
+        btn.onclick = function () { alert('Application submitted!'); };
       }
       if (text.includes('Profile')) {
-        btn.onclick = function() { alert('Opening profile...'); };
+        btn.onclick = function () { alert('Opening profile...'); };
       }
       if (text.includes('Call')) {
-        btn.onclick = function() { alert('Initiating call...'); };
+        btn.onclick = function () { alert('Initiating call...'); };
       }
       if (text.includes('Slip')) {
-        btn.onclick = function() { alert('Generating slip...'); };
+        btn.onclick = function () { alert('Generating slip...'); };
       }
       if (text.includes('Perms')) {
-        btn.onclick = function() { alert('Managing permissions...'); };
+        btn.onclick = function () { alert('Managing permissions...'); };
       }
       if (text.includes('Disable')) {
-        btn.onclick = function() { alert('Account disabled'); };
+        btn.onclick = function () { alert('Account disabled'); };
       }
       if (text.includes('Generate')) {
-        btn.onclick = function() { alert('Generating...'); };
+        btn.onclick = function () { alert('Generating...'); };
       }
       if (text.includes('Print') || text.includes('<i class="fas fa-download"></i>')) {
         btn.onclick = printDocument;
@@ -12527,19 +12460,19 @@ function initButtonHandlers() {
     if (!btn.onclick && !btn.parentElement.innerHTML.includes('onclick')) {
       const text = btn.innerHTML;
       if (text.includes('Enroll') || text.includes('Add')) {
-        btn.onclick = function() { createRecord(text.split(/\s+/)[1] || 'Record'); };
+        btn.onclick = function () { createRecord(text.split(/\s+/)[1] || 'Record'); };
       }
       if (text.includes('Import')) {
-        btn.onclick = function() { alert('Importing data...'); };
+        btn.onclick = function () { alert('Importing data...'); };
       }
       if (text.includes('Export')) {
-        btn.onclick = function() { exportData(); };
+        btn.onclick = function () { exportData(); };
       }
       if (text.includes('Print')) {
         btn.onclick = printDocument;
       }
       if (text.includes('Edit')) {
-        btn.onclick = function() { alert('Opening editor...'); };
+        btn.onclick = function () { alert('Opening editor...'); };
       }
     }
   });
@@ -12549,13 +12482,13 @@ function initButtonHandlers() {
     if (!btn.onclick && !btn.parentElement.innerHTML.includes('onclick')) {
       const text = btn.innerHTML;
       if (text.includes('Browse')) {
-        btn.onclick = function() { navTo('directory'); };
+        btn.onclick = function () { navTo('directory'); };
       }
       if (text.includes('Admission')) {
-        btn.onclick = function() { navTo('admission'); };
+        btn.onclick = function () { navTo('admission'); };
       }
       if (text.includes('Learn')) {
-        btn.onclick = function() { navTo('about'); };
+        btn.onclick = function () { navTo('about'); };
       }
     }
   });
@@ -12563,15 +12496,15 @@ function initButtonHandlers() {
   // Send message buttons
   document.querySelectorAll('.btn').forEach(btn => {
     if (btn.innerHTML.includes('Send Message') && !btn.onclick) {
-      btn.onclick = function() { showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success'); };
+      btn.onclick = function () { showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success'); };
     }
   });
 
   // Process/Backup buttons
   document.querySelectorAll('.btn').forEach(btn => {
-    if ((btn.innerHTML.includes('Backup') || btn.innerHTML.includes('Process') || 
-         btn.innerHTML.includes('Download') || btn.innerHTML.includes('Cloud')) && !btn.onclick) {
-      btn.onclick = function() { alert(this.innerHTML + ' initiated...'); };
+    if ((btn.innerHTML.includes('Backup') || btn.innerHTML.includes('Process') ||
+      btn.innerHTML.includes('Download') || btn.innerHTML.includes('Cloud')) && !btn.onclick) {
+      btn.onclick = function () { alert(this.innerHTML + ' initiated...'); };
     }
   });
 }
@@ -12579,10 +12512,10 @@ function initButtonHandlers() {
 // ═══════════════════════════════════
 // INIT
 // ═══════════════════════════════════
-document.getElementById('role-fab').style.display='none';
+document.getElementById('role-fab').style.display = 'none';
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', function () {
   // Initialize Visitor home page on load
   switchRole('Visitor');
   initButtonHandlers();
@@ -12591,7 +12524,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // Re-initialize button handlers after rendering new content
 const originalRenderMain = renderMain;
-renderMain = function() {
+renderMain = function () {
   originalRenderMain.call(this);
   setTimeout(initButtonHandlers, 100);
   setTimeout(initMobileSidebarHandlers, 100);
@@ -12600,42 +12533,42 @@ renderMain = function() {
 // ═══════════════════════════════════
 // MOBILE SIDEBAR EVENT HANDLERS
 // ═══════════════════════════════════
-function initMobileSidebarHandlers(){
+function initMobileSidebarHandlers() {
   const sidebar = document.getElementById('sidebar');
   const sidebarItems = document.querySelectorAll('.sb-item');
-  
-  if(!sidebar) return;
-  
+
+  if (!sidebar) return;
+
   // Close sidebar when clicking on any sidebar item
   sidebarItems.forEach(item => {
     item.addEventListener('click', closeMobileSidebar);
   });
-  
+
   // Close sidebar when clicking outside on mobile
-  document.addEventListener('click', function(event){
+  document.addEventListener('click', function (event) {
     const isMobile = window.innerWidth <= 768;
-    if(!isMobile) return;
-    
+    if (!isMobile) return;
+
     const sidebar = document.getElementById('sidebar');
     const toggle = document.getElementById('sidebar-toggle');
-    
-    if(!sidebar || !toggle) return;
-    
+
+    if (!sidebar || !toggle) return;
+
     const isClickInSidebar = sidebar.contains(event.target);
     const isClickOnToggle = toggle.contains(event.target);
-    
-    if(!isClickInSidebar && !isClickOnToggle && sidebar.classList.contains('open')){
+
+    if (!isClickInSidebar && !isClickOnToggle && sidebar.classList.contains('open')) {
       closeMobileSidebar();
     }
   });
-  
+
   // Handle window resize - close sidebar if resizing to desktop
-  window.addEventListener('resize', function(){
-    if(window.innerWidth > 768){
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 768) {
       closeMobileSidebar();
     }
   });
-  
+
   // Wrap all tables with responsive wrapper
   wrapTablesForResponsiveness();
 }
@@ -12643,18 +12576,18 @@ function initMobileSidebarHandlers(){
 // ═══════════════════════════════════
 // RESPONSIVE TABLE WRAPPER
 // ═══════════════════════════════════
-function wrapTablesForResponsiveness(){
+function wrapTablesForResponsiveness() {
   const tables = document.querySelectorAll('.card .tbl, .main-wrap .tbl');
   tables.forEach(table => {
     // Check if table is already wrapped
-    if(table.parentElement && table.parentElement.classList.contains('table-wrapper')){
+    if (table.parentElement && table.parentElement.classList.contains('table-wrapper')) {
       return;
     }
-    
+
     // Create wrapper div
     const wrapper = document.createElement('div');
     wrapper.className = 'table-wrapper';
-    
+
     // Wrap the table
     table.parentNode.insertBefore(wrapper, table);
     wrapper.appendChild(table);
