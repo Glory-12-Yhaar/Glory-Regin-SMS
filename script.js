@@ -1805,6 +1805,26 @@ function renderMain() {
   if (m === 'events') {
     setTimeout(() => renderCalendar(currentCalendarYear, currentCalendarMonth), 100);
   }
+  // Initialize materials UI when navigating to materials
+  if (m === 'materials') {
+    setTimeout(() => { try{ initMaterialsUI(); }catch(e){} }, 80);
+  }
+  // Initialize recent payments rendering when Accountant views dashboard
+  if (m === 'dashboard' && r === 'Accountant') {
+    setTimeout(() => { try{ renderRecentPaymentsTable(); } catch(e){} }, 80);
+  }
+  // Initialize parent dashboard
+  if (m === 'dashboard' && r === 'Parent') {
+    setTimeout(() => { try{ getParentChildren(); getParentMessages(); getParentAssignments(); } catch(e){} }, 80);
+  }
+  // Initialize teacher dashboard
+  if (m === 'dashboard' && r === 'Teacher') {
+    setTimeout(() => { try{ getAssignments(); getTeacherMessages(); } catch(e){} }, 80);
+  }
+  // Initialize student dashboard
+  if (m === 'dashboard' && r === 'Student') {
+    setTimeout(() => { try{ /* placeholder for student init */ } catch(e){} }, 80);
+  }
 }
 
 // ═══════════════════════════════════
@@ -2097,15 +2117,15 @@ function teacherDash() {
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Messages</span><span class="card-act" onclick="navTo('messaging')">Open Chat</span></div>
       <div class="chat-msgs">
-        ${[['Admin', 'Staff meeting tomorrow at 3PM', false], ['Parent Serwaa', 'Please update Ama\'s grade', false]].map(([n, m, mine]) => `
-        <div class="chat-msg">
-          <div class="av av-sm av-blue">${n[0]}</div>
-          <div><div class="chat-bubble them">${m}</div><div class="chat-meta">${n}</div></div>
+        ${getTeacherMessages().map(m => `
+        <div class="chat-msg ${m.fromTeacher ? 'me' : ''}">
+          <div class="av av-sm av-${m.fromTeacher ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
+          <div><div class="chat-bubble ${m.fromTeacher ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromTeacher ? 'me' : ''}">${m.fromTeacher ? 'You' : escapeHtml(m.from)} · ${m.time}</div></div>
         </div>`).join('')}
       </div>
       <div class="chat-input-row">
-        <input class="chat-inp" placeholder="Type reply..." onkeypress="if(event.key==='Enter') sendTeacherMessage()">
-        <button class="chat-send" onclick="sendTeacherMessage()"><i class="fa-regular fa-paper-plane"></i></button>
+        <textarea id="teacher-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Mr. Amponsah', 'Admin Office', 'teacher-chat-input')"></textarea>
+        <button class="chat-send" onclick="sendTeacherChatButton()"><i class="fa-regular fa-paper-plane"></i></button>
       </div>
     </div>
   </div>`;
@@ -2304,76 +2324,216 @@ function studentDash() {
 }
 
 // ═══════════════════════════════════
+// TEACHER/STUDENT STORAGE & HELPERS
+// ═══════════════════════════════════
+const TEACHERS_KEY = 'gr_teachers';
+const STUDENTS_KEY = 'gr_students';
+const GRADEBOOK_KEY = 'gr_gradebook';
+const ASSIGNMENTS_KEY = 'gr_assignments';
+const TEACHER_MESSAGES_KEY = 'gr_teacher_messages';
+
+function getAssignments() {
+  const raw = localStorage.getItem(ASSIGNMENTS_KEY);
+  return raw ? JSON.parse(raw) : ASSIGNMENTS_DATA;
+}
+function saveAssignments(obj) {
+  localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(obj));
+}
+
+function getTeacherMessages() {
+  const raw = localStorage.getItem(TEACHER_MESSAGES_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+function saveTeacherMessages(arr) {
+  localStorage.setItem(TEACHER_MESSAGES_KEY, JSON.stringify(arr));
+}
+
+function sendTeacherChatMessage() {
+  const inp = document.querySelector('.chat-inp');
+  if (!inp) return showToast('No message box found', 'error');
+  const txt = inp.value.trim();
+  if (!txt) return showToast('Type a message first', 'error');
+  const msgs = getTeacherMessages();
+  msgs.push({ from: 'Me', text: txt, time: new Date().toLocaleString(), fromTeacher: true });
+  saveTeacherMessages(msgs);
+  try{ addMessage({ sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: '', text: txt }); }catch(e){}
+  inp.value = '';
+  showToast('<i class="fas fa-check-circle"></i> Message sent', 'success');
+  setTimeout(() => renderMain(), 120);
+}
+
+function openGradeEntryModal(studentName) {
+  const subjects = SUBJECTS_BY_CLASS[(STUDENTS_DATA[studentName]||{}).class] || Object.keys(STUDENTS_DATA[studentName]?.scores||{});
+  const subjOptions = (subjects || []).map(s => `<option value="${s}">${s}</option>`).join('');
+  const html = `<div style="max-width:520px">
+    <h3>Quick Grade Entry — ${studentName}</h3>
+    <div style="margin-top:12px">
+      <label>Subject</label>
+      <select id="grade-subject" style="width:100%;padding:8px;margin:6px 0">${subjOptions}</select>
+      <label>Class Score</label>
+      <input id="grade-class" type="number" style="width:100%;padding:8px;margin:6px 0" />
+      <label>Exam Score</label>
+      <input id="grade-exam" type="number" style="width:100%;padding:8px;margin:6px 0" />
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveGradeEntry('${escapeHtml(studentName)}')">Save</button>
+      </div>
+    </div>
+  </div>`;
+  openModal(html, true);
+}
+
+function saveGradeEntry(studentName) {
+  const subj = document.getElementById('grade-subject').value;
+  const cls = parseFloat(document.getElementById('grade-class').value) || 0;
+  const exam = parseFloat(document.getElementById('grade-exam').value) || 0;
+  const gbRaw = localStorage.getItem(GRADEBOOK_KEY);
+  const gb = gbRaw ? JSON.parse(gbRaw) : {};
+  gb[studentName] = gb[studentName] || {};
+  gb[studentName][subj] = { classScore: cls, examScore: exam, updated: new Date().toISOString() };
+  localStorage.setItem(GRADEBOOK_KEY, JSON.stringify(gb));
+  closeModal();
+  showToast('Grade saved', 'success');
+  setTimeout(() => renderMain(), 120);
+}
+
+function saveAttendance() {
+  const rows = Array.from(document.querySelectorAll('table.tbl tbody tr'));
+  const today = new Date().toISOString().slice(0,10);
+  const gbRaw = localStorage.getItem(GRADEBOOK_KEY);
+  const gb = gbRaw ? JSON.parse(gbRaw) : {attendance:{}};
+  gb.attendance = gb.attendance || {};
+  rows.forEach(r => {
+    const nameCell = r.querySelector('td');
+    if (!nameCell) return;
+    const studentName = nameCell.textContent.trim();
+    const radios = r.querySelectorAll('input[type=radio]');
+    let val = 'P';
+    radios.forEach(rd=>{ if(rd.checked) val = rd.value; });
+    gb.attendance[studentName] = gb.attendance[studentName] || {};
+    gb.attendance[studentName][today] = val;
+  });
+  localStorage.setItem(GRADEBOOK_KEY, JSON.stringify(gb));
+  showToast('Attendance saved', 'success');
+}
+
+function viewAssignmentSubmissions(title) {
+  const assigns = getAssignments();
+  const a = Object.values(assigns).find(x=>x.title===title) || assigns[title];
+  if (!a) return showToast('Assignment not found', 'error');
+  const subs = a.submissions || {};
+  const html = `<div style="max-width:640px"><h3>Submissions — ${escapeHtml(a.title)}</h3><div style="max-height:420px;overflow:auto;margin-top:10px">${Object.entries(subs).map(([name,d])=>`<div style="padding:8px;border-bottom:1px solid var(--gray-100)"><strong>${escapeHtml(name)}</strong> — ${d.submitted || '-'}<div style="font-size:13px;color:var(--gray-600)">Score: ${d.score||'–'} · Feedback: ${escapeHtml(d.feedback||'')}</div></div>`).join('') || '<div style="padding:18px;color:var(--gray-400)">No submissions yet</div>'}</div></div>`;
+  openModal(html, true);
+}
+
+function openAddAssignmentForm() {
+  const html = `<div style="max-width:600px"><h3>Add Assignment</h3>
+    <label>Title</label><input id="assign-title" style="width:100%;padding:8px;margin:6px 0" />
+    <label>Subject</label><input id="assign-subject" style="width:100%;padding:8px;margin:6px 0" />
+    <label>Class</label><input id="assign-class" style="width:100%;padding:8px;margin:6px 0" />
+    <label>Due Date</label><input id="assign-due" type="date" style="width:100%;padding:8px;margin:6px 0" />
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addAssignment()">Create</button>
+    </div>
+  </div>`;
+  openModal(html, true);
+}
+
+function addAssignment() {
+  const title = document.getElementById('assign-title').value.trim();
+  const subject = document.getElementById('assign-subject').value.trim();
+  const cls = document.getElementById('assign-class').value.trim();
+  const due = document.getElementById('assign-due').value;
+  if (!title) return showToast('Provide a title', 'error');
+  const assigns = getAssignments();
+  const id = String(Date.now());
+  assigns[id] = { id, title, subject, class: cls, dueDate: due || 'TBD', createdDate: new Date().toISOString().slice(0,10), maxScore: 100, status: 'Active', instructions: '', submissions: {} };
+  saveAssignments(assigns);
+  closeModal();
+  showToast('Assignment created', 'success');
+  setTimeout(()=>renderMain(),120);
+}
+
+function showStudentIDCard() {
+  const html = `<div style="max-width:420px;text-align:center"><h3>Student ID</h3><div class="av av-xl av-blue" style="margin:12px auto">AS</div><div><strong>Ama Serwaa</strong><div>ID: 2024-0042</div><div>JHS 1</div></div><div style="margin-top:12px"><button class="btn btn-primary" onclick="closeModal()">Close</button></div></div>`;
+  openModal(html, true);
+}
+
+// ═══════════════════════════════════
 // PARENT DASHBOARD
 // ═══════════════════════════════════
 function parentDash() {
-  return hdr('Parent Dashboard', 'Welcome, Mr. & Mrs. Serwaa · Parent of 2 students · ' + getCurrentDateString()) + `
+  const students = getParentChildren();
+  const childrenStats = students.map(s => `<div style="display:flex;gap:16px;align-items:center;padding:14px;background:var(--gray-50);border-radius:var(--radius-lg);margin-bottom:12px">
+    <div class="av av-lg av-${s.color}">${(s.name||' ')[0]}</div>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:700;color:var(--blue-dark)">${escapeHtml(s.name)}</div>
+      <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(s.class)} · ${s.studentId}</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <span class="badge b-success">${s.attendance}% Attendance</span>
+        <span class="badge b-info">GPA ${s.gpa}</span>
+        <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">Fees ${s.feeStatus}</span>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="viewStudentReport('${s.studentId}')"><i class="fas fa-file"></i> Report</button>
+    <button class="btn btn-info btn-sm" onclick="viewAttendance('${s.studentId}')"><i class="fas fa-chart-bar"></i> Progress</button>
+  </div>`).join('');
+  const messages = getParentMessages();
+  const messageHtml = messages.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:20px"><i class="fas fa-inbox" style="font-size:32px;margin-bottom:8px;display:block"></i> No messages yet</div>' : messages.map(m=>`<div class="chat-msg ${m.fromParent ? 'me' : ''}">
+    <div class="av av-sm av-${m.fromParent ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
+    <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} · ${m.time}</div></div>
+  </div>`).join('');
+  const assignments = getParentAssignments();
+  const assignmentHtml = assignments.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:12px">No pending assignments</div>' : assignments.filter(a=>!a.completed).map((a,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
+    <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${escapeHtml(a.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(a.student)}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="badge ${a.dueDate === 'Today' ? 'b-danger' : a.dueDate.includes('Mar 2') ? 'b-warning' : 'b-info'}">${a.dueDate}</span>
+      <button class="btn btn-success btn-xs" onclick="markAssignmentDone(${i})"><i class="fas fa-check"></i></button>
+    </div>
+  </div>`).join('');
+  const feeSummary = getParentFeeSummary();
+  return hdr('Parent Dashboard', 'Welcome, Mr. & Mrs. Serwaa · Parent of ' + students.length + ' students · ' + getCurrentDateString()) + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-child"></i>', '2', 'My Children', 'Both active', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>', '96%', 'Ama\'s Attendance', 'Excellent', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-file"></i>', 'A', 'Last Report Grade', 'Term 2, 2024', 'up', 'si-gold')}
-    ${statCard('<i class="fas fa-money-bill"></i>', 'Paid', 'Fees Status', 'All clear', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-child"></i>', students.length, 'My Children', 'All active', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-check-circle"></i>', students.length > 0 ? students[0].attendance + '%' : '—', 'Avg Attendance', 'Excellent', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-file"></i>', 'A', 'Last Report Grade', 'Term 1, 2025', 'up', 'si-gold')}
+    ${statCard('<i class="fas fa-money-bill"></i>', feeSummary.pending > 0 ? feeSummary.pending + ' Pending' : 'All Paid', 'Fees Status', feeSummary.pending > 0 ? 'Action needed' : 'All clear', feeSummary.pending > 0 ? 'dn' : 'up', feeSummary.pending > 0 ? 'si-red' : 'si-green')}
   </div>
   <div class="g2 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-child"></i> My Children</span></div>
-      ${[['Ama Serwaa', 'JHS 1', '2024-0042', '96%', '3.8', 'Paid', 'blue'], ['Kweku Serwaa', 'Basic 3', '2024-0143', '91%', '3.5', 'Paid', 'purple']].map(([n, c, r, att, gpa, f, av]) => `
-      <div style="display:flex;gap:16px;align-items:center;padding:14px;background:var(--gray-50);border-radius:var(--radius-lg);margin-bottom:12px">
-        <div class="av av-lg av-${av}">${n[0]}</div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:700;color:var(--blue-dark)">${n}</div>
-          <div style="font-size:11px;color:var(--gray-500)">${c} · ${r}</div>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-            <span class="badge b-success">${att} Attendance</span>
-            <span class="badge b-info">GPA ${gpa}</span>
-            <span class="badge b-success">Fees ${f}</span>
-          </div>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="navTo('reportcards')"><i class="fas fa-file"></i> Report</button>
-      </div>`).join('')}
+      ${childrenStats}
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Teacher Communication</span><span class="card-act" onclick="navTo('teachers')">All Teachers</span></div>
-      <div class="chat-msgs">
-        <div class="chat-msg">
-          <div class="av av-sm av-green">A</div>
-          <div><div class="chat-bubble them">Ama has shown great improvement in Mathematics this term. Excellent student!</div><div class="chat-meta">Mr. Amponsah · 9:00 AM</div></div>
-        </div>
-        <div class="chat-msg me">
-          <div class="av av-sm av-blue">P</div>
-          <div><div class="chat-bubble me-bubble">Thank you for the update. We will keep encouraging her!</div><div class="chat-meta" style="text-align:right">You · 9:15 AM</div></div>
-        </div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Teacher Messages</span><span class="card-act" onclick="openParentMessenger()">Send Message</span></div>
+      <div class="chat-msgs" style="max-height:300px;overflow-y:auto">
+        ${messageHtml}
       </div>
       <div class="chat-input-row">
-        <input class="chat-inp" placeholder="Message a teacher...">
-        <button class="chat-send">➤</button>
+        <textarea id="parent-msg-input" class="chat-inp" placeholder="Message a teacher..." onkeydown="handleChatTextareaKey(event, 'Parent Serwaa', 'Mr. Amponsah', 'parent-msg-input')"></textarea>
+        <button class="chat-send" onclick="sendParentMessage()">➤</button>
       </div>
     </div>
   </div>
   <div class="g3">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Pending Assignments</span></div>
-      ${[['Math HW', 'Ama Serwaa', 'Today'], ['English Essay', 'Ama Serwaa', 'Mar 20'], ['ICT Project', 'Kweku Serwaa', 'Mar 25']].map(([a, c, d]) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
-        <div><div style="font-size:12.5px;font-weight:600">${a}</div><div style="font-size:11px;color:var(--gray-400)">${c}</div></div>
-        <span class="badge ${d === 'Today' ? 'b-danger' : 'b-warning'}">${d}</span>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Assignments Due</span></div>
+      ${assignmentHtml}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fee Payment Status</span></div>
+      ${students.map(s=>`<div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:600">${escapeHtml(s.name)} · ${escapeHtml(s.class)}</div>
+          <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">${s.feeStatus}</span>
+        </div>
+        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GH₵ ${Number(s.feeAmount||0).toLocaleString()}</div>
+        <button class="btn btn-info btn-xs" style="margin-top:8px" onclick="viewPaymentHistory('${s.studentId}')"><i class="fas fa-history"></i> Payment History</button>
       </div>`).join('')}
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fees Summary</span></div>
-      <div class="fee-hero" style="margin-bottom:10px">
-        <h3>Ama Serwaa · JHS 1</h3>
-        <div class="amount">GH₵ 2,400</div>
-        <div class="sub">Fully Paid · Term 1, 2025</div>
-      </div>
-      <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius)">
-        <div style="font-size:12px;font-weight:600;margin-bottom:4px">Kweku Serwaa · Form 1B</div>
-        <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">GH₵ 2,200</div>
-        <span class="badge b-success" style="margin-top:6px">Fully Paid</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> School Events</span></div>
       ${[['Mar 20', 'PTA Meeting', '3:00 PM School Hall'], ['Mar 24', 'Sports Day', 'All day event'], ['Apr 01', 'Term Exams Begin', '8:00 AM daily']].map(([d, e, t]) => `
       <div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
         <div style="min-width:46px;height:46px;background:var(--blue-xpale);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center">
@@ -2400,20 +2560,24 @@ function accountDash() {
   <div class="g21 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-credit-card"></i> Recent Payments</span><button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button></div>
-      <table class="tbl">
-        <thead><tr><th>Student</th><th>Amount</th><th>Date</th><th>Receipt No.</th><th>Method</th><th>Status</th></tr></thead>
-        <tbody>
-          ${[['Ama Serwaa', 'GH₵2,400', 'Mar 15', '#R-0482', 'Cash', 'Paid'], ['Kwame Asante', 'GH₵1,200', 'Mar 15', '#R-0481', 'Cash', 'Partial'], ['Abena Mensah', 'GH₵2,400', 'Mar 14', '#R-0480', 'Cash', 'Paid'], ['Kofi Boateng', '—', '—', '—', '—', 'Pending'], ['Akosua Darko', 'GH₵2,400', 'Mar 13', '#R-0479', 'Cash', 'Paid']].map(([n, a, d, r, m, s]) => `
-          <tr>
-            <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-gold">${n[0]}</div>${n}</div></td>
-            <td style="font-weight:700;color:var(--blue-dark)">${a}</td>
-            <td>${d}</td>
-            <td style="color:var(--blue-main)">${r}</td>
-            <td>${m}</td>
-            <td><span class="badge ${s === 'Paid' ? 'b-success' : s === 'Pending' ? 'b-danger' : 'b-warning'}">${s}</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;padding:10px;background:var(--gray-50);border-radius:8px;flex-wrap:wrap">
+        <input id="payments-search" placeholder="Search student or receipt..." style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;flex:1;min-width:180px;font-size:12px">
+        <select id="payments-status" style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px"><option value="">All Status</option><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Pending">Pending</option></select>
+        <input id="payments-date-from" type="date" style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px">
+        <input id="payments-date-to" type="date" style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px">
+        <button class="btn btn-sm" onclick="renderRecentPaymentsTable()"><i class="fas fa-filter"></i> Filter</button>
+        <button class="btn btn-gold btn-sm" onclick="exportPaymentsCSV()"><i class="fas fa-download"></i> CSV</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="tbl">
+          <thead><tr><th>Student</th><th>Amount</th><th>Date</th><th>Receipt</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="payments-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:10px;background:var(--gray-50);border-radius:6px;font-size:12px">
+        <div id="payments-info" style="color:var(--gray-600)">Loading...</div>
+        <div style="display:flex;gap:6px" id="payments-pagination"></div>
+      </div>
     </div>
     <div>
       <div class="fee-hero mb16">
@@ -2466,75 +2630,86 @@ function accountDash() {
 // ALUMNI DASHBOARD
 // ═══════════════════════════════════
 function alumniDash() {
+  const alumni = getAlumniList();
+  const donations = getAlumniDonations();
+  const registrations = getAlumniEventRegistrations();
+  const totalDonated = donations.filter(d=>d.status==='Completed').reduce((sum,d)=>sum + (d.amount||0), 0);
+  const recentDonations = donations.slice(-3).reverse();
+  
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1><i class="fas fa-graduation-cap"></i> Welcome, Alumni Network</h1>
     <p>Stay connected with your alma mater, reconnect with classmates, and give back to Glory Regin Preparatory school</p>
     <div class="hero-btns">
-      <button class="hero-btn-gold" onclick="navTo('directory')">Browse Directory</button>
-      <button class="hero-btn-outline" onclick="navTo('events')">Upcoming Reunions</button>
+      <button class="hero-btn-gold" onclick="openAlumniDirectory()"><i class="fas fa-users"></i> Browse Directory</button>
+      <button class="hero-btn-outline" onclick="openAlumniJobs()"><i class="fas fa-briefcase"></i> Job Listings</button>
+      <button class="hero-btn-outline" onclick="openDonationHub()"><i class="fas fa-hand-holding-heart"></i> Donate</button>
     </div>
-  </div>`+ `
+  </div>
   <div class="stats-row">
     ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Network growing', 'up', 'si-blue')}
     ${statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Upcoming Events', 'This quarter', 'neu', 'si-gold')}
     ${statCard('<i class="fas fa-briefcase"></i>', '28', 'Job Listings', 'Posted by alumni', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Total Donations', 'This year', 'up', 'si-purple')}
+    ${statCard('<i class="fas fa-hand-holding-heart"></i>', 'GH₵' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')}
   </div>
   <div class="g2 mb20">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Important Announcements</span><span class="card-act" onclick="navTo('notices')">View All</span></div>
-      ${[['Annual Alumni General Meeting', 'Join us virtually on Zoom to discuss upcoming projects.', '2 days ago', 'blue'],
-         ['Call for Mentorship Program', 'Volunteer to mentor final year students.', '1 week ago', 'gold']].map(([t, desc, d, c]) => `
-      <div style="display:flex;gap:12px;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px;border-left:4px solid var(--${c})">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Announcements</span><span class="card-act" onclick="showAllAnnouncements()">View All</span></div>
+      ${getAlumniAnnouncements().slice(0,2).map(a => `
+      <div style="display:flex;gap:12px;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px;border-left:4px solid var(--${a.color||'blue'})">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${t}</div>
-          <div style="font-size:11px;color:var(--gray-500);margin-top:4px">${desc}</div>
-          <div style="font-size:10px;color:var(--gray-400);margin-top:8px">${d}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(a.title)}</div>
+          <div style="font-size:11px;color:var(--gray-500);margin-top:4px">${escapeHtml(a.description)}</div>
+          <div style="font-size:10px;color:var(--gray-400);margin-top:8px">${a.date}</div>
         </div>
       </div>`).join('')}
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-handshake"></i> Active Donation Campaigns</span><span class="card-act" onclick="navTo('donations')">Donate Now</span></div>
-      ${[['New Science Lab Equipment', 'Goal: GH¢ 50,000', 'Raised: GH¢ 15,000', '30%'],
-         ['2026 Scholarship Fund', 'Goal: GH¢ 20,000', 'Raised: GH¢ 18,500', '92%']].map(([t, g, r, p]) => `
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-hand-holding-heart"></i> Donation Campaigns</span><span class="card-act" onclick="openDonationHub()">Donate</span></div>
+      ${getAlumniCampaigns().slice(0,2).map(c => `
       <div style="padding:12px;border:1.5px solid var(--gray-200);border-radius:10px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-size:13px;font-weight:700;color:var(--gray-800)">${t}</span>
-          <span class="badge b-green">${p}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(c.title)}</span>
+          <span class="badge b-green">${c.percentage}%</span>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);display:flex;justify-content:space-between;margin-bottom:6px"><span>${r}</span><span>${g}</span></div>
-        <div style="height:6px;background:var(--gray-200);border-radius:4px;overflow:hidden"><div style="height:100%;width:${p};background:linear-gradient(90deg, #10b981, #34d399)"></div></div>
+        <div style="font-size:11px;color:var(--gray-500);display:flex;justify-content:space-between;margin-bottom:6px">
+          <span>Raised: GH₵${Number(c.raised||0).toLocaleString()}</span>
+          <span>Goal: GH₵${Number(c.goal||0).toLocaleString()}</span>
+        </div>
+        <div style="height:6px;background:var(--gray-200);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${c.percentage}%;background:linear-gradient(90deg, #10b981, #34d399)"></div>
+        </div>
+        <button class="btn btn-success btn-xs" style="margin-top:8px" onclick="makeDonation('${c.id}')"><i class="fas fa-heart"></i> Donate</button>
       </div>`).join('')}
     </div>
   </div>
   <div class="g2 mb20">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span><span class="card-act" onclick="navTo('events')">View Calendar</span></div>
-      ${[['Class of 2015 10-Year Reunion', 'Main Campus Hall', 'Oct 15, 2026'],
-         ['Annual Sports Homecoming', 'School Sports Field', 'Nov 12, 2026']].map(([t, l, d]) => `
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span><span class="card-act" onclick="viewAllEvents()">Calendar</span></div>
+      ${getAlumniEvents().slice(0,2).map(e => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${t}</div>
-          <div style="font-size:11px;color:var(--gray-500);margin-top:4px"><i class="fas fa-map-marker-alt"></i> ${l}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(e.title)}</div>
+          <div style="font-size:11px;color:var(--gray-500);margin-top:4px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(e.location)}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:11px;font-weight:600;color:var(--blue-dark)">${d}</div>
-          <button class="btn btn-secondary btn-xs" style="margin-top:6px" onclick="openEventRegistrationModal('${t}', '${d}')">Register</button>
+          <div style="font-size:11px;font-weight:600;color:var(--blue-dark)">${e.date}</div>
+          <button class="btn ${registrations.find(r=>r.eventId===e.id) ? 'btn-secondary' : 'btn-success'} btn-xs" style="margin-top:6px" onclick="registerForEvent('${e.id}','${escapeHtml(e.title)}')">
+            ${registrations.find(r=>r.eventId===e.id) ? 'Registered' : 'Register'}
+          </button>
         </div>
       </div>`).join('')}
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-envelope"></i> Recent Messages</span><span class="card-act" onclick="navTo('messaging')">Inbox</span></div>
-      ${[['Admin Office', 'Invitation to Mentorship Board', '1 hour ago'],
-         ['Class of 2018 Group', 'Are we still meeting this Friday?', '5 hours ago']].map(([s, m, d]) => `
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-gift"></i> Recent Donors</span><span class="card-act" onclick="viewDonationHistory()">History</span></div>
+      ${recentDonations.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:20px"><i class="fas fa-heart-broken" style="font-size:24px;margin-bottom:8px;display:block"></i> No donations yet</div>' : recentDonations.map(d => `
       <div style="display:flex;gap:12px;align-items:center;padding:10px;border-bottom:1px solid var(--gray-100)">
-        <div class="av av-sm av-blue">${s[0]}</div>
+        <div class="av av-sm av-gold">${(d.name||' ')[0]}</div>
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between">
-            <span style="font-size:12px;font-weight:600;color:var(--gray-800)">${s}</span>
-            <span style="font-size:10px;color:var(--gray-400)">${d}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--gray-800)">${escapeHtml(d.name)}</span>
+            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">GH₵${Number(d.amount||0).toLocaleString()}</span>
           </div>
-          <div style="font-size:11px;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${m}</div>
+          <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(d.campaign)}</div>
         </div>
       </div>`).join('')}
     </div>
@@ -2845,6 +3020,10 @@ function approveAdmission(admId, studentName) {
     showToast('<i class="fas fa-check-circle"></i> Admission Approved!<br/>Student: ' + studentName + '<br/>Student ID: ' + studentID, 'success', 4000);
     renderMain('admissions');
   }
+  // Initialize alumni dashboard
+  if (m === 'dashboard' && r === 'Alumni') {
+    setTimeout(() => { try{ getAlumniList(); getAlumniDonations(); getAlumniEventRegistrations(); } catch(e){} }, 80);
+  }
 }
 
 function rejectAdmission(admId) {
@@ -2998,6 +3177,254 @@ function previewAdmPicture(input) {
 // ═══════════════════════════════════
 // REPORT GENERATION FUNCTIONS
 // ═══════════════════════════════════
+
+// ═══════════════════════════════════
+// USER ACCOUNTS (Admin Create / Edit / Disable)
+// ═══════════════════════════════════
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"'`]/g, function (s) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' })[s];
+  });
+}
+
+function getUsers() {
+  const saved = localStorage.getItem('gr_users');
+  if (saved) return JSON.parse(saved);
+  const arr = Object.values(USERS_DATA || {}).map(u => ({ ...u }));
+  localStorage.setItem('gr_users', JSON.stringify(arr));
+  return arr;
+}
+
+function saveUsers(users) {
+  localStorage.setItem('gr_users', JSON.stringify(users));
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  const users = getUsers();
+  document.getElementById('users-count').textContent = users.length;
+  tbody.innerHTML = users.map((u, i) => {
+    const initials = u.avatar || (u.name ? u.name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase() : 'NA');
+    return `<tr>
+      <td style="padding:12px 10px">${i+1}</td>
+      <td style="padding:12px 10px"><div style="display:flex;align-items:center;gap:10px"><div class="av av-sm av-blue" style="width:36px;height:36px;border-radius:8px">${initials}</div><div><strong>${escapeHtml(u.name)}</nobr></strong></div></div></td>
+      <td style="padding:12px 10px">${escapeHtml(u.username)}</td>
+      <td style="padding:12px 10px">${escapeHtml(u.email)}</td>
+      <td style="padding:12px 10px">${escapeHtml(u.role)}</td>
+      <td style="padding:12px 10px">${u.lastLogin || '—'}</td>
+      <td style="padding:12px 10px">${u.status || 'Active'}</td>
+      <td style="padding:12px 10px"><button class="btn btn-primary btn-xs" onclick="editUser('${u.id}')">Edit</button><button class="btn btn-secondary btn-xs" onclick="toggleUserStatus('${u.id}')" style="margin-left:6px">${u.status==='Disabled'?'Enable':'Disable'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openCreateUserModal(editId) {
+  const users = getUsers();
+  const user = editId ? users.find(u=>u.id===editId) : null;
+  const html = `
+    <div style="padding:20px;min-width:420px;max-width:92vw">
+      <h3 style="margin-top:0">${user ? 'Edit User' : 'Create New User'}</h3>
+      <form id="create-user-form">
+        <div class="form-field"><label>Full Name *</label><input id="cu-name" value="${user?escapeHtml(user.name):''}" required><div class="field-err" id="err-cu-name" style="color:var(--danger);font-size:12px;margin-top:6px;display:none"></div></div>
+        <div class="form-field"><label>Username *</label><input id="cu-username" value="${user?escapeHtml(user.username):''}" required><div class="field-err" id="err-cu-username" style="color:var(--danger);font-size:12px;margin-top:6px;display:none"></div></div>
+        <div class="form-field"><label>Email *</label><input id="cu-email" type="email" value="${user?escapeHtml(user.email):''}" required><div class="field-err" id="err-cu-email" style="color:var(--danger);font-size:12px;margin-top:6px;display:none"></div></div>
+        <div class="form-field"><label>Role *</label><select id="cu-role"><option>Admin</option><option>Teacher</option><option>Student</option><option>Accountant</option><option>Parent</option><option>Alumni</option><option>Visitor</option></select></div>
+        <div class="form-field"><label>Password ${user? '(leave blank to keep existing)':''}</label><input id="cu-password" type="password" ${user? '':'required'} oninput="updatePasswordStrength()"><div id="pw-strength" style="height:8px;background:#eee;border-radius:6px;margin-top:6px;width:0%"></div><div id="pw-strength-label" style="font-size:12px;color:var(--gray-500);margin-top:6px"></div><div class="field-err" id="err-cu-password" style="color:var(--danger);font-size:12px;margin-top:6px;display:none"></div></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" type="submit">${user ? 'Update' : 'Create'}</button>
+          <button class="btn btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  openModal(html, true);
+
+  if (user) {
+    const roleSelect = document.getElementById('cu-role');
+    if (roleSelect) roleSelect.value = user.role;
+  }
+
+  // Attach handlers
+  const pwd = document.getElementById('cu-password');
+  if (pwd) pwd.addEventListener('input', updatePasswordStrength);
+
+  document.getElementById('create-user-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    handleCreateOrUpdateUser(editId);
+  });
+}
+
+function handleCreateOrUpdateUser(editId) {
+  clearFieldErrors();
+  const name = document.getElementById('cu-name').value.trim();
+  const username = document.getElementById('cu-username').value.trim();
+  const email = document.getElementById('cu-email').value.trim();
+  const role = document.getElementById('cu-role').value;
+  const password = document.getElementById('cu-password').value;
+
+  // Basic validation
+  let hasError = false;
+  if (!name || name.length < 2) { showFieldError('err-cu-name', 'Please enter a valid full name'); hasError = true; }
+  if (!username || username.length < 3) { showFieldError('err-cu-username', 'Username must be at least 3 characters'); hasError = true; }
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRe.test(email)) { showFieldError('err-cu-email', 'Enter a valid email address'); hasError = true; }
+
+  if (!editId) {
+    if (!password || password.length < 6) { showFieldError('err-cu-password', 'Password must be at least 6 characters'); hasError = true; }
+    const score = passwordStrength(password || '');
+    if ((password || '').length > 0 && score < 2) { showFieldError('err-cu-password', 'Choose a stronger password'); hasError = true; }
+  } else if (password && password.length > 0) {
+    const score = passwordStrength(password);
+    if (score < 2) { showFieldError('err-cu-password', 'Choose a stronger password'); hasError = true; }
+  }
+
+  if (hasError) { showToast('<i class="fas fa-exclamation-triangle"></i> Please fix the highlighted fields', 'error'); return; }
+
+  const users = getUsers();
+
+  if (editId) {
+    const idx = users.findIndex(u => u.id === editId);
+    if (idx === -1) return showToast('User not found', 'error');
+    users[idx].name = name;
+    users[idx].username = username;
+    users[idx].email = email;
+    users[idx].role = role;
+    if (password) users[idx].password = password;
+    saveUsers(users);
+    closeModal();
+    showToast('<i class="fas fa-check-circle"></i> User updated', 'success');
+    renderUsersTable();
+    return;
+  }
+
+  const id = 'user' + Date.now();
+  const initials = name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();
+  const newUser = { id, name, username, email, role, password: password || 'changeme', lastLogin: '', status: 'Active', createdDate: new Date().toISOString().split('T')[0], avatar: initials };
+
+  users.unshift(newUser);
+  saveUsers(users);
+  closeModal();
+  showToast('<i class="fas fa-check-circle"></i> User created', 'success');
+  renderUsersTable();
+}
+
+function editUser(id) {
+  openCreateUserModal(id);
+}
+
+function toggleUserStatus(id) {
+  const users = getUsers();
+  const idx = users.findIndex(u => u.id === id);
+  if (idx === -1) return;
+  users[idx].status = users[idx].status === 'Disabled' ? 'Active' : 'Disabled';
+  saveUsers(users);
+  showToast(`<i class="fas fa-user-cog"></i> ${users[idx].name} is now ${users[idx].status}`, 'success');
+  renderUsersTable();
+}
+
+// Helper: clear and show field errors inside modal
+function clearFieldErrors() {
+  document.querySelectorAll('.field-err').forEach(el => { el.style.display = 'none'; el.textContent = ''; });
+}
+
+function showFieldError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+// Password strength: returns 0-4
+function passwordStrength(pwd) {
+  if (!pwd) return 0;
+  let score = 0;
+  if (pwd.length >= 6) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  return score;
+}
+
+function updatePasswordStrength() {
+  const pwd = document.getElementById('cu-password');
+  const bar = document.getElementById('pw-strength');
+  const lbl = document.getElementById('pw-strength-label');
+  if (!pwd || !bar || !lbl) return;
+  const score = passwordStrength(pwd.value);
+  const pct = Math.min(100, score * 25);
+  bar.style.width = pct + '%';
+  let color = 'var(--danger)';
+  let text = 'Very weak';
+  if (score >= 3) { color = 'var(--success)'; text = 'Strong'; }
+  else if (score === 2) { color = 'var(--gold)'; text = 'Medium'; }
+  else if (score === 1) { color = 'var(--warning)'; text = 'Weak'; }
+  bar.style.background = color;
+  lbl.textContent = pwd.value ? text : '';
+}
+
+// Export users as JSON file
+function exportUsers() {
+  const users = getUsers();
+  const dataStr = JSON.stringify(users, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'users_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('<i class="fas fa-download"></i> Users exported', 'success');
+}
+
+// Handle import file input change
+function handleImportFile(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!Array.isArray(parsed)) return showToast('Invalid file format: expected an array of users', 'error');
+      importUsers(parsed);
+    } catch (err) {
+      showToast('Failed to parse JSON file', 'error');
+    }
+  };
+  reader.readAsText(f);
+  // clear input
+  e.target.value = '';
+}
+
+function importUsers(list) {
+  const existing = getUsers();
+  let added = 0, updated = 0;
+  list.forEach(u => {
+    if (!u.username || !u.email || !u.name) return;
+    const idx = existing.findIndex(ex => ex.username === u.username || ex.email === u.email);
+    if (idx === -1) {
+      const id = u.id || ('user' + Date.now() + Math.floor(Math.random()*1000));
+      existing.unshift({ id, name: u.name, username: u.username, email: u.email, role: u.role || 'Visitor', password: u.password || 'changeme', lastLogin: u.lastLogin || '', status: u.status || 'Active', createdDate: u.createdDate || new Date().toISOString().split('T')[0], avatar: u.avatar || (u.name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase()) });
+      added++;
+    } else {
+      existing[idx] = { ...existing[idx], ...u };
+      updated++;
+    }
+  });
+  saveUsers(existing);
+  renderUsersTable();
+  showToast(`<i class="fas fa-file-import"></i> Import complete — ${added} added, ${updated} updated`, 'success');
+}
+
+// Initialize users table on load
+window.addEventListener('load', function () {
+  try { renderUsersTable(); } catch (e) { /* ignore during partial loads */ }
+});
 function printEnrollmentAttendanceReport() {
   const printWindow = window.open('', '', 'width=1000,height=800');
   const content = document.getElementById('main-content').innerHTML;
@@ -4104,6 +4531,7 @@ function sendTeacherMessage(teacherId, teacherName) {
     return;
   }
 
+  try{ addMessage({ sender: currentRole || 'Visitor', senderRole: (currentRole||'visitor').toLowerCase(), recipient: teacherName, recipientRole: 'teacher', subject, text: content }); }catch(e){}
   showToast('<i class="fas fa-check-circle"></i> Message sent to ' + teacherName + '!<br/>Your teacher will respond soon.', 'success', 3000);
   setTimeout(() => navTo('teachers'), 1500);
 }
@@ -7632,6 +8060,7 @@ function parentMessagingModule() {
     const isActive = name === currentChat;
     const teacher = wardTeachers.find(t => t.name === name);
     const className = teacher ? teacher.class_assigned : 'N/A';
+    const unread = getUnreadCount('Parent Serwaa', name);
     
     return `
       <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px" 
@@ -7639,7 +8068,7 @@ function parentMessagingModule() {
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}"></div>
           <div style="flex:1">
-            <span style="font-size:12px;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}</span>
+            <span style="font-size:12px;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}${unread?` <span class="badge b-danger" style="font-size:10px;margin-left:6px">${unread}</span>`:''}</span>
             <div style="font-size:9px;color:${isActive ? 'rgba(255,255,255,.7)' : 'var(--gray-500)'}">${className} Teacher</div>
           </div>
         </div>
@@ -7946,12 +8375,13 @@ function studentMessagingModule() {
 
   const conversationsList = Object.entries(conversations).map(([name, conv]) => {
     const isActive = name === currentChat;
+    const unread = getUnreadCount('Ama Osei', name);
     return `
       <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px;transition:all .2s" 
            onclick="currentChat='${name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${name[0]}</div>
-          <span style="font-size:12px;font-weight:600;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}</span>
+          <span style="font-size:12px;font-weight:600;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}${unread?` <span class="badge b-danger" style="font-size:10px;margin-left:6px">${unread}</span>`:''}</span>
           <span style="font-size:10px;color:${isActive ? 'rgba(255,255,255,.7)' : 'var(--gray-400)'}">${conv.time}</span>
         </div>
         <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
@@ -7991,13 +8421,17 @@ function studentMessagingModule() {
               <div style="font-size:13px;font-weight:700">${currentContact.name}</div>
               <div style="font-size:11px;color:var(--gray-400)">${currentContact.role} · ${currentContact.status}</div>
             </div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-secondary btn-xs" onclick="markConversationRead('Ama Osei','${currentChat}')">Mark Read</button>
+              <button class="btn btn-danger btn-xs" onclick="deleteConversation('Ama Osei','${currentChat}')"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
           <div class="chat-msgs" style="flex:1;overflow-y:auto;padding-right:8px">
             ${messagesHTML}
           </div>
           <div class="chat-input-row">
-            <input class="chat-inp" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChatMessage('Ama Osei', '${currentChat}', this.value); this.value='';">
-            <button class="chat-send" onclick="const inp = this.previousElementSibling; sendChatMessage('Ama Osei', '${currentChat}', inp.value); inp.value='';">➤</button>
+            <textarea id="student-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Ama Osei', '${currentChat}', 'student-chat-input')"></textarea>
+            <button class="chat-send" onclick="sendChatFromTextarea('Ama Osei', '${currentChat}', 'student-chat-input')">➤</button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations yet</div>'}
         </div>
@@ -8101,13 +8535,17 @@ function parentMessagingModule() {
               <div style="font-size:13px;font-weight:700">${currentContact.name}</div>
               <div style="font-size:11px;color:var(--gray-400)">${currentContact.role} · ${currentContact.status}</div>
             </div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-secondary btn-xs" onclick="markConversationRead('Parent Serwaa','${currentChat}')">Mark Read</button>
+              <button class="btn btn-danger btn-xs" onclick="deleteConversation('Parent Serwaa','${currentChat}')"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
           <div class="chat-msgs" style="flex:1;overflow-y:auto;padding-right:8px">
             ${messagesHTML}
           </div>
           <div class="chat-input-row">
-            <input class="chat-inp" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChatMessage('Parent Serwaa', '${currentChat}', this.value); this.value='';">
-            <button class="chat-send" onclick="const inp = this.previousElementSibling; sendChatMessage('Parent Serwaa', '${currentChat}', inp.value); inp.value='';">➤</button>
+            <textarea id="parent-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Parent Serwaa', '${currentChat}', 'parent-chat-input')"></textarea>
+            <button class="chat-send" onclick="sendChatFromTextarea('Parent Serwaa', '${currentChat}', 'parent-chat-input')">➤</button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations yet</div>'}
         </div>
@@ -8148,12 +8586,13 @@ function teacherMessagingModule() {
 
   const conversationsList = Object.entries(conversations).map(([name, conv]) => {
     const isActive = name === currentChat;
+    const unread = getUnreadCount('Mr. Amponsah', name);
     return `
       <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px" 
            onclick="currentChat='${name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${name[0]}</div>
-          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}</span>
+          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${name}${unread?` <span class="badge b-danger" style="font-size:10px;margin-left:6px">${unread}</span>`:''}</span>
         </div>
         <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
       </div>
@@ -8192,13 +8631,17 @@ function teacherMessagingModule() {
               <div style="font-size:13px;font-weight:700">${currentContact.name}</div>
               <div style="font-size:11px;color:var(--gray-400)">${currentContact.role} · ${currentContact.status}</div>
             </div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-secondary btn-xs" onclick="markConversationRead('Mr. Amponsah','${currentChat}')">Mark Read</button>
+              <button class="btn btn-danger btn-xs" onclick="deleteConversation('Mr. Amponsah','${currentChat}')"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
           <div class="chat-msgs" style="flex:1;overflow-y:auto;padding-right:8px">
             ${messagesHTML}
           </div>
           <div class="chat-input-row">
-            <input class="chat-inp" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChatMessage('Mr. Amponsah', '${currentChat}', this.value); this.value='';">
-            <button class="chat-send" onclick="const inp = this.previousElementSibling; sendChatMessage('Mr. Amponsah', '${currentChat}', inp.value); inp.value='';">➤</button>
+            <textarea id="teacher-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Mr. Amponsah', '${currentChat}', 'teacher-chat-input')"></textarea>
+            <button class="chat-send" onclick="sendChatFromTextarea('Mr. Amponsah', '${currentChat}', 'teacher-chat-input')">➤</button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations yet</div>'}
         </div>
@@ -8235,13 +8678,13 @@ function adminMessagingModule() {
 
   const conversationsList = Object.entries(allConversations).map(([key, conv]) => {
     const isActive = conv.name === currentChat;
+    const unread = getUnreadCount('Admin Office', conv.name);
     return `
       <div class="sb-item" style="padding:10px 8px;border-radius:10px;cursor:pointer;background:${isActive ? 'var(--blue-main)' : 'transparent'};margin-bottom:3px" 
            onclick="currentChat='${conv.name}';renderMain()">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           <div class="av av-sm av-${conv.info.avatar}">${conv.name[0]}</div>
-          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${conv.name}</span>
-          ${conv.unread ? '<span style="background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">1</span>' : ''}
+          <span style="font-size:12px;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${conv.name}${unread?` <span class="badge b-danger" style="font-size:10px;margin-left:6px">${unread}</span>`:''}</span>
         </div>
         <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${conv.lastMsg}</div>
       </div>
@@ -8280,13 +8723,17 @@ function adminMessagingModule() {
               <div style="font-size:13px;font-weight:700">${currentContact.name}</div>
               <div style="font-size:11px;color:var(--gray-400)">${currentContact.role} · ${currentContact.status}</div>
             </div>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-secondary btn-xs" onclick="markConversationRead('Admin Office','${currentChat}')">Mark Read</button>
+              <button class="btn btn-danger btn-xs" onclick="deleteConversation('Admin Office','${currentChat}')"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
           <div class="chat-msgs" style="flex:1;overflow-y:auto;padding-right:8px">
             ${messagesHTML}
           </div>
           <div class="chat-input-row">
-            <input class="chat-inp" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChatMessage('Admin Office', '${currentChat}', this.value); this.value='';">
-            <button class="chat-send" onclick="const inp = this.previousElementSibling; sendChatMessage('Admin Office', '${currentChat}', inp.value); inp.value='';">➤</button>
+            <textarea id="admin-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Admin Office', '${currentChat}', 'admin-chat-input')"></textarea>
+            <button class="chat-send" onclick="sendChatFromTextarea('Admin Office', '${currentChat}', 'admin-chat-input')">➤</button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations</div>'}
         </div>
@@ -8313,21 +8760,67 @@ function sendChatMessage(sender, recipient, message) {
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  try{
+    addMessage({ sender, senderRole: currentRole.toLowerCase(), recipient, recipientRole: contactInfo[recipient]?.role || '', subject: 'Message', text: message });
+    showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
+    renderMain();
+  }catch(e){
+    showToast('<i class="fas fa-times-circle"></i> Failed to send', 'error');
+  }
+}
 
-  allMessages.push({
-    id: allMessages.length + 1,
-    sender: sender,
-    senderRole: currentRole,
-    recipient: recipient,
-    recipientRole: contactInfo[recipient].role,
-    subject: 'Message',
-    text: message,
-    time: timeStr,
-    date: now.toLocaleDateString()
+function markConversationRead(userName, otherName){
+  let changed = false;
+  allMessages.forEach(m => {
+    if(m.recipient === userName && m.sender === otherName && !m.read){ m.read = true; changed = true; }
   });
+  if(changed) { saveAllMessages(); showToast('<i class="fas fa-check-circle"></i> Conversation marked read', 'success'); renderMain(); }
+}
 
-  showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
+function deleteConversation(userName, otherName){
+  if(!confirm(`Delete conversation between ${userName} and ${otherName}?`)) return;
+  allMessages = allMessages.filter(m => !((m.sender===userName && m.recipient===otherName) || (m.sender===otherName && m.recipient===userName)));
+  saveAllMessages();
+  showToast('<i class="fas fa-check-circle"></i> Conversation deleted', 'success');
   renderMain();
+}
+
+// Self-test utility for messaging flows (call from console)
+function runMessagingSelfTest() {
+  console.group('Messaging Self Test');
+  try{
+    // clean test messages
+    const before = allMessages.length;
+    console.log('messages before:', before);
+
+    // add message from student to teacher
+    const m1 = addMessage({ sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test', text: 'Hello teacher (test)' });
+    console.log('added m1', m1);
+
+    // ensure unread shows up
+    const unread1 = getUnreadCount('Mr. Amponsah', 'Ama Osei');
+    console.log('unread for Mr. Amponsah from Ama Osei:', unread1);
+
+    // mark read
+    markConversationRead('Mr. Amponsah', 'Ama Osei');
+    const unread2 = getUnreadCount('Mr. Amponsah', 'Ama Osei');
+    console.log('after mark read:', unread2);
+
+    // add teacher reply
+    const m2 = addMessage({ sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Re:Test', text: 'Thanks, received.' });
+    console.log('added m2', m2);
+
+    // delete conversation
+    deleteConversation('Ama Osei', 'Mr. Amponsah');
+    const after = allMessages.length;
+    console.log('messages after delete:', after);
+
+    showToast('<i class="fas fa-check-circle"></i> Messaging self-test completed (check console).', 'success', 4000);
+  }catch(e){
+    console.error(e);
+    showToast('<i class="fas fa-times-circle"></i> Self-test failed (see console)', 'error', 4000);
+  }
+  console.groupEnd();
 }
 
 // SWITCH BETWEEN CONVERSATIONS
@@ -10552,37 +11045,32 @@ function learningMaterialsModule() {
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-cloud-download-alt"></i> Uploaded Resources</span></div>
-      <table class="tbl">
-        <thead><tr><th>Title</th><th>Subject</th><th>Class</th><th>Date</th><th>Type</th><th>Downloads</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${[['Chapter 5: Quadratic Equations', 'Mathematics', 'JHS 2', 'Mar 15', 'PDF', 24], ['English Essay Writing Guide', 'English', 'Form 3A', 'Mar 12', 'DOCX', 18], ['Science Lab Safety Rules', 'Science', 'Form 1C', 'Mar 10', 'PDF', 32], ['ICT Database Notes', 'ICT', 'Form 2B', 'Mar 8', 'PPTX', 15]].map(([t, s, c, d, ty, dl]) => `
-          <tr>
-            <td style="font-weight:600;color:var(--blue-dark)">${t}</td><td>${s}</td><td>${c}</td><td>${d}</td>
-            <td><span class="badge b-info">${ty}</span></td>
-            <td style="font-weight:700">${dl}</td>
-            <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs">Edit</button><button class="btn btn-danger btn-xs"><i class="fas fa-trash"></i></button></div></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
+      <div class="table-wrapper">
+        <table class="tbl">
+          <thead><tr><th>Title</th><th>Subject</th><th>Class</th><th>Date</th><th>Type</th><th>Downloads</th><th>Actions</th></tr></thead>
+          <tbody id="materials-tbody"></tbody>
+        </table>
+      </div>
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-cloud-upload-alt"></i> Upload New Material</span></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Material Title</label><input placeholder="e.g. Past Questions..."></div>
+      <div class="f-field" style="margin-bottom:12px"><label>Material Title</label><input id="mat-title" placeholder="e.g. Past Questions..."></div>
       <div class="f-row">
-        <div class="f-field"><label>Subject</label><select><option>Mathematics</option><option>English</option><option>Science</option></select></div>
-        <div class="f-field"><label>Class</label><select><option>Form 2A</option><option>Form 3A</option></select></div>
+        <div class="f-field"><label>Subject</label><select id="mat-subject"><option>Mathematics</option><option>English</option><option>Science</option><option>ICT</option></select></div>
+        <div class="f-field"><label>Class</label><select id="mat-class"><option>Form 2A</option><option>Form 3A</option><option>JHS 1</option><option>JHS 2</option></select></div>
       </div>
-      <div class="f-field" style="margin-bottom:12px;margin-top:12px"><label>Description</label><textarea placeholder="Brief description..."></textarea></div>
+      <div class="f-field" style="margin-bottom:12px;margin-top:12px"><label>Description</label><textarea id="mat-desc" placeholder="Brief description..."></textarea></div>
       <div class="f-field" style="margin-bottom:14px">
         <label>Upload File</label>
-        <div style="border:2px dashed var(--gray-200);border-radius:var(--radius);padding:30px;text-align:center;cursor:pointer;background:var(--gray-50)">
-          <div style="font-size:32px;margin-bottom:8px;color:var(--gray-400)"><i class="fas fa-file-upload"></i></div>
+        <div id="mat-drop" style="border:2px dashed var(--gray-200);border-radius:var(--radius);padding:20px 14px;text-align:center;cursor:pointer;background:var(--gray-50);display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="font-size:28px;margin-bottom:2px;color:var(--gray-400)"><i class="fas fa-file-upload"></i></div>
           <div style="font-size:13px;font-weight:600;color:var(--blue-main)">Drop file here or click to browse</div>
-          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">PDF, DOCX, PPTX, MP4 - Max 50MB</div>
-          <input type="file" style="display:none">
+          <div style="font-size:11px;color:var(--gray-400);">PDF, DOCX, PPTX, MP4 - Max 50MB</div>
+          <input id="mat-file" type="file" accept=".pdf,.docx,.pptx,.mp4" style="display:none">
+          <div id="mat-file-name" style="font-size:12px;color:var(--gray-600);margin-top:6px"></div>
         </div>
       </div>
-      <button class="btn btn-primary" style="width:100%" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Material uploaded and shared with students!', 'success')"><i class="fas fa-upload"></i> Upload Material</button>
+      <button class="btn btn-primary" style="width:100%" onclick="uploadMaterial()"><i class="fas fa-upload"></i> Upload Material</button>
     </div>
   </div>`;
 }
@@ -10734,7 +11222,1025 @@ function sbaModule() {
   ${renderSbaContent()}
   `;
 }
-// CHILDREN MODULE (Parent)
+
+// Learning Materials storage and handlers
+const MATERIALS_KEY = 'gr_materials';
+function getMaterials(){
+  try{ return JSON.parse(localStorage.getItem(MATERIALS_KEY) || '[]'); }catch(e){return []}
+}
+function saveMaterials(list){ localStorage.setItem(MATERIALS_KEY, JSON.stringify(list)); }
+
+function renderMaterialsTable(){
+  const tbody = document.getElementById('materials-tbody');
+  if(!tbody) return;
+  const list = getMaterials();
+  if(list.length===0){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-600)">No materials uploaded yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((m, idx) => `
+    <tr>
+      <td style="font-weight:600;color:var(--blue-dark)">${escapeHtml(m.title)}</td>
+      <td>${escapeHtml(m.subject)}</td>
+      <td>${escapeHtml(m.className)}</td>
+      <td>${escapeHtml(m.date)}</td>
+      <td><span class="badge b-info">${escapeHtml(m.type)}</span></td>
+      <td style="font-weight:700">${m.downloads||0}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-xs" onclick="downloadMaterial(${idx})"><i class="fas fa-download"></i></button>
+          <button class="btn btn-secondary btn-xs" onclick="editMaterial(${idx})"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-xs" onclick="deleteMaterial(${idx})"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function uploadMaterial(){
+  const title = (document.getElementById('mat-title')||{}).value||'';
+  const subject = (document.getElementById('mat-subject')||{}).value||'';
+  const className = (document.getElementById('mat-class')||{}).value||'';
+  const desc = (document.getElementById('mat-desc')||{}).value||'';
+  const fileInput = document.getElementById('mat-file');
+  const file = fileInput && fileInput.files && fileInput.files[0];
+  clearFieldErrors();
+  if(!title.trim()){ showFieldError('mat-title','Title is required'); return; }
+  if(!file){ showFieldError('mat-file-name','Please choose a file to upload'); return; }
+  const allowed = ['application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.presentationml.presentation','video/mp4'];
+  if(!allowed.includes(file.type) && !['.pdf','.docx','.pptx','.mp4'].some(ext=>file.name.toLowerCase().endsWith(ext))){ showToast('Unsupported file type','error'); return; }
+  const max = 50 * 1024 * 1024;
+  if(file.size > max){ showToast('File exceeds 50MB limit','error'); return; }
+  // Read file as DataURL (for demo only)
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const list = getMaterials();
+    const now = new Date();
+    const item = {
+      title: title.trim(), subject, className, desc, type: file.name.split('.').pop().toUpperCase(),
+      date: now.toLocaleDateString(), downloads:0, dataUrl: e.target.result, filename: file.name, size: file.size
+    };
+    list.unshift(item);
+    saveMaterials(list);
+    renderMaterialsTable();
+    // clear form
+    document.getElementById('mat-title').value='';
+    document.getElementById('mat-desc').value='';
+    document.getElementById('mat-file').value='';
+    document.getElementById('mat-file-name').textContent='';
+    showToast('<i class="fas fa-check-circle"></i> Material uploaded and shared with students!', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function downloadMaterial(idx){
+  const list = getMaterials();
+  const it = list[idx]; if(!it) return;
+  // increment downloads
+  it.downloads = (it.downloads||0) + 1;
+  saveMaterials(list);
+  renderMaterialsTable();
+  const a = document.createElement('a');
+  a.href = it.dataUrl;
+  a.download = it.filename || ('material.' + (it.type||'bin'));
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function deleteMaterial(idx){
+  if(!confirm('Delete this material?')) return;
+  const list = getMaterials(); list.splice(idx,1); saveMaterials(list); renderMaterialsTable();
+}
+
+function editMaterial(idx){
+  const list = getMaterials(); const it = list[idx]; if(!it) return;
+  // Open modal with pre-filled values (reuse openModal)
+  const content = `
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Edit Material</span></div>
+      <div class="f-field"><label>Title</label><input id="edit-mat-title" value="${escapeHtml(it.title)}"></div>
+      <div class="f-row"><div class="f-field"><label>Subject</label><input id="edit-mat-subject" value="${escapeHtml(it.subject)}"></div><div class="f-field"><label>Class</label><input id="edit-mat-class" value="${escapeHtml(it.className)}"></div></div>
+      <div class="f-field"><label>Description</label><textarea id="edit-mat-desc">${escapeHtml(it.desc||'')}</textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveMaterialEdits(${idx})">Save</button></div>
+    </div>`;
+  openModal(content,true);
+}
+
+function saveMaterialEdits(idx){
+  const list = getMaterials(); const it = list[idx]; if(!it) return;
+  it.title = (document.getElementById('edit-mat-title')||{}).value||it.title;
+  it.subject = (document.getElementById('edit-mat-subject')||{}).value||it.subject;
+  it.className = (document.getElementById('edit-mat-class')||{}).value||it.className;
+  it.desc = (document.getElementById('edit-mat-desc')||{}).value||it.desc;
+  saveMaterials(list); renderMaterialsTable(); closeModal(); showToast('Material updated','success');
+}
+
+// wire up drag/drop and file input interactions
+function initMaterialsUI(){
+  const drop = document.getElementById('mat-drop');
+  const fileInput = document.getElementById('mat-file');
+  const fname = document.getElementById('mat-file-name');
+  if(!drop || !fileInput) return;
+  drop.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', ()=>{ fname.textContent = fileInput.files[0] ? fileInput.files[0].name : ''; });
+  drop.addEventListener('dragover', (e)=>{ e.preventDefault(); drop.style.background='rgba(0,0,0,0.03)'; });
+  drop.addEventListener('dragleave', ()=>{ drop.style.background='var(--gray-50)'; });
+  drop.addEventListener('drop', (e)=>{ e.preventDefault(); drop.style.background='var(--gray-50)'; const f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f){ fileInput.files = e.dataTransfer.files; fname.textContent = f.name; } });
+  renderMaterialsTable();
+}
+
+// initialize materials UI when DOM ready or after navigation
+window.initMaterialsUI = initMaterialsUI;
+
+// PAYMENTS (Accountant) helpers
+const PAYMENTS_KEY = 'gr_payments';
+function getPayments(){
+  try{ const raw = localStorage.getItem(PAYMENTS_KEY); if(raw) return JSON.parse(raw);
+    const sample = [
+      {student:'Ama Serwaa', amount:2400, date:'2025-03-15', receipt:'#R-0482', method:'Cash', status:'Paid'},
+      {student:'Kwame Asante', amount:1200, date:'2025-03-15', receipt:'#R-0481', method:'Cash', status:'Partial'},
+      {student:'Abena Mensah', amount:2400, date:'2025-03-14', receipt:'#R-0480', method:'Cash', status:'Paid'},
+      {student:'Kofi Boateng', amount:0, date:'', receipt:'', method:'', status:'Pending'},
+      {student:'Akosua Darko', amount:2400, date:'2025-03-13', receipt:'#R-0479', method:'Cash', status:'Paid'}
+    ];
+    localStorage.setItem(PAYMENTS_KEY, JSON.stringify(sample));
+    return sample;
+  }catch(e){return []}
+}
+function savePayments(list){ localStorage.setItem(PAYMENTS_KEY, JSON.stringify(list)); }
+
+function renderRecentPaymentsTable(){
+  const tbody = document.getElementById('payments-tbody'); if(!tbody) return;
+  const filtered = getFilteredPayments();
+  const totalPages = Math.ceil(filtered.length / PAYMENTS_PER_PAGE);
+  const startIdx = (currentPaymentsPage - 1) * PAYMENTS_PER_PAGE;
+  const endIdx = startIdx + PAYMENTS_PER_PAGE;
+  const pageData = filtered.slice(startIdx, endIdx);
+  if(pageData.length===0){ tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-600);padding:18px">No payment records found.</td></tr>'; }
+  else { tbody.innerHTML = pageData.map((p, i)=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-gold">${(p.student||' ')[0]||''}</div>${escapeHtml(p.student||'')}</div></td>
+    <td style="font-weight:700;color:var(--blue-dark)">${p.amount?('GH₵' + Number(p.amount).toLocaleString()):'\u2014'}</td>
+    <td>${p.date||'\u2014'}</td>
+    <td style="color:var(--blue-main)">${p.receipt||'\u2014'}</td>
+    <td>${p.method||'\u2014'}</td>
+    <td><span class="badge ${p.status==='Paid' ? 'b-success' : p.status==='Pending' ? 'b-danger' : 'b-warning'}">${p.status||'\u2014'}</span></td>
+    <td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="editPayment(${startIdx + i})"><i class="fas fa-edit"></i></button><button class="btn btn-info btn-xs" onclick="generatePaymentReceipt(${startIdx + i})"><i class="fas fa-receipt"></i></button><button class="btn btn-danger btn-xs" onclick="deletePayment(${startIdx + i})"><i class="fas fa-trash"></i></button></div></td>
+  </tr>`).join(''); }
+  const infoEl = document.getElementById('payments-info');
+  if(infoEl) infoEl.textContent = `Showing ${pageData.length > 0 ? startIdx + 1 : 0}\u2013${Math.min(endIdx, filtered.length)} of ${filtered.length} payments`;
+  const paginationEl = document.getElementById('payments-pagination');
+  if(paginationEl){
+    let html = '';
+    if(currentPaymentsPage > 1) html += `<button class="btn btn-sm" onclick="currentPaymentsPage--;renderRecentPaymentsTable()">\u2190 Prev</button>`;
+    for(let p = 1; p <= totalPages; p++){ html += `<button class="btn btn-sm ${p===currentPaymentsPage ? 'btn-primary' : 'btn-secondary'}" onclick="currentPaymentsPage=${p};renderRecentPaymentsTable()">${p}</button>`; }
+    if(currentPaymentsPage < totalPages) html += `<button class="btn btn-sm" onclick="currentPaymentsPage++;renderRecentPaymentsTable()">Next \u2192</button>`;
+    paginationEl.innerHTML = html;
+  }
+}
+
+function editPayment(idx){
+  const filtered = getFilteredPayments();
+  const p = filtered[idx]; if(!p) return;
+  const html = `
+    <div style="padding:18px;min-width:420px">
+      <h3 style="margin-top:0">Edit Payment</h3>
+      <div class="f-field"><label>Student</label><input id="edit-pay-student" value="${escapeHtml(p.student||'')}" required></div>
+      <div class="f-row">
+        <div class="f-field"><label>Amount (GH\u20b5)</label><input id="edit-pay-amount" type="number" value="${p.amount||0}" required></div>
+        <div class="f-field"><label>Date</label><input id="edit-pay-date" type="date" value="${p.date||''}" required></div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Receipt</label><input id="edit-pay-receipt" value="${escapeHtml(p.receipt||'')}" required></div>
+        <div class="f-field"><label>Status</label><select id="edit-pay-status"><option value="Paid" ${p.status==='Paid'?'selected':''}>Paid</option><option value="Partial" ${p.status==='Partial'?'selected':''}>Partial</option><option value="Pending" ${p.status==='Pending'?'selected':''}>Pending</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" onclick="savePaymentEdit(${idx})">Save</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function savePaymentEdit(idx){
+  const list = getPayments();
+  const filtered = getFilteredPayments();
+  const p = filtered[idx];
+  const originalIdx = list.findIndex(x => x === p);
+  if(originalIdx === -1) return;
+  list[originalIdx].student = document.getElementById('edit-pay-student').value;
+  list[originalIdx].amount = parseFloat(document.getElementById('edit-pay-amount').value) || 0;
+  list[originalIdx].date = document.getElementById('edit-pay-date').value;
+  list[originalIdx].receipt = document.getElementById('edit-pay-receipt').value;
+  list[originalIdx].status = document.getElementById('edit-pay-status').value;
+  savePayments(list);
+  closeModal();
+  currentPaymentsPage = 1;
+  renderRecentPaymentsTable();
+  showToast('<i class="fas fa-check-circle"></i> Payment updated', 'success');
+}
+
+function deletePayment(idx){
+  if(!confirm('Delete this payment record?')) return;
+  const list = getPayments();
+  const filtered = getFilteredPayments();
+  const p = filtered[idx];
+  const originalIdx = list.findIndex(x => x === p);
+  if(originalIdx !== -1){ list.splice(originalIdx, 1); savePayments(list); }
+  renderRecentPaymentsTable();
+  showToast('<i class="fas fa-trash"></i> Payment deleted', 'success');
+}
+
+function generatePaymentReceipt(idx){
+  const filtered = getFilteredPayments();
+  const p = filtered[idx]; if(!p) return;
+  const html = `
+    <div style="padding:30px;width:600px;font-family:Arial,sans-serif">
+      <div style="text-align:center;margin-bottom:24px">
+        <h2 style="margin:0;color:var(--blue-dark)">Glory Regin Preparatory School</h2>
+        <div style="font-size:12px;color:var(--gray-600)">Official Payment Receipt</div>
+      </div>
+      <div style="border:2px solid var(--blue-light);border-radius:8px;padding:20px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">RECEIPT NO.</div><div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${escapeHtml(p.receipt||'N/A')}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">DATE</div><div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${p.date||'N/A'}</div></div>
+        </div>
+        <div style="border-top:1px solid var(--gray-200);padding-top:12px">
+          <div style="font-size:11px;color:var(--gray-600);font-weight:600;margin-bottom:4px">STUDENT NAME</div>
+          <div style="font-size:14px;font-weight:700;color:var(--gray-800)">${escapeHtml(p.student||'')}</div>
+        </div>
+      </div>
+      <div style="background:var(--blue-xpale);border-radius:8px;padding:16px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:12px;color:var(--gray-600)">Amount Paid:</span>
+          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH\u20b5 ${Number(p.amount||0).toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:12px;color:var(--gray-600)">Payment Method:</span>
+          <span style="font-size:12px;font-weight:600;color:var(--blue-dark)">${escapeHtml(p.method||'Cash')}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:var(--gray-600)">Status:</span>
+          <span class="badge ${p.status==='Paid' ? 'b-success' : 'b-warning'}" style="font-weight:600">${p.status||'Pending'}</span>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--gray-200);padding-top:12px;margin-bottom:20px;text-align:center">
+        <div style="font-size:10px;color:var(--gray-500)">Received by: Accountant</div>
+        <div style="font-size:10px;color:var(--gray-500)">Date Processed: ${new Date().toLocaleDateString()}</div>
+        <div style="font-size:10px;color:var(--gray-500);margin-top:8px">This is an automated receipt. Keep for your records.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-primary" style="flex:1" onclick="printPaymentReceipt()"><i class="fas fa-print"></i> Print</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="downloadPaymentReceiptPDF('${escapeHtml(p.receipt||'receipt')}')"><i class="fas fa-download"></i> Download PDF</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+  window.currentReceiptData = p;
+}
+
+function printPaymentReceipt(){
+  const p = window.currentReceiptData;
+  if(!p) return;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004;}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Regin Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH\u20b5 ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
+  const w = window.open('', '', 'width=800,height=600');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 250);
+}
+
+function downloadPaymentReceiptPDF(filename){
+  const p = window.currentReceiptData;
+  if(!p) return;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Regin Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH\u20b5 ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
+  const a = document.createElement('a');
+  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+  a.download = (filename || 'receipt') + '_' + new Date().toISOString().slice(0,10) + '.pdf.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('<i class="fas fa-download"></i> Receipt downloaded', 'success');
+}
+
+function exportPaymentsCSV(){
+  const filtered = getFilteredPayments();
+  let csv = 'Student,Amount,Date,Receipt,Method,Status\n';
+  filtered.forEach(p=>{ csv += `"${(p.student||'')}","${p.amount||''}","${p.date||''}","${p.receipt||''}","${p.method||''}","${p.status||''}"\n`; });
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'payments_' + new Date().toISOString().slice(0,10) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+  showToast('<i class="fas fa-file-csv"></i> Payments exported', 'success');
+}
+
+function getFilteredPayments(){
+  const list = getPayments();
+  const search = (document.getElementById('payments-search')||{}).value||'';
+  const status = (document.getElementById('payments-status')||{}).value||'';
+  const dateFrom = (document.getElementById('payments-date-from')||{}).value||'';
+  const dateTo = (document.getElementById('payments-date-to')||{}).value||'';
+  return list.filter(p=>{
+    const s = (p.student||'') + ' ' + (p.receipt||'');
+    const matchSearch = !search || s.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !status || (p.status||'').toLowerCase() === status.toLowerCase();
+    const pDate = p.date||'';
+    const matchFrom = !dateFrom || (pDate >= dateFrom);
+    const matchTo = !dateTo || (pDate <= dateTo);
+    return matchSearch && matchStatus && matchFrom && matchTo;
+  });
+}
+
+let currentPaymentsPage = 1;
+const PAYMENTS_PER_PAGE = 5;
+
+function renderRecentPaymentsTable(){
+  const tbody = document.getElementById('payments-tbody'); if(!tbody) return;
+  const filtered = getFilteredPayments();
+  const totalPages = Math.ceil(filtered.length / PAYMENTS_PER_PAGE);
+  const startIdx = (currentPaymentsPage - 1) * PAYMENTS_PER_PAGE;
+  const endIdx = startIdx + PAYMENTS_PER_PAGE;
+  const pageData = filtered.slice(startIdx, endIdx);
+  if(pageData.length===0){ tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-600);padding:18px">No payment records found.</td></tr>'; }
+  else { tbody.innerHTML = pageData.map((p, i)=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-gold">${(p.student||' ')[0]||''}</div>${escapeHtml(p.student||'')}</div></td>
+    <td style="font-weight:700;color:var(--blue-dark)">${p.amount?('GH₵' + Number(p.amount).toLocaleString()):'—'}</td>
+    <td>${p.date||'—'}</td>
+    <td style="color:var(--blue-main)">${p.receipt||'—'}</td>
+    <td>${p.method||'—'}</td>
+    <td><span class="badge ${p.status==='Paid' ? 'b-success' : p.status==='Pending' ? 'b-danger' : 'b-warning'}">${p.status||'—'}</span></td>
+    <td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="editPayment(${startIdx + i})"><i class="fas fa-edit"></i></button><button class="btn btn-info btn-xs" onclick="generatePaymentReceipt(${startIdx + i})"><i class="fas fa-receipt"></i></button><button class="btn btn-danger btn-xs" onclick="deletePayment(${startIdx + i})"><i class="fas fa-trash"></i></button></div></td>
+  </tr>`).join(''); }
+  const infoEl = document.getElementById('payments-info');
+  if(infoEl) infoEl.textContent = `Showing ${pageData.length > 0 ? startIdx + 1 : 0}–${Math.min(endIdx, filtered.length)} of ${filtered.length} payments`;
+  const paginationEl = document.getElementById('payments-pagination');
+  if(paginationEl){
+    let html = '';
+    if(currentPaymentsPage > 1) html += `<button class="btn btn-sm" onclick="currentPaymentsPage--;renderRecentPaymentsTable()">← Prev</button>`;
+    for(let p = 1; p <= totalPages; p++){ html += `<button class="btn btn-sm ${p===currentPaymentsPage ? 'btn-primary' : 'btn-secondary'}" onclick="currentPaymentsPage=${p};renderRecentPaymentsTable()">${p}</button>`; }
+    if(currentPaymentsPage < totalPages) html += `<button class="btn btn-sm" onclick="currentPaymentsPage++;renderRecentPaymentsTable()">Next →</button>`;
+    paginationEl.innerHTML = html;
+  }
+}
+
+function editPayment(idx){
+  const list = getFilteredPayments();
+  const p = list[idx]; if(!p) return;
+  const html = `
+    <div style="padding:18px;min-width:420px">
+      <h3 style="margin-top:0">Edit Payment</h3>
+      <div class="f-field"><label>Student</label><input id="edit-pay-student" value="${escapeHtml(p.student||'')}" required></div>
+      <div class="f-row">
+        <div class="f-field"><label>Amount (GH₵)</label><input id="edit-pay-amount" type="number" value="${p.amount||0}" required></div>
+        <div class="f-field"><label>Date</label><input id="edit-pay-date" type="date" value="${p.date||''}" required></div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Receipt</label><input id="edit-pay-receipt" value="${escapeHtml(p.receipt||'')}" required></div>
+        <div class="f-field"><label>Status</label><select id="edit-pay-status"><option value="Paid" ${p.status==='Paid'?'selected':''}>Paid</option><option value="Partial" ${p.status==='Partial'?'selected':''}>Partial</option><option value="Pending" ${p.status==='Pending'?'selected':''}>Pending</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" onclick="savePaymentEdit(${idx})">Save</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function savePaymentEdit(idx){
+  const list = getPayments();
+  const originalIdx = list.findIndex(p => p === getFilteredPayments()[idx]);
+  if(originalIdx === -1) return;
+  list[originalIdx].student = document.getElementById('edit-pay-student').value;
+  list[originalIdx].amount = parseFloat(document.getElementById('edit-pay-amount').value) || 0;
+  list[originalIdx].date = document.getElementById('edit-pay-date').value;
+  list[originalIdx].receipt = document.getElementById('edit-pay-receipt').value;
+  list[originalIdx].status = document.getElementById('edit-pay-status').value;
+  savePayments(list);
+  closeModal();
+  renderRecentPaymentsTable();
+  showToast('<i class="fas fa-check-circle"></i> Payment updated', 'success');
+}
+
+function deletePayment(idx){
+  if(!confirm('Delete this payment record?')) return;
+  const list = getPayments();
+  const filtered = getFilteredPayments();
+  const p = filtered[idx];
+  const originalIdx = list.findIndex(x => x === p);
+  if(originalIdx !== -1){ list.splice(originalIdx, 1); savePayments(list); }
+  renderRecentPaymentsTable();
+  showToast('<i class="fas fa-trash"></i> Payment deleted', 'success');
+}
+
+function generatePaymentReceipt(idx){
+  const list = getFilteredPayments();
+  const p = list[idx]; if(!p) return;
+  const html = `
+    <div style="padding:30px;width:600px;font-family:Arial,sans-serif">
+      <div style="text-align:center;margin-bottom:24px">
+        <h2 style="margin:0;color:var(--blue-dark)">Glory Regin Preparatory School</h2>
+        <div style="font-size:12px;color:var(--gray-600)">Official Payment Receipt</div>
+      </div>
+      <div style="border:2px solid var(--blue-light);border-radius:8px;padding:20px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">RECEIPT NO.</div><div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${escapeHtml(p.receipt||'N/A')}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">DATE</div><div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${p.date||'N/A'}</div></div>
+        </div>
+        <div style="border-top:1px solid var(--gray-200);padding-top:12px">
+          <div style="font-size:11px;color:var(--gray-600);font-weight:600;margin-bottom:4px">STUDENT NAME</div>
+          <div style="font-size:14px;font-weight:700;color:var(--gray-800)">${escapeHtml(p.student||'')}</div>
+        </div>
+      </div>
+      <div style="background:var(--blue-xpale);border-radius:8px;padding:16px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:12px;color:var(--gray-600)">Amount Paid:</span>
+          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH₵ ${Number(p.amount||0).toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:12px;color:var(--gray-600)">Payment Method:</span>
+          <span style="font-size:12px;font-weight:600;color:var(--blue-dark)">${escapeHtml(p.method||'Cash')}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:var(--gray-600)">Status:</span>
+          <span class="badge ${p.status==='Paid' ? 'b-success' : 'b-warning'}" style="font-weight:600">${p.status||'Pending'}</span>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--gray-200);padding-top:12px;margin-bottom:20px;text-align:center">
+        <div style="font-size:10px;color:var(--gray-500)">Received by: Accountant</div>
+        <div style="font-size:10px;color:var(--gray-500)">Date Processed: ${new Date().toLocaleDateString()}</div>
+        <div style="font-size:10px;color:var(--gray-500);margin-top:8px">This is an automated receipt. Keep for your records.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-primary" style="flex:1" onclick="printPaymentReceipt()"><i class="fas fa-print"></i> Print</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="downloadPaymentReceiptPDF('${escapeHtml(p.receipt||'receipt')}')"<i class="fas fa-download"></i> Download PDF</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+  window.currentReceiptData = p;
+}
+
+function printPaymentReceipt(){
+  const p = window.currentReceiptData;
+  if(!p) return;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004;}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Regin Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH₵ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
+  const w = window.open('', '', 'width=800,height=600');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 250);
+}
+
+function downloadPaymentReceiptPDF(filename){
+  const p = window.currentReceiptData;
+  if(!p) return;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Regin Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH₵ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
+  const a = document.createElement('a');
+  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+  a.download = (filename || 'receipt') + '_' + new Date().toISOString().slice(0,10) + '.pdf.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('<i class="fas fa-download"></i> Receipt downloaded', 'success');
+}
+
+function exportPaymentsCSV(){
+  const filtered = getFilteredPayments();
+  let csv = 'Student,Amount,Date,Receipt,Method,Status\n';
+  filtered.forEach(p=>{ csv += `"${(p.student||'')}","${p.amount||''}","${p.date||''}","${p.receipt||''}","${p.method||''}","${p.status||''}"\n`; });
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'payments_' + new Date().toISOString().slice(0,10) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+  showToast('<i class="fas fa-file-csv"></i> Payments exported', 'success');
+}
+
+// ═══════════════════════════════════
+// PARENT DASHBOARD HELPERS
+// ═══════════════════════════════════
+const PARENT_CHILDREN_KEY = 'gr_parent_children';
+const PARENT_MESSAGES_KEY = 'gr_parent_messages';
+const PARENT_ASSIGNMENTS_KEY = 'gr_parent_assignments';
+
+function getParentChildren(){
+  try{
+    const raw = localStorage.getItem(PARENT_CHILDREN_KEY);
+    if(raw) return JSON.parse(raw);
+    const sample = [
+      {name:'Ama Serwaa', studentId:'2024-0042', class:'JHS 1', attendance:96, gpa:'3.8', feeStatus:'Paid', feeAmount:2400, color:'blue'},
+      {name:'Kweku Serwaa', studentId:'2024-0143', class:'Basic 3', attendance:91, gpa:'3.5', feeStatus:'Paid', feeAmount:2200, color:'purple'}
+    ];
+    localStorage.setItem(PARENT_CHILDREN_KEY, JSON.stringify(sample));
+    return sample;
+  }catch(e){return []}
+}
+
+function saveParentChildren(list){ localStorage.setItem(PARENT_CHILDREN_KEY, JSON.stringify(list)); }
+
+function getParentMessages(){
+  try{
+    const raw = localStorage.getItem(PARENT_MESSAGES_KEY);
+    if(raw) return JSON.parse(raw);
+    const sample = [
+      {from:'Mr. Amponsah', text:'Ama has shown great improvement in Mathematics this term. Excellent student!', time:'9:00 AM', fromParent:false},
+      {from:'Parent', text:'Thank you for the update. We will keep encouraging her!', time:'9:15 AM', fromParent:true}
+    ];
+    localStorage.setItem(PARENT_MESSAGES_KEY, JSON.stringify(sample));
+    return sample;
+  }catch(e){return []}
+}
+
+function saveParentMessages(list){ localStorage.setItem(PARENT_MESSAGES_KEY, JSON.stringify(list)); }
+
+function sendParentMessage(){
+  const input = document.getElementById('parent-msg-input');
+  if(!input || !input.value.trim()) return;
+  const messages = getParentMessages();
+  messages.push({from:'Parent', text:input.value, time:new Date().toLocaleTimeString().slice(0,5), fromParent:true});
+  saveParentMessages(messages);
+  try{ addMessage({ sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: '', text: input.value }); }catch(e){}
+  input.value = '';
+  renderMain();
+  showToast('<i class="fas fa-paper-plane"></i> Message sent', 'success');
+}
+
+function getParentAssignments(){
+  try{
+    const raw = localStorage.getItem(PARENT_ASSIGNMENTS_KEY);
+    if(raw) return JSON.parse(raw);
+    const sample = [
+      {title:'Math HW', student:'Ama Serwaa', dueDate:'Today', completed:false},
+      {title:'English Essay', student:'Ama Serwaa', dueDate:'Mar 20', completed:false},
+      {title:'ICT Project', student:'Kweku Serwaa', dueDate:'Mar 25', completed:false}
+    ];
+    localStorage.setItem(PARENT_ASSIGNMENTS_KEY, JSON.stringify(sample));
+    return sample;
+  }catch(e){return []}
+}
+
+function saveParentAssignments(list){ localStorage.setItem(PARENT_ASSIGNMENTS_KEY, JSON.stringify(list)); }
+
+function markAssignmentDone(idx){
+  const list = getParentAssignments();
+  if(list[idx]) list[idx].completed = true;
+  saveParentAssignments(list);
+  renderMain();
+  showToast('<i class="fas fa-check-circle"></i> Assignment marked done', 'success');
+}
+
+function getParentFeeSummary(){
+  const children = getParentChildren();
+  const pending = children.filter(c=>c.feeStatus!=='Paid').length;
+  const total = children.reduce((sum,c)=>sum + (c.feeAmount||0), 0);
+  return {pending, total};
+}
+
+function viewStudentReport(studentId){
+  const children = getParentChildren();
+  const student = children.find(c=>c.studentId===studentId);
+  if(!student) return;
+  const html = `
+    <div style="padding:20px;min-width:500px;max-height:500px;overflow-y:auto">
+      <h3 style="margin-top:0">${escapeHtml(student.name)} - Report Card</h3>
+      <div style="background:var(--blue-xpale);padding:16px;border-radius:8px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">Class</div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(student.class)}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">GPA</div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${student.gpa}</div></div>
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">Attendance</div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${student.attendance}%</div></div>
+          <div><div style="font-size:11px;color:var(--gray-600);font-weight:600">Term</div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">Term 1, 2025</div></div>
+        </div>
+      </div>
+      <table class="tbl" style="font-size:12px">
+        <thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Remark</th></tr></thead>
+        <tbody>
+          <tr><td>Mathematics</td><td>87</td><td>A</td><td>Excellent</td></tr>
+          <tr><td>English</td><td>82</td><td>B+</td><td>Very Good</td></tr>
+          <tr><td>Science</td><td>90</td><td>A</td><td>Outstanding</td></tr>
+          <tr><td>Social Studies</td><td>79</td><td>B</td><td>Good</td></tr>
+          <tr><td>ICT</td><td>88</td><td>A</td><td>Excellent</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:16px;padding:12px;background:var(--gray-50);border-radius:6px">
+        <div style="font-size:12px;color:var(--gray-600);margin-bottom:6px"><strong>Teacher Comment:</strong></div>
+        <div style="font-size:12px;color:var(--blue-dark)">${escapeHtml(student.name)} is performing exceptionally well this term. Keep up the good work!</div>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function viewAttendance(studentId){
+  const children = getParentChildren();
+  const student = children.find(c=>c.studentId===studentId);
+  if(!student) return;
+  const html = `
+    <div style="padding:20px;min-width:480px">
+      <h3 style="margin-top:0">${escapeHtml(student.name)} - Attendance Progress</h3>
+      <div style="background:var(--green-xpale);padding:20px;border-radius:8px;margin-bottom:20px;text-align:center">
+        <div style="font-size:48px;font-weight:800;color:var(--green-dark)">${student.attendance}%</div>
+        <div style="font-size:14px;color:var(--green-dark);margin-top:6px">Current Attendance Rate</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px">Monthly Breakdown</div>
+        ${['January', 'February', 'March'].map((m,i)=>{
+          const att = [92, 94, 96][i];
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+            <span style="font-size:12px">${m}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:100px;height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden"><div style="width:${att}%;height:100%;background:var(--green-main)"></div></div>
+              <span style="font-size:12px;font-weight:600;min-width:35px">${att}%</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="btn btn-secondary" style="width:100%" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function viewPaymentHistory(studentId){
+  const children = getParentChildren();
+  const student = children.find(c=>c.studentId===studentId);
+  if(!student) return;
+  const html = `
+    <div style="padding:20px;min-width:480px;max-height:500px;overflow-y:auto">
+      <h3 style="margin-top:0">${escapeHtml(student.name)} - Payment History</h3>
+      <div style="background:var(--blue-xpale);padding:16px;border-radius:8px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:12px;color:var(--gray-600)">Total Due:</span>
+          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH₵ ${Number(student.feeAmount||0).toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:var(--gray-600)">Status:</span>
+          <span class="badge ${student.feeStatus==='Paid' ? 'b-success' : 'b-warning'}">${student.feeStatus}</span>
+        </div>
+      </div>
+      <table class="tbl" style="font-size:12px">
+        <thead><tr><th>Date</th><th>Amount</th><th>Receipt</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Mar 15, 2025</td><td>GH₵ 1,200</td><td>#R-2425-001</td><td><span class="badge b-success">Paid</span></td></tr>
+          <tr><td>Mar 22, 2025</td><td>GH₵ 1,200</td><td>#R-2425-002</td><td><span class="badge b-success">Paid</span></td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function openParentMessenger(){
+  const html = `
+    <div style="padding:20px;min-width:480px">
+      <h3 style="margin-top:0">Send Message to Teacher</h3>
+      <div class="f-field"><label>Select Teacher</label><select id="msg-teacher-select" style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%">
+        <option value="">Choose a teacher...</option>
+        <option value="Mr. Amponsah">Mr. Amponsah (Mathematics)</option>
+        <option value="Mrs. Mensah">Mrs. Mensah (English)</option>
+        <option value="Mr. Boateng">Mr. Boateng (Science)</option>
+      </select></div>
+      <div class="f-field"><label>Message</label><textarea id="msg-text-area" placeholder="Write your message here..." style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%;min-height:120px;font-family:Arial"></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" style="flex:1" onclick="sendTeacherMessage()">Send</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function sendTeacherMessage(){
+  const teacher = document.getElementById('msg-teacher-select').value;
+  const text = document.getElementById('msg-text-area').value;
+  if(!teacher || !text.trim()) { showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error'); return; }
+  const messages = getParentMessages();
+  messages.push({from:'Parent', text:text.trim(), time:new Date().toLocaleTimeString().slice(0,5), fromParent:true});
+  saveParentMessages(messages);
+  closeModal();
+  renderMain();
+  showToast(`<i class="fas fa-paper-plane"></i> Message sent to ${teacher}`, 'success');
+}
+
+// ═══════════════════════════════════
+// ALUMNI DASHBOARD HELPERS
+// ═══════════════════════════════════
+const ALUMNI_LIST_KEY = 'gr_alumni_list';
+const ALUMNI_DONATIONS_KEY = 'gr_alumni_donations';
+const ALUMNI_EVENTS_KEY = 'gr_alumni_events';
+const ALUMNI_REGISTRATIONS_KEY = 'gr_alumni_registrations';
+
+function getAlumniList(){
+  try{
+    const raw = localStorage.getItem(ALUMNI_LIST_KEY);
+    if(raw) return JSON.parse(raw);
+    const sample = [
+      {id:'A001', name:'Samuel Amponsah', gradYear:2015, profession:'Software Engineer', location:'Accra', bio:'Working at tech startup', avatar:'blue'},
+      {id:'A002', name:'Grace Mensah', gradYear:2018, profession:'Banker', location:'Kumasi', bio:'Senior Associate at GCB', avatar:'gold'},
+      {id:'A003', name:'David Boateng', gradYear:2020, profession:'Doctor', location:'Takoradi', bio:'Medical resident at Korle-Bu', avatar:'green'}
+    ];
+    localStorage.setItem(ALUMNI_LIST_KEY, JSON.stringify(sample));
+    return sample;
+  }catch(e){return []}
+}
+
+function getAlumniAnnouncements(){
+  return [
+    {title:'Annual Alumni General Meeting', description:'Join us virtually on Zoom to discuss upcoming projects.', date:'2 days ago', color:'blue'},
+    {title:'Call for Mentorship Program', description:'Volunteer to mentor final year students.', date:'1 week ago', color:'gold'},
+    {title:'Homecoming 2026 Planning', description:'Save the date for our biggest reunion yet!', date:'2 weeks ago', color:'green'}
+  ];
+}
+
+function getAlumniCampaigns(){
+  return [
+    {id:'C001', title:'New Science Lab Equipment', goal:50000, raised:15000, percentage:30, description:'Upgrade our science lab with modern equipment'},
+    {id:'C002', title:'2026 Scholarship Fund', goal:20000, raised:18500, percentage:92, description:'Help deserving students with financial aid'},
+    {id:'C003', title:'Campus WiFi Upgrade', goal:30000, raised:12000, percentage:40, description:'High-speed internet for all campus buildings'}
+  ];
+}
+
+function getAlumniEvents(){
+  return [
+    {id:'E001', title:'Class of 2015 10-Year Reunion', location:'Main Campus Hall', date:'Oct 15, 2026', time:'2:00 PM', description:'Celebrate a decade since graduation'},
+    {id:'E002', title:'Annual Sports Homecoming', location:'School Sports Field', date:'Nov 12, 2026', time:'9:00 AM', description:'Alumni vs Current Students'},
+    {id:'E003', title:'Mentorship Workshop', location:'Admin Building', date:'Apr 5, 2026', time:'10:00 AM', description:'Learn mentoring best practices'}
+  ];
+}
+
+function getAlumniDonations(){
+  try{
+    const raw = localStorage.getItem(ALUMNI_DONATIONS_KEY);
+    if(raw) return JSON.parse(raw);
+    const sample = [
+      {id:'D001', name:'Samuel Amponsah', amount:500, campaign:'Science Lab', date:'Mar 15, 2025', status:'Completed', method:'Bank Transfer'},
+      {id:'D002', name:'Grace Mensah', amount:1000, campaign:'Scholarship Fund', date:'Mar 10, 2025', status:'Completed', method:'Mobile Money'},
+      {id:'D003', name:'David Boateng', amount:250, campaign:'WiFi Upgrade', date:'Mar 8, 2025', status:'Completed', method:'Card'}
+    ];
+    localStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(sample));
+    return sample;
+  }catch(e){return []}
+}
+
+function saveAlumniDonations(list){ localStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(list)); }
+
+function getAlumniEventRegistrations(){
+  try{
+    const raw = localStorage.getItem(ALUMNI_REGISTRATIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){return []}
+}
+
+function saveAlumniEventRegistrations(list){ localStorage.setItem(ALUMNI_REGISTRATIONS_KEY, JSON.stringify(list)); }
+
+function openAlumniDirectory(){
+  const alumni = getAlumniList();
+  const html = `
+    <div style="padding:20px;min-width:600px">
+      <h3 style="margin-top:0">Alumni Directory</h3>
+      <input id="alumni-search" type="text" placeholder="Search by name, profession, or year..." style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;width:100%;margin-bottom:16px;font-size:12px" onkeyup="filterAlumniDirectory()">
+      <div id="alumni-list" style="display:grid;gap:12px;max-height:400px;overflow-y:auto">
+        ${alumni.map(a=>`<div class="alumni-card" style="padding:14px;border:1px solid var(--gray-200);border-radius:8px;display:flex;gap:12px;align-items:start">
+          <div class="av av-lg av-${a.avatar}">${(a.name||' ')[0]}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} · Class of ${a.gradYear}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
+            <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="connectWithAlumni('${a.id}')"><i class="fas fa-user-plus"></i> Connect</button>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function filterAlumniDirectory(){
+  const query = (document.getElementById('alumni-search')||{}).value.toLowerCase();
+  const alumni = getAlumniList();
+  const filtered = alumni.filter(a => 
+    (a.name||'').toLowerCase().includes(query) ||
+    (a.profession||'').toLowerCase().includes(query) ||
+    (a.location||'').toLowerCase().includes(query) ||
+    (a.gradYear||'').toString().includes(query)
+  );
+  const html = filtered.map(a=>`<div class="alumni-card" style="padding:14px;border:1px solid var(--gray-200);border-radius:8px;display:flex;gap:12px;align-items:start">
+    <div class="av av-lg av-${a.avatar}">${(a.name||' ')[0]}</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} · Class of ${a.gradYear}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
+      <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="connectWithAlumni('${a.id}')"><i class="fas fa-user-plus"></i> Connect</button>
+  </div>`).join('');
+  document.getElementById('alumni-list').innerHTML = html || '<div style="text-align:center;color:var(--gray-400);padding:20px">No alumni found</div>';
+}
+
+function connectWithAlumni(alumniId){
+  showToast('<i class="fas fa-check-circle"></i> Connection request sent', 'success');
+}
+
+function openAlumniJobs(){
+  const html = `
+    <div style="padding:20px;min-width:600px">
+      <h3 style="margin-top:0">Job Opportunities</h3>
+      <button class="btn btn-success" style="margin-bottom:16px" onclick="postNewJob()"><i class="fas fa-briefcase"></i> Post a Job</button>
+      <div style="display:grid;gap:12px;max-height:400px;overflow-y:auto">
+        ${[
+          {title:'Software Developer', company:'TechHub Solutions', location:'Accra', type:'Full-time', posted:'2 days ago'},
+          {title:'Accountant', company:'Finance Pro', location:'Kumasi', type:'Full-time', posted:'5 days ago'},
+          {title:'Nurse', company:'Korle-Bu Hospital', location:'Accra', type:'Contract', posted:'1 week ago'},
+          {title:'Teacher', company:'Education Plus', location:'Takoradi', type:'Full-time', posted:'1 week ago'}
+        ].map(j => `<div style="padding:14px;border:1px solid var(--gray-200);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:start">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(j.title)}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(j.company)} · ${escapeHtml(j.location)}</div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <span class="badge b-info">${j.type}</span>
+                <span style="font-size:11px;color:var(--gray-400)">${j.posted}</span>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="applyForJob('${j.title}')"><i class="fas fa-check"></i> Apply</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function postNewJob(){
+  const html = `
+    <div style="padding:20px;min-width:480px">
+      <h3 style="margin-top:0">Post a Job Opening</h3>
+      <div class="f-field"><label>Job Title</label><input id="job-title" placeholder="e.g. Software Developer"></div>
+      <div class="f-field"><label>Company</label><input id="job-company" placeholder="Your company name"></div>
+      <div class="f-field"><label>Location</label><input id="job-location" placeholder="City or Remote"></div>
+      <div class="f-field"><label>Job Type</label><select id="job-type" style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%">
+        <option value="Full-time">Full-time</option>
+        <option value="Part-time">Part-time</option>
+        <option value="Contract">Contract</option>
+        <option value="Internship">Internship</option>
+      </select></div>
+      <div class="f-field"><label>Description</label><textarea id="job-desc" placeholder="Job description..." style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%;min-height:100px"></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-success" style="flex:1" onclick="submitJobPosting()">Post Job</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function submitJobPosting(){
+  const title = document.getElementById('job-title').value;
+  const company = document.getElementById('job-company').value;
+  if(!title || !company) { showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error'); return; }
+  closeModal();
+  showToast('<i class="fas fa-briefcase"></i> Job posted successfully', 'success');
+}
+
+function applyForJob(jobTitle){
+  showToast(`<i class="fas fa-paper-plane"></i> Application sent for ${jobTitle}`, 'success');
+}
+
+function openDonationHub(){
+  const campaigns = getAlumniCampaigns();
+  const html = `
+    <div style="padding:20px;min-width:600px">
+      <h3 style="margin-top:0">Donation Campaigns</h3>
+      <div style="display:grid;gap:14px;max-height:400px;overflow-y:auto">
+        ${campaigns.map(c => `<div style="padding:16px;border:1.5px solid var(--gray-200);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(c.title)}</span>
+            <span class="badge b-success">${c.percentage}%</span>
+          </div>
+          <div style="font-size:12px;color:var(--gray-600);margin-bottom:10px">${escapeHtml(c.description)}</div>
+          <div style="font-size:11px;color:var(--gray-500);display:flex;justify-content:space-between;margin-bottom:8px">
+            <span>Raised: GH₵${Number(c.raised||0).toLocaleString()}</span>
+            <span>Goal: GH₵${Number(c.goal||0).toLocaleString()}</span>
+          </div>
+          <div style="height:6px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:12px">
+            <div style="height:100%;width:${c.percentage}%;background:linear-gradient(90deg, #10b981, #34d399)"></div>
+          </div>
+          <button class="btn btn-success" style="width:100%" onclick="makeDonation('${c.id}')"><i class="fas fa-heart"></i> Donate Now</button>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function makeDonation(campaignId){
+  const campaign = getAlumniCampaigns().find(c => c.id === campaignId);
+  if(!campaign) return;
+  const html = `
+    <div style="padding:20px;min-width:420px">
+      <h3 style="margin-top:0">Donate to ${escapeHtml(campaign.title)}</h3>
+      <div style="background:var(--blue-xpale);padding:14px;border-radius:8px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--gray-600);margin-bottom:4px">Campaign Goal</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH₵ ${Number(campaign.goal||0).toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:6px">Already raised: GH₵ ${Number(campaign.raised||0).toLocaleString()} (${campaign.percentage}%)</div>
+      </div>
+      <div class="f-field"><label>Your Name</label><input id="donor-name" placeholder="Full name" value="Alumni User"></div>
+      <div class="f-field"><label>Donation Amount (GH₵)</label><input id="donor-amount" type="number" placeholder="Enter amount" value="250" min="10"></div>
+      <div class="f-field"><label>Payment Method</label><select id="donor-method" style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%">
+        <option value="Card">Credit/Debit Card</option>
+        <option value="Mobile Money">Mobile Money</option>
+        <option value="Bank Transfer">Bank Transfer</option>
+      </select></div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-success" style="flex:1" onclick="processDonation('${campaignId}')"><i class="fas fa-heart"></i> Donate</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function processDonation(campaignId){
+  const name = document.getElementById('donor-name').value;
+  const amount = parseFloat(document.getElementById('donor-amount').value);
+  if(!name || !amount || amount < 10) { showToast('<i class="fas fa-exclamation-circle"></i> Please enter valid donation details', 'error'); return; }
+  const donations = getAlumniDonations();
+  donations.push({id:'D' + Date.now(), name:name, amount:amount, campaign:getAlumniCampaigns().find(c=>c.id===campaignId)?.title||'', date:new Date().toLocaleDateString(), status:'Completed', method:document.getElementById('donor-method').value});
+  saveAlumniDonations(donations);
+  closeModal();
+  renderMain();
+  showToast(`<i class="fas fa-heart"></i> Thank you for your donation of GH₵${Number(amount).toLocaleString()}!`, 'success');
+}
+
+function registerForEvent(eventId, eventTitle){
+  const registrations = getAlumniEventRegistrations();
+  if(registrations.find(r => r.eventId === eventId)) { showToast('Already registered for this event', 'info'); return; }
+  registrations.push({id:'R' + Date.now(), eventId:eventId, title:eventTitle, date:new Date().toLocaleDateString(), status:'Registered'});
+  saveAlumniEventRegistrations(registrations);
+  renderMain();
+  showToast(`<i class="fas fa-check-circle"></i> Registered for ${eventTitle}`, 'success');
+}
+
+function viewAllEvents(){
+  const events = getAlumniEvents();
+  const registrations = getAlumniEventRegistrations();
+  const html = `
+    <div style="padding:20px;min-width:600px">
+      <h3 style="margin-top:0">All Events</h3>
+      <div style="display:grid;gap:12px;max-height:400px;overflow-y:auto">
+        ${events.map(e => `<div style="padding:14px;border:1px solid var(--gray-200);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:start">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(e.title)}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(e.location)}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:2px"><i class="fas fa-clock"></i> ${e.date} at ${e.time}</div>
+              <div style="font-size:12px;color:var(--gray-600);margin-top:8px">${escapeHtml(e.description)}</div>
+            </div>
+            <button class="btn ${registrations.find(r=>r.eventId===e.id) ? 'btn-secondary' : 'btn-success'} btn-sm" onclick="registerForEvent('${e.id}','${escapeHtml(e.title).replace(/'/g, "\\'")}')">${registrations.find(r=>r.eventId===e.id) ? 'Registered' : 'Register'}</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function viewDonationHistory(){
+  const donations = getAlumniDonations();
+  const html = `
+    <div style="padding:20px;min-width:600px;max-height:500px;overflow-y:auto">
+      <h3 style="margin-top:0">Donation History</h3>
+      <div style="display:grid;gap:10px">
+        ${donations.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:40px"><i class="fas fa-heart-broken" style="font-size:48px;margin-bottom:12px;display:block"></i> No donations yet</div>' : donations.map(d => `<div style="padding:12px;border:1px solid var(--gray-200);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:700;color:var(--gray-800)">${escapeHtml(d.name)}</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green-dark)">GH₵ ${Number(d.amount||0).toLocaleString()}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--gray-500)">
+            <span>${escapeHtml(d.campaign)} • ${d.date}</span>
+            <span class="badge b-success">${d.status}</span>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+function showAllAnnouncements(){
+  const announcements = getAlumniAnnouncements();
+  const html = `
+    <div style="padding:20px;min-width:600px;max-height:500px;overflow-y:auto">
+      <h3 style="margin-top:0">All Announcements</h3>
+      <div style="display:grid;gap:12px">
+        ${announcements.map(a => `<div style="padding:14px;background:var(--gray-50);border-left:4px solid var(--${a.color});border-radius:6px">
+          <div style="font-size:14px;font-weight:700;color:var(--gray-800)">${escapeHtml(a.title)}</div>
+          <div style="font-size:12px;color:var(--gray-600);margin-top:6px">${escapeHtml(a.description)}</div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:8px">${a.date}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+  openModal(html, true);
+}
+
+
 function childrenModule() {
   return hdr('My Children', 'Monitor your children\'s school activities', 'My Children') + `
   <div class="g2">
@@ -11889,28 +13395,46 @@ function showNewsArticle(title, content) {
 // MESSAGING & CHAT DATA STORAGE
 // ═══════════════════════════════════
 let currentChat = null;  // Track current conversation
-let allMessages = [];    // Global messages array
+const MESSAGES_KEY = 'gr_all_messages';
+let allMessages = [];
 
-// Sample messages for different scenarios
-allMessages = [
-  // Student -> Teacher conversations
-  { id: 1, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Ama, great work on your last test! You scored 88/100.', time: '9:00 AM', date: 'Mar 20' },
-  { id: 2, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Thank you sir! I will work harder for the next exam.', time: '9:15 AM', date: 'Mar 20' },
-  { id: 3, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Test Score', text: 'That\'s the spirit! Focus on Chapter 6 for the next exam.', time: '9:17 AM', date: 'Mar 20' },
+function saveAllMessages() {
+  try { localStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages)); } catch(e){}
+}
 
-  // Parent -> Teacher conversations
-  { id: 4, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Hello Sir, how is Ama doing in your class?', time: '2:30 PM', date: 'Mar 19' },
-  { id: 5, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Progress Update', text: 'She is doing very well! Her test scores are excellent.', time: '3:45 PM', date: 'Mar 19' },
-  { id: 6, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Thank you for the update! We really appreciate your support.', time: '4:00 PM', date: 'Mar 19' },
+function addMessage({ sender, senderRole, recipient, recipientRole, subject='', text='' }){
+  const now = new Date();
+  const id = (allMessages.length ? Math.max(...allMessages.map(m=>m.id||0)) : 0) + 1;
+  const msg = { id, sender, senderRole, recipient, recipientRole, subject, text, time: now.toLocaleTimeString(), date: now.toLocaleDateString() };
+  allMessages.push(msg);
+  saveAllMessages();
+  return msg;
+}
 
-  // Parent -> Admin
-  { id: 7, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Fee Payment', text: 'Good morning, I want to inquire about the school fees payment.', time: '8:15 AM', date: 'Mar 20' },
-  { id: 8, sender: 'Admin Office', senderRole: 'admin', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Fee Payment', text: 'The fees are due by the end of this month. Please visit the office with your receipt.', time: '9:30 AM', date: 'Mar 20' },
+// Load messages from storage or fall back to sample data
+try{
+  const raw = localStorage.getItem(MESSAGES_KEY);
+  if(raw) allMessages = JSON.parse(raw);
+}catch(e){ allMessages = []; }
+if(!allMessages || allMessages.length === 0){
+  allMessages = [
+    { id: 1, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Ama, great work on your last test! You scored 88/100.', time: '9:00 AM', date: 'Mar 20' },
+    { id: 2, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Thank you sir! I will work harder for the next exam.', time: '9:15 AM', date: 'Mar 20' },
+    { id: 3, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Test Score', text: 'That\'s the spirit! Focus on Chapter 6 for the next exam.', time: '9:17 AM', date: 'Mar 20' },
+    { id: 4, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Hello Sir, how is Ama doing in your class?', time: '2:30 PM', date: 'Mar 19' },
+    { id: 5, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Progress Update', text: 'She is doing very well! Her test scores are excellent.', time: '3:45 PM', date: 'Mar 19' },
+    { id: 6, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Thank you for the update! We really appreciate your support.', time: '4:00 PM', date: 'Mar 19' },
+    { id: 7, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Fee Payment', text: 'Good morning, I want to inquire about the school fees payment.', time: '8:15 AM', date: 'Mar 20' },
+    { id: 8, sender: 'Admin Office', senderRole: 'admin', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Fee Payment', text: 'The fees are due by the end of this month. Please visit the office with your receipt.', time: '9:30 AM', date: 'Mar 20' },
+    { id: 9, sender: 'Mrs. Asante', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Exam Schedule', text: 'When will the final exams start?', time: '10:00 AM', date: 'Mar 20' },
+    { id: 10, sender: 'Admin Office', senderRole: 'admin', recipient: 'Mrs. Asante', recipientRole: 'teacher', subject: 'Exam Schedule', text: 'Exams start on April 5th. Detailed schedule will be shared by Friday.', time: '10:45 AM', date: 'Mar 20' }
+  ];
+  saveAllMessages();
+}
 
-  // Teacher -> Admin
-  { id: 9, sender: 'Mrs. Asante', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Exam Schedule', text: 'When will the final exams start?', time: '10:00 AM', date: 'Mar 20' },
-  { id: 10, sender: 'Admin Office', senderRole: 'admin', recipient: 'Mrs. Asante', recipientRole: 'teacher', subject: 'Exam Schedule', text: 'Exams start on April 5th. Detailed schedule will be shared by Friday.', time: '10:45 AM', date: 'Mar 20' }
-];
+function getUnreadCount(userName, otherName){
+  return allMessages.filter(m=>m.sender===otherName && m.recipient===userName && !m.read).length;
+}
 
 let messageChats = {};  // Dynamic - will be populated based on current user conversations
 
