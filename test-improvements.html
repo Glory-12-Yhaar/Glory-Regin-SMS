@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Management System - Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="styles/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<!-- Test Container -->
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+  
+  <!-- Header -->
+  <div style="background: var(--white); border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <h1 style="margin: 0; color: var(--blue-dark); font-size: 28px;">🚀 Modern School Management System</h1>
+    <p style="margin: 8px 0 0 0; color: var(--gray-600);">Testing enhanced features and improvements</p>
+  </div>
+
+  <!-- Feature Cards -->
+  <div class="g2 mb24">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">✅ Form Validation Test</div>
+      </div>
+      <form id="test-form">
+        <div class="form-field">
+          <label for="test-name">Student Name *</label>
+          <input type="text" id="test-name" name="name" placeholder="Enter full name">
+        </div>
+        <div class="form-field">
+          <label for="test-email">Email Address *</label>
+          <input type="email" id="test-email" name="email" placeholder="student@school.edu">
+        </div>
+        <div class="form-field">
+          <label for="test-phone">Phone Number</label>
+          <input type="tel" id="test-phone" name="phone" placeholder="+233 24 000 0000">
+        </div>
+        <button type="submit" class="btn btn-primary">Test Validation</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">🔍 Smart Search Test</div>
+      </div>
+      <div class="search-container">
+        <input type="text" id="search-test" class="search-input" placeholder="Search students...">
+        <i class="fas fa-search search-icon"></i>
+      </div>
+      <div id="search-results" style="margin-top: 16px; min-height: 100px; padding: 16px; background: var(--gray-50); border-radius: 8px;">
+        <p style="color: var(--gray-500); margin: 0;">Type to search students...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State Test -->
+  <div class="g2 mb24">
+    <div class="card" id="loading-test-card">
+      <div class="card-hdr">
+        <div class="card-title">⏳ Loading States Test</div>
+      </div>
+      <button class="btn btn-secondary" onclick="testLoadingState()">Show Loading</button>
+      <p style="margin-top: 16px; color: var(--gray-600);">Click to see enhanced loading animation</p>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">🎨 Enhanced Toast Test</div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-xs" style="background: var(--success); color: white;" onclick="showToast('Success message!', 'success')">Success</button>
+        <button class="btn btn-xs" style="background: var(--danger); color: white;" onclick="showToast('Error occurred!', 'error')">Error</button>
+        <button class="btn btn-xs" style="background: var(--warning); color: white;" onclick="showToast('Warning message!', 'warning')">Warning</button>
+        <button class="btn btn-xs" style="background: var(--info); color: white;" onclick="showToast('Info message!', 'info')">Info</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Dashboard -->
+  <div class="card mb24">
+    <div class="card-hdr">
+      <div class="card-title">📊 Analytics Dashboard</div>
+      <button class="btn btn-secondary btn-sm" onclick="toggleAnalytics()">Toggle View</button>
+    </div>
+    <div id="analytics-dashboard" style="display: none;">
+      <!-- Analytics will be rendered here -->
+    </div>
+    <div id="analytics-placeholder">
+      <p style="text-align: center; color: var(--gray-500); padding: 40px;">Click "Toggle View" to see the analytics dashboard</p>
+    </div>
+  </div>
+
+  <!-- Student Management Test -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">👥 Enhanced Student Management</div>
+    </div>
+    <div id="students-table-container">
+      <!-- Enhanced student table will be rendered here -->
+      <div class="loading-spinner" style="text-align: center; padding: 40px;">
+        <div class="spinner" style="margin: 0 auto;"></div>
+        <div class="loading-message">Loading student management system...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="scripts/improvements.js"></script>
+<script src="scripts/enhanced-student-management.js"></script>
+<script src="scripts/analytics-dashboard.js"></script>
+<script>
+// Test implementations
+function testLoadingState() {
+  const card = document.getElementById('loading-test-card');
+  LoadingManager.show(card, 'Processing data...');
+  
+  setTimeout(() => {
+    LoadingManager.hide(card);
+    showToast('Loading test completed!', 'success');
+  }, 2000);
+}
+
+function toggleAnalytics() {
+  const dashboard = document.getElementById('analytics-dashboard');
+  const placeholder = document.getElementById('analytics-placeholder');
+  
+  if (dashboard.style.display === 'none') {
+    dashboard.style.display = 'block';
+    placeholder.style.display = 'none';
+    // Initialize analytics if not already done
+    if (!window.analyticsManager) {
+      window.analyticsManager = new AnalyticsDashboard();
+    } else {
+      analyticsManager.renderDashboard();
+    }
+  } else {
+    dashboard.style.display = 'none';
+    placeholder.style.display = 'block';
+  }
+}
+
+// Form validation test
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('test-form');
+  if (form) {
+    const validator = new FormValidator(form);
+    
+    validator
+      .addRule('name', [
+        { type: 'required' },
+        { type: 'minLength', value: 2 }
+      ], {
+        required: 'Student name is required',
+        minLength: 'Name must be at least 2 characters'
+      })
+      .addRule('email', [
+        { type: 'required' },
+        { type: 'email' }
+      ], {
+        required: 'Email address is required',
+        email: 'Please enter a valid email address'
+      })
+      .addRule('phone', [
+        { type: 'phone' }
+      ], {
+        phone: 'Please enter a valid phone number'
+      });
+
+    validator.onSubmitSuccess = function(formData) {
+      showToast('Form validation passed! ✨', 'success');
+    };
+
+    validator.onSubmitError = function(errors) {
+      showToast('Please fix the form errors', 'error');
+    };
+  }
+
+  // Search test
+  const searchInput = document.getElementById('search-test');
+  const resultsDiv = document.getElementById('search-results');
+  
+  if (searchInput && resultsDiv) {
+    const sampleStudents = [
+      { name: 'Ama Serwaa', class: 'JHS 1', id: '2024-38' },
+      { name: 'Kwame Asante', class: 'Basic 6', id: '2024-41' },
+      { name: 'Abena Mensah', class: 'Basic 6', id: '2024-42' },
+      { name: 'Kofi Boateng', class: 'Basic 6', id: '2024-43' },
+      { name: 'Akosua Darko', class: 'JHS 1', id: '2024-39' }
+    ];
+
+    const searchEngine = new SmartSearch(sampleStudents, {
+      keys: ['name', 'class', 'id'],
+      threshold: 0.3
+    });
+
+    const debouncedSearch = debounce(function(query) {
+      if (!query.trim()) {
+        resultsDiv.innerHTML = '<p style="color: var(--gray-500); margin: 0;">Type to search students...</p>';
+        return;
+      }
+
+      const results = searchEngine.search(query, 5);
+      
+      if (results.length === 0) {
+        resultsDiv.innerHTML = '<p style="color: var(--gray-500); margin: 0;">No students found</p>';
+      } else {
+        resultsDiv.innerHTML = results.map(student => `
+          <div class="search-result-item" style="padding: 8px 12px; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between;">
+            <span><strong>${student.name}</strong> - ${student.class}</span>
+            <span class="badge b-gray">${student.id}</span>
+          </div>
+        `).join('');
+      }
+    }, 300);
+
+    searchInput.addEventListener('input', function(e) {
+      debouncedSearch(e.target.value);
+    });
+  }
+
+  // Initialize student manager
+  if (typeof EnhancedStudentManager !== 'undefined') {
+    window.studentManager = new EnhancedStudentManager();
+  }
+});
+
+// Dark mode toggle for testing
+function toggleTestDarkMode() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  showToast(`Switched to ${isDark ? 'dark' : 'light'} mode`, 'info');
+}
+</script>
+
+<!-- Dark mode toggle button -->
+<button 
+  onclick="toggleTestDarkMode()" 
+  style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--blue-main); color: white; font-size: 18px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000;"
+  title="Toggle Dark Mode"
+>
+  <i class="fas fa-moon"></i>
+</button>
+
+</body>
+</html>

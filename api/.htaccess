@@ -1,0 +1,10 @@
+# Enable CORS and JSON headers for all PHP files in /api
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>
+
+# Force all responses to be JSON-friendly
+<FilesMatch "\.php$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+</FilesMatch>
