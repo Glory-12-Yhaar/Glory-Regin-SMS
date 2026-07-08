@@ -1,4 +1,4 @@
-﻿
+
 // -----------------------------------
 // STATE & CONFIG
 // -----------------------------------
@@ -12,7 +12,7 @@ let miniCalDate = new Date();  // Track mini calendar navigation
 // -----------------------------------
 function initializeDarkMode() {
   // Load saved theme preference from localStorage
-  const savedTheme = localStorage.getItem('gloryReginTheme');
+  const savedTheme = localStorage.getItem('gloryReignTheme');
   if (savedTheme) {
     darkMode = savedTheme === 'dark';
   } else if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
@@ -761,7 +761,10 @@ function showToast(message, type = 'success', duration = 3000) {
   const toastContainer = document.getElementById('toast-container') || createToastContainer();
   const toast = document.createElement('div');
   toast.className = 'toast toast-' + type;
-  toast.innerHTML = message;
+  const cleanedMessage = String(message || '')
+    .replace(/^\?\s*/, '<i class="fas fa-check-circle"></i> ')
+    .replace(/\s\?\s(?=\d|[A-Za-z])/, ' <i class="fas fa-arrow-up"></i> ');
+  toast.innerHTML = cleanedMessage;
   toast.style.animation = 'slideInRight 0.3s ease';
   toastContainer.appendChild(toast);
 
@@ -995,14 +998,13 @@ const MENUS = {
       g: 'Academics', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
         { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignment / Homework' },
-        { id: 'lessonnotes', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Lesson Notes' },
         { id: 'materials', ic: '<i class="fas fa-cloud-upload-alt"></i>', lbl: 'Upload Learning Materials' },
       ]
     },
     {
       g: 'Assessments', items: [
         { id: 'sba', ic: '<i class="fas fa-balance-scale"></i>', lbl: 'SBA Module' },
-        { id: 'exams', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Exams / Test Scores' },
+        { id: 'exams', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Exam Schedule' },
         { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Cards' },
       ]
     },
@@ -1389,7 +1391,7 @@ function doAdminLogin() {
 function toggleDark() {
   darkMode = !darkMode;
   applyTheme();
-  localStorage.setItem('gloryReginTheme', darkMode ? 'dark' : 'light');
+  localStorage.setItem('gloryReignTheme', darkMode ? 'dark' : 'light');
   showToast(`<i class="fas fa-check-circle"></i> ${darkMode ? 'Dark' : 'Light'} mode enabled`, 'success');
 }
 
@@ -1688,7 +1690,8 @@ function switchRole(role, preferredMod) {
   currentRole = role;
   document.getElementById('role-switcher').classList.remove('open');
   document.getElementById('top-role').textContent = role.toUpperCase();
-  document.getElementById('top-av').textContent = sessionUser?.name ? getInitials(sessionUser.name, role) : (AV_INIT[role] || 'US');
+  const topAvatar = document.getElementById('top-av');
+  if (topAvatar) topAvatar.textContent = sessionUser?.name ? getInitials(sessionUser.name, role) : (AV_INIT[role] || 'US');
   const menus = MENUS[role] || MENUS.Admin;
   const defaultMod = menus[0].items[0].id;
   currentMod = preferredMod && canAccessModule(preferredMod, role) ? preferredMod : defaultMod;
@@ -1992,7 +1995,6 @@ function renderMain() {
     yearbook: () => yearbookModule(),
     yearbook_admin: () => adminYearbookModule(),
     reportcards: () => reportCardsModule(),
-    lessonnotes: () => lessonNotesModule(),
     materials: () => learningMaterialsModule(),
     sba: () => sbaModule(),
     children: () => childrenModule(),
@@ -2320,6 +2322,13 @@ function teacherDash() {
     ${statCard('<i class="fas fa-book"></i>', mySubjects.length, 'My Subjects', teacher.subject, 'neu', 'si-gold', true, 'navTo("subjects")')}
     ${statCard('<i class="fas fa-check-circle"></i>', attendanceAverage + '%', 'Attendance Rate', 'My classes', 'up', 'si-purple', true, 'navTo("attendance")')}
   </div>
+  <div class="card mb20">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-balance-scale"></i> SBA Module</span><span class="card-act" onclick="navTo('sba')">Open SBA</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <button class="btn btn-secondary" style="justify-content:flex-start;white-space:normal;text-align:left" onclick="currentSbaView='subject';navTo('sba')"><i class="fas fa-chalkboard-teacher"></i> Subject Teacher SBA</button>
+      <button class="btn btn-secondary" style="justify-content:flex-start;white-space:normal;text-align:left" onclick="currentSbaView='class';navTo('sba')"><i class="fas fa-users"></i> Class Teacher SBA</button>
+    </div>
+  </div>
   <div class="g21 mb20">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar"></i> Today's Schedule</span><span class="card-act" onclick="navTo('timetable')">Full Timetable</span></div>
@@ -2353,20 +2362,14 @@ function teacherDash() {
   </div>
   <div class="g2">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> Mark Attendance — ${myClassNames[0] || 'Assigned Class'}</span><button class="btn btn-primary btn-sm" onclick="saveAttendance()">Save</button></div>
-      <table class="tbl">
-        <thead><tr><th>Student</th><th style="text-align:center">P</th><th style="text-align:center">A</th><th style="text-align:center">L</th><th>Remark</th></tr></thead>
-        <tbody>
-          ${attendanceStudents.map((student, i) => [student.name, i === 1 ? 'A' : i === 2 ? 'L' : 'P']).map(([n, s]) => `
-          <tr>
-            <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '_')}" value="P" ${s === 'P' ? 'checked' : ''}></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '_')}" value="A" ${s === 'A' ? 'checked' : ''}></td>
-            <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '_')}" value="L" ${s === 'L' ? 'checked' : ''}></td>
-            <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..." data-remark_${n.replace(/ /g, '_')}></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> Class Attendance</span><span class="card-act" onclick="navTo('attendance')">Open Module</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px;background:var(--gray-50);border-radius:8px">
+        <div>
+          <div style="font-weight:700;color:var(--blue-dark);font-size:14px">${myClassNames[0] || 'Assigned Class'}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Record today's attendance from the Attendance Module.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navTo('attendance')"><i class="fas fa-clipboard-check"></i> Mark Attendance</button>
+      </div>
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Messages</span><span class="card-act" onclick="navTo('messaging')">Open Chat</span></div>
@@ -5626,7 +5629,6 @@ function updateClassCards(classes) {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
-        <span class="badge b-info">${c.stream}</span>
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
@@ -5650,7 +5652,7 @@ function classesModule() {
   const totalStudents = visibleClasses.reduce((sum, c) => sum + getClassActiveStudentCount(c.name), 0);
   const avgClassSize = visibleClasses.length ? Math.round(totalStudents / visibleClasses.length) : 0;
 
-  return hdr('Classes Module', isAdmin ? 'Manage classes, streams and assignments' : 'Your assigned classes', 'Classes') + `
+  return hdr('Classes Module', isAdmin ? 'Manage classes and teacher assignments' : 'Your assigned classes', 'Classes') + `
   <div class="stats-row">
     ${statCard('<i class="fas fa-building"></i>', visibleClasses.length, isAdmin ? 'Total Classes' : 'My Classes', isAdmin ? 'All levels' : 'Assigned to you', 'neu', 'si-blue')}
     ${statCard('<i class="fas fa-graduation-cap"></i>', totalStudents, 'Total Students', isAdmin ? 'All classes' : 'My classes', 'neu', 'si-gold')}
@@ -5658,16 +5660,11 @@ function classesModule() {
     ${statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')}
   </div>
   ${!isAdmin ? `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>` : ''}
-  <div style="margin-bottom:18px">
-    <label style="font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block">Filter by Stream</label>
-    <select id="class-stream-filter" class="select-sm" onchange="filterClasses()"><option value="All Streams">All Streams</option><option>General</option><option>Mixed</option></select>
-  </div>
   <div class="g3 mb20">
     ${visibleClasses.map((c) => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
-        <span class="badge b-info">${c.stream}</span>
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
@@ -5720,7 +5717,7 @@ function subjectsModule() {
         <div style="font-size:32px">${s.icon}</div>
         ${isAdmin ? `
         <div class="subject-menu-wrapper">
-          <button class="subject-menu-btn" onclick="toggleSubjectMenu(event)">?</button>
+          <button class="subject-menu-btn" onclick="toggleSubjectMenu(event)" title="Subject actions"><i class="fas fa-ellipsis-vertical"></i></button>
           <div class="subject-menu">
             <button class="subject-menu-item" onclick="viewSubject('${s.subject_id}')">View</button>
             <button class="subject-menu-item" onclick="editSubject('${s.subject_id}')">Edit</button>
@@ -5955,7 +5952,7 @@ function updateSubjectDisplay(filteredSubjects) {
         <div style="font-size:32px">${s.icon}</div>
         ${isAdmin ? `
         <div class="subject-menu-wrapper">
-          <button class="subject-menu-btn" onclick="toggleSubjectMenu(event)">?</button>
+          <button class="subject-menu-btn" onclick="toggleSubjectMenu(event)" title="Subject actions"><i class="fas fa-ellipsis-vertical"></i></button>
           <div class="subject-menu">
             <button class="subject-menu-item" onclick="viewSubject('${s.subject_id}')">View</button>
             <button class="subject-menu-item" onclick="editSubject('${s.subject_id}')">Edit</button>
@@ -6156,6 +6153,7 @@ function editSubject(subjectId) {
       <div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
         <button class="btn btn-primary" onclick="saveSubjectChanges('${subject.subject_id}')">Save Changes</button>
+        
       </div>
     </div>
   </div>`;
@@ -6293,6 +6291,7 @@ function timetableModule() {
     selectedClass = getReadableClassForRole('Basic 2');
   }
   const selectedTerm = localStorage.getItem('tt-selected-term') || 'Term 1, 2025';
+  ensureTimetablesForAllClasses(selectedTerm);
 
   // Build class tabs for admin
   let classTabsHtml = '';
@@ -6359,6 +6358,7 @@ function loadTimetablesFromStorage() {
       });
     } catch (e) { }
   }
+  ensureTimetablesForAllClasses(localStorage.getItem('tt-selected-term') || 'Term 1, 2025');
 }
 function saveTimetablesToStorage() {
   try { localStorage.setItem('gloryReginTimetables', JSON.stringify(timetablesData)); } catch (e) { }
@@ -6380,6 +6380,7 @@ function refreshTimetableView() {
   const cls = currentRole === 'Admin'
     ? (localStorage.getItem('tt-selected-class') || classesData[0].name)
     : getReadableClassForRole('Basic 2');
+  ensureTimetablesForAllClasses(term);
   const area = document.getElementById('tt-display-area');
   if (area) area.innerHTML = getTimetableDisplay(cls, term);
 }
@@ -6461,16 +6462,17 @@ function getTimetableDisplay(className, term) {
 // -- Create Timetable (Admin) --
 function openCreateTimetableForm() {
   if (currentRole !== 'Admin') { showToast('<i class="fas fa-lock"></i> Admin only', 'error'); return; }
+  currentMod = 'timetable';
   const selClass = localStorage.getItem('tt-selected-class') || classesData[0].name;
   const classOpts = classesData.map(c => `<option value="${c.name}" ${c.name === selClass ? 'selected' : ''}>${c.name}</option>`).join('');
-  const periods = getPeriodsForClass(selClass);
-
-  const form = `
-  <div style="background:white;border-radius:12px;padding:24px;width:95vw;max-width:1400px;overflow-y:auto;max-height:95vh;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+  const el = document.getElementById('main-content');
+  if (!el) return;
+  el.innerHTML = hdr('Create Timetable', 'Set up a termly schedule for a class', 'Timetable') + `
+  <div class="card">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#1e3a5f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px"><i class="fas fa-plus"></i></div>
       <div><h2 style="margin:0;font-size:18px;font-weight:700;color:var(--gray-800)">Create New Timetable</h2>
-      <p style="margin:0;font-size:12px;color:var(--gray-500)">Set up a Termly schedule for a class</p></div>
+      <p style="margin:0;font-size:12px;color:var(--gray-500)">Fill the weekly periods below, then save.</p></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
       <div class="form-field"><label>Class *</label>
@@ -6482,11 +6484,11 @@ function openCreateTimetableForm() {
     </div>
     <div id="create-periods-grid">${buildCreateGrid(selClass)}</div>
     <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--gray-200)">
-      <button class="btn btn-secondary" onclick="closeModal()" style="padding:10px 24px">Cancel</button>
+      <button class="btn btn-secondary" onclick="navTo('timetable')" style="padding:10px 24px">Cancel</button>
       <button class="btn btn-primary" onclick="saveNewTimetable()" style="padding:10px 24px"><i class="fas fa-check"></i> Create Timetable</button>
     </div>
   </div>`;
-  openModal(form, true);
+  window.scrollTo(0, 0);
 }
 
 function buildCreateGrid(className) {
@@ -6704,130 +6706,118 @@ function exportTimetablePDF() {
   showToast('<i class="fas fa-file-pdf"></i> Timetable exported for ' + cls, 'success');
 }
 
-// ATTENDANCE MODULE (Enhanced for Parents)
-function attendanceModule() {
-  // Check if user is a parent
-  const isParent = currentRole === 'Parent';
-  const canMarkAttendance = currentRole === 'Teacher';
+// ATTENDANCE MODULE
+function getAttendanceBatches() {
+  try { return JSON.parse(localStorage.getItem(ATTENDANCE_BATCHES_KEY) || '[]'); } catch (e) { return []; }
+}
 
-  if (isParent) {
-    // Parent view: Show attendance for their children
-    return hdr('Attendance Tracking', 'Monitor your children\'s school attendance', 'Attendance') + `
-    <div class="stats-row" style="margin-bottom:20px">
-      ${statCard('<i class="fas fa-check-circle"></i>', '96%', 'Ama\'s Attendance', 'Excellent', 'up', 'si-green')}
-      ${statCard('<i class="fas fa-check-circle"></i>', '91%', 'Kweku\'s Attendance', 'Good', 'up', 'si-blue')}
-      ${statCard('<i class="fas fa-bar-chart"></i>', '93.5%', 'Family Average', 'Above Target', 'up', 'si-gold')}
-      ${statCard('<i class="fas fa-calendar-alt"></i>', '85%', 'Target Attendance', 'School Goal', 'neu', 'si-purple')}
-    </div>
-    <div class="g2" style="margin-bottom:20px">
-      <div class="card">
-        <div class="card-hdr"><span class="card-title"><i class="fas fa-graduation-cap"></i> Ama Serwaa - Attendance Record</span></div>
-        <table class="tbl" style="font-size:12px">
-          <thead><tr><th>Date</th><th>Status</th><th>Remarks</th><th></th></tr></thead>
-          <tbody>
-            ${[['Mar 15, 2025', 'Present', 'Regular'], ['Mar 14, 2025', 'Present', 'Regular'], ['Mar 13, 2025', 'Late', 'Arrived 10 mins late'], ['Mar 12, 2025', 'Present', 'Regular'], ['Mar 11, 2025', 'Absent', 'Sick leave (Medical cert attached)'], ['Mar 10, 2025', 'Present', 'Regular'], ['Mar 09, 2025', 'Present', 'Regular']].map(([d, s, r]) => `
-            <tr>
-              <td>${d}</td>
-              <td><span class="badge ${s === 'Present' ? 'b-success' : s === 'Late' ? 'b-warning' : 'b-danger'}">${s}</span></td>
-              <td style="font-size:11px">${r}</td>
-              <td><button class="btn btn-secondary btn-xs" onclick="requestLeaveExcuse()" style="cursor:pointer">Request Excuse</button></td>
-            </tr>
-            `).join('')}
-          </tbody>
-        </table>
+function saveAttendanceBatches(batches) {
+  localStorage.setItem(ATTENDANCE_BATCHES_KEY, JSON.stringify(batches.slice(0, 100)));
+}
+
+function formatAttendanceDate(dateString) {
+  const d = dateString ? new Date(dateString + 'T00:00:00') : new Date();
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function getAttendanceStudentsForClass(className) {
+  const students = enrolledStudents.filter(s => (s.student_class || s.class) === className);
+  return students.length ? students : enrolledStudents.slice(0, 6);
+}
+
+function buildAttendanceSummaryRows() {
+  const latestByClass = new Map();
+  getAttendanceBatches().forEach(batch => {
+    if (!latestByClass.has(batch.className)) latestByClass.set(batch.className, batch);
+  });
+  return classesData.map(c => {
+    const batch = latestByClass.get(c.name);
+    const records = batch?.records || [];
+    const total = records.length || getClassActiveStudentCount(c.name) || c.students || 0;
+    const present = records.filter(r => r.status === 'P').length || Math.max(0, total - 2);
+    const absent = records.length ? records.filter(r => r.status === 'A').length : Math.min(2, total);
+    const late = records.filter(r => r.status === 'L').length || 0;
+    return { className: c.name, teacher: c.teacher, present, absent, late, date: batch?.date || new Date().toISOString().slice(0, 10), submittedAt: batch?.submittedAt || '' };
+  });
+}
+
+function attendanceModule() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (currentRole === 'Teacher') {
+    const assignedClasses = getAssignedClassNamesForTeacher();
+    const selectedClass = localStorage.getItem('attendance-selected-class');
+    const className = assignedClasses.includes(selectedClass) ? selectedClass : (assignedClasses[0] || '');
+    const students = className ? getAttendanceStudentsForClass(className) : [];
+    return hdr('Attendance Module', 'Record daily class attendance', 'Attendance') + `
+    <div class="card mb20">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Class Attendance</span></div>
+      <div class="f-row" style="margin-bottom:16px">
+        <div class="f-field"><label>Date</label><input id="attendance-date" type="date" value="${today}"></div>
+        <div class="f-field"><label>Class</label><select id="attendance-class" onchange="localStorage.setItem('attendance-selected-class', this.value);renderMain()">${assignedClasses.map(c => `<option value="${escapeAttr(c)}" ${c === className ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select></div>
       </div>
-      <div class="card">
-        <div class="card-hdr"><span class="card-title"><i class="fas fa-bar-chart"></i> Attendance Trend</span></div>
-        <div style="display:flex;gap:4px;align-items:flex-end;height:150px;padding:10px 0">
-          ${[90, 92, 94, 91, 96, 95, 97, 96, 98, 94, 96, 92].map(val => `
-          <div style="flex:1;background:var(--blue-main);border-radius:3px 3px 0 0;height:${val}%;opacity:0.85" title="${val}%"></div>
-          `).join('')}
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--gray-400);padding:0 2px">
-          ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => `<span>${m}</span>`).join('')}
-        </div>
-        <div style="margin-top:12px;padding:12px;background:var(--green);background:var(--success-light);border-radius:8px;text-align:center">
-          <div style="font-size:13px;font-weight:700;color:var(--success)">? On Track</div>
-          <div style="font-size:11px;color:var(--gray-600)">Attendance meets school requirements</div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-graduation-cap"></i> Kweku Serwaa - Attendance Record</span></div>
-      <table class="tbl" style="font-size:12px">
-        <thead><tr><th>Date</th><th>Status</th><th>Remarks</th><th></th></tr></thead>
+      ${className ? `
+      <table class="tbl">
+        <thead><tr><th>No.</th><th>Student Name</th><th style="text-align:center">Present (P)</th><th style="text-align:center">Absent (A)</th></tr></thead>
         <tbody>
-          ${[['Mar 15, 2025', 'Present', 'Regular'], ['Mar 14, 2025', 'Late', 'Arrived 5 mins late'], ['Mar 13, 2025', 'Present', 'Regular'], ['Mar 12, 2025', 'Present', 'Regular'], ['Mar 11, 2025', 'Present', 'Regular'], ['Mar 10, 2025', 'Absent', 'Family emergency'], ['Mar 09, 2025', 'Present', 'Regular']].map(([d, s, r]) => `
-          <tr>
-            <td>${d}</td>
-            <td><span class="badge ${s === 'Present' ? 'b-success' : s === 'Late' ? 'b-warning' : 'b-danger'}">${s}</span></td>
-            <td style="font-size:11px">${r}</td>
-            <td><button class="btn btn-secondary btn-xs" onclick="requestLeaveExcuse()" style="cursor:pointer">Request Excuse</button></td>
-          </tr>
-          `).join('')}
+          ${students.map((s, i) => `
+          <tr class="attendance-row" data-student-id="${escapeAttr(s.student_id || '')}" data-student-name="${escapeAttr(s.name)}">
+            <td>${i + 1}</td>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${s.avatar_color || 'blue'}">${(s.name || 'S')[0]}</div><strong>${escapeHtml(s.name)}</strong></div></td>
+            <td style="text-align:center"><input type="radio" name="att_${i}" value="P" checked></td>
+            <td style="text-align:center"><input type="radio" name="att_${i}" value="A"></td>
+          </tr>`).join('')}
         </tbody>
       </table>
-    </div>
-    <div style="margin-top:20px;padding:14px;background:var(--blue-xpale);border-radius:8px;border-left:4px solid var(--blue-main)">
-      <div style="font-size:13px;font-weight:600;color:var(--blue-main);margin-bottom:4px"><i class="fas fa-info-circle"></i> Attendance Policy</div>
-      <div style="font-size:12px;color:var(--gray-700);line-height:1.6">
-        <p>Students should maintain at least 85% attendance to be eligible for promotion. Absences must be reported to the class teacher within 3 days with supporting documentation. Excessive absences may affect academic performance and eligibility for certain activities.</p>
-        <button class="btn btn-info btn-sm" onclick="requestLeaveExcuse()" style="margin-top:8px;cursor:pointer"><i class="fas fa-envelope"></i> Request Leave / Excuse</button>
-      </div>
-    </div>
-    `;
+      <div style="display:flex;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn-primary" onclick="saveAttendance()"><i class="fas fa-save"></i> Save Attendance</button>
+      </div>` : `<div style="padding:20px;text-align:center;color:var(--gray-500)">No assigned class found for this teacher.</div>`}
+    </div>`;
   }
 
-  // Teacher/Admin view: Show all students attendance
-  const attendanceData = [['Creche', 28, 26, 2], ['Nursery', 32, 31, 1], ['KG 1', 35, 33, 2], ['KG 2', 36, 35, 1], ['Basic 1', 38, 36, 2], ['Basic 2', 40, 38, 2], ['Basic 3', 42, 40, 2], ['Basic 4', 38, 35, 3], ['Basic 5', 40, 39, 1], ['Basic 6', 36, 34, 2], ['JHS 1', 42, 40, 2], ['JHS 2', 40, 37, 3], ['JHS 3', 39, 37, 2]];
-
-  const totalStudents = attendanceData.reduce((sum, [, total]) => sum + total, 0);
-  const presentCount = attendanceData.reduce((sum, [, , present]) => sum + present, 0);
-  const absentCount = attendanceData.reduce((sum, [, , , absent]) => sum + absent, 0);
-  const lateCount = totalStudents - presentCount - absentCount;
-
-  const presentPercent = ((presentCount / totalStudents) * 100).toFixed(1);
-  const absentPercent = ((absentCount / totalStudents) * 100).toFixed(1);
-  const latePercent = ((lateCount / totalStudents) * 100).toFixed(1);
-  const monthlyAverage = 94.2;
-
-  return hdr('Attendance Module', 'Daily attendance tracking and management', 'Attendance') + `
-  <div class="stats-row">
-    ${statCard('<i class="fas fa-check-circle"></i>', presentCount, 'Present Today', presentPercent + '%', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-times-circle"></i>', absentCount, 'Absent Today', absentPercent + '%', 'dn', 'si-red')}
-    ${statCard('<i class="fas fa-clock"></i>', lateCount, 'Late Today', latePercent + '%', 'dn', 'si-gold')}
-    ${statCard('<i class="fas fa-chart-bar"></i>', monthlyAverage + '%', 'Monthly Average', 'On track', 'up', 'si-blue')}
-  </div>
-  <div class="g2">
-    <div class="card">
-      ${!canMarkAttendance ? `
-        <div style="padding:20px;text-align:center;background:var(--warning-light);border-radius:var(--radius);border-left:4px solid var(--warning)">
-          <div style="font-size:14px;font-weight:600;color:var(--gold-dark);margin-bottom:8px"><i class="fas fa-exclamation-triangle"></i> Permission Denied</div>
-          <div style="font-size:12px;color:var(--gray-600)">Only class teachers can mark attendance. Contact your class teacher to update attendance records.</div>
-        </div>
-      ` : `
-        <div class="card-hdr">
-          <span class="card-title"><i class="fas fa-clipboard-list"></i> Mark Attendance — Basic 5</span>
-          <div style="display:flex;gap:8px">
-            <select class="select-sm"><option>Basic 5</option><option>Basic 6</option><option>JHS 1</option></select>
-            <button class="btn btn-primary btn-sm" onclick="saveAttendance()">Save</button>
-          </div>
+  if (currentRole === 'Parent' || currentRole === 'Student') {
+    const visibleStudents = currentRole === 'Student' ? [getCurrentStudentRecord()] : getParentChildren().map(c => ({ name: c.name, student_class: c.class, attendance: c.attendance + '%' }));
+    return hdr('Attendance Tracking', currentRole === 'Student' ? 'View your attendance record' : 'Monitor your children\'s attendance', 'Attendance') + `
+    <div class="g2">
+      ${visibleStudents.map(student => `
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-user-check"></i> ${escapeHtml(student.name)}</span></div>
+        <div class="stats-row" style="grid-template-columns:repeat(2,1fr)">
+          ${statCard('<i class="fas fa-check-circle"></i>', student.attendance || '96%', 'Attendance Rate', student.student_class || student.class || '', 'up', 'si-green')}
+          ${statCard('<i class="fas fa-building"></i>', escapeHtml(student.student_class || student.class || 'Class'), 'Class', 'View only', 'neu', 'si-blue')}
         </div>
         <table class="tbl">
-          <thead><tr><th>Student</th><th style="text-align:center">Present</th><th style="text-align:center">Absent</th><th style="text-align:center">Late</th><th>Remark</th></tr></thead>
+          <thead><tr><th>Date</th><th>Status</th><th>Class Teacher</th></tr></thead>
           <tbody>
-            ${[['Ama Serwaa', 'P'], ['Kwame Asante', 'A'], ['Abena Mensah', 'P'], ['Kofi Boateng', 'L'], ['Akosua Darko', 'P'], ['Yaw Mensah', 'P'], ['Adwoa Frimpong', 'P']].map(([n, s]) => `
-            <tr>
-              <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
-              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '')}" ${s === 'P' ? 'checked' : ''}></td>
-              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '')}" ${s === 'A' ? 'checked' : ''}></td>
-              <td style="text-align:center"><input type="radio" name="att_${n.replace(/ /g, '')}" ${s === 'L' ? 'checked' : ''}></td>
-              <td><input style="border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;font-size:11px;width:90px;font-family:Poppins,sans-serif" placeholder="Note..."></td>
-            </tr>`).join('')}
+            ${getAttendanceBatches().filter(b => b.records?.some(r => r.student === student.name)).slice(0, 5).map(b => {
+              const rec = b.records.find(r => r.student === student.name);
+              return `<tr><td>${formatAttendanceDate(b.date)}</td><td><span class="badge ${rec.status === 'P' ? 'b-success' : 'b-danger'}">${rec.status === 'P' ? 'Present' : 'Absent'}</span></td><td>${escapeHtml(b.teacherName || 'Class Teacher')}</td></tr>`;
+            }).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-500)">No submitted attendance records yet.</td></tr>'}
           </tbody>
         </table>
-      `}
-    </div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  const rows = buildAttendanceSummaryRows();
+  const presentCount = rows.reduce((sum, r) => sum + r.present, 0);
+  const absentCount = rows.reduce((sum, r) => sum + r.absent, 0);
+  const lateCount = rows.reduce((sum, r) => sum + r.late, 0);
+  return hdr('Attendance Module', 'Monitor attendance across all classes', 'Attendance') + `
+  <div class="stats-row">
+    ${statCard('<i class="fas fa-check-circle"></i>', presentCount, 'Present Today', 'All classes', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-times-circle"></i>', absentCount, 'Absent Today', 'All classes', 'dn', 'si-red')}
+    ${statCard('<i class="fas fa-clock"></i>', lateCount, 'Late Today', 'Recorded late', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', rows.length, 'Classes Monitored', 'Admin view', 'up', 'si-blue')}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-table"></i> Class Attendance Summary</span><button class="btn btn-secondary btn-sm" onclick="generateReportPDF('Attendance')"><i class="fas fa-chart-line"></i> View Reports</button></div>
+    <table class="tbl">
+      <thead><tr><th>Class</th><th>Teacher</th><th>Present</th><th>Absent</th><th>Late</th><th>Date</th><th>Submitted</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr><td><strong>${escapeHtml(r.className)}</strong></td><td>${escapeHtml(r.teacher)}</td><td>${r.present}</td><td>${r.absent}</td><td>${r.late}</td><td>${formatAttendanceDate(r.date)}</td><td>${r.submittedAt ? new Date(r.submittedAt).toLocaleString() : 'Awaiting submission'}</td></tr>`).join('')}
+      </tbody>
+    </table>
   </div>`;
 }
 
@@ -6837,8 +6827,39 @@ function examsModule() {
   const isTeacher = currentRole === 'Teacher';
   const isStudent = currentRole === 'Student';
   const readableClasses = isTeacher ? getAssignedClassNamesForTeacher() : isStudent ? [getCurrentStudentRecord().student_class] : classesData.map(c => c.name);
-  const allExamRows = [['Mathematics', 'JHS 3', 'Apr 1', '2 hrs', 'Hall A', 'Mr. Amponsah'], ['English Language', 'JHS 3', 'Apr 2', '2 hrs', 'Hall A', 'Mrs. Asante'], ['Integrated Science', 'JHS 3', 'Apr 3', '1.5 hrs', 'Hall B', 'Mr. Oduro'], ['ICT', 'JHS 3', 'Apr 4', '1 hr', 'Lab 1', 'Ms. Frimpong'], ['Social Studies', 'JHS 3', 'Apr 5', '1.5 hrs', 'Hall B', 'Mr. Boateng']];
+  const allExamRows = classesData.flatMap(c => (SUBJECTS_BY_CLASS[c.name] || c.subjects || ['Mathematics', 'English']).slice(0, 3).map((subject, i) => [
+    subject,
+    c.name,
+    ['Apr 1', 'Apr 2', 'Apr 3'][i] || 'Apr 4',
+    i === 2 ? '1.5 hrs' : '2 hrs',
+    c.level === 'JHS' ? 'Hall A' : 'Classroom',
+    c.teacher
+  ]));
   const examRows = allExamRows.filter(([_, className]) => !isTeacher && !isStudent || readableClasses.includes(className));
+
+  if (isTeacher) {
+    return hdr('Exam Schedule', 'View exam schedule information for your permitted classes', 'Exams') + `
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title"><i class="fas fa-calendar-alt"></i> Permitted Class Exam Schedule</span>
+        <input type="text" id="exam-search" placeholder="Search by subject or class..." style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:250px" onkeyup="filterExamTable()">
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th></tr></thead>
+        <tbody id="exam-table-body">
+          ${examRows.length ? examRows.map(([s, c, d, du, v, inv]) => `
+          <tr class="exam-row" data-subject="${s.toLowerCase()}" data-class="${c.toLowerCase()}">
+            <td style="font-weight:600">${escapeHtml(s)}</td>
+            <td>${escapeHtml(c)}</td>
+            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(d)}</td>
+            <td>${escapeHtml(du)}</td>
+            <td>${escapeHtml(v)}</td>
+            <td style="font-size:11px">${escapeHtml(inv)}</td>
+          </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">No exams scheduled for your assigned classes.</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+  }
 
   return hdr(isStudent ? 'Exam Results' : 'Exams & Report Cards', isAdmin ? 'Manage examinations, grading and report generation' : 'View exam information for your permitted classes', 'Exams') + `
   <div class="mod-tabs">
@@ -6966,10 +6987,10 @@ function examsModule() {
       <div style="padding:15px;background:var(--gray-50);border-radius:8px;border-left:4px solid var(--blue-main)">
         <div style="font-weight:600;color:var(--blue-dark);margin-bottom:10px"><i class="fas fa-chart-line"></i> Performance Insight</div>
         <ul style="margin:0;padding:0;list-style:none;font-size:12px;color:var(--gray-600);line-height:1.8">
-          <li>? Strong performance in Mathematics with 94% average</li>
-          <li>? English Language shows consistent improvement</li>
+          <li><i class="fas fa-check-circle"></i> Strong performance in Mathematics with 94% average</li>
+          <li><i class="fas fa-check-circle"></i> English Language shows consistent improvement</li>
           <li><i class="fas fa-exclamation-triangle"></i> 15 students require remedial support in Science</li>
-          <li>? Recommend extra tuition for bottom 20% in ICT</li>
+          <li><i class="fas fa-lightbulb"></i> Recommend extra tuition for bottom 20% in ICT</li>
         </ul>
       </div>
     </div>
@@ -7072,6 +7093,29 @@ const timetablesData = {
     ]
   }
 };
+
+function buildDefaultTimetableForClass(className) {
+  const subjects = SUBJECTS_BY_CLASS[className] || ['English', 'Mathematics', 'Science', 'Computing', 'RME'];
+  const periods = getPeriodsForClass(className);
+  let subjectIndex = 0;
+  return periods.map(period => {
+    if (period.type === 'break' || period.type === 'close') return [period.label, ['—', '—', '—', '—', '—']];
+    if (period.type === 'assembly') return [period.label, ['Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly']];
+    if (period.type === 'special' && period.dayLabels) return [period.label, period.dayLabels];
+    return [period.label, Array.from({ length: 5 }, () => {
+      const subject = subjects[subjectIndex % subjects.length];
+      subjectIndex += 1;
+      return subject;
+    })];
+  });
+}
+
+function ensureTimetablesForAllClasses(term = 'Term 1, 2025') {
+  classesData.forEach(c => {
+    if (!timetablesData[c.name]) timetablesData[c.name] = {};
+    if (!timetablesData[c.name][term]) timetablesData[c.name][term] = buildDefaultTimetableForClass(c.name);
+  });
+}
 
 // REPORT CARDS MODULE
 // -----------------------------------
@@ -9202,7 +9246,7 @@ function studentMessagingModule() {
           </div>
           <div class="chat-input-row">
             <textarea id="student-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Ama Osei', '${currentChat}', 'student-chat-input')"></textarea>
-            <button class="chat-send" onclick="sendChatFromTextarea('Ama Osei', '${currentChat}', 'student-chat-input')">?</button>
+            <button class="chat-send" onclick="sendChatFromTextarea('Ama Osei', '${currentChat}', 'student-chat-input')"><i class="fa-regular fa-paper-plane"></i></button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations yet</div>'}
         </div>
@@ -9316,7 +9360,7 @@ function parentMessagingModule() {
           </div>
           <div class="chat-input-row">
             <textarea id="parent-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Parent Serwaa', '${currentChat}', 'parent-chat-input')"></textarea>
-            <button class="chat-send" onclick="sendChatFromTextarea('Parent Serwaa', '${currentChat}', 'parent-chat-input')">?</button>
+            <button class="chat-send" onclick="sendChatFromTextarea('Parent Serwaa', '${currentChat}', 'parent-chat-input')"><i class="fa-regular fa-paper-plane"></i></button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations yet</div>'}
         </div>
@@ -9412,7 +9456,7 @@ function teacherMessagingModule() {
           </div>
           <div class="chat-input-row">
             <textarea id="teacher-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Mr. Amponsah', '${currentChat}', 'teacher-chat-input')"></textarea>
-            <button class="chat-send" onclick="sendChatFromTextarea('Mr. Amponsah', '${currentChat}', 'teacher-chat-input')">?</button>
+            <button class="chat-send" onclick="sendChatFromTextarea('Mr. Amponsah', '${currentChat}', 'teacher-chat-input')"><i class="fa-regular fa-paper-plane"></i></button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations yet</div>'}
         </div>
@@ -9504,7 +9548,7 @@ function adminMessagingModule() {
           </div>
           <div class="chat-input-row">
             <textarea id="admin-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Admin Office', '${currentChat}', 'admin-chat-input')"></textarea>
-            <button class="chat-send" onclick="sendChatFromTextarea('Admin Office', '${currentChat}', 'admin-chat-input')">?</button>
+            <button class="chat-send" onclick="sendChatFromTextarea('Admin Office', '${currentChat}', 'admin-chat-input')"><i class="fa-regular fa-paper-plane"></i></button>
           </div>
           ` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations</div>'}
         </div>
@@ -9993,6 +10037,53 @@ function sendReply(msgId, recipientEmail) {
   renderMain();
 }
 
+function getReportsDashboardInsights() {
+  const students = enrolledStudents.map(s => ({ ...s, attendanceValue: parseFloat(String(s.attendance || '0').replace('%', '')) || 0 }));
+  const scoreRows = Object.entries(STUDENTS_DATA).flatMap(([studentName, record]) =>
+    Object.entries(record.scores || {}).map(([subject, scores]) => {
+      const sba = Number(scores.classScore) || 0;
+      const exam = Number(scores.examScore) || 0;
+      const total = sba + exam;
+      return { studentName, subject, className: record.class, sba, exam, total };
+    })
+  );
+  const avgAttendance = students.length ? Math.round(students.reduce((sum, s) => sum + s.attendanceValue, 0) / students.length) : 0;
+  const avgSba = scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.sba, 0) / scoreRows.length) : 0;
+  const avgAcademic = scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.total, 0) / scoreRows.length) : 0;
+  const passRate = scoreRows.length ? Math.round(scoreRows.filter(r => r.total >= 50).length / scoreRows.length * 100) : 0;
+  const finance = getFinanceSummary();
+  const feesCollection = finance.totalCount ? Math.round(finance.paidCount / finance.totalCount * 100) : 0;
+  const topStudent = Object.entries(STUDENTS_DATA).map(([name, record]) => {
+    const totals = Object.values(record.scores || {}).map(scores => (Number(scores.classScore) || 0) + (Number(scores.examScore) || 0));
+    const average = totals.length ? Math.round(totals.reduce((sum, n) => sum + n, 0) / totals.length) : 0;
+    return { name, className: record.class, average };
+  }).sort((a, b) => b.average - a.average)[0];
+  return {
+    students,
+    scoreRows,
+    avgAttendance,
+    avgSba,
+    avgAcademic,
+    passRate,
+    feesCollection,
+    topStudent,
+    enrollmentTotal: students.length,
+    activeStudents: students.filter(s => (s.status || 'Active') === 'Active').length
+  };
+}
+
+function openReportPage(type) {
+  const destinations = {
+    Academic: 'reportcards',
+    Attendance: 'attendance',
+    Financial: 'fees',
+    Enrollment: 'students',
+    'Exam Results': 'exams',
+    'Top Performers': 'reportcards'
+  };
+  navTo(destinations[type] || 'reports');
+}
+
 // REPORTS MODULE
 function reportsModule() {
   if (currentRole === 'Accountant') {
@@ -10027,12 +10118,13 @@ function reportsModule() {
     </div>`;
   }
 
+  const insights = getReportsDashboardInsights();
   return hdr('Reports & Analytics', 'School performance data and comprehensive reports', 'Reports') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-chart-bar"></i>', '88.7%', 'Avg Pass Rate', 'This term', 'up', 'si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>', '94.2%', 'Avg Attendance', 'Monthly', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-money-bill"></i>', '88.6%', 'Fees Collection', 'Of target', 'up', 'si-gold')}
-    ${statCard('<i class="fas fa-trophy"></i>', '86%', 'Academic Performance', 'All students', 'up', 'si-purple')}
+    ${statCard('<i class="fas fa-chart-bar"></i>', insights.passRate + '%', 'Avg Pass Rate', 'From SBA + exams', 'up', 'si-blue', true, 'openReportPage("Academic")')}
+    ${statCard('<i class="fas fa-check-circle"></i>', insights.avgAttendance + '%', 'Avg Attendance', 'Student profiles', 'up', 'si-green', true, 'openReportPage("Attendance")')}
+    ${statCard('<i class="fas fa-money-bill"></i>', insights.feesCollection + '%', 'Fees Collection', 'Payment status', 'up', 'si-gold', true, 'openReportPage("Financial")')}
+    ${statCard('<i class="fas fa-trophy"></i>', insights.avgAcademic + '%', 'Academic Performance', 'SBA avg ' + insights.avgSba, 'up', 'si-purple', true, 'openReportPage("Academic")')}
   </div>
   <div class="mod-tabs" id="report-tabs">
     ${['Overview', 'Academic', 'Attendance', 'Financial', 'Enrollment'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchReportTab(this,${i})">${t}</div>`).join('')}
@@ -10058,7 +10150,7 @@ function reportsModule() {
         <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Quick Reports</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           ${[['Academic', '<i class="fas fa-chart-bar"></i>'], ['Attendance', '<i class="fas fa-check-circle"></i>'], ['Financial', '<i class="fas fa-money-bill"></i>'], ['Enrollment', '<i class="fas fa-graduation-cap"></i>'], ['Exam Results', '<i class="fas fa-chart-line"></i>'], ['Top Performers', '<i class="fas fa-trophy"></i>']].map(([name, icon]) => `
-          <button class="btn btn-secondary" style="font-size:11px;padding:12px" onclick="generateReportPDF('${name}')"><span style="font-size:14px;margin-right:4px">${icon}</span>${name}</button>`).join('')}
+          <button class="btn btn-secondary" style="font-size:11px;padding:12px;min-width:0;white-space:normal" onclick="openReportPage('${name}')"><span style="font-size:14px;margin-right:4px">${icon}</span>${name}</button>`).join('')}
         </div>
       </div>
     </div>
@@ -10118,30 +10210,30 @@ function reportsModule() {
         <select id="financial-filter" class="select-sm" onchange="filterReportTab('financial')"><option value="">All Months</option><option value="January">January</option><option value="February">February</option><option value="March">March</option><option value="April">April</option></select>
         <button class="btn btn-primary" onclick="generateReportPDF('Financial')"><i class="fas fa-download"></i> Export PDF</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
-        <div class="card" style="background:linear-gradient(135deg,var(--blue-main),#2563eb)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;max-width:100%">
+        <div style="background:linear-gradient(135deg,var(--blue-main),#2563eb);border-radius:8px;min-width:0">
           <div style="color:#fff;padding:15px">
             <div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL INCOME</div>
             <div style="font-size:24px;font-weight:700">GHS 245,800</div>
-            <div style="font-size:10px;opacity:.7;margin-top:8px">? 12% from last month</div>
+            <div style="font-size:10px;opacity:.7;margin-top:8px"><i class="fas fa-arrow-up"></i> 12% from last month</div>
           </div>
         </div>
-        <div class="card" style="background:linear-gradient(135deg,var(--danger),#dc2626)">
+        <div style="background:linear-gradient(135deg,var(--danger),#dc2626);border-radius:8px;min-width:0">
           <div style="color:#fff;padding:15px">
             <div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL EXPENDITURE</div>
             <div style="font-size:24px;font-weight:700">GHS 156,400</div>
-            <div style="font-size:10px;opacity:.7;margin-top:8px">? 8% from last month</div>
+            <div style="font-size:10px;opacity:.7;margin-top:8px"><i class="fas fa-arrow-down"></i> 8% from last month</div>
           </div>
         </div>
-        <div class="card" style="background:linear-gradient(135deg,var(--success),#10b981)">
+        <div style="background:linear-gradient(135deg,var(--success),#10b981);border-radius:8px;min-width:0">
           <div style="color:#fff;padding:15px">
             <div style="font-size:11px;opacity:.8;margin-bottom:5px">NET SURPLUS</div>
             <div style="font-size:24px;font-weight:700">GHS 89,400</div>
-            <div style="font-size:10px;opacity:.7;margin-top:8px">? 16% improvement</div>
+            <div style="font-size:10px;opacity:.7;margin-top:8px"><i class="fas fa-arrow-up"></i> 16% improvement</div>
           </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px">
         <div>
           <div style="font-weight:600;margin-bottom:10px;font-size:13px">Income Breakdown</div>
           <table class="tbl" style="font-size:12px">
@@ -10638,7 +10730,7 @@ function previewSchoolLogo() {
 function saveSchoolBrand() {
   SETTINGS_DATA.schoolInfo.schoolMotto = document.getElementById('school-motto').value;
   saveSettingsToStorage();
-  showToast('? School logo and motto saved successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> School logo and motto saved successfully!', 'success');
 }
 
 function resetBrandForm() {
@@ -10664,7 +10756,7 @@ function saveSchoolInfo() {
     website: document.getElementById('school-website').value
   };
   saveSettingsToStorage();
-  showToast('? School information saved successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> School information saved successfully!', 'success');
 }
 
 function resetSchoolForm() {
@@ -10686,7 +10778,7 @@ function saveAcademicCalendar() {
     termEndDate: document.getElementById('term-end-date').value
   };
   saveSettingsToStorage();
-  showToast('? Academic calendar updated successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> Academic calendar updated successfully!', 'success');
 }
 
 function resetAcademicForm() {
@@ -10705,7 +10797,7 @@ function saveSystemSettings() {
     language: document.getElementById('system-language').value
   };
   saveSettingsToStorage();
-  showToast('? System settings saved successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> System settings saved successfully!', 'success');
 }
 
 function resetSystemForm() {
@@ -10724,7 +10816,7 @@ function saveSecuritySettings() {
     apiKeyRotation: document.getElementById('api-rotation').value
   };
   saveSettingsToStorage();
-  showToast('? Security settings saved successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> Security settings saved successfully!', 'success');
 }
 
 function resetSecurityForm() {
@@ -10746,9 +10838,9 @@ function saveAppearanceSettings() {
   // Apply theme immediately if it changed
   darkMode = selectedTheme === 'Dark';
   applyTheme();
-  localStorage.setItem('gloryReginTheme', darkMode ? 'dark' : 'light');
+  localStorage.setItem('gloryReignTheme', darkMode ? 'dark' : 'light');
   saveSettingsToStorage();
-  showToast('? Appearance settings saved successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> Appearance settings saved successfully!', 'success');
 }
 
 function resetAppearanceForm() {
@@ -10767,7 +10859,7 @@ function saveNotificationSettings() {
     dailyDigest: document.getElementById('daily-digest').checked
   };
   saveSettingsToStorage();
-  showToast('? Notification preferences saved successfully!', 'success');
+  showToast('<i class="fas fa-check-circle"></i> Notification preferences saved successfully!', 'success');
 }
 
 function resetNotificationForm() {
@@ -12504,36 +12596,6 @@ async function saveProfileChanges(userId) {
   showToast('<i class="fas fa-check-circle"></i> Profile updated successfully!', 'success');
 }
 
-// LESSON NOTES MODULE (NEW - Form based)
-function lessonNotesModule() {
-  return hdr('Lesson Notes / Plan', 'Create and manage your teaching lesson plans', 'Lesson Notes') + `
-  <div class="g21">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-file-signature"></i> Create Lesson Plan</span></div>
-      <div class="f-row">
-        <div class="f-field"><label>Subject</label><select><option>Mathematics</option><option>Science</option></select></div>
-        <div class="f-field"><label>Class</label><select><option>JHS 3</option><option>Basic 6</option></select></div>
-        <div class="f-field"><label>Week / Date</label><input type="date" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;width:100%"></div>
-      </div>
-      <div class="f-field" style="margin-top:12px"><label>Lesson Topic</label><input type="text" placeholder="e.g. Introduction to Algebra"></div>
-      <div class="f-field" style="margin-top:12px"><label>Objectives</label><textarea placeholder="By the end of the lesson, students should be able to..." style="min-height:60px"></textarea></div>
-      <div class="f-field" style="margin-top:12px"><label>Teaching & Learning Activities</label><textarea placeholder="Describe the core activities..." style="min-height:80px"></textarea></div>
-      <div class="f-field" style="margin-top:12px;margin-bottom:16px"><label>Assessment Tasks</label><input type="text" placeholder="e.g. Exercise 3.1, pages 45-46"></div>
-      <button class="btn btn-primary" onclick="showToast('Lesson Plan submitted to Head of Department for review', 'success')"><i class="fas fa-paper-plane"></i> Submit for Review</button>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-history"></i> Recent Lesson Notes</span></div>
-      <table class="tbl">
-        <thead><tr><th>Topic</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          <tr><td style="font-weight:600;color:var(--blue-dark)">Algebra Basics</td><td>Math</td><td><span class="badge b-success">Approved</span></td><td><button class="btn btn-secondary btn-xs"><i class="fas fa-print"></i></button></td></tr>
-          <tr><td style="font-weight:600;color:var(--blue-dark)">Cells Structure</td><td>Science</td><td><span class="badge b-warning">Pending</span></td><td><button class="btn btn-secondary btn-xs"><i class="fas fa-edit"></i></button></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-}
-
 // LEARNING MATERIALS MODULE
 function learningMaterialsModule() {
   return hdr('Learning Materials', 'Upload and manage educational resources for students', 'Materials') + `
@@ -12578,28 +12640,59 @@ window.toggleSbaView = function(view) {
 };
 
 function renderSbaContent() {
+  const teacher = getCurrentTeacherProfile() || { name: 'Subject Teacher', subject: 'Mathematics' };
+  const assignedClasses = getAssignedClassNamesForTeacher();
+  const selectedClass = assignedClasses[0] || 'JHS 1';
+  const subjectName = (teacher.subject || 'Mathematics').split('&')[0].trim();
+  const classStudents = enrolledStudents.filter(s => (s.student_class || s.class) === selectedClass);
+  const sourceStudents = classStudents.length ? classStudents : enrolledStudents.slice(0, 5);
+  const sbaRows = sourceStudents.map((student, idx) => {
+    const profileScore = STUDENTS_DATA[student.name]?.scores?.[subjectName] || Object.values(STUDENTS_DATA[student.name]?.scores || {})[0];
+    const exercise = Math.min(20, Math.max(10, Math.round((profileScore?.classScore || 35) * 0.35)));
+    const quiz = Math.min(20, Math.max(10, Math.round((profileScore?.classScore || 35) * 0.32)));
+    const project = Math.min(10, Math.max(5, Math.round((profileScore?.classScore || 35) * 0.18)));
+    const total = exercise + quiz + project;
+    return { student, exercise, quiz, project, total, percentage: Math.round(total / 50 * 100), rank: idx + 1 };
+  }).sort((a, b) => b.total - a.total).map((row, idx) => ({ ...row, rank: idx + 1 }));
+  const submittedSubjects = [
+    ['English', 'Mrs. Akua Asante', 'Submitted', 74],
+    ['Mathematics', 'Mr. Kweku Amponsah', 'Submitted', 71],
+    ['Science', 'Mr. Samuel Oduro', 'Pending', null],
+    ['Computing', 'Ms. Grace Frimpong', 'Returned for Correction', 63],
+    ['RME', 'Mrs. Esi Aidoo', 'Approved', 76]
+  ];
+  const submittedCount = submittedSubjects.filter(([, , status]) => ['Submitted', 'Approved'].includes(status)).length;
+  const pendingCount = submittedSubjects.filter(([, , status]) => status === 'Pending').length;
+  const approvedCount = submittedSubjects.filter(([, , status]) => status === 'Approved').length;
+  const totals = sbaRows.map(r => r.total);
+  const avg = totals.length ? Math.round(totals.reduce((sum, n) => sum + n, 0) / totals.length) : 0;
+  const high = totals.length ? Math.max(...totals) : 0;
+  const low = totals.length ? Math.min(...totals) : 0;
+
   if (currentSbaView === 'subject') {
     return `
       <div class="stats-row mt-3">
-        ${statCard('<i class="fas fa-file-alt"></i>', '12', 'Assessments Created', 'This Term', 'neu', 'si-blue')}
-        ${statCard('<i class="fas fa-check"></i>', '4', 'SBA Submitted', 'To Class Teachers', 'neu', 'si-green')}
+        ${statCard('<i class="fas fa-file-alt"></i>', '6', 'Assessments Created', 'This term', 'neu', 'si-blue')}
+        ${statCard('<i class="fas fa-calculator"></i>', avg + '/50', 'Average SBA', selectedClass, 'up', 'si-green')}
+        ${statCard('<i class="fas fa-trophy"></i>', high + '/50', 'Highest Score', 'Subject ranking', 'up', 'si-gold')}
+        ${statCard('<i class="fas fa-paper-plane"></i>', 'Pending', 'Submission Status', 'Editable before submit', 'neu', 'si-purple')}
       </div>
-      <div class="card mt-3">
+      <div class="g21 mt-3">
+      <div class="card">
         <div class="card-hdr" style="text-align:center;display:block">
-          <div style="font-size:16px;font-weight:700">SCHOOL BASED ASSESSMENT IN JUNIOR HIGH SCHOOLS</div>
-          <div style="font-size:14px;font-weight:600;color:var(--gray-600)">TERMLY SBA RECORDING REGISTER</div>
+          <div style="font-size:16px;font-weight:700">Subject Teacher SBA Workspace</div>
+          <div style="font-size:14px;font-weight:600;color:var(--gray-600)">Create assessments, enter scores, calculate SBA, then submit to class teacher</div>
         </div>
         <div class="f-row" style="margin-top:16px;padding-bottom:16px;border-bottom:2px solid var(--gray-200)">
-          <div class="f-field"><label>Subject</label><select><option>Mathematics</option><option>Science</option></select></div>
-          <div class="f-field"><label>Class</label><select><option>JHS 1</option><option>JHS 2</option></select></div>
-          <div class="f-field"><label>Term</label><select><option>Term 1</option><option>Term 2</option></select></div>
-          <div class="f-field"><label>Year</label><input type="text" value="2025" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;width:100%"></div>
+          <div class="f-field"><label>Assessment Type</label><select><option>Class Exercise</option><option>Quiz</option><option>Homework</option><option>Project</option><option>Practical Work</option><option>Class Participation</option></select></div>
+          <div class="f-field"><label>Subject</label><select><option>${escapeHtml(subjectName)}</option><option>Mathematics</option><option>Science</option><option>English</option></select></div>
+          <div class="f-field"><label>Class</label><select>${(assignedClasses.length ? assignedClasses : ['JHS 1', 'JHS 2']).map(c => `<option>${escapeHtml(c)}</option>`).join('')}</select></div>
+          <div class="f-field"><label>Term</label><select><option>Term 1</option><option>Term 2</option><option>Term 3</option></select></div>
         </div>
         <div class="f-row" style="margin-top:16px;margin-bottom:16px">
-          <div class="f-field" style="flex:2"><label>Teacher</label><input type="text" value="Mr. Osei" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
-          <div class="f-field" style="flex:1"><label>No. on Roll</label><input type="text" value="40" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
-          <div class="f-field" style="flex:1"><label>Boys</label><input type="text" value="22" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
-          <div class="f-field" style="flex:1"><label>Girls</label><input type="text" value="18" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
+          <div class="f-field" style="flex:2"><label>Teacher</label><input type="text" value="${escapeHtml(teacher.name)}" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
+          <div class="f-field" style="flex:1"><label>No. on Roll</label><input type="text" value="${sourceStudents.length}" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
+          <div class="f-field" style="flex:1"><label>Status</label><input type="text" value="Pending Review" disabled style="padding:10px;border:none;background:transparent;border-bottom:1px dotted #000;font-weight:600;width:100%"></div>
         </div>
         <div style="overflow-x:auto">
           <table class="tbl mt-3" style="border:2px solid #000;white-space:nowrap;font-size:12px">
@@ -12607,53 +12700,26 @@ function renderSbaContent() {
               <tr style="border-bottom:2px solid #000">
                 <th style="border-right:1px solid #000;text-align:center">NO.</th>
                 <th style="border-right:1px solid #000">NAME OF STUDENT</th>
-                <th style="border-right:1px solid #000;text-align:center">CAT1</th>
-                <th style="border-right:1px solid #000;text-align:center">CAT2<br><small style="font-size:9px">GROUP<br>EXERCISE</small></th>
-                <th style="border-right:2px solid #000;text-align:center">CAT3</th>
-                <th style="border-right:2px solid #000;text-align:center">TOTAL<br>FOR<br>CATs</th>
-                <th style="border-right:2px solid #000;text-align:center">END OF<br>TERM<br>EXAM</th>
-                <th style="border-right:1px solid #000;text-align:center">TOTAL<br>FOR CATs,<br>& END OF<br>TERM EXAM</th>
-                <th style="border-right:1px solid #000;text-align:center">GRADE</th>
-                <th style="text-align:center">POSITION</th>
+                <th style="border-right:1px solid #000;text-align:center">Exercise /20</th>
+                <th style="border-right:1px solid #000;text-align:center">Quiz /20</th>
+                <th style="border-right:2px solid #000;text-align:center">Project /10</th>
+                <th style="border-right:2px solid #000;text-align:center">Total SBA /50</th>
+                <th style="border-right:1px solid #000;text-align:center">Percentage</th>
+                <th style="text-align:center">Subject Rank</th>
               </tr>
             </thead>
             <tbody>
+              ${sbaRows.map((row, i) => `
               <tr style="border-bottom:1px solid #000">
-                <td style="border-right:1px solid #000;text-align:center">1</td>
-                <td style="border-right:1px solid #000;font-weight:600">Ama Serwaa</td>
-                <td style="border-right:1px solid #000;padding:4px"><input type="number" value="15" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:1px solid #000;padding:4px"><input type="number" value="18" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:2px solid #000;padding:4px"><input type="number" value="14" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:2px solid #000;text-align:center;font-weight:700">47</td>
-                <td style="border-right:2px solid #000;padding:4px"><input type="number" value="85" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:1px solid #000;text-align:center;font-weight:700;color:var(--blue-dark)">80</td>
-                <td style="border-right:1px solid #000;text-align:center">A</td>
-                <td style="text-align:center">1st</td>
-              </tr>
-              <tr style="border-bottom:1px solid #000">
-                <td style="border-right:1px solid #000;text-align:center">2</td>
-                <td style="border-right:1px solid #000;font-weight:600">Kwame Mensah</td>
-                <td style="border-right:1px solid #000;padding:4px"><input type="number" value="12" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:1px solid #000;padding:4px"><input type="number" value="14" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:2px solid #000;padding:4px"><input type="number" value="10" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:2px solid #000;text-align:center;font-weight:700">36</td>
-                <td style="border-right:2px solid #000;padding:4px"><input type="number" value="65" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:1px solid #000;text-align:center;font-weight:700;color:var(--blue-dark)">59</td>
-                <td style="border-right:1px solid #000;text-align:center">C</td>
-                <td style="text-align:center">12th</td>
-              </tr>
-              <tr style="border-bottom:1px solid #000">
-                <td style="border-right:1px solid #000;text-align:center">3</td>
-                <td style="border-right:1px solid #000;font-weight:600">Abena Osei</td>
-                <td style="border-right:1px solid #000;padding:4px"><input type="number" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:1px solid #000;padding:4px"><input type="number" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:2px solid #000;padding:4px"><input type="number" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:2px solid #000;text-align:center;font-weight:700">-</td>
-                <td style="border-right:2px solid #000;padding:4px"><input type="number" style="width:50px;border:none;text-align:center;background:transparent"></td>
-                <td style="border-right:1px solid #000;text-align:center;font-weight:700;color:var(--blue-dark)">-</td>
-                <td style="border-right:1px solid #000;text-align:center">-</td>
-                <td style="text-align:center">-</td>
-              </tr>
+                <td style="border-right:1px solid #000;text-align:center">${i + 1}</td>
+                <td style="border-right:1px solid #000;font-weight:600">${escapeHtml(row.student.name)}</td>
+                <td style="border-right:1px solid #000;padding:4px"><input type="number" value="${row.exercise}" style="width:58px;border:none;text-align:center;background:transparent"></td>
+                <td style="border-right:1px solid #000;padding:4px"><input type="number" value="${row.quiz}" style="width:58px;border:none;text-align:center;background:transparent"></td>
+                <td style="border-right:2px solid #000;padding:4px"><input type="number" value="${row.project}" style="width:58px;border:none;text-align:center;background:transparent"></td>
+                <td style="border-right:2px solid #000;text-align:center;font-weight:700">${row.total}</td>
+                <td style="border-right:1px solid #000;text-align:center;font-weight:700;color:var(--blue-dark)">${row.percentage}%</td>
+                <td style="text-align:center">${row.rank}</td>
+              </tr>`).join('')}
             </tbody>
           </table>
         </div>
@@ -12662,32 +12728,37 @@ function renderSbaContent() {
           <button class="btn btn-primary" onclick="showToast('Termly SBA Register submitted to Class Teacher!', 'success')"><i class="fas fa-paper-plane"></i> Submit SBA to Class Teacher</button>
         </div>
       </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> SBA Analysis</span></div>
+        ${[['Class Average', avg + '/50'], ['Highest Score', high + '/50'], ['Lowest Score', low + '/50'], ['Submission Status', 'Pending Review']].map(([label, value]) => `
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);font-size:13px"><span>${label}</span><strong>${value}</strong></div>`).join('')}
+        <div style="margin-top:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--gray-600);margin-bottom:8px">Workflow</div>
+          ${['Create SBA', 'Enter Scores', 'Review Scores', 'Submit SBA'].map((step, i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px"><span class="badge ${i < 2 ? 'b-success' : 'b-warning'}">${i + 1}</span>${step}</div>`).join('')}
+        </div>
+      </div>
+      </div>
     `;
   } else {
     // Class Teacher View
     return `
       <div class="stats-row mt-3">
-        ${statCard('<i class="fas fa-inbox"></i>', '8/12', 'Subjects Received', 'For JHS 1', 'neu', 'si-blue')}
-        ${statCard('<i class="fas fa-tasks"></i>', '4', 'Pending Subjects', 'Awaiting submission', 'neu', 'si-gold')}
+        ${statCard('<i class="fas fa-inbox"></i>', submittedCount + '/' + submittedSubjects.length, 'Subjects Received', selectedClass, 'neu', 'si-blue')}
+        ${statCard('<i class="fas fa-tasks"></i>', pendingCount, 'Pending Subjects', 'Awaiting submission', 'neu', 'si-gold')}
+        ${statCard('<i class="fas fa-user-check"></i>', approvedCount, 'Approved Subjects', 'Ready for reports', 'up', 'si-green')}
+        ${statCard('<i class="fas fa-chart-line"></i>', avg + '/50', 'Class SBA Avg', 'Across students', 'up', 'si-purple')}
       </div>
       <div class="card mt-3">
-        <div class="card-hdr"><span class="card-title"><i class="fas fa-inbox"></i> SBA Collection Center (Class Teacher - JHS 1)</span></div>
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-inbox"></i> SBA Collection Center (Class Teacher - ${escapeHtml(selectedClass)})</span></div>
         <table class="tbl">
           <thead><tr><th>Subject</th><th>Teacher</th><th>Status</th><th>Class Average</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr><td style="font-weight:600;color:var(--blue-dark)">Mathematics</td><td>Mr. Osei</td><td><span class="badge b-success">Submitted</span></td><td>72%</td>
+            ${submittedSubjects.map(([subject, teacherName, status, subjectAvg]) => `
+            <tr><td style="font-weight:600;color:var(--blue-dark)">${subject}</td><td>${teacherName}</td><td><span class="badge ${status === 'Approved' ? 'b-success' : status === 'Pending' ? 'b-warning' : status === 'Returned for Correction' ? 'b-danger' : 'b-info'}">${status}</span></td><td>${subjectAvg ? subjectAvg + '%' : '-'}</td>
               <td><div style="display:flex;gap:4px">
-                <button class="btn btn-primary btn-xs" onclick="showToast('SBA Approved for Compilation', 'success')"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn btn-danger btn-xs" onclick="showToast('Returned to subject teacher', 'info')"><i class="fas fa-undo"></i> Return</button>
+                ${status === 'Pending' ? '<span style="font-size:11px;color:var(--gray-500)">Waiting</span>' : `<button class="btn btn-primary btn-xs" onclick="showToast('SBA Approved for Compilation', 'success')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="showToast('Returned to subject teacher with comments', 'info')"><i class="fas fa-undo"></i> Return</button>`}
               </div></td>
-            </tr>
-            <tr><td style="font-weight:600;color:var(--blue-dark)">English</td><td>Mrs. Appiah</td><td><span class="badge b-warning">Pending</span></td><td>-</td><td>-</td></tr>
-            <tr><td style="font-weight:600;color:var(--blue-dark)">Science</td><td>Dr. Mensah</td><td><span class="badge b-success">Submitted</span></td><td>68%</td>
-              <td><div style="display:flex;gap:4px">
-                <button class="btn btn-primary btn-xs" onclick="showToast('SBA Approved for Compilation', 'success')"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn btn-danger btn-xs" onclick="showToast('Returned to subject teacher', 'info')"><i class="fas fa-undo"></i> Return</button>
-              </div></td>
-            </tr>
+            </tr>`).join('')}
           </tbody>
         </table>
         <div style="margin-top:20px;text-align:right">
@@ -12699,8 +12770,7 @@ function renderSbaContent() {
         <table class="tbl">
           <thead><tr><th>Student</th><th>Math</th><th>English</th><th>Science</th><th>Overall Average</th></tr></thead>
           <tbody>
-            <tr><td style="font-weight:600;color:var(--blue-dark)">Ama Serwaa</td><td>85</td><td>-</td><td>70</td><td style="font-weight:700">77.5%</td></tr>
-            <tr><td style="font-weight:600;color:var(--blue-dark)">Kwame Mensah</td><td>62</td><td>-</td><td>55</td><td style="font-weight:700">58.5%</td></tr>
+            ${sbaRows.slice(0, 6).map(row => `<tr><td style="font-weight:600;color:var(--blue-dark)">${escapeHtml(row.student.name)}</td><td>${row.total}</td><td>${Math.max(30, row.total - 2)}</td><td>${Math.max(30, row.total - 4)}</td><td style="font-weight:700">${Math.round((row.total + Math.max(30, row.total - 2) + Math.max(30, row.total - 4)) / 3)}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
@@ -13875,14 +13945,13 @@ function showAllAnnouncements(){
 function childrenModule() {
   return hdr('My Children', 'Monitor your children\'s school activities', 'My Children') + `
   <div class="g2">
-    ${[['Ama Serwaa', 'JHS 1', '2024-0042', ['96% Attendance', 'Fees: Paid', 'Rank: 3/40'], 'blue', 'Mixed Stream'], ['Kweku Serwaa', 'Basic 3', '2024-0143', ['91% Attendance', 'Fees: Paid', 'Rank: 8/38'], 'purple', 'General Stream']].map(([n, c, r, stats, av, st]) => `
+    ${[['Ama Serwaa', 'JHS 1', '2024-0042', ['96% Attendance', 'Fees: Paid', 'Rank: 3/40'], 'blue'], ['Kweku Serwaa', 'Basic 3', '2024-0143', ['91% Attendance', 'Fees: Paid', 'Rank: 8/38'], 'purple']].map(([n, c, r, stats, av]) => `
     <div class="card">
       <div style="display:flex;gap:16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--gray-200)">
         <div class="av av-xl av-${av}">${n[0]}</div>
         <div>
           <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${n}</div>
           <div style="font-size:12px;color:var(--gray-400)">${c} · Roll: ${r}</div>
-          <span class="badge b-info" style="margin-top:6px">${st}</span>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
@@ -15409,7 +15478,7 @@ function visitorAdmission() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Entry Requirements</span></div>
       ${[['Age Requirement', 'Not more than 18 years at time of admission'], ['Medical Certificate', 'Current health status from a certified physician'], ['Character Reference', 'Letter from primary school headteacher'], ['Passport Photographs', '2 recent passport-sized photographs'], ['Birth Certificate', 'Original and photocopy']].map(([t, d]) => `
       <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-        <span style="color:var(--success);font-weight:800;font-size:16px;flex-shrink:0">?</span>
+        <span style="color:var(--success);font-weight:800;font-size:16px;flex-shrink:0"><i class="fas fa-check"></i></span>
         <div><div style="font-size:13px;font-weight:600">${t}</div><div style="font-size:11px;color:var(--gray-400);margin-top:2px">${d}</div></div>
       </div>`).join('')}
     </div>
@@ -15881,7 +15950,7 @@ function visitorGallery() {
     ['<i class="fas fa-book"></i>', 'School Library', '#ede9fe'],
     ['<i class="fas fa-theater-masks"></i>', 'Drama & Arts Club', '#e0f2fe'],
     ['<i class="fas fa-leaf"></i>', 'Beautiful Campus', '#d1fae5'],
-    ['<i class="fas fa-user"></i>?<i class="fas fa-laptop"></i>', 'ICT Laboratory', '#dbeafe'],
+    ['<i class="fas fa-user"></i><i class="fas fa-laptop" style="margin-left:6px"></i>', 'ICT Laboratory', '#dbeafe'],
     ['<i class="fas fa-palette"></i>', 'Art Exhibition', '#fef3c7'],
     ['<i class="fas fa-trophy"></i>', 'Champions Cup 2024', '#fef3c7'],
     ['<i class="fas fa-music"></i>', 'School Choir', '#ede9fe'],
@@ -16201,38 +16270,53 @@ function saveForm(message = 'Saved successfully!') {
 
 // Save attendance
 function saveAttendance() {
-  // Only teachers can save attendance
   if (currentRole !== 'Teacher') {
     showToast('<i class="fas fa-times-circle"></i> Only class teachers can mark attendance', 'error');
     return;
   }
 
-  const data = {};
-  const records = [];
-  let count = 0;
-  document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
-    data[input.name] = input.value;
-    records.push({
-      student: input.name.replace(/^att_/, '').replace(/_/g, ' '),
-      status: input.value,
-      date: new Date().toISOString().slice(0, 10),
-      recordedBy: getSessionUser()?.name || 'Teacher'
-    });
-    count++;
+  const className = document.getElementById('attendance-class')?.value || getAssignedClassNamesForTeacher()[0];
+  const date = document.getElementById('attendance-date')?.value || new Date().toISOString().slice(0, 10);
+  if (!className || !getAssignedClassNamesForTeacher().includes(className)) {
+    showToast('<i class="fas fa-times-circle"></i> Select one of your assigned classes', 'error');
+    return;
+  }
+
+  const records = Array.from(document.querySelectorAll('.attendance-row')).map(row => {
+    const checked = row.querySelector('input[type="radio"]:checked');
+    return {
+      studentId: row.dataset.studentId || '',
+      student: row.dataset.studentName || '',
+      status: checked?.value || 'P'
+    };
   });
 
-  if (count === 0) {
+  if (records.length === 0) {
     showToast('<i class="fas fa-times-circle"></i> Please mark attendance for at least one student', 'error');
     return;
   }
 
-  try {
-    const raw = localStorage.getItem(ATTENDANCE_BATCHES_KEY);
-    const batches = raw ? JSON.parse(raw) : [];
-    batches.unshift({ id: Date.now(), date: new Date().toISOString(), records });
-    localStorage.setItem(ATTENDANCE_BATCHES_KEY, JSON.stringify(batches.slice(0, 50)));
-  } catch(e) {}
-  showToast('<i class="fas fa-check-circle"></i> Attendance for ' + count + ' students saved!', 'success');
+  const teacher = getCurrentTeacherProfile();
+  const teacherName = teacher?.name || getSessionUser()?.name || 'Class Teacher';
+  const present = records.filter(r => r.status === 'P').length;
+  const absent = records.filter(r => r.status === 'A').length;
+  const batch = {
+    id: Date.now(),
+    date,
+    className,
+    teacherId: getCurrentTeacherId(),
+    teacherName,
+    submittedAt: new Date().toISOString(),
+    present,
+    absent,
+    late: 0,
+    records
+  };
+  const batches = getAttendanceBatches().filter(b => !(b.className === className && b.date === date));
+  batches.unshift(batch);
+  saveAttendanceBatches(batches);
+  showToast('<i class="fas fa-check-circle"></i> Attendance successfully recorded for ' + className + ' on ' + formatAttendanceDate(date) + '.', 'success', 5000);
+  renderMain();
 }
 
 // TEACHER DASHBOARD INTERACTIVE FUNCTIONS
@@ -16270,7 +16354,7 @@ function viewStatDetail(statType) {
   if (statType === 'students') {
     content = '<h3>My Students (38)</h3><p>2 new students joined this term</p><button class="btn btn-primary" style="margin-top:10px">View All Students</button>';
   } else if (statType === 'subjects') {
-    content = '<h3>Subjects Teaching (5)</h3><p>This semester</p><ul style="list-style:none;padding:0"><li>? Mathematics</li><li>? Further Maths</li><li>? Core Maths</li><li>? Statistics</li><li>? Algebra</li></ul>';
+    content = '<h3>Subjects Teaching (5)</h3><p>This semester</p><ul style="list-style:none;padding:0"><li><i class="fas fa-book"></i> Mathematics</li><li><i class="fas fa-book"></i> Further Maths</li><li><i class="fas fa-book"></i> Core Maths</li><li><i class="fas fa-book"></i> Statistics</li><li><i class="fas fa-book"></i> Algebra</li></ul>';
   } else if (statType === 'attendance') {
     content = '<h3>Attendance Rate (94%)</h3><p>Above average performance</p><div class="prog-bar"><div class="prog-fill pf-green" style="width:94%"></div></div>';
   } else if (statType === 'grades') {
@@ -16452,8 +16536,11 @@ function filterExamTable() {
 }
 
 function openScheduleExamForm() {
-  const formContent = `
-    <div style="padding:20px;width:100%;max-width:900px">
+  currentMod = 'exams';
+  const el = document.getElementById('main-content');
+  if (!el) return;
+  el.innerHTML = hdr('Schedule Exam', 'Create a class examination timetable', 'Exams') + `
+    <div class="card">
       <h2 style="margin:0 0 20px 0;color:var(--blue-dark);font-size:22px"><i class="fas fa-clipboard-list"></i> Exam Timetable Scheduler</h2>
       
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:20px">
@@ -16494,11 +16581,11 @@ function openScheduleExamForm() {
       
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="saveExamTimetable()"><i class="fas fa-check-circle"></i> Create Exam Schedule</button>
-        <button class="btn btn-secondary btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-secondary btn-sm" onclick="navTo('exams')">Cancel</button>
       </div>
     </div>
   `;
-  openModal(formContent);
+  window.scrollTo(0, 0);
 }
 
 function saveNewExam() {
@@ -16528,8 +16615,8 @@ function saveExamTimetable() {
     return;
   }
 
-  closeModal();
   showToast('<i class="fas fa-check-circle"></i> Exam timetable created for ' + classVal + ' starting ' + startDate + ' (' + duration + ' days)', 'success');
+  navTo('exams');
 }
 
 function editExam(subject, classVal) {

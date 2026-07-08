@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Glory Reign School — One-Click Database Setup
  * Visit: http://localhost/SCH/setup.php  then delete this file.
@@ -45,11 +45,11 @@ try {
 
     // 4. Users (bcrypt hashed in PHP)
     $users = [
-        ['user001','System Admin',   'admin',         'admin@gloryregin.edu.gh',        'admin123',   'Admin',      'SA'],
-        ['user002','Mr. Amponsah',   'k.amponsah',    'k.amponsah@gloryregin.edu.gh',   'teacher123', 'Teacher',    'MA'],
-        ['user003','Ama Serwaa',     'ama.serwaa',    'ama@student.gloryregin.edu.gh',  'student123', 'Student',    'AS'],
-        ['user004','Mr. Kojo Mensah','k.accountant',  'accountant@gloryregin.edu.gh',   'acct123',    'Accountant', 'KA'],
-        ['user005','Mr. Serwaa',     'serwaa.parent', 'parent@gloryregin.edu.gh',       'parent123',  'Parent',     'SP'],
+        ['user001','System Admin',   'admin',         'admin@gloryreign.edu.gh',        'admin123',   'Admin',      'SA'],
+        ['user002','Mr. Amponsah',   'k.amponsah',    'k.amponsah@gloryreign.edu.gh',   'teacher123', 'Teacher',    'MA'],
+        ['user003','Ama Serwaa',     'ama.serwaa',    'ama@student.gloryreign.edu.gh',  'student123', 'Student',    'AS'],
+        ['user004','Mr. Kojo Mensah','k.accountant',  'accountant@gloryreign.edu.gh',   'acct123',    'Accountant', 'KA'],
+        ['user005','Mr. Serwaa',     'serwaa.parent', 'parent@gloryreign.edu.gh',       'parent123',  'Parent',     'SP'],
     ];
     $ins = $pdo->prepare("INSERT INTO users (user_code,name,username,email,password_hash,role,status,avatar) VALUES (?,?,?,?,?,?,'Active',?)");
     foreach ($users as [$code,$name,$uname,$email,$pw,$role,$av]) {
@@ -105,16 +105,16 @@ try {
 
     // 7. Staff
     $staff = [
-        ['KWA001','Mr. Kweku Amponsah','kweku.amponsah@gloryregin.edu.gh','+233 24 100 0001','Teaching','Mathematics','Senior Teacher','B.Sc Mathematics (Legon), Diploma in Education','Grade 8','2013-01-15','Male','1985-05-22','123 Education Street, Accra','Ama Amponsah','+233 244 567 890','4.8/5','Active','KA'],
-        ['AKA002','Mrs. Akua Asante','akua.asante@gloryregin.edu.gh','+233 24 100 0002','Teaching','Languages','Senior Teacher','B.A English (UCC), Diploma in Education','Grade 7','2017-03-10','Female','1988-07-14','456 Learning Street, Accra','Kwame Asante','+233 245 678 901','4.6/5','Active','AA'],
-        ['KMN003','Mr. Kojo Mensah','kojo.mensah@gloryregin.edu.gh','+233 24 100 0003','Admin','Finance','Accounts Officer','HND Accounting','Admin A','2015-06-20','Male','1982-09-03','789 Finance Lane, Accra','Abena Mensah','+233 246 789 012','4.5/5','Active','KM'],
-        ['ABO004','Ms. Abena Ofori','abena.ofori@gloryregin.edu.gh','+233 24 100 0004','Admin','Front Office','Receptionist','Diploma in Secretarial Studies','Admin B','2020-09-15','Female','1995-02-11','321 Office Avenue, Accra','John Ofori','+233 247 890 123','4.3/5','Active','AO'],
-        ['KWO005','Mr. Kwame Oti','kwame.oti@gloryregin.edu.gh','+233 24 100 0005','Support','Maintenance','Maintenance Supervisor','Technical Certificate in Building Maintenance','Support','2018-01-08','Male','1980-11-30','654 Support Road, Accra','Ama Oti','+233 248 901 234','4.4/5','Active','KO'],
-        ['FPA006','Ms. Freda Poku','freda.poku@gloryregin.edu.gh','+233 24 100 0006','Teaching','ICT','Teacher','B.Tech ICT (KNUST)','Grade 6','2019-08-25','Female','1992-04-18','987 Tech Street, Accra','Ernest Poku','+233 249 012 345','4.7/5','Active','FP'],
-        ['YOB007','Mr. Yaw Boateng Sr.','yaw.boateng@gloryregin.edu.gh','+233 24 100 0007','Teaching','Social Studies','Teacher','B.A History (UG)','Grade 6','2016-09-12','Male','1986-03-25','159 History Street, Accra','Grace Boateng','+233 240 123 456','4.5/5','Active','YB'],
-        ['NYS008','Mrs. Nana Yaa Sekyere','nana.sekyere@gloryregin.edu.gh','+233 24 100 0008','Teaching','Science','Science Coordinator','B.Sc Biology (KNUST), Diploma in Education','Grade 7','2014-02-01','Female','1987-06-09','357 Science Park, Accra','Samuel Sekyere','+233 241 234 567','4.8/5','Active','NS'],
-        ['ABD009','Mr. Abdul Hassan','abdul.hassan@gloryregin.edu.gh','+233 24 100 0009','Support','Security','Security Officer','National Security Certificate','Support','2017-07-10','Male','1979-08-15','741 Security Lane, Accra','Zainab Hassan','+233 242 345 678','4.2/5','Active','AH'],
-        ['RSO010','Ms. Rose Sarbah','rose.sarbah@gloryregin.edu.gh','+233 24 100 0010','Admin','Registrar','Registrar','Diploma in Educational Management','Admin A','2012-08-20','Female','1981-10-05','852 Admin Street, Accra','Daniel Sarbah','+233 243 456 789','4.9/5','Active','RS'],
+        ['KWA001','Mr. Kweku Amponsah','kweku.amponsah@gloryreign.edu.gh','+233 24 100 0001','Teaching','Mathematics','Senior Teacher','B.Sc Mathematics (Legon), Diploma in Education','Grade 8','2013-01-15','Male','1985-05-22','123 Education Street, Accra','Ama Amponsah','+233 244 567 890','4.8/5','Active','KA'],
+        ['AKA002','Mrs. Akua Asante','akua.asante@gloryreign.edu.gh','+233 24 100 0002','Teaching','Languages','Senior Teacher','B.A English (UCC), Diploma in Education','Grade 7','2017-03-10','Female','1988-07-14','456 Learning Street, Accra','Kwame Asante','+233 245 678 901','4.6/5','Active','AA'],
+        ['KMN003','Mr. Kojo Mensah','kojo.mensah@gloryreign.edu.gh','+233 24 100 0003','Admin','Finance','Accounts Officer','HND Accounting','Admin A','2015-06-20','Male','1982-09-03','789 Finance Lane, Accra','Abena Mensah','+233 246 789 012','4.5/5','Active','KM'],
+        ['ABO004','Ms. Abena Ofori','abena.ofori@gloryreign.edu.gh','+233 24 100 0004','Admin','Front Office','Receptionist','Diploma in Secretarial Studies','Admin B','2020-09-15','Female','1995-02-11','321 Office Avenue, Accra','John Ofori','+233 247 890 123','4.3/5','Active','AO'],
+        ['KWO005','Mr. Kwame Oti','kwame.oti@gloryreign.edu.gh','+233 24 100 0005','Support','Maintenance','Maintenance Supervisor','Technical Certificate in Building Maintenance','Support','2018-01-08','Male','1980-11-30','654 Support Road, Accra','Ama Oti','+233 248 901 234','4.4/5','Active','KO'],
+        ['FPA006','Ms. Freda Poku','freda.poku@gloryreign.edu.gh','+233 24 100 0006','Teaching','ICT','Teacher','B.Tech ICT (KNUST)','Grade 6','2019-08-25','Female','1992-04-18','987 Tech Street, Accra','Ernest Poku','+233 249 012 345','4.7/5','Active','FP'],
+        ['YOB007','Mr. Yaw Boateng Sr.','yaw.boateng@gloryreign.edu.gh','+233 24 100 0007','Teaching','Social Studies','Teacher','B.A History (UG)','Grade 6','2016-09-12','Male','1986-03-25','159 History Street, Accra','Grace Boateng','+233 240 123 456','4.5/5','Active','YB'],
+        ['NYS008','Mrs. Nana Yaa Sekyere','nana.sekyere@gloryreign.edu.gh','+233 24 100 0008','Teaching','Science','Science Coordinator','B.Sc Biology (KNUST), Diploma in Education','Grade 7','2014-02-01','Female','1987-06-09','357 Science Park, Accra','Samuel Sekyere','+233 241 234 567','4.8/5','Active','NS'],
+        ['ABD009','Mr. Abdul Hassan','abdul.hassan@gloryreign.edu.gh','+233 24 100 0009','Support','Security','Security Officer','National Security Certificate','Support','2017-07-10','Male','1979-08-15','741 Security Lane, Accra','Zainab Hassan','+233 242 345 678','4.2/5','Active','AH'],
+        ['RSO010','Ms. Rose Sarbah','rose.sarbah@gloryreign.edu.gh','+233 24 100 0010','Admin','Registrar','Registrar','Diploma in Educational Management','Admin A','2012-08-20','Female','1981-10-05','852 Admin Street, Accra','Daniel Sarbah','+233 243 456 789','4.9/5','Active','RS'],
     ];
     $ins = $pdo->prepare("INSERT INTO staff (staff_code,name,email,phone,category,department,position,qualifications,salary_grade,join_date,gender,dob,address,emergency_contact,emergency_phone,performance,status,avatar) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     foreach ($staff as $s) $ins->execute($s);
@@ -232,7 +232,7 @@ try {
         'phone'          => '+233 24 000 0000',
         'email'          => 'gloryreign2011@gmail.com',
         'address'        => 'Jirapa, Upper West Region, Ghana',
-        'website'        => 'www.gloryregin.edu.gh',
+        'website'        => 'www.gloryreign.edu.gh',
         'academic_year'  => '2024/2025',
         'current_term'   => '1st Term',
         'term_start_date'=> '2025-01-06',
