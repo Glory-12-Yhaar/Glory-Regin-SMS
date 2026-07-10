@@ -30,6 +30,11 @@ try {
     $sql = file_get_contents(__DIR__ . '/database/schema.sql');
     if (!$sql) throw new RuntimeException('Cannot read database/schema.sql');
 
+    // Strip UTF-8 BOM if present
+    if (substr($sql, 0, 3) === "\xEF\xBB\xBF") {
+        $sql = substr($sql, 3);
+    }
+
     // Strip -- line comments, then split on semicolons
     $clean = preg_replace('/--[^\n]*/m', '', $sql);
     $stmts = array_filter(array_map('trim', explode(';', $clean)), fn($s) => strlen($s) > 5);
@@ -62,7 +67,7 @@ try {
     // 5. Classes
     $classes = [
         ['Creche',   'Early Childhood', 'Ms. Doe'],
-        ['Nursery',  'Early Childhood',; 'Ms. Amoah'],
+        ['Nursery',  'Early Childhood', 'Ms. Amoah'],
         ['KG 1',     'Early Childhood', 'Ms. Boateng'],
         ['KG 2',     'Early Childhood', 'Mrs. Darko'],
         ['Basic 1',  'Primary',         'Mr. Quaye'],
