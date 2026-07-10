@@ -16,13 +16,33 @@ class AnalyticsDashboard {
 
   init() {
     this.loadData();
-    this.generateAnalytics();
-    this.renderDashboard();
+    this.fetchServerAnalytics().then(() => {
+      this.generateAnalytics();
+      this.renderDashboard();
+    });
   }
 
   loadData() {
-    // Load student data
+    // Load student data (keep client-side as fallback)
     this.students = SafeStorage.get('students_data') || STUDENTS_DATA || {};
+  }
+
+  async fetchServerAnalytics() {
+    try {
+      const res = await API.analytics();
+      if (!res || !res.success) return;
+      const payload = res.data;
+      // Attach server analytics
+      this.analytics = payload.analytics || this.analytics;
+      // Replace students map with server data where available
+      if (Array.isArray(payload.students)) {
+        const map = {};
+        payload.students.forEach(s => { map[s.id] = s; });
+        this.students = map;
+      }
+    } catch (err) {
+      console.error('Failed to fetch server analytics', err);
+    }
   }
 
   generateAnalytics() {

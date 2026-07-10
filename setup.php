@@ -12,7 +12,6 @@ $log = [];   // [ ['ok'|'err', 'message'] ]
 
 function ok(string $msg)  { global $log; $log[] = ['ok',  $msg]; }
 function err(string $msg) { global $log; $log[] = ['err', $msg]; }
-
 try {
     // 1. Connect (no DB selected yet)
     $pdo = new PDO("mysql:host=".DB_HOST.";charset=utf8mb4", DB_USER, DB_PASS, [
@@ -63,7 +62,7 @@ try {
     // 5. Classes
     $classes = [
         ['Creche',   'Early Childhood', 'Ms. Doe'],
-        ['Nursery',  'Early Childhood', 'Ms. Amoah'],
+        ['Nursery',  'Early Childhood',; 'Ms. Amoah'],
         ['KG 1',     'Early Childhood', 'Ms. Boateng'],
         ['KG 2',     'Early Childhood', 'Mrs. Darko'],
         ['Basic 1',  'Primary',         'Mr. Quaye'],

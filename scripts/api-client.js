@@ -145,6 +145,7 @@ const API = {
 
     // ── Dashboard / Reports ──────────────────────────────────
     dashboard: () => apiRequest('/reports/dashboard.php'),
+    analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
 
     // ── Parents ──────────────────────────────────────────────
     parents: {

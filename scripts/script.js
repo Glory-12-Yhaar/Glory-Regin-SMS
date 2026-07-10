@@ -2041,6 +2041,10 @@ function renderMain() {
   if (m === 'dashboard' && r === 'Student') {
     setTimeout(() => { try{ /* placeholder for student init */ } catch(e){} }, 80);
   }
+  // Initialize admin dashboard data
+  if (m === 'dashboard' && r === 'Admin') {
+    setTimeout(() => { try{ if (!ADMIN_DASHBOARD_STATE.loaded) fetchAdminDashboardData(); } catch(e){} }, 80);
+  }
   updateNotificationBadge();
 }
 
@@ -2181,15 +2185,35 @@ function getCurrentDateString() {
   return `${day}, ${date} ${month} ${year}`;
 }
 
+const ADMIN_DASHBOARD_STATE = {
+  loaded: false,
+  dashboard: {},
+  analytics: {},
+  recentStudents: [],
+  classesOverview: [],
+  subjectPerformance: [],
+  finance: {
+    payments: [],
+    collected: 0,
+    outstanding: 0,
+    paidCount: 0,
+    partialCount: 0,
+    pendingCount: 0,
+    totalCount: 1
+  }
+};
+
 function adminDash() {
-  const totalStudents = enrolledStudents.length;
-  const totalTeachers = teachersData.length;
-  const pendingFees = enrolledStudents.filter(s => s.fees_status === 'Pending').length;
-  const finance = getFinanceSummary();
-  const paidPct = Math.round(finance.paidCount / finance.totalCount * 100);
-  const partialPct = Math.round(finance.partialCount / finance.totalCount * 100);
+  const totalStudents = ADMIN_DASHBOARD_STATE.dashboard.total_students ?? '—';
+  const totalTeachers = ADMIN_DASHBOARD_STATE.dashboard.total_teachers ?? '—';
+  const pendingFees = ADMIN_DASHBOARD_STATE.dashboard.fees_pending_count ?? '—';
+  const finance = ADMIN_DASHBOARD_STATE.finance;
+  const paidPct = finance.totalCount ? Math.round((finance.paidCount / finance.totalCount) * 100) : 0;
+  const partialPct = finance.totalCount ? Math.round((finance.partialCount / finance.totalCount) * 100) : 0;
   const pendingPct = Math.max(0, 100 - paidPct - partialPct);
-  const recentStudents = enrolledStudents.slice(0, 5);
+  const recentStudents = ADMIN_DASHBOARD_STATE.recentStudents.length
+    ? ADMIN_DASHBOARD_STATE.recentStudents
+    : [{ name: 'Loading student records...', student_class: '', status: 'Loading', fees_status: 'Loading' }];
 
   return hdr('Admin Dashboard', 'Welcome back, Administrator · ' + getCurrentDateString()) + `
   <div class="stats-row">
@@ -2251,14 +2275,7 @@ function adminDash() {
   <div class="g3">
     <div class="card" style="cursor:pointer" onclick="navTo('classes')">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Classes Overview</span></div>
-      ${[['Primary/Basic', 330, 6, 370], ['Junior High (JHS)', 215, 3, 250], ['Early Childhood', 140, 4, 180]].map(([f, n, c, t]) => `
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-          <span style="font-weight:600">${f} — ${c} classes</span>
-          <span style="color:var(--gray-500)">${n}/${t}</span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${Math.round(n / t * 100)}%"></div></div>
-      </div>`).join('')}
+      ${getAdminDashboardClassesOverviewHtml()}
     </div>
     <div class="card" style="cursor:pointer" onclick="navTo('fees')">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fees Status</span></div>
@@ -2282,15 +2299,97 @@ function adminDash() {
     </div>
     <div class="card" style="cursor:pointer" onclick="navTo('subjects')">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-trophy"></i> Subject Performance</span></div>
-      ${[['Mathematics', '92%', 92], ['English', '88%', 88], ['Science', '85%', 85], ['ICT', '94%', 94], ['History', '78%', 78]].map(([s, p, v]) => `
-      <div style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span>${s}</span><span style="color:var(--blue-main);font-weight:700">${p}</span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${v}%"></div></div>
-      </div>`).join('')}
+      ${getAdminDashboardSubjectPerformanceHtml()}
     </div>
   </div>`;
+}
+
+function getAdminDashboardClassesOverviewHtml() {
+  if (!ADMIN_DASHBOARD_STATE.loaded) {
+    return '<div style="padding:24px;text-align:center;color:var(--gray-400)">Loading classes overview...</div>';
+  }
+  if (!ADMIN_DASHBOARD_STATE.classesOverview.length) {
+    return '<div style="padding:24px;text-align:center;color:var(--gray-400)">No classes found.</div>';
+  }
+  const classes = ADMIN_DASHBOARD_STATE.classesOverview.slice(0, 3);
+  return classes.map(cls => {
+    const percentage = cls.student_count && cls.student_count > 0 ? Math.min(100, Math.round((cls.student_count / Math.max(cls.student_count, 1)) * 100)) : 0;
+    return `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="font-weight:600">${escapeHtml(cls.name)}</span>
+          <span style="color:var(--gray-500)">${cls.student_count} students</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${percentage}%"></div></div>
+      </div>`;
+  }).join('');
+}
+
+function getAdminDashboardSubjectPerformanceHtml() {
+  if (!ADMIN_DASHBOARD_STATE.loaded) {
+    return '<div style="padding:24px;text-align:center;color:var(--gray-400)">Loading subject performance...</div>';
+  }
+  if (!ADMIN_DASHBOARD_STATE.subjectPerformance.length) {
+    return '<div style="padding:24px;text-align:center;color:var(--gray-400)">No performance analytics available.</div>';
+  }
+  return ADMIN_DASHBOARD_STATE.subjectPerformance.slice(0, 5).map(sub => `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span>${escapeHtml(sub.subject)}</span><span style="color:var(--blue-main);font-weight:700">${sub.averageScore}%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${Math.min(100, Math.round(sub.averageScore))}%"></div></div>
+      </div>`).join('');
+}
+
+async function fetchAdminDashboardData() {
+  try {
+    const [dashboardRes, analyticsRes, studentsRes, classesRes] = await Promise.all([
+      API.dashboard(),
+      API.analytics(),
+      API.students.list({ limit: 5 }),
+      API.classes.list()
+    ]);
+
+    if (dashboardRes?.success) {
+      ADMIN_DASHBOARD_STATE.dashboard = dashboardRes.data || {};
+      ADMIN_DASHBOARD_STATE.finance = {
+        payments: [],
+        collected: dashboardRes.data?.total_fees_collected || 0,
+        outstanding: dashboardRes.data?.total_fees_outstanding || 0,
+        paidCount: dashboardRes.data?.fees_paid_count || 0,
+        partialCount: 0,
+        pendingCount: dashboardRes.data?.fees_pending_count || 0,
+        totalCount: Math.max(1, (dashboardRes.data?.fees_paid_count || 0) + (dashboardRes.data?.fees_pending_count || 0))
+      };
+    }
+
+    if (analyticsRes?.success) {
+      ADMIN_DASHBOARD_STATE.analytics = analyticsRes.data?.analytics || {};
+      ADMIN_DASHBOARD_STATE.subjectPerformance = Object.entries(ADMIN_DASHBOARD_STATE.analytics.subjectPerformance || {}).map(([subject, data]) => ({
+        subject,
+        averageScore: Number(data.averageScore || 0)
+      })).sort((a, b) => b.averageScore - a.averageScore);
+    }
+
+    if (studentsRes?.success) {
+      ADMIN_DASHBOARD_STATE.recentStudents = studentsRes.data || [];
+    }
+
+    if (classesRes?.success) {
+      ADMIN_DASHBOARD_STATE.classesOverview = classesRes.data || [];
+    }
+
+    ADMIN_DASHBOARD_STATE.loaded = true;
+    if (currentRole === 'Admin' && currentMod === 'dashboard') {
+      const main = document.getElementById('main-content');
+      if (main) {
+        main.innerHTML = adminDash();
+        initDashboardInteractivity();
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load admin dashboard data', err);
+  }
 }
 
 // -----------------------------------
@@ -5603,6 +5702,124 @@ function saveClassChanges(classId) {
   }, 2000);
 }
 
+function openCreateClass() {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can create classes', 'error');
+    return;
+  }
+
+  let html = hdr('Create Class', 'Add a new class to the school roster', 'Classes') + `
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-plus-circle"></i> New Class</span></div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Class Name *</label>
+        <input type="text" id="new-class-name" placeholder="e.g. Basic 7">
+      </div>
+      <div class="form-field">
+        <label>Class Level *</label>
+        <select id="new-class-level">
+          <option value="Creche">Creche</option>
+          <option value="Nursery">Nursery</option>
+          <option value="KG 1">KG 1</option>
+          <option value="KG 2">KG 2</option>
+          <option value="Basic">Basic</option>
+          <option value="JHS">JHS</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Stream *</label>
+        <select id="new-class-stream">
+          <option value="General">General</option>
+          <option value="Mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Class Teacher *</label>
+        <select id="new-class-teacher">
+          <option value="">-- Select Teacher --</option>
+          ${teachersData.map(t => '<option value="' + t.teacher_id + '">' + t.name + '</option>').join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Current Students *</label>
+        <input type="number" id="new-class-students" placeholder="0">
+      </div>
+      <div class="form-field">
+        <label>Class Capacity *</label>
+        <input type="number" id="new-class-capacity" placeholder="0">
+      </div>
+      <div style="grid-column:1/-1">
+        <label>Subjects (Comma-separated) *</label>
+        <input type="text" id="new-class-subjects" placeholder="Mathematics, English, Science">
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="createClass()"><i class="fas fa-check"></i> Create Class</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="navTo('classes')">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function createClass() {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can create classes', 'error');
+    return;
+  }
+
+  const name = document.getElementById('new-class-name')?.value.trim();
+  const level = document.getElementById('new-class-level')?.value;
+  const stream = document.getElementById('new-class-stream')?.value;
+  const teacherId = document.getElementById('new-class-teacher')?.value;
+  const students = document.getElementById('new-class-students')?.value;
+  const capacity = document.getElementById('new-class-capacity')?.value;
+  const subjectsStr = document.getElementById('new-class-subjects')?.value.trim();
+
+  if (!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  const newClass = {
+    class_id: 'C' + String(classesData.length + 1).padStart(3, '0'),
+    name,
+    level,
+    stream,
+    teacher: teacher?.name || 'Not assigned',
+    teacher_id: teacherId,
+    students: parseInt(students, 10),
+    attendance: '0%',
+    capacity: parseInt(capacity, 10),
+    subjects: subjectsStr.split(',').map(s => s.trim())
+  };
+
+  classesData.push(newClass);
+  showToast('<i class="fas fa-check-circle"></i> Class created successfully!<br/>Name: ' + name, 'success', 3000);
+  setTimeout(() => navTo('classes'), 2000);
+}
+
+function deleteClass(classId) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can delete classes', 'error');
+    return;
+  }
+
+  if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
+
+  const index = classesData.findIndex(c => c.class_id === classId);
+  if (index === -1) {
+    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+    return;
+  }
+
+  classesData.splice(index, 1);
+  showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
+  setTimeout(() => navTo('classes'), 1200);
+}
+
 function filterClasses() {
   const streamFilter = document.getElementById('class-stream-filter');
   const selectedStream = streamFilter ? streamFilter.value : 'All Streams';
@@ -5659,6 +5876,12 @@ function classesModule() {
     ${statCard('<i class="fas fa-chalkboard-user"></i>', visibleClasses.length, 'Class Teachers', isAdmin ? 'One per class' : 'Your assignments', 'neu', 'si-green')}
     ${statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')}
   </div>
+  ${isAdmin ? `
+  <div class="toolbar" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font-size:12px;color:var(--gray-600)">Manage classes, assign teachers, and keep class records updated.</div>
+    <button class="btn btn-primary" onclick="openCreateClass()"><i class="fas fa-plus"></i> Add Class</button>
+  </div>
+  ` : ''}
   ${!isAdmin ? `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>` : ''}
   <div class="g3 mb20">
     ${visibleClasses.map((c) => `
@@ -5672,10 +5895,11 @@ function classesModule() {
         <span style="color:var(--success);font-weight:700">${c.attendance}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewClassStudents('${c.class_id}')">View Students</button>
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewClassTimetable('${c.name}')">Timetable</button>
         ${isAdmin ? `<button class="btn btn-primary btn-xs" style="flex:1" onclick="manageClass('${c.class_id}')">Manage</button>` : ''}
+        ${isAdmin ? `<button class="btn btn-danger btn-xs" style="flex:1" onclick="deleteClass('${c.class_id}')">Delete</button>` : ''}
       </div>
     </div>`).join('')}
   </div>`;
