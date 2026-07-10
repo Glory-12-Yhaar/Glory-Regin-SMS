@@ -42,7 +42,7 @@ if ($method === 'GET') {
                 t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color
          FROM staff s
          LEFT JOIN teachers t ON t.staff_id = s.id
-         WHERE s.$whereStr ORDER BY s.name ASC LIMIT $limit OFFSET $offset"
+         WHERE $whereStr ORDER BY s.name ASC LIMIT $limit OFFSET $offset"
     );
     $stmt->execute($params);
     jsonResponse([

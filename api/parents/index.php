@@ -28,8 +28,9 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare(
         "SELECT u.id, u.user_code, u.name, u.username, u.email,
-                u.phone, u.address, u.status, u.last_login, u.created_at
+                p.phone, p.address, u.status, u.last_login, u.created_at
          FROM users u
+         LEFT JOIN parents p ON p.user_id = u.id
          WHERE $where
          ORDER BY u.name ASC"
     );
@@ -38,9 +39,10 @@ if ($method === 'GET') {
 
     // Attach children for each parent
     $childStmt = $db->prepare(
-        "SELECT ps.user_id, s.id AS student_id, s.student_code,
+        "SELECT p.user_id, s.id AS student_id, s.student_code,
                 s.name AS student_name, c.name AS class_name
          FROM parent_student ps
+         JOIN parents p ON p.id = ps.parent_id
          JOIN students s ON s.id = ps.student_id
          LEFT JOIN classes c ON c.id = s.class_id"
     );
@@ -71,15 +73,28 @@ if ($method === 'POST') {
     }
 
     // Verify the user is actually a Parent
-    $check = $db->prepare("SELECT id FROM users WHERE id = ? AND role = 'Parent'");
+    $check = $db->prepare("SELECT name, email FROM users WHERE id = ? AND role = 'Parent'");
     $check->execute([$userId]);
-    if (!$check->fetch()) {
+    $uData = $check->fetch();
+    if (!$uData) {
         jsonResponse(['success' => false, 'message' => 'User is not a Parent role'], 422);
     }
 
+    // Ensure parents record exists
+    $pCheck = $db->prepare("SELECT id FROM parents WHERE user_id = ?");
+    $pCheck->execute([$userId]);
+    $parent = $pCheck->fetch();
+    if (!$parent) {
+        $insParent = $db->prepare("INSERT INTO parents (name, email, user_id) VALUES (?, ?, ?)");
+        $insParent->execute([$uData['name'], $uData['email'], $userId]);
+        $parentId = $db->lastInsertId();
+    } else {
+        $parentId = $parent['id'];
+    }
+
     $db->prepare(
-        "INSERT IGNORE INTO parent_student (user_id, student_id) VALUES (?, ?)"
-    )->execute([$userId, $studentId]);
+        "INSERT IGNORE INTO parent_student (parent_id, student_id) VALUES (?, ?)"
+    )->execute([$parentId, $studentId]);
 
     jsonResponse(['success' => true, 'message' => 'Child linked to parent']);
 }
@@ -91,7 +106,7 @@ if ($method === 'DELETE') {
     if (!$userId || !$studentId) {
         jsonResponse(['success' => false, 'message' => 'user_id and student_id required'], 422);
     }
-    $db->prepare("DELETE FROM parent_student WHERE user_id = ? AND student_id = ?")
+    $db->prepare("DELETE ps FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE p.user_id = ? AND ps.student_id = ?")
        ->execute([$userId, $studentId]);
     jsonResponse(['success' => true, 'message' => 'Child unlinked from parent']);
 }

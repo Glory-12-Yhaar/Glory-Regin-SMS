@@ -3353,7 +3353,7 @@ function admissionsModule() {
     <button class="btn btn-secondary" onclick="exportAdmissionsToCSV()" style="cursor:pointer"><i class="fas fa-download"></i> CSV</button>
     <button class="btn btn-secondary" onclick="exportAdmissionsToExcel()" style="cursor:pointer"><i class="fas fa-chart-bar"></i> Excel</button>
     <button class="btn btn-secondary" onclick="downloadAdmissionsPDF()" style="cursor:pointer"><i class="fas fa-file-pdf"></i> PDF</button>
-    <div class="search-bar"><span><i class="fas fa-magnifying-glass"></i></span><input placeholder="Search by name or ID..."></div>
+    <div class="search-bar"><span><i class="fas fa-magnifying-glass"></i></span><input id="adm-search" placeholder="Search by name or ID..." onkeyup="filterAdmissions()" style="cursor:text"></div>
   </div>
   
   <!-- FORM -->
@@ -3374,79 +3374,56 @@ function admissionsModule() {
         </div>
         <div class="form-field">
           <label>Gender *</label>
-          <select id="adm-gender"><option>-- Select --</option><option>Male</option><option>Female</option></select>
-        </div>
-        <div class="form-field">
-          <label>Contact Number</label>
-          <input type="tel" id="adm-phone" placeholder="0244567890">
-        </div>
-        <div class="form-field" style="grid-column:1/-1">
-          <label>Residential Address *</label>
-          <input type="text" id="adm-address" placeholder="Full residential address">
-        </div>
-        
-        <div style="grid-column:1/-1;margin-top:12px">
-          <h3 style="color:var(--blue-dark);font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-users"></i> Parent/Guardian Details</h3>
-        </div>
-        <div class="form-field">
-          <label>Parent/Guardian Name *</label>
-          <input type="text" id="adm-parent-name" placeholder="Full name">
-        </div>
-        <div class="form-field">
-          <label>Parent Phone *</label>
-          <input type="tel" id="adm-parent-phone" placeholder="0244567890">
-        </div>
-        <div class="form-field">
-          <label>Parent Email *</label>
-          <input type="email" id="adm-parent-email" placeholder="parent@email.com">
-        </div>
-        <div class="form-field">
-          <label>Parent Gender *</label>
-          <select id="adm-parent-gender"><option>-- Select --</option><option>Male</option><option>Female</option></select>
-        </div>
-        <div class="form-field">
-          <label>Primary Contact Person *</label>
-          <input type="text" id="adm-contact-person" placeholder="e.g., Mr. Joseph Serwaa">
-        </div>
-        <div class="form-field">
-          <label>Relationship *</label>
-          <select id="adm-relationship"><option>-- Select --</option><option>Father</option><option>Mother</option><option>Guardian</option><option>Uncle</option><option>Aunt</option></select>
-        </div>
-        <div class="form-field">
-          <label>Occupation</label>
-          <input type="text" id="adm-occupation" placeholder="e.g., Teacher, Trader, Engineer">
-        </div>
-        
-        <div style="grid-column:1/-1;margin-top:12px">
-          <h3 style="color:var(--blue-dark);font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-book"></i> Academic Information</h3>
-        </div>
-        <div class="form-field">
-          <label>Previous School *</label>
-          <input type="text" id="adm-school" placeholder="Name of previous school">
-        </div>
-        <div class="form-field">
-          <label>Last Class Attended</label>
-          <input type="text" id="adm-last-class" placeholder="e.g., Primary 6, JHS 3">
+          <select id="adm-gender">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
         </div>
         <div class="form-field">
           <label>Class Applying For *</label>
-          <select id="adm-class"><option>-- Select Class --</option><option>Creche</option><option>Nursery</option><option>KG 1</option><option>KG 2</option><option>Basic 1</option><option>Basic 2</option><option>Basic 3</option><option>Basic 4</option><option>Basic 5</option><option>Basic 6</option><option>JHS 1</option><option>JHS 2</option><option>JHS 3</option></select>
+          <select id="adm-class">
+            <option value="Early Childhood">Early Childhood</option>
+            <option value="Primary 1">Primary 1</option>
+            <option value="Primary 2">Primary 2</option>
+            <option value="Primary 3">Primary 3</option>
+            <option value="Primary 4">Primary 4</option>
+            <option value="Primary 5">Primary 5</option>
+            <option value="Primary 6">Primary 6</option>
+            <option value="JHS 1">JHS 1</option>
+            <option value="JHS 2">JHS 2</option>
+            <option value="JHS 3">JHS 3</option>
+          </select>
         </div>
         <div class="form-field">
-          <label>House</label>
-          <select id="adm-house"><option>-- Select House --</option><option>LivingStone</option><option>Nkrumah</option><option>Aggrey</option><option>Guggisberg</option></select>
+          <label>Previous School (If any)</label>
+          <input type="text" id="adm-prev-school" placeholder="Name of previous school attended">
+        </div>
+        
+        <div style="grid-column:1/-1;margin-top:10px">
+          <h3 style="color:var(--blue-dark);font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-users"></i> Parent / Guardian Details</h3>
         </div>
         <div class="form-field">
-          <label>Academic Year *</label>
-          <select id="adm-year"><option>2025/2026</option><option>2024/2025</option></select>
+          <label>Parent/Guardian Full Name *</label>
+          <input type="text" id="adm-parent-name" placeholder="Enter parent full name">
         </div>
-        <div class="form-field" style="grid-column:1/-1">
-          <label><i class="fas fa-camera"></i> Passport Photo / Picture</label>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="flex:1">
-              <input type="file" id="adm-picture" accept="image/*" onchange="previewAdmPicture(this)" style="border:1.5px solid var(--gray-200);border-radius:6px;padding:8px;width:100%;font-size:12px;cursor:pointer">
-              <div style="font-size:10px;color:var(--gray-400);margin-top:4px">Supported: JPG, PNG, GIF (Max 5MB)</div>
-            </div>
+        <div class="form-field">
+          <label>Contact Phone Number *</label>
+          <input type="tel" id="adm-parent-phone" placeholder="e.g. +233 24 000 0000">
+        </div>
+        <div class="form-field">
+          <label>Email Address</label>
+          <input type="email" id="adm-parent-email" placeholder="e.g. parent@email.com">
+        </div>
+        <div class="form-field">
+          <label>Residential Address</label>
+          <input type="text" id="adm-parent-address" placeholder="Enter house number / area">
+        </div>
+        <div class="form-field" style="display:flex;align-items:center;gap:12px;margin-top:16px">
+          <div>
+            <label style="cursor:pointer;background:var(--gray-100);padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;color:var(--blue-dark);border:1.5px dashed var(--gray-300)" for="adm-pic-input"><i class="fas fa-upload"></i> Upload Passport Photo</label>
+            <input type="file" id="adm-pic-input" accept="image/*" style="display:none" onchange="previewAdmPic(event)">
+          </div>
+          <div>
             <div id="adm-pic-preview" style="width:80px;height:100px;background:var(--gray-100);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:32px;overflow:hidden;flex-shrink:0"><i class="fas fa-camera"></i></div>
           </div>
         </div>
@@ -3480,8 +3457,8 @@ function admissionsModule() {
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        ${admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('')}
+      <tbody id="pending-admissions-tbody">
+        ${admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('')}
       </tbody>
     </table>
   </div>
@@ -3501,8 +3478,8 @@ function admissionsModule() {
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        ${admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('')}
+      <tbody id="approved-admissions-tbody">
+        ${admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('')}
       </tbody>
     </table>
   </div>
@@ -3521,8 +3498,8 @@ function admissionsModule() {
           <th>Date</th>
         </tr>
       </thead>
-      <tbody>
-        ${admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('')}
+      <tbody id="rejected-admissions-tbody">
+        ${admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('')}
       </tbody>
     </table>
   </div>
@@ -3532,6 +3509,34 @@ function admissionsModule() {
 function toggleAdmForm() {
   const form = document.getElementById('adm-form-wrap');
   if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function filterAdmissions() {
+  const searchInput = document.getElementById('adm-search');
+  const searchText = (searchInput ? searchInput.value : '').toLowerCase();
+
+  const pendingTbody = document.getElementById('pending-admissions-tbody');
+  const approvedTbody = document.getElementById('approved-admissions-tbody');
+  const rejectedTbody = document.getElementById('rejected-admissions-tbody');
+
+  const pending = admissionsData.filter(a => a.status === 'Pending' && (!searchText || a.name.toLowerCase().includes(searchText) || a.adm_id.toLowerCase().includes(searchText) || (a.parent_name && a.parent_name.toLowerCase().includes(searchText))));
+  const approved = admissionsData.filter(a => a.status === 'Approved' && (!searchText || a.name.toLowerCase().includes(searchText) || a.adm_id.toLowerCase().includes(searchText) || (a.parent_name && a.parent_name.toLowerCase().includes(searchText))));
+  const rejected = admissionsData.filter(a => a.status === 'Rejected' && (!searchText || a.name.toLowerCase().includes(searchText) || a.adm_id.toLowerCase().includes(searchText) || (a.parent_name && a.parent_name.toLowerCase().includes(searchText))));
+
+  if (pendingTbody) {
+    pendingTbody.innerHTML = pending.length === 0 ? '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No pending applications found</td></tr>' :
+      pending.map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td>' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class="fas fa-hourglass-half"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class="fas fa-times"></i> Reject</button></div></td></tr>').join('');
+  }
+
+  if (approvedTbody) {
+    approvedTbody.innerHTML = approved.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray-400)">No approved applications found</td></tr>' :
+      approved.map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class="fas fa-check-circle"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class="fas fa-print"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class="fas fa-book"></i> Enroll</button></div></td></tr>').join('');
+  }
+
+  if (rejectedTbody) {
+    rejectedTbody.innerHTML = rejected.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray-400)">No rejected applications found</td></tr>' :
+      rejected.map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class="fas fa-times-circle"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('');
+  }
 }
 
 function generateStudentID(classApplying, index) {
@@ -4482,6 +4487,42 @@ function submitStudentEnrollment() {
   }, 800);
 }
 
+function viewAdmissionDetail(admId) {
+  const a = admissionsData.find(adm => adm.adm_id === admId);
+  if (!a) return;
+  const modalHtml = `
+    <div class="modal-overlay" onclick="document.querySelector('.modal-overlay')?.remove()">
+      <div class="card" style="max-width:600px;margin:auto" onclick="event.stopPropagation()">
+        <div class="card-hdr" style="display:flex;justify-content:space-between;align-items:center">
+          <span class="card-title"><i class="fas fa-file-alt"></i> Admission Application Details</span>
+          <button class="btn btn-icon" onclick="document.querySelector('.modal-overlay')?.remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;padding:20px;font-size:13px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="av av-lg av-blue">${(a.name || 'A')[0]}</div>
+            <div>
+              <div style="font-size:16px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name || '')}</div>
+              <div style="color:var(--gray-500)">ID: ${escapeHtml(a.adm_id || '')} | Status: <span class="badge ${a.status === 'Pending' ? 'b-warning' : (a.status === 'Approved' ? 'b-success' : 'b-danger')}">${escapeHtml(a.status || '')}</span></div>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--gray-200);margin:8px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div><span style="color:var(--gray-500)">Date of Birth:</span> <strong>${escapeHtml(a.dob || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Gender:</span> <strong>${escapeHtml(a.gender || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Class Applying:</span> <strong>${escapeHtml(a.class_applying || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Date Applied:</span> <strong>${escapeHtml(a.created || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Parent Name:</span> <strong>${escapeHtml(a.parent_name || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Parent Phone:</span> <strong>${escapeHtml(a.parent_phone || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Parent Email:</span> <strong>${escapeHtml(a.parent_email || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Address:</span> <strong>${escapeHtml(a.address || 'N/A')}</strong></div>
+          </div>
+          <div style="margin-top:10px"><span style="color:var(--gray-500)">Notes:</span> <p style="background:var(--gray-50);padding:10px;border-radius:6px;margin-top:4px">${escapeHtml(a.notes || 'None')}</p></div>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
 function viewStudent(studentId) {
   const student = enrolledStudents.find(s => s.student_id === studentId);
   if (!student) return;
@@ -4701,7 +4742,7 @@ function updateStudentTable(students) {
 function studentTableRowHtml(s, i, isAdmin) {
   const studentId = escapeAttr(s.student_id);
   const actions = '<details class="row-action-menu"><summary title="Student actions"><i class="fas fa-bars"></i></summary><div class="row-action-list"><button onclick="viewStudent(\'' + studentId + '\')"><i class="fas fa-eye"></i> View</button>' + (isAdmin ? '<button onclick="editStudent(\'' + studentId + '\')"><i class="fas fa-edit"></i> Edit</button><button class="danger" onclick="withdrawStudent(\'' + studentId + '\')"><i class="fas fa-user-slash"></i> Withdraw</button>' : '') + '</div></details>';
-  return '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + (s.avatar_color || 'blue') + '">' + (s.name || 'S')[0] + '</div><span style="font-weight:600">' + escapeHtml(s.name || '') + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td><span class="badge ' + ((s.gender_abbr === 'F' || s.gender === 'Female') ? 'b-purple' : 'b-info') + '">' + escapeHtml(s.gender || '') + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + escapeHtml(s.dob || '') + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + escapeHtml(s.attendance || '') + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + escapeHtml(s.fees_status || '') + '</span></td><td><span class="badge ' + (s.status === 'Withdrawn' ? 'b-danger' : 'b-success') + '">' + escapeHtml(s.status || 'Active') + '</span></td><td class="student-actions-cell">' + actions + '</td></tr>';
+  return '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'.student-actions-cell\') && !event.target.closest(\'details\')) viewStudent(\'' + studentId + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + (s.avatar_color || 'blue') + '">' + (s.name || 'S')[0] + '</div><span style="font-weight:600">' + escapeHtml(s.name || '') + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td><span class="badge ' + ((s.gender_abbr === 'F' || s.gender === 'Female') ? 'b-purple' : 'b-info') + '">' + escapeHtml(s.gender || '') + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + escapeHtml(s.dob || '') + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + escapeHtml(s.attendance || '') + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + escapeHtml(s.fees_status || '') + '</span></td><td><span class="badge ' + (s.status === 'Withdrawn' ? 'b-danger' : 'b-success') + '">' + escapeHtml(s.status || 'Active') + '</span></td><td class="student-actions-cell">' + actions + '</td></tr>';
 }
 
 function withdrawStudent(studentId) {
@@ -4728,7 +4769,7 @@ function restoreStudent(studentId) {
 
 function viewWithdrawnStudents() {
   const withdrawn = getWithdrawnStudents();
-  const rows = withdrawn.length ? withdrawn.map((s, i) => '<tr><td>' + (i + 1) + '</td><td>' + escapeHtml(s.name || '') + '</td><td>' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td>' + escapeHtml(s.gender || '') + '</td><td>' + escapeHtml(s.dob || '') + '</td><td>' + escapeHtml(s.parent_name || 'Not provided') + '</td><td>' + escapeHtml(s.parent_phone || 'Not provided') + '</td><td>' + escapeHtml(s.withdrawn_date || '') + '</td><td><button class="btn btn-secondary btn-xs" onclick="viewStudent(\'' + escapeAttr(s.student_id) + '\')">View</button><button class="btn btn-primary btn-xs" onclick="restoreStudent(\'' + escapeAttr(s.student_id) + '\')" style="margin-left:6px">Restore</button></td></tr>').join('') : '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No withdrawn students</td></tr>';
+  const rows = withdrawn.length ? withdrawn.map((s, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewStudent(\'' + escapeAttr(s.student_id) + '\')"><td>' + (i + 1) + '</td><td>' + escapeHtml(s.name || '') + '</td><td>' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td>' + escapeHtml(s.gender || '') + '</td><td>' + escapeHtml(s.dob || '') + '</td><td>' + escapeHtml(s.parent_name || 'Not provided') + '</td><td>' + escapeHtml(s.parent_phone || 'Not provided') + '</td><td>' + escapeHtml(s.withdrawn_date || '') + '</td><td><button class="btn btn-secondary btn-xs" onclick="viewStudent(\'' + escapeAttr(s.student_id) + '\')">View</button><button class="btn btn-primary btn-xs" onclick="restoreStudent(\'' + escapeAttr(s.student_id) + '\')" style="margin-left:6px">Restore</button></td></tr>').join('') : '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No withdrawn students</td></tr>';
   document.getElementById('main-content').innerHTML = hdr('Withdrawn Students', 'Students withdrawn from active class lists', 'Students') + `
   <div class="toolbar"><button class="btn btn-secondary" onclick="navTo('students')"><i class="fas fa-arrow-left"></i> Back to Students</button></div>
   <div class="card records-table-card">
@@ -4851,7 +4892,7 @@ function updateTeacherCards(teachers) {
   }
 
   container.innerHTML = teachers.map((t) => `
-    <div class="card" style="cursor:pointer">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewTeacherProfile('${t.teacher_id}')">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}">${t.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>'}</div>
         <div>
@@ -4894,7 +4935,7 @@ function filterTeachersManagement() {
   }
 
   container.innerHTML = filtered.map((t) => `
-    <div class="card" style="cursor:pointer">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewTeacherProfile('${t.teacher_id}')">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}"><i class="fas fa-user"></i></div>
         <div style="flex:1">
@@ -5297,7 +5338,7 @@ function teachersModule() {
   ` : ''}
   <div class="g3">
     ${filteredTeachers.map((t) => `
-    <div class="card" style="cursor:pointer">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewTeacherProfile('${t.teacher_id}')">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}">${t.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>'}</div>
         <div>
@@ -5332,7 +5373,7 @@ function teachersManagementModule() {
   </div>
   <div class="g3">
     ${activeTeachers.map((t) => `
-    <div class="card" style="cursor:pointer">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewTeacherProfile('${t.teacher_id}')">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}"><i class="fas fa-user"></i></div>
         <div style="flex:1">
@@ -5538,10 +5579,11 @@ function updateParentTable(parents) {
     return;
   }
 
-  tbody.innerHTML = parents.map((p, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
+  tbody.innerHTML = parents.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
 }
 
 // PARENTS MODULE
+// -----------------------------------
 // -----------------------------------
 function parentsModule() {
   return hdr('Parents Module', 'Parent/Guardian records and communication', 'Parents') + `
@@ -5552,7 +5594,7 @@ function parentsModule() {
     <table class="tbl">
       <thead><tr><th>#</th><th>Parent/Guardian</th><th>Children</th><th>Contact</th><th>Email</th><th>Fees Status</th><th>Actions</th></tr></thead>
       <tbody>
-        ${parentsData.map((p, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('')}
+        ${parentsData.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('')}
       </tbody>
     </table>
   </div>`;
@@ -5843,7 +5885,7 @@ function updateClassCards(classes) {
   }
 
   container.innerHTML = classes.map((c) => `
-    <div class="card">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewClassStudents('${c.class_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
       </div>
@@ -5885,7 +5927,7 @@ function classesModule() {
   ${!isAdmin ? `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>` : ''}
   <div class="g3 mb20">
     ${visibleClasses.map((c) => `
-    <div class="card">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewClassStudents('${c.class_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
       </div>
@@ -5936,7 +5978,7 @@ function subjectsModule() {
   `}
   <div class="g4">
     ${filteredSubjects.map(s => `
-    <div class="card">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button') && !event.target.closest('.subject-menu-wrapper')) viewSubject('${s.subject_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:32px">${s.icon}</div>
         ${isAdmin ? `
@@ -6171,7 +6213,7 @@ function updateSubjectDisplay(filteredSubjects) {
   }
 
   gridContainer.innerHTML = filteredSubjects.map(s => `
-    <div class="card">
+    <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button') && !event.target.closest('.subject-menu-wrapper')) viewSubject('${s.subject_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:32px">${s.icon}</div>
         ${isAdmin ? `
@@ -8406,6 +8448,7 @@ function editGrade(assignmentId, student) {
 
 function openGradeSubmissionForm(assignmentId, student, index) {
   const assignment = ASSIGNMENTS_DATA[assignmentId];
+  const sub = (assignment && assignment.submissions) ? (assignment.submissions[student] || {}) : {};
 
   const formHTML = `
     <div style="max-width:600px;background:white;border-radius:12px;overflow:hidden">
@@ -8419,14 +8462,14 @@ function openGradeSubmissionForm(assignmentId, student, index) {
           <div class="f-field" style="margin-bottom:16px">
             <label>Raw Score</label>
             <div style="position:relative">
-              <input type="number" id="grade-score" min="0" max="${assignment.maxScore}" placeholder="0" required style="font-size:24px;padding:12px;text-align:center;font-weight:700">
+              <input type="number" id="grade-score" min="0" max="${assignment.maxScore}" placeholder="0" value="${sub.score !== undefined ? sub.score : ''}" required style="font-size:24px;padding:12px;text-align:center;font-weight:700">
               <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--gray-500)">/ ${assignment.maxScore}</div>
             </div>
           </div>
           
           <div class="f-field" style="margin-bottom:16px">
             <label>Feedback for Student</label>
-            <textarea id="grade-feedback" placeholder="Provide constructive feedback..." style="min-height:100px"></textarea>
+            <textarea id="grade-feedback" placeholder="Provide constructive feedback..." style="min-height:100px">${sub.feedback || ''}</textarea>
           </div>
           
           <div style="padding:12px;background:var(--blue-xpale);border-radius:6px;border-left:4px solid var(--blue-main);margin-bottom:16px;font-size:12px;color:var(--blue-dark)">
@@ -10762,8 +10805,8 @@ function settingsModule() {
 
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Academic Calendar</span></div>
-        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year"><option>2024/2025</option><option>2025/2026</option><option>2026/2027</option></select></div><div class="f-field"><label>Current Term</label><select id="current-term"><option>Term 1</option><option>Term 2</option><option>Term 3</option></select></div></div>
-        <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="2025-01-13"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="2025-04-11"></div></div>
+        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year">${['2024/2025', '2025/2026', '2026/2027'].map(y => `<option ${y === SETTINGS_DATA.academic.academicYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="f-field"><label>Current Term</label><select id="current-term">${['Term 1', 'Term 2', 'Term 3'].map(t => `<option ${t === SETTINGS_DATA.academic.currentTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div>
+        <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="${SETTINGS_DATA.academic.termStartDate}"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="${SETTINGS_DATA.academic.termEndDate}"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
           ${[['A', '80–100', 'Excellent'], ['B', '70–79', 'Very Good'], ['C', '60–69', 'Good'], ['D', '50–59', 'Average'], ['F', '0–49', 'Fail']].map(([g, r, l]) => `
@@ -10785,34 +10828,25 @@ function settingsModule() {
       <div class="f-row">
         <div class="f-field"><label>Maintenance Mode</label>
           <select id="maintenance-mode">
-            <option value="false">Disabled</option>
-            <option value="true">Enabled</option>
+            <option value="false" ${SETTINGS_DATA.system.maintenanceMode === false || SETTINGS_DATA.system.maintenanceMode === 'false' ? 'selected' : ''}>Disabled</option>
+            <option value="true" ${SETTINGS_DATA.system.maintenanceMode === true || SETTINGS_DATA.system.maintenanceMode === 'true' ? 'selected' : ''}>Enabled</option>
           </select>
         </div>
         <div class="f-field"><label>Backup Frequency</label>
           <select id="backup-frequency">
-            <option>Hourly</option>
-            <option>Daily</option>
-            <option>Weekly</option>
-            <option>Monthly</option>
+            ${['Hourly', 'Daily', 'Weekly', 'Monthly'].map(f => `<option ${f === SETTINGS_DATA.system.backupFrequency ? 'selected' : ''}>${f}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-field"><label>Max Upload Size</label>
           <select id="max-upload">
-            <option>10MB</option>
-            <option>50MB</option>
-            <option>100MB</option>
-            <option>500MB</option>
+            ${['10MB', '50MB', '100MB', '500MB'].map(s => `<option ${s === SETTINGS_DATA.system.maxUploadSize ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </div>
         <div class="f-field"><label>System Language</label>
           <select id="system-language">
-            <option>English</option>
-            <option>Twi</option>
-            <option>Ga</option>
-            <option>French</option>
+            ${['English', 'Twi', 'Ga', 'French'].map(l => `<option ${l === SETTINGS_DATA.system.language ? 'selected' : ''}>${l}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -10827,34 +10861,25 @@ function settingsModule() {
       <div class="f-row">
         <div class="f-field"><label>Password Policy</label>
           <select id="password-policy">
-            <option>Weak</option>
-            <option>Medium</option>
-            <option>Strong</option>
-            <option>Very Strong</option>
+            ${['Weak', 'Medium', 'Strong', 'Very Strong'].map(p => `<option ${p === SETTINGS_DATA.security.passwordPolicy ? 'selected' : ''}>${p}</option>`).join('')}
           </select>
         </div>
         <div class="f-field"><label>Session Timeout</label>
           <select id="session-timeout">
-            <option>15 minutes</option>
-            <option>30 minutes</option>
-            <option>1 hour</option>
-            <option>2 hours</option>
+            ${['15 minutes', '30 minutes', '1 hour', '2 hours'].map(t => `<option ${t === SETTINGS_DATA.security.sessionTimeout ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-field"><label>Two-Factor Authentication</label>
           <select id="two-factor">
-            <option value="true">Enabled</option>
-            <option value="false">Disabled</option>
+            <option value="true" ${SETTINGS_DATA.security.twoFactorAuth === true || SETTINGS_DATA.security.twoFactorAuth === 'true' ? 'selected' : ''}>Enabled</option>
+            <option value="false" ${SETTINGS_DATA.security.twoFactorAuth === false || SETTINGS_DATA.security.twoFactorAuth === 'false' ? 'selected' : ''}>Disabled</option>
           </select>
         </div>
         <div class="f-field"><label>API Key Rotation</label>
           <select id="api-rotation">
-            <option>30 days</option>
-            <option>60 days</option>
-            <option>90 days</option>
-            <option>180 days</option>
+            ${['30 days', '60 days', '90 days', '180 days'].map(r => `<option ${r === SETTINGS_DATA.security.apiKeyRotation ? 'selected' : ''}>${r}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -10869,33 +10894,25 @@ function settingsModule() {
       <div class="f-row">
         <div class="f-field"><label>Theme</label>
           <select id="theme-select">
-            <option>Light</option>
-            <option>Dark</option>
-            <option>Auto</option>
+            ${['Light', 'Dark', 'Auto'].map(t => `<option ${t === SETTINGS_DATA.appearance.theme ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
         </div>
         <div class="f-field"><label>Accent Color</label>
           <select id="accent-color">
-            <option>Blue</option>
-            <option>Purple</option>
-            <option>Green</option>
-            <option>Orange</option>
+            ${['Blue', 'Purple', 'Green', 'Orange'].map(c => `<option ${c === SETTINGS_DATA.appearance.accentColor ? 'selected' : ''}>${c}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="f-row">
         <div class="f-field"><label>Font Size</label>
           <select id="font-size">
-            <option>Small</option>
-            <option>Normal</option>
-            <option>Large</option>
-            <option>Extra Large</option>
+            ${['Small', 'Normal', 'Large', 'Extra Large'].map(f => `<option ${f === SETTINGS_DATA.appearance.fontSize ? 'selected' : ''}>${f}</option>`).join('')}
           </select>
         </div>
         <div class="f-field"><label>Compact Mode</label>
           <select id="compact-mode">
-            <option value="false">Disabled</option>
-            <option value="true">Enabled</option>
+            <option value="false" ${SETTINGS_DATA.appearance.compactMode === false || SETTINGS_DATA.appearance.compactMode === 'false' ? 'selected' : ''}>Disabled</option>
+            <option value="true" ${SETTINGS_DATA.appearance.compactMode === true || SETTINGS_DATA.appearance.compactMode === 'true' ? 'selected' : ''}>Enabled</option>
           </select>
         </div>
       </div>
@@ -10909,19 +10926,19 @@ function settingsModule() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-bell"></i> Notification Preferences</span></div>
       <div style="display:grid;gap:12px">
         <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
-          <input type="checkbox" id="email-notif" checked style="width:20px;height:20px;cursor:pointer">
+          <input type="checkbox" id="email-notif" ${SETTINGS_DATA.notifications.emailNotifications ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer">
           <label style="flex:1;margin-left:12px;cursor:pointer">Email Notifications</label>
         </div>
         <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
-          <input type="checkbox" id="sms-notif" style="width:20px;height:20px;cursor:pointer">
+          <input type="checkbox" id="sms-notif" ${SETTINGS_DATA.notifications.smsNotifications ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer">
           <label style="flex:1;margin-left:12px;cursor:pointer">SMS Notifications</label>
         </div>
         <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
-          <input type="checkbox" id="push-notif" checked style="width:20px;height:20px;cursor:pointer">
+          <input type="checkbox" id="push-notif" ${SETTINGS_DATA.notifications.pushNotifications ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer">
           <label style="flex:1;margin-left:12px;cursor:pointer">Push Notifications</label>
         </div>
         <div style="display:flex;align-items:center;padding:12px;background:var(--gray-50);border-radius:8px">
-          <input type="checkbox" id="daily-digest" checked style="width:20px;height:20px;cursor:pointer">
+          <input type="checkbox" id="daily-digest" ${SETTINGS_DATA.notifications.dailyDigest ? 'checked' : ''} style="width:20px;height:20px;cursor:pointer">
           <label style="flex:1;margin-left:12px;cursor:pointer">Daily Digest Email</label>
         </div>
       </div>
@@ -11443,7 +11460,7 @@ function staffModule() {
       <thead><tr><th>#</th><th>Staff Name</th><th>Category</th><th>Department</th><th>Position</th><th>Phone</th><th>Join Date</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody id="staff-list-body">
         ${Object.values(STAFF_DATA).map((staff, i) => `
-        <tr class="staff-row" data-category="${staff.category}" data-name="${staff.name.toLowerCase()}">
+        <tr class="staff-row" data-category="${staff.category}" data-name="${staff.name.toLowerCase()}" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewStaffDetail('${staff.id}')">
           <td style="color:var(--gray-400);font-size:11px">${i + 1}</td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
@@ -11552,7 +11569,7 @@ async function refreshStaffTable() {
 
   const colors = ['blue','purple','gold','green','teal'];
   tbody.innerHTML = res.data.map((s, i) => `
-    <tr class="staff-row" data-category="${s.category}" data-name="${s.name.toLowerCase()}">
+    <tr class="staff-row" data-category="${s.category}" data-name="${s.name.toLowerCase()}" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewStaffDetailAPI(${s.id})">
       <td style="color:var(--gray-400);font-size:11px">${i + 1}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
@@ -15547,7 +15564,7 @@ function alumniDirectory() {
 
   <div class="g3" id="alumni-grid">
     ${Object.values(ALUMNI_DATA).map(a => `
-    <div class="card alumni-card" data-name="${a.name.toLowerCase()}" data-year="${a.classYear}" data-profession="${a.profession.toLowerCase()}">
+    <div class="card alumni-card" data-name="${a.name.toLowerCase()}" data-year="${a.classYear}" data-profession="${a.profession.toLowerCase()}" style="cursor:pointer" onclick="if(!event.target.closest('button')) showAlumniProfile('${a.id}')">
       <div style="display:flex;gap:12px;margin-bottom:14px">
         <div class="av av-lg av-${a.avatarColor}">${a.avatar}</div>
         <div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${a.name}</div>
@@ -17432,7 +17449,28 @@ function createRecord(type) {
 
 // Edit record
 function editRecord(id, type) {
-  const currentValue = prompt(`Edit ${type}:`, '');
+  let defaultVal = '';
+  if (type === 'Student') {
+    const student = enrolledStudents.find(s => s.student_id === id);
+    if (student) defaultVal = student.name;
+  } else if (type === 'Teacher') {
+    const teacher = teachersData.find(t => t.teacher_id === id);
+    if (teacher) defaultVal = teacher.name;
+  } else if (type === 'Parent') {
+    const parent = parentsData.find(p => p.parent_id === id);
+    if (parent) defaultVal = parent.name;
+  } else if (type === 'Class') {
+    const cls = classesData.find(c => c.class_id === id);
+    if (cls) defaultVal = cls.name;
+  } else if (type === 'Subject') {
+    const subj = subjectsData.find(s => s.subject_id === id);
+    if (subj) defaultVal = subj.name;
+  } else if (type === 'Admission') {
+    const adm = admissionsData.find(a => a.adm_id === id);
+    if (adm) defaultVal = adm.name;
+  }
+
+  const currentValue = prompt(`Edit ${type}:`, defaultVal);
   if (currentValue !== null) {
     showToast(`<i class="fas fa-check-circle"></i> ${type} updated!`, 'success');
     location.reload();

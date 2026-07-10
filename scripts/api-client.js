@@ -3,7 +3,11 @@
 // Replaces in-memory data with real backend calls
 // ═══════════════════════════════════════════════════════════════
 
-const API_BASE = '/SCH/api';
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const baseDir = path.substring(0, path.lastIndexOf('/'));
+    return baseDir + '/api';
+})();
 
 // ── Core fetch wrapper ────────────────────────────────────────
 async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -289,6 +293,61 @@ async function logoutAPI() {
 // MONOLITHIC APP OVERRIDES & SYNC HOOKS
 // ═══════════════════════════════════════════════════════════════
 
+// Helper to extract a reliable database integer ID from a student object/ID
+function getStudentDbId(studentId) {
+    if (!studentId) return 0;
+    if (Number.isInteger(studentId)) return studentId;
+    const num = parseInt(studentId, 10);
+    if (!isNaN(num) && String(num) === String(studentId)) return num;
+
+    const student = enrolledStudents.find(s => s.student_id === studentId || s.id == studentId);
+    if (student && student.id) return student.id;
+
+    if (typeof studentId === 'string' && studentId.includes('-')) {
+        const parts = studentId.split('-');
+        const parsed = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(parsed)) return parsed;
+    }
+    const clean = parseInt(String(studentId).replace(/[^0-9]/g, ''), 10);
+    return isNaN(clean) ? 0 : clean;
+}
+
+// Helper to extract a reliable database integer ID from a teacher/staff object/ID
+function getTeacherDbId(teacherId) {
+    if (!teacherId) return 0;
+    if (Number.isInteger(teacherId)) return teacherId;
+    const num = parseInt(teacherId, 10);
+    if (!isNaN(num) && String(num) === String(teacherId)) return num;
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId || t.id == teacherId);
+    if (teacher && teacher.id) return teacher.id;
+
+    if (typeof teacherId === 'string') {
+        const clean = parseInt(teacherId.replace('T', ''), 10);
+        if (!isNaN(clean)) return clean;
+    }
+    const clean = parseInt(String(teacherId).replace(/[^0-9]/g, ''), 10);
+    return isNaN(clean) ? 0 : clean;
+}
+
+// Helper to extract a reliable database integer ID from an admission object/ID
+function getAdmissionDbId(admId) {
+    if (!admId) return 0;
+    if (Number.isInteger(admId)) return admId;
+    const num = parseInt(admId, 10);
+    if (!isNaN(num) && String(num) === String(admId)) return num;
+
+    const adm = admissionsData.find(a => a.adm_id === admId || a.id == admId);
+    if (adm && adm.id) return adm.id;
+
+    if (typeof admId === 'string') {
+        const clean = parseInt(admId.replace('ADM', ''), 10);
+        if (!isNaN(clean)) return clean;
+    }
+    const clean = parseInt(String(admId).replace(/[^0-9]/g, ''), 10);
+    return isNaN(clean) ? 0 : clean;
+}
+
 // Sync utility to populate global arrays with data from backend MySQL APIs
 async function syncAllDataFromBackend() {
     console.log("Syncing all data with MySQL backend...");
@@ -373,11 +432,15 @@ async function syncAllDataFromBackend() {
                 parent_id: 'P' + String(p.id).padStart(3, '0'),
                 id: p.id,
                 name: p.name,
-                email: p.email || '',
+                contact_person: p.name,
+                gender: 'Male',
+                avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][p.id % 5],
                 phone: p.phone || '',
+                email: p.email || '',
                 address: p.address || '',
-                student: p.student_name || '',
-                student_id: p.student_id || ''
+                children: p.children && p.children.length ? p.children.map(c => c.student_name + ' (' + (c.class_name || 'Not Assigned') + ')').join(', ') : 'None',
+                fees_status: 'All Paid',
+                occupation: 'Parent'
             })));
         }
     } catch (e) { console.error("Error syncing parents:", e); }
@@ -389,17 +452,17 @@ async function syncAllDataFromBackend() {
             admissionsData.splice(0, admissionsData.length, ...res.data.map(a => ({
                 adm_id: 'ADM' + String(a.id).padStart(3, '0'),
                 id: a.id,
-                name: a.student_name,
+                name: a.applicant_name,
                 gender: a.gender || 'Male',
                 dob: a.dob || '2015-01-01',
-                class_applying: a.class_level || '',
+                class_applying: a.class_applying || '',
                 address: a.address || '',
-                parent_name: a.guardian_name || '',
-                parent_phone: a.guardian_phone || '',
-                parent_email: a.guardian_email || '',
+                parent_name: a.parent_name || '',
+                parent_phone: a.parent_phone || '',
+                parent_email: a.parent_email || '',
                 status: a.status || 'Pending',
                 notes: a.notes || '',
-                date: a.created_at ? a.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
+                created: a.applied_date || new Date().toISOString().split('T')[0]
             })));
         }
     } catch (e) { console.error("Error syncing admissions:", e); }
@@ -953,10 +1016,9 @@ saveStudentChanges = async function(studentId) {
     return;
   }
 
-  const student = enrolledStudents.find(s => s.student_id === studentId);
-  if (!student) return;
+  const id = getStudentDbId(studentId);
+  if (!id) return;
 
-  const id = student.id;
   const res = await API.students.update(id, {
     name,
     student_class: studentClass,
@@ -977,10 +1039,10 @@ saveStudentChanges = async function(studentId) {
 
 withdrawStudent = async function(studentId) {
   if (!confirm('Are you sure you want to withdraw this student?')) return;
-  const student = enrolledStudents.find(s => s.student_id === studentId);
-  if (!student) return;
+  const id = getStudentDbId(studentId);
+  if (!id) return;
   
-  const res = await API.students.update(student.id, { status: 'Withdrawn' });
+  const res = await API.students.update(id, { status: 'Withdrawn' });
   if (res && res.success) {
       showToast('<i class="fas fa-check-circle"></i> Student withdrawn', 'success');
       await syncAllDataFromBackend();
@@ -991,10 +1053,10 @@ withdrawStudent = async function(studentId) {
 };
 
 restoreStudent = async function(studentId) {
-  const student = enrolledStudents.find(s => s.student_id === studentId);
-  if (!student) return;
+  const id = getStudentDbId(studentId);
+  if (!id) return;
   
-  const res = await API.students.update(student.id, { status: 'Active' });
+  const res = await API.students.update(id, { status: 'Active' });
   if (res && res.success) {
       showToast('<i class="fas fa-check-circle"></i> Student restored', 'success');
       await syncAllDataFromBackend();
@@ -1056,8 +1118,8 @@ submitTeacherForm = async function() {
 };
 
 submitEditTeacher = async function(teacherId) {
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return showToast('Teacher not found', 'error');
+  const id = getTeacherDbId(teacherId);
+  if (!id) return showToast('Teacher not found', 'error');
 
   const name = document.getElementById('teacher-name')?.value;
   const subject = document.getElementById('teacher-subject')?.value;
@@ -1073,7 +1135,7 @@ submitEditTeacher = async function(teacherId) {
     return;
   }
 
-  const res = await API.staff.update(teacher.id, {
+  const res = await API.staff.update(id, {
     name,
     email,
     phone,
@@ -1097,10 +1159,10 @@ submitEditTeacher = async function(teacherId) {
 
 deleteTeacher = async function(teacherId) {
   if (!confirm('Are you sure you want to delete this teacher? This cannot be undone.')) return;
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return;
+  const id = getTeacherDbId(teacherId);
+  if (!id) return;
 
-  const res = await API.staff.delete(teacher.id);
+  const res = await API.staff.delete(id);
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher deleted successfully!', 'success');
     await syncAllDataFromBackend();
@@ -1111,10 +1173,10 @@ deleteTeacher = async function(teacherId) {
 };
 
 archiveTeacher = async function(teacherId) {
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return;
+  const id = getTeacherDbId(teacherId);
+  if (!id) return;
 
-  const res = await API.staff.update(teacher.id, { status: 'Inactive' });
+  const res = await API.staff.update(id, { status: 'Inactive' });
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
     await syncAllDataFromBackend();
@@ -1125,10 +1187,10 @@ archiveTeacher = async function(teacherId) {
 };
 
 restoreTeacher = async function(teacherId) {
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return;
+  const id = getTeacherDbId(teacherId);
+  if (!id) return;
 
-  const res = await API.staff.update(teacher.id, { status: 'Active' });
+  const res = await API.staff.update(id, { status: 'Active' });
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
     await syncAllDataFromBackend();
@@ -1152,8 +1214,7 @@ submitClassForm = async function() {
     return;
   }
 
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  const tId = teacher ? teacher.id : null;
+  const tId = getTeacherDbId(teacherId) || null;
 
   const res = await API.classes.create({
     name,
@@ -1175,9 +1236,8 @@ submitClassForm = async function() {
 
 // ── ADMISSIONS ACTIONS OVERRIDES ────────────────────────
 approveAdmission = async function(admId, studentName) {
-  const adm = admissionsData.find(a => a.adm_id === admId);
-  if (!adm) return;
-  const id = adm.id;
+  const id = getAdmissionDbId(admId);
+  if (!id) return;
   const res = await API.admissions.updateStatus(id, 'Approved', 'Approved by administrator');
   if (res && res.success) {
       showToast('<i class="fas fa-check-circle"></i> Admission Approved!', 'success');
@@ -1190,9 +1250,8 @@ approveAdmission = async function(admId, studentName) {
 
 rejectAdmission = async function(admId) {
   if (!confirm('Are you sure you want to reject this application?')) return;
-  const adm = admissionsData.find(a => a.adm_id === admId);
-  if (!adm) return;
-  const id = adm.id;
+  const id = getAdmissionDbId(admId);
+  if (!id) return;
   const res = await API.admissions.updateStatus(id, 'Rejected', 'Rejected by administrator');
   if (res && res.success) {
       showToast('Application rejected.', 'info');
