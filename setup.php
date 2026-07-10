@@ -249,6 +249,31 @@ try {
     foreach ($settings as $k => $v) $ins->execute([$k,$v]);
     ok('Settings seeded ('.count($settings).' keys).');
 
+    // 15b. Seed Hero Slides
+    $slides = [
+        ['Glory Reign Preparatory School', 'Nurturing minds, building character, and shaping futures.', 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400"><rect width="800" height="400" fill="%231e3a8a"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="28" fill="%23ffffff">Welcome to Glory Reign School</text></svg>', 'Active']
+    ];
+    $insSlides = $pdo->prepare("INSERT INTO hero_slides (title, caption, image, status) VALUES (?,?,?,?)");
+    foreach ($slides as $s) $insSlides->execute($s);
+    ok('Hero slides seeded.');
+
+    // 15c. Seed News Articles
+    $news = [
+        ['📰', 'Glory Reign Launches Digital Campus Portal', 'Announcements', '2025-03-01', 'We are thrilled to launch our new fully persistent MySQL digital database portal supporting student enrollment and administration.', 'Published']
+    ];
+    $insNews = $pdo->prepare("INSERT INTO news_articles (icon, title, category, date, `desc`, status) VALUES (?,?,?,?,?,?)");
+    foreach ($news as $n) $insNews->execute($n);
+    ok('News articles seeded.');
+
+    // 15d. Seed Yearbooks
+    $yearbooks = [
+        ['2025', 'Class of 2025 Graduation', '#1e3a8a', 'Published', 52, 120, '{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}']
+    ];
+    $insYb = $pdo->prepare("INSERT INTO yearbooks (year, title, cover_img, status, total_grads, total_photos, data) VALUES (?,?,?,?,?,?,?)");
+    foreach ($yearbooks as $y) $insYb->execute($y);
+    ok('Yearbooks seeded.');
+
+
     // 16. Unique constraints for upserts
     $pdo->exec("ALTER TABLE student_scores ADD UNIQUE KEY uq_score (student_id, subject(100), term, academic_year)");
     $pdo->exec("ALTER TABLE attendance ADD UNIQUE KEY uq_attendance (student_id, attendance_date)");
@@ -257,7 +282,7 @@ try {
 
     // 17. Row counts
     $counts = [];
-    foreach (['users','classes','subjects','staff','students','student_scores','fees','events','notices','alumni','settings'] as $t) {
+    foreach (['users','classes','subjects','staff','students','student_scores','fees','events','notices','alumni','settings','hero_slides','news_articles','yearbooks'] as $t) {
         $counts[$t] = (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
     }
 

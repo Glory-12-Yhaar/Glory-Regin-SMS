@@ -1,4 +1,4 @@
-﻿-- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════════
 -- Glory Reign Preparatory School - Database Schema (DDL only)
 -- Seed data is handled by setup.php
 -- ═══════════════════════════════════════════════════════════════
@@ -44,6 +44,12 @@ CREATE TABLE IF NOT EXISTS `subjects` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(100) NOT NULL,
   `class_id` INT NOT NULL,
+  `icon` VARCHAR(100) DEFAULT NULL,
+  `teacher_id` INT DEFAULT NULL,
+  `type` ENUM('Core', 'Elective', 'Extracurricular') DEFAULT 'Core',
+  `classes` VARCHAR(255) DEFAULT NULL,
+  `hours` VARCHAR(50) DEFAULT NULL,
+  `description` TEXT DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -377,9 +383,6 @@ CREATE TABLE IF NOT EXISTS `admissions` (
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ───────────────────────────────────────────
--- TIMETABLE
--- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `timetable` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `class_id` INT NOT NULL,
@@ -389,9 +392,57 @@ CREATE TABLE IF NOT EXISTS `timetable` (
   `start_time` TIME NOT NULL,
   `end_time` TIME NOT NULL,
   `room` VARCHAR(50),
+  `period_label` VARCHAR(100) DEFAULT NULL,
+  `term` VARCHAR(50) DEFAULT 'Term 1, 2025',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
+-- ───────────────────────────────────────────
+-- HERO SLIDES
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `hero_slides` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `caption` TEXT,
+  `image` LONGTEXT NOT NULL,
+  `status` ENUM('Active', 'Draft') DEFAULT 'Active',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ───────────────────────────────────────────
+-- NEWS ARTICLES
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `news_articles` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `icon` VARCHAR(10),
+  `title` VARCHAR(255) NOT NULL,
+  `category` VARCHAR(100),
+  `date` DATE,
+  `desc` TEXT,
+  `status` ENUM('Published', 'Draft') DEFAULT 'Published',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ───────────────────────────────────────────
+-- YEARBOOKS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `yearbooks` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `year` VARCHAR(10) UNIQUE NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `cover_img` VARCHAR(255) DEFAULT '#1e3a8a',
+  `status` ENUM('Published', 'Draft') DEFAULT 'Draft',
+  `total_grads` INT DEFAULT 0,
+  `total_photos` INT DEFAULT 0,
+  `data` LONGTEXT,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ───────────────────────────────────────────
+-- ADDITIONAL RELATIONSHIPS
+-- ───────────────────────────────────────────
+ALTER TABLE `subjects` ADD CONSTRAINT `fk_subjects_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
 
 -- End of DDL. Seed data is inserted by setup.php.
