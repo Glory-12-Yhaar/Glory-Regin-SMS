@@ -37,9 +37,12 @@ if ($method === 'GET') {
     $totalCount = (int)$total->fetchColumn();
 
     $stmt = $db->prepare(
-        "SELECT id, staff_code, name, email, phone, category, department, position,
-                salary_grade, join_date, gender, status, performance, avatar
-         FROM staff WHERE $whereStr ORDER BY name ASC LIMIT $limit OFFSET $offset"
+        "SELECT s.id, s.staff_code, s.name, s.email, s.phone, s.category, s.department, s.position,
+                s.salary_grade, s.join_date, s.gender, s.status, s.performance, s.avatar,
+                t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.$whereStr ORDER BY s.name ASC LIMIT $limit OFFSET $offset"
     );
     $stmt->execute($params);
     jsonResponse([
@@ -66,34 +69,57 @@ if ($method === 'POST') {
     $seq       = str_pad((int)$countStmt->fetchColumn() + 1, 3, '0', STR_PAD_LEFT);
     $code      = $prefix . $seq;
 
-    $stmt = $db->prepare(
-        "INSERT INTO staff (staff_code,name,email,phone,category,department,position,
-                            qualifications,salary_grade,join_date,gender,dob,address,
-                            emergency_contact,emergency_phone,performance,status,avatar)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-    );
-    $stmt->execute([
-        $code,
-        htmlspecialchars(trim($body['name']),   ENT_QUOTES),
-        filter_var($body['email'], FILTER_SANITIZE_EMAIL),
-        $body['phone']             ?? null,
-        $body['category'],
-        $body['department']        ?? null,
-        $body['position']          ?? null,
-        $body['qualifications']    ?? null,
-        $body['salary_grade']      ?? null,
-        $body['join_date']         ?? null,
-        $body['gender'],
-        $body['dob']               ?? null,
-        $body['address']           ?? null,
-        $body['emergency_contact'] ?? null,
-        $body['emergency_phone']   ?? null,
-        $body['performance']       ?? null,
-        $body['status']            ?? 'Active',
-        $body['avatar']            ?? strtoupper(substr($body['name'], 0, 2)),
-    ]);
+    $db->beginTransaction();
+    try {
+        $stmt = $db->prepare(
+            "INSERT INTO staff (staff_code,name,email,phone,category,department,position,
+                                qualifications,salary_grade,join_date,gender,dob,address,
+                                emergency_contact,emergency_phone,performance,status,avatar)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+        );
+        $stmt->execute([
+            $code,
+            htmlspecialchars(trim($body['name']),   ENT_QUOTES),
+            filter_var($body['email'], FILTER_SANITIZE_EMAIL),
+            $body['phone']             ?? null,
+            $body['category'],
+            $body['department']        ?? null,
+            $body['position']          ?? null,
+            $body['qualifications']    ?? null,
+            $body['salary_grade']      ?? null,
+            $body['join_date']         ?? null,
+            $body['gender'],
+            $body['dob']               ?? null,
+            $body['address']           ?? null,
+            $body['emergency_contact'] ?? null,
+            $body['emergency_phone']   ?? null,
+            $body['performance']       ?? null,
+            $body['status']            ?? 'Active',
+            $body['avatar']            ?? strtoupper(substr($body['name'], 0, 2)),
+        ]);
+        $staffId = $db->lastInsertId();
 
-    jsonResponse(['success' => true, 'message' => 'Staff created', 'id' => $db->lastInsertId(), 'staff_code' => $code], 201);
+        if ($body['category'] === 'Teaching') {
+            $stmtTeacher = $db->prepare(
+                "INSERT INTO teachers (staff_id, subject, class_assigned, experience, schedule, avatar_color)
+                 VALUES (?, ?, ?, ?, ?, ?)"
+            );
+            $stmtTeacher->execute([
+                $staffId,
+                $body['subject']        ?? null,
+                $body['class_assigned'] ?? 'Not Assigned',
+                (int)($body['experience'] ?? 0),
+                $body['schedule']       ?? 'Mon-Fri',
+                $body['avatar_color']   ?? 'blue'
+            ]);
+        }
+
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'Staff created', 'id' => $staffId, 'staff_code' => $code], 201);
+    } catch (PDOException $e) {
+        $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Failed to create staff: ' . $e->getMessage()], 500);
+    }
 }
 
 jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);

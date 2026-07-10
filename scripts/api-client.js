@@ -1,4 +1,4 @@
-﻿// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // Glory Reign School — PHP API Client
 // Replaces in-memory data with real backend calls
 // ═══════════════════════════════════════════════════════════════
@@ -161,6 +161,45 @@ const API = {
         markRead: (id)   => apiRequest('/contact/index.php?id=' + id, 'PUT'),
         delete:   (id)   => apiRequest('/contact/index.php?id=' + id, 'DELETE'),
     },
+
+    // ── Subjects ─────────────────────────────────────────────
+    subjects: {
+        list:   ()          => apiRequest('/subjects/index.php'),
+        get:    (id)        => apiRequest('/subjects/index.php?id=' + id),
+        create: (data)      => apiRequest('/subjects/index.php', 'POST', data),
+        update: (id, data)  => apiRequest('/subjects/index.php?id=' + id, 'PUT', data),
+        delete: (id)        => apiRequest('/subjects/index.php?id=' + id, 'DELETE')
+    },
+
+    // ── Timetable ────────────────────────────────────────────
+    timetable: {
+        get:    ()          => apiRequest('/timetable/index.php'),
+        save:   (data)      => apiRequest('/timetable/index.php', 'POST', data),
+        delete: (className, term) => apiRequest('/timetable/index.php?' + new URLSearchParams({ class_name: className, term }), 'DELETE')
+    },
+
+    // ── Hero Slides ──────────────────────────────────────────
+    heroSlides: {
+        list:   ()          => apiRequest('/hero_slides/index.php'),
+        create: (data)      => apiRequest('/hero_slides/index.php', 'POST', data),
+        setActive: (id)     => apiRequest('/hero_slides/index.php', 'POST', { action: 'set_active', id }),
+        delete: (id)        => apiRequest('/hero_slides/index.php?id=' + id, 'DELETE')
+    },
+
+    // ── News ─────────────────────────────────────────────────
+    news: {
+        list:   ()          => apiRequest('/news/index.php'),
+        get:    (id)        => apiRequest('/news/index.php?id=' + id),
+        create: (data)      => apiRequest('/news/index.php', 'POST', data),
+        update: (id, data)  => apiRequest('/news/index.php?id=' + id, 'PUT', data),
+        delete: (id)        => apiRequest('/news/index.php?id=' + id, 'DELETE')
+    },
+
+    // ── Yearbook ─────────────────────────────────────────────
+    yearbook: {
+        list:   ()          => apiRequest('/yearbook/index.php'),
+        save:   (data)      => apiRequest('/yearbook/index.php', 'POST', data),
+    },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -200,6 +239,7 @@ async function doRoleLoginAPI(role) {
     if (roleLoginPage) roleLoginPage.remove();
     doLogin();
     showToast(`<i class="fas fa-check-circle"></i> Welcome, ${res.user.name}!`, 'success');
+    syncAllDataFromBackend().then(() => { if (typeof renderMain === 'function') renderMain(); });
 }
 
 async function doAdminLoginAPI() {
@@ -235,6 +275,7 @@ async function doAdminLoginAPI() {
     if (adminPage) adminPage.remove();
     doLogin();
     showToast('<i class="fas fa-shield-halved"></i> Welcome, Administrator!', 'success');
+    syncAllDataFromBackend().then(() => { if (typeof renderMain === 'function') renderMain(); });
 }
 
 async function logoutAPI() {
@@ -243,3 +284,921 @@ async function logoutAPI() {
     else window.SESSION_USER = null;
     logout(); // call the existing JS logout UI function
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MONOLITHIC APP OVERRIDES & SYNC HOOKS
+// ═══════════════════════════════════════════════════════════════
+
+// Sync utility to populate global arrays with data from backend MySQL APIs
+async function syncAllDataFromBackend() {
+    console.log("Syncing all data with MySQL backend...");
+
+    // 1. Classes
+    try {
+        const res = await API.classes.list();
+        if (res && res.success && res.data) {
+            classesData.splice(0, classesData.length, ...res.data.map(c => ({
+                class_id: 'C' + String(c.id).padStart(3, '0'),
+                id: c.id,
+                name: c.name,
+                level: c.level,
+                stream: c.stream,
+                teacher: c.teacher_name || 'Not assigned',
+                teacher_id: c.teacher_id ? 'T' + String(c.teacher_id).padStart(3, '0') : null,
+                students: parseInt(c.student_count || 0, 10),
+                capacity: parseInt(c.capacity || 40, 10),
+                subjects: Array.isArray(c.subjects) ? c.subjects : (c.subjects ? c.subjects.split(',').map(s => s.trim()) : []),
+                attendance: '100%'
+            })));
+        }
+    } catch (e) { console.error("Error syncing classes:", e); }
+
+    // 2. Staff/Teachers
+    try {
+        const res = await API.staff.list();
+        if (res && res.success && res.data) {
+            teachersData.splice(0, teachersData.length, ...res.data.filter(t => t.category === 'Teaching').map(t => ({
+                teacher_id: 'T' + String(t.id).padStart(3, '0'),
+                id: t.id,
+                name: t.name,
+                subject: t.subject || 'General',
+                department: t.department || 'Academic',
+                experience: String(t.experience || 0),
+                email: t.email || '',
+                phone: t.phone || '',
+                class_assigned: t.class_assigned || 'Not Assigned',
+                basicSalary: parseFloat(t.salary_grade) || 3000,
+                allowances: Math.round((parseFloat(t.salary_grade) || 3000) * 0.25),
+                deductions: Math.round((parseFloat(t.salary_grade) || 3000) * 0.10),
+                schedule: t.schedule || 'Mon-Fri',
+                gender: t.gender || 'Male',
+                avatar_color: t.avatar_color || 'blue',
+                dob: t.dob || '1990-01-01',
+                hiring_date: t.join_date || '2020-01-01',
+                status: t.status || 'Active'
+            })));
+        }
+    } catch (e) { console.error("Error syncing staff:", e); }
+
+    // 3. Students
+    try {
+        const res = await API.students.list();
+        if (res && res.success && res.data) {
+            enrolledStudents.splice(0, enrolledStudents.length, ...res.data.map(s => ({
+                student_id: s.student_code || ('2024-' + String(s.id).padStart(4, '0')),
+                id: s.id,
+                name: s.name,
+                student_class: s.student_class,
+                gender: s.gender || 'Male',
+                dob: s.dob || '2015-01-01',
+                attendance: (s.attendance || 95) + '%',
+                fees_status: 'Paid',
+                status: s.status || 'Active',
+                avatar_color: s.avatar_color || ['blue', 'gold', 'purple', 'green', 'teal'][s.id % 5],
+                gender_abbr: (s.gender || 'Male') === 'Male' ? 'M' : 'F',
+                address: s.address || '',
+                parent_name: s.guardian_name || '',
+                parent_phone: s.guardian_phone || '',
+                picture: null,
+                enrolled_date: s.created_at ? s.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
+            })));
+        }
+    } catch (e) { console.error("Error syncing students:", e); }
+
+    // 4. Parents
+    try {
+        const res = await API.parents.list();
+        if (res && res.success && res.data) {
+            parentsData.splice(0, parentsData.length, ...res.data.map(p => ({
+                parent_id: 'P' + String(p.id).padStart(3, '0'),
+                id: p.id,
+                name: p.name,
+                email: p.email || '',
+                phone: p.phone || '',
+                address: p.address || '',
+                student: p.student_name || '',
+                student_id: p.student_id || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing parents:", e); }
+
+    // 5. Admissions
+    try {
+        const res = await API.admissions.list();
+        if (res && res.success && res.data) {
+            admissionsData.splice(0, admissionsData.length, ...res.data.map(a => ({
+                adm_id: 'ADM' + String(a.id).padStart(3, '0'),
+                id: a.id,
+                name: a.student_name,
+                gender: a.gender || 'Male',
+                dob: a.dob || '2015-01-01',
+                class_applying: a.class_level || '',
+                address: a.address || '',
+                parent_name: a.guardian_name || '',
+                parent_phone: a.guardian_phone || '',
+                parent_email: a.guardian_email || '',
+                status: a.status || 'Pending',
+                notes: a.notes || '',
+                date: a.created_at ? a.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
+            })));
+        }
+    } catch (e) { console.error("Error syncing admissions:", e); }
+
+    // 6. Subjects
+    try {
+        const res = await API.subjects.list();
+        if (res && res.success && res.data) {
+            subjectsData.splice(0, subjectsData.length, ...res.data.map(s => ({
+                subject_id: 'SUB' + String(s.id).padStart(3, '0'),
+                id: s.id,
+                name: s.name,
+                icon: s.icon || '<i class="fas fa-book"></i>',
+                type: s.type || 'Core',
+                teacher: s.teacher_name || 'Not assigned',
+                teacher_id: s.teacher_id ? 'T' + String(s.teacher_id).padStart(3, '0') : null,
+                classes: s.classes || 'All Forms',
+                hours: s.hours || '4 hrs/wk',
+                description: s.description || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing subjects:", e); }
+
+    // 7. News Articles
+    try {
+        const res = await API.news.list();
+        if (res && res.success && res.data) {
+            newsArticles.splice(0, newsArticles.length, ...res.data.map(a => ({
+                id: parseInt(a.id, 10),
+                title: a.title,
+                icon: a.icon || '📰',
+                date: a.publish_date,
+                category: a.category,
+                desc: a.summary || '',
+                content: a.content || '',
+                status: a.status || 'Published'
+            })));
+        }
+    } catch (e) { console.error("Error syncing news:", e); }
+
+    // 8. Timetables
+    try {
+        const res = await API.timetable.get();
+        if (res && res.success && res.data) {
+            const formatted = {};
+            res.data.forEach(row => {
+                const cls = row.class_name;
+                const term = row.term;
+                const schedule = typeof row.schedule === 'string' ? JSON.parse(row.schedule) : row.schedule;
+                if (!formatted[cls]) formatted[cls] = {};
+                formatted[cls][term] = schedule;
+            });
+            for (let k in timetablesData) delete timetablesData[k];
+            Object.assign(timetablesData, formatted);
+        }
+    } catch (e) { console.error("Error syncing timetables:", e); }
+
+    // 9. Yearbook
+    try {
+        const res = await API.yearbook.list();
+        if (res && res.success && res.data) {
+            const formatted = {};
+            res.data.forEach(row => {
+                formatted[row.year] = {
+                    year: row.year,
+                    title: row.title,
+                    status: row.status,
+                    totalGrads: parseInt(row.total_graduates || 0, 10),
+                    totalPhotos: parseInt(row.total_photos || 0, 10),
+                    coverImg: row.cover_image || '#1e3a8a',
+                    ...(typeof row.layout === 'string' ? JSON.parse(row.layout) : row.layout || {})
+                };
+            });
+            for (let k in YEARBOOK_DATA) delete YEARBOOK_DATA[k];
+            Object.assign(YEARBOOK_DATA, formatted);
+        }
+    } catch (e) { console.error("Error syncing yearbook:", e); }
+
+    // 10. Hero Slides
+    try {
+        const res = await API.heroSlides.list();
+        if (res && res.success && res.data) {
+            window.cachedHeroSlides = res.data;
+        }
+    } catch (e) { console.error("Error syncing hero slides:", e); }
+}
+
+// Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
+loadPersistentRecords = async function() {
+    await syncAllDataFromBackend();
+    if (typeof renderMain === 'function') {
+        renderMain();
+    }
+};
+
+// No-op local saving functions to prevent overwriting server state with stale local mock data
+saveStudentRecords = () => {};
+saveTeacherRecords = () => {};
+saveParentRecords = () => {};
+saveAdmissionRecords = () => {};
+
+// ── SUBJECTS ACTIONS OVERRIDES ──────────────────────────
+submitSubjectForm = async function() {
+    const icon = document.getElementById('add-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
+    const name = document.getElementById('add-subject-name')?.value?.trim();
+    const type = document.getElementById('add-subject-type')?.value;
+    const teacherId = document.getElementById('add-subject-teacher')?.value;
+    const classes = document.getElementById('add-subject-classes')?.value?.trim();
+    const hours = document.getElementById('add-subject-hours')?.value?.trim();
+    const desc = document.getElementById('add-subject-desc')?.value?.trim();
+
+    if (!name || !classes || !hours) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    const tId = teacherId ? parseInt(teacherId.replace('T', ''), 10) : null;
+    const data = { icon, name, type, teacher_id: tId, classes, hours, description: desc };
+    const res = await API.subjects.create(data);
+    if (res && res.success) {
+        showToast(`Subject "${name}" added successfully`, 'success');
+        closeModal();
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to add subject', 'error');
+    }
+};
+
+saveSubjectChanges = async function(subjectId) {
+    const icon = document.getElementById('edit-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
+    const name = document.getElementById('edit-subject-name')?.value?.trim();
+    const type = document.getElementById('edit-subject-type')?.value;
+    const teacherId = document.getElementById('edit-subject-teacher')?.value;
+    const classes = document.getElementById('edit-subject-classes')?.value?.trim();
+    const hours = document.getElementById('edit-subject-hours')?.value?.trim();
+    const desc = document.getElementById('edit-subject-desc')?.value?.trim();
+
+    if (!name || !classes || !hours) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    const id = parseInt(subjectId.replace('SUB', ''), 10);
+    const tId = teacherId ? parseInt(teacherId.replace('T', ''), 10) : null;
+    const data = { icon, name, type, teacher_id: tId, classes, hours, description: desc };
+    const res = await API.subjects.update(id, data);
+    if (res && res.success) {
+        showToast('Subject updated successfully', 'success');
+        closeModal();
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to update subject', 'error');
+    }
+};
+
+deleteSubject = async function(subjectId) {
+    if (!confirm('Are you sure you want to delete this subject?')) return;
+    const id = parseInt(subjectId.replace('SUB', ''), 10);
+    const res = await API.subjects.delete(id);
+    if (res && res.success) {
+        showToast('Subject deleted successfully', 'success');
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to delete subject', 'error');
+    }
+};
+
+// ── TIMETABLE ACTIONS OVERRIDES ─────────────────────────
+saveNewTimetable = async function() {
+    const clsEl = document.getElementById('create-tt-class');
+    const termEl = document.getElementById('create-tt-term');
+    if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
+    const cls = clsEl.value, term = termEl.value;
+    
+    const periods = getPeriodsForClass(cls);
+    const schedule = [];
+    let hasContent = false;
+    periods.forEach((p, idx) => {
+        const subjects = [];
+        for (let d = 0; d < 5; d++) {
+            const input = document.getElementById('create-p-' + idx + '-' + d);
+            const val = input ? input.value.trim() : '';
+            subjects.push(val || '—');
+            if (val && val !== '—' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
+        }
+        schedule.push([p.label, subjects]);
+    });
+    if (!hasContent) { showToast('Fill in at least one subject', 'error'); return; }
+    
+    const res = await API.timetable.save({
+        class_name: cls,
+        term: term,
+        schedule: schedule
+    });
+    if (res && res.success) {
+        closeModal();
+        localStorage.setItem('tt-selected-class', cls);
+        localStorage.setItem('tt-selected-term', term);
+        await syncAllDataFromBackend();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> Timetable created successfully', 'success');
+    } else {
+        showToast(res?.message || 'Failed to create timetable', 'error');
+    }
+};
+
+saveEditedTimetable = async function(cls, term) {
+    const schedule = timetablesData[cls] && timetablesData[cls][term];
+    if (!schedule) return;
+    
+    schedule.forEach(([period], idx) => {
+        const pLow = period.toLowerCase();
+        const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
+        if (isFixed) return;
+        for (let d = 0; d < 5; d++) {
+            const input = document.getElementById('edit-p-' + idx + '-' + d);
+            if (input) schedule[idx][1][d] = input.value.trim() || '—';
+        }
+    });
+    
+    const res = await API.timetable.save({
+        class_name: cls,
+        term: term,
+        schedule: schedule
+    });
+    if (res && res.success) {
+        closeModal();
+        await syncAllDataFromBackend();
+        refreshTimetableView();
+        showToast('<i class="fas fa-check-circle"></i> Timetable updated successfully', 'success');
+    } else {
+        showToast(res?.message || 'Failed to save timetable changes', 'error');
+    }
+};
+
+deleteTimetable = async function() {
+    const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
+    const termEl = document.getElementById('tt-term-select');
+    const term = termEl ? termEl.value : 'Term 1, 2025';
+    if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
+    if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
+    
+    const res = await API.timetable.delete(cls, term);
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        refreshTimetableView();
+        showToast('<i class="fas fa-trash"></i> Timetable deleted', 'success');
+    } else {
+        showToast(res?.message || 'Failed to delete timetable', 'error');
+    }
+};
+
+// ── HERO SLIDES ACTIONS OVERRIDES ───────────────────────
+getHeroSlides = function() {
+    const slides = Object.values(window.cachedHeroSlides || []);
+    return slides.sort((a,b) => (b.status === 'Active') - (a.status === 'Active'));
+};
+
+saveHeroSlides = () => {};
+
+uploadHeroSlide = async function() {
+    const title = document.getElementById('hero-slide-title')?.value?.trim() || 'Glory Reign Preparatory School';
+    const caption = document.getElementById('hero-slide-caption')?.value?.trim() || 'Nurturing minds, building character, and shaping futures.';
+    const file = document.getElementById('hero-slide-file')?.files?.[0];
+
+    if (!file) {
+        showToast('<i class="fas fa-exclamation-triangle"></i> Please select a slide image file', 'warning');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Img = e.target.result;
+        const res = await API.heroSlides.create({
+            title,
+            caption,
+            image: base64Img,
+            status: 'Draft'
+        });
+        if (res && res.success) {
+            showToast('<i class="fas fa-check-circle"></i> Hero slide uploaded', 'success');
+            if (document.getElementById('hero-slide-title')) document.getElementById('hero-slide-title').value = '';
+            if (document.getElementById('hero-slide-caption')) document.getElementById('hero-slide-caption').value = '';
+            if (document.getElementById('hero-slide-file')) document.getElementById('hero-slide-file').value = '';
+            
+            const slidesRes = await API.heroSlides.list();
+            if (slidesRes && slidesRes.success && slidesRes.data) {
+                window.cachedHeroSlides = slidesRes.data;
+            }
+            renderMain();
+        } else {
+            showToast(res?.message || 'Failed to upload slide', 'error');
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+setHeroSlideActive = async function(slideId) {
+    const res = await API.heroSlides.setActive(slideId);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Hero slide activated', 'success');
+        const slidesRes = await API.heroSlides.list();
+        if (slidesRes && slidesRes.success && slidesRes.data) {
+            window.cachedHeroSlides = slidesRes.data;
+        }
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to activate slide', 'error');
+    }
+};
+
+deleteHeroSlide = async function(slideId) {
+    if (!confirm('Are you sure you want to delete this hero slide?')) return;
+    const res = await API.heroSlides.delete(slideId);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Hero slide deleted', 'success');
+        const slidesRes = await API.heroSlides.list();
+        if (slidesRes && slidesRes.success && slidesRes.data) {
+            window.cachedHeroSlides = slidesRes.data;
+        }
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to delete slide', 'error');
+    }
+};
+
+// ── NEWS ACTIONS OVERRIDES ──────────────────────────────
+publishNews = async function() {
+    const title = document.getElementById('blogTitle')?.value?.trim() || '';
+    const icon = document.getElementById('blogIcon')?.value?.trim() || '';
+    const date = document.getElementById('blogDate')?.value || '';
+    const category = document.getElementById('blogCategory')?.value || '';
+    const desc = document.getElementById('blogDesc')?.value?.trim() || '';
+    const content = document.getElementById('blogContent')?.value?.trim() || '';
+    const status = document.getElementById('blogStatus')?.value || 'Published';
+
+    if (!title || !icon || !date || !category || !desc || !content) {
+        showToast('<i class="fas fa-exclamation-triangle"></i> Please fill in all required fields (*)', 'warning');
+        return;
+    }
+
+    if (desc.length < 20) {
+        showToast('<i class="fas fa-exclamation-triangle"></i> Description must be at least 20 characters', 'warning');
+        return;
+    }
+
+    const data = { title, icon, publish_date: date, category, summary: desc, content, status };
+    const res = await API.news.create(data);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Article published successfully!', 'success');
+        clearNewsForm();
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to publish article', 'error');
+    }
+};
+
+saveArticleChanges = async function(articleId) {
+    const title = document.getElementById('editTitle')?.value?.trim() || '';
+    const icon = document.getElementById('editIcon')?.value?.trim() || '';
+    const date = document.getElementById('editDate')?.value || '';
+    const category = document.getElementById('editCategory')?.value || '';
+    const desc = document.getElementById('editDesc')?.value?.trim() || '';
+    const content = document.getElementById('editContent')?.value?.trim() || '';
+    const status = document.getElementById('editStatus')?.value || 'Published';
+
+    if (!title || !icon || !date || !category || !desc || !content) {
+        showToast('<i class="fas fa-exclamation-triangle"></i> Please fill in all required fields', 'warning');
+        return;
+    }
+
+    const data = { title, icon, publish_date: date, category, summary: desc, content, status };
+    const res = await API.news.update(articleId, data);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Article updated successfully!', 'success');
+        closeModal();
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to update article', 'error');
+    }
+};
+
+deleteArticle = async function(articleId) {
+    if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
+    const res = await API.news.delete(articleId);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Article deleted successfully!', 'success');
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to delete article', 'error');
+    }
+};
+
+// ── YEARBOOK ACTIONS OVERRIDES ──────────────────────────
+adminYearbookModule = function() {
+    const ybs = Object.values(YEARBOOK_DATA);
+    const rows = ybs.map(yb => `
+      <tr>
+        <td><strong>${escapeHtml(yb.year)}</strong></td>
+        <td>${escapeHtml(yb.title)}</td>
+        <td><span class="badge b-${yb.status === 'Published' ? 'success' : 'warning'}">${escapeHtml(yb.status)}</span></td>
+        <td>${yb.totalGrads || 0}</td>
+        <td>${yb.totalPhotos || 0}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-xs" onclick="openYearbook('${yb.year}')">Preview</button>
+            <button class="btn btn-secondary btn-xs" onclick="showToast('Edit mode enabled via database. Check back soon!', 'info')">Edit Content</button>
+            ${yb.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="publishYearbook('${yb.year}')">Publish</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    return hdr('Yearbook Management', 'Create and manage digital yearbooks', 'Admin Yearbook') + `
+    <div class="toolbar" style="margin-bottom:20px">
+      <button class="btn btn-primary" onclick="openCreateYearbookModal()"><i class="fas fa-plus"></i> Create Yearbook</button>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Yearbook Editions</span></div>
+      <table class="tbl">
+        <thead><tr><th>Academic Year</th><th>Title</th><th>Status</th><th>Graduates</th><th>Photos</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${rows || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:24px">No yearbooks found.</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+};
+
+openCreateYearbookModal = function() {
+    openModal(`
+      <div style="padding:24px;width:400px;max-width:90vw">
+        <h3 style="margin-top:0;color:var(--blue-dark)"><i class="fas fa-plus-circle"></i> Create New Yearbook</h3>
+        <div class="f-field" style="margin-top:20px"><label>Academic Year</label><input type="text" id="new-yb-year" placeholder="e.g. 2028"></div>
+        <div class="f-field"><label>Yearbook Title</label><input type="text" id="new-yb-title" placeholder="Class of 2028 Yearbook"></div>
+        <div class="f-field"><label>Cover Color Theme</label><input type="color" id="new-yb-theme" value="#1e3a8a" style="padding:0;height:40px;width:100%"></div>
+        <div style="display:flex;gap:10px;margin-top:24px">
+          <button class="btn btn-primary" style="flex:1" onclick="submitCreateYearbookForm()">Create</button>
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+      </div>
+    `, true);
+};
+
+submitCreateYearbookForm = async function() {
+    const year = document.getElementById('new-yb-year')?.value?.trim();
+    const title = document.getElementById('new-yb-title')?.value?.trim();
+    const theme = document.getElementById('new-yb-theme')?.value;
+    if (!year || !title) { showToast('Please enter both year and title', 'error'); return; }
+    
+    const res = await API.yearbook.save({
+        year,
+        title,
+        cover_image: theme,
+        status: 'Draft',
+        total_graduates: 0,
+        total_photos: 0,
+        layout: {
+            classes: [],
+            teachers: [],
+            events: [],
+            tributes: []
+        }
+    });
+    if (res && res.success) {
+        showToast('Yearbook initialized successfully!', 'success');
+        closeModal();
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to create yearbook', 'error');
+    }
+};
+
+publishYearbook = async function(year) {
+    const yb = YEARBOOK_DATA[year];
+    if (!yb) return;
+    const res = await API.yearbook.save({
+        year: yb.year,
+        title: yb.title,
+        cover_image: yb.coverImg,
+        status: 'Published',
+        total_graduates: yb.totalGrads,
+        total_photos: yb.totalPhotos,
+        layout: {
+            classes: yb.classes || [],
+            teachers: yb.teachers || [],
+            events: yb.events || [],
+            tributes: yb.tributes || []
+        }
+    });
+    if (res && res.success) {
+        showToast('Yearbook published successfully!', 'success');
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to publish yearbook', 'error');
+    }
+};
+
+// ── STUDENTS ACTIONS OVERRIDES ──────────────────────────
+submitStudentEnrollment = async function() {
+  const name = document.getElementById('std-name')?.value.trim();
+  const dob = document.getElementById('std-dob')?.value;
+  const gender = document.getElementById('std-gender')?.value;
+  const studentClass = document.getElementById('std-class')?.value;
+  const address = document.getElementById('std-address')?.value.trim();
+  const parentName = document.getElementById('std-parent-name')?.value.trim();
+  const parentPhone = document.getElementById('std-parent-phone')?.value.trim();
+
+  if (!name || !dob || !gender || !studentClass) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const res = await API.students.create({
+    name,
+    dob,
+    gender,
+    student_class: studentClass,
+    address,
+    guardian_name: parentName,
+    guardian_phone: parentPhone,
+    status: 'Active'
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Student enrolled successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('students');
+  } else {
+    showToast(res?.message || 'Failed to enroll student', 'error');
+  }
+};
+
+saveStudentChanges = async function(studentId) {
+  const name = document.getElementById('edit-std-name')?.value.trim();
+  const studentClass = document.getElementById('edit-std-class')?.value;
+  const status = document.getElementById('edit-std-status')?.value;
+  const address = document.getElementById('edit-std-address')?.value.trim();
+  const parentName = document.getElementById('edit-std-parent-name')?.value.trim();
+  const parentPhone = document.getElementById('edit-std-parent-phone')?.value.trim();
+
+  if (!name || !studentClass) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const student = enrolledStudents.find(s => s.student_id === studentId);
+  if (!student) return;
+
+  const id = student.id;
+  const res = await API.students.update(id, {
+    name,
+    student_class: studentClass,
+    status,
+    address,
+    guardian_name: parentName,
+    guardian_phone: parentPhone
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Student updated successfully!', 'success');
+    await syncAllDataFromBackend();
+    viewStudent(studentId);
+  } else {
+    showToast(res?.message || 'Failed to update student', 'error');
+  }
+};
+
+withdrawStudent = async function(studentId) {
+  if (!confirm('Are you sure you want to withdraw this student?')) return;
+  const student = enrolledStudents.find(s => s.student_id === studentId);
+  if (!student) return;
+  
+  const res = await API.students.update(student.id, { status: 'Withdrawn' });
+  if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Student withdrawn', 'success');
+      await syncAllDataFromBackend();
+      navTo('students');
+  } else {
+      showToast(res?.message || 'Failed to withdraw student', 'error');
+  }
+};
+
+restoreStudent = async function(studentId) {
+  const student = enrolledStudents.find(s => s.student_id === studentId);
+  if (!student) return;
+  
+  const res = await API.students.update(student.id, { status: 'Active' });
+  if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Student restored', 'success');
+      await syncAllDataFromBackend();
+      navTo('students');
+  } else {
+      showToast(res?.message || 'Failed to restore student', 'error');
+  }
+};
+
+// ── TEACHERS ACTIONS OVERRIDES ──────────────────────────
+submitTeacherForm = async function() {
+  const name = document.getElementById('teacher-name')?.value;
+  const subject = document.getElementById('teacher-subject')?.value;
+  const department = document.getElementById('teacher-department')?.value;
+  const experience = document.getElementById('teacher-experience')?.value;
+  const email = document.getElementById('teacher-email')?.value;
+  const phone = document.getElementById('teacher-phone')?.value;
+  const classAssigned = document.getElementById('teacher-class')?.value;
+  const schedule = document.getElementById('teacher-schedule')?.value;
+  
+  const defaultBasic = typeof getTeacherPayrollBasic === 'function' ? getTeacherPayrollBasic({ experience }) : 3000;
+  const basicSalary = Number(document.getElementById('teacher-basic')?.value || defaultBasic);
+
+  if (!name || !subject || department === '-- Select --' || !experience || !email || !phone) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+
+  const res = await API.staff.create({
+    name,
+    email,
+    phone,
+    gender: 'Male',
+    dob: document.getElementById('teacher-dob')?.value || '1990-01-01',
+    category: 'Teaching',
+    department,
+    position: subject,
+    qualifications: 'Degree',
+    salary_grade: String(basicSalary),
+    join_date: new Date().toISOString().split('T')[0],
+    address: 'Glory Reign Campus',
+    subject,
+    class_assigned: classAssigned || 'Not Assigned',
+    experience: parseInt(experience, 10),
+    schedule: schedule || 'Mon-Fri',
+    avatar_color: 'blue',
+    status: 'Active'
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher added successfully!', 'success');
+    await syncAllDataFromBackend();
+    const returnToPayroll = window.returnToPayrollAfterTeacherAdd;
+    window.returnToPayrollAfterTeacherAdd = false;
+    navTo(returnToPayroll ? 'salary' : 'teachers');
+  } else {
+    showToast(res?.message || 'Failed to add teacher', 'error');
+  }
+};
+
+submitEditTeacher = async function(teacherId) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return showToast('Teacher not found', 'error');
+
+  const name = document.getElementById('teacher-name')?.value;
+  const subject = document.getElementById('teacher-subject')?.value;
+  const department = document.getElementById('teacher-department')?.value;
+  const experience = document.getElementById('teacher-experience')?.value;
+  const email = document.getElementById('teacher-email')?.value;
+  const phone = document.getElementById('teacher-phone')?.value;
+  const classAssigned = document.getElementById('teacher-class')?.value;
+  const schedule = document.getElementById('teacher-schedule')?.value;
+
+  if (!name || !subject || department === '-- Select --' || !experience || !email || !phone) {
+    showToast('Please fill all required fields', 'error');
+    return;
+  }
+
+  const res = await API.staff.update(teacher.id, {
+    name,
+    email,
+    phone,
+    department,
+    position: subject,
+    subject,
+    class_assigned: classAssigned || 'Not Assigned',
+    experience: parseInt(experience, 10),
+    schedule: schedule || 'Mon-Fri'
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher updated successfully!', 'success');
+    closeModal();
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to update teacher', 'error');
+  }
+};
+
+deleteTeacher = async function(teacherId) {
+  if (!confirm('Are you sure you want to delete this teacher? This cannot be undone.')) return;
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
+  const res = await API.staff.delete(teacher.id);
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher deleted successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to delete teacher', 'error');
+  }
+};
+
+archiveTeacher = async function(teacherId) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
+  const res = await API.staff.update(teacher.id, { status: 'Inactive' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to archive teacher', 'error');
+  }
+};
+
+restoreTeacher = async function(teacherId) {
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  if (!teacher) return;
+
+  const res = await API.staff.update(teacher.id, { status: 'Active' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to restore teacher', 'error');
+  }
+};
+
+// ── CLASSES ACTIONS OVERRIDES ───────────────────────────
+submitClassForm = async function() {
+  const name = document.getElementById('class-name')?.value.trim();
+  const level = document.getElementById('class-level')?.value;
+  const stream = document.getElementById('class-stream')?.value;
+  const teacherId = document.getElementById('class-teacher')?.value;
+  const capacity = document.getElementById('class-capacity')?.value;
+  const subjectsStr = document.getElementById('class-subjects')?.value.trim();
+
+  if (!name || !level || !stream || !teacherId || !capacity) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  const tId = teacher ? teacher.id : null;
+
+  const res = await API.classes.create({
+    name,
+    level,
+    stream,
+    teacher_id: tId,
+    capacity: parseInt(capacity, 10),
+    subjects: subjectsStr
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Class created successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('classes');
+  } else {
+    showToast(res?.message || 'Failed to create class', 'error');
+  }
+};
+
+// ── ADMISSIONS ACTIONS OVERRIDES ────────────────────────
+approveAdmission = async function(admId, studentName) {
+  const adm = admissionsData.find(a => a.adm_id === admId);
+  if (!adm) return;
+  const id = adm.id;
+  const res = await API.admissions.updateStatus(id, 'Approved', 'Approved by administrator');
+  if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Admission Approved!', 'success');
+      await syncAllDataFromBackend();
+      renderMain('admissions');
+  } else {
+      showToast(res?.message || 'Failed to approve admission', 'error');
+  }
+};
+
+rejectAdmission = async function(admId) {
+  if (!confirm('Are you sure you want to reject this application?')) return;
+  const adm = admissionsData.find(a => a.adm_id === admId);
+  if (!adm) return;
+  const id = adm.id;
+  const res = await API.admissions.updateStatus(id, 'Rejected', 'Rejected by administrator');
+  if (res && res.success) {
+      showToast('Application rejected.', 'info');
+      await syncAllDataFromBackend();
+      renderMain('admissions');
+  } else {
+      showToast(res?.message || 'Failed to reject admission', 'error');
+  }
+};
