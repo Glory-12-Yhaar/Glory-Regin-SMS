@@ -43,4 +43,37 @@ if ($method === 'POST') {
     jsonResponse(['success' => true, 'message' => 'Class created', 'id' => $db->lastInsertId()], 201);
 }
 
+if ($method === 'PUT') {
+    requireRole(['Admin']);
+    $id = (int)($_GET['id'] ?? 0);
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Class ID required'], 422);
+    }
+    $body = getRequestBody();
+    if (empty($body['name']) || empty($body['level'])) {
+        jsonResponse(['success' => false, 'message' => 'name and level are required'], 422);
+    }
+
+    $stmt = $db->prepare("UPDATE classes SET name = ?, level = ?, class_teacher = ? WHERE id = ?");
+    $stmt->execute([
+        htmlspecialchars(trim($body['name']), ENT_QUOTES),
+        $body['level'],
+        $body['class_teacher'] ?? null,
+        $id
+    ]);
+    jsonResponse(['success' => true, 'message' => 'Class updated']);
+}
+
+if ($method === 'DELETE') {
+    requireRole(['Admin']);
+    $id = (int)($_GET['id'] ?? 0);
+    if (!$id) {
+        jsonResponse(['success' => false, 'message' => 'Class ID required'], 422);
+    }
+
+    $stmt = $db->prepare("DELETE FROM classes WHERE id = ?");
+    $stmt->execute([$id]);
+    jsonResponse(['success' => true, 'message' => 'Class deleted']);
+}
+
 jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);

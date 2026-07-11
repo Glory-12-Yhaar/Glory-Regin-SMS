@@ -67,6 +67,8 @@ const API = {
     classes: {
         list:   ()     => apiRequest('/classes/index.php'),
         create: (data) => apiRequest('/classes/index.php', 'POST', data),
+        update: (id, data) => apiRequest('/classes/index.php?id=' + id, 'PUT', data),
+        delete: (id)   => apiRequest('/classes/index.php?id=' + id, 'DELETE'),
     },
 
     // ── Fees ─────────────────────────────────────────────────
@@ -153,8 +155,10 @@ const API = {
 
     // ── Parents ──────────────────────────────────────────────
     parents: {
-        list:      (params = {}) => apiRequest('/parents/index.php?' + new URLSearchParams(params)),
-        linkChild: (user_id, student_id) => apiRequest('/parents/index.php', 'POST', { user_id, student_id }),
+        list:        (params = {}) => apiRequest('/parents/index.php?' + new URLSearchParams(params)),
+        update:      (id, data)    => apiRequest('/parents/index.php?id=' + id, 'PUT', data),
+        delete:      (id)          => apiRequest('/parents/index.php?id=' + id, 'DELETE'),
+        linkChild:   (user_id, student_id) => apiRequest('/parents/index.php', 'POST', { user_id, student_id }),
         unlinkChild: (user_id, student_id) => apiRequest('/parents/index.php?' + new URLSearchParams({ user_id, student_id }), 'DELETE'),
     },
 
@@ -394,7 +398,7 @@ async function syncAllDataFromBackend() {
                 avatar_color: t.avatar_color || 'blue',
                 dob: t.dob || '1990-01-01',
                 hiring_date: t.join_date || '2020-01-01',
-                status: t.status || 'Active'
+                status: t.status === 'Inactive' ? 'Archived' : (t.status || 'Active')
             })));
         }
     } catch (e) { console.error("Error syncing staff:", e); }
@@ -407,7 +411,7 @@ async function syncAllDataFromBackend() {
                 student_id: s.student_code || ('2024-' + String(s.id).padStart(4, '0')),
                 id: s.id,
                 name: s.name,
-                student_class: s.student_class,
+                student_class: s.class_name || 'Not Assigned',
                 gender: s.gender || 'Male',
                 dob: s.dob || '2015-01-01',
                 attendance: (s.attendance || 95) + '%',
@@ -548,10 +552,17 @@ async function syncAllDataFromBackend() {
             window.cachedHeroSlides = res.data;
         }
     } catch (e) { console.error("Error syncing hero slides:", e); }
+
+    if (typeof renderSidebar === 'function') {
+        renderSidebar();
+    }
 }
 
-// Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
-loadPersistentRecords = async function() {
+window.applyApiClientOverrides = function() {
+    console.log("Applying API client overrides...");
+
+    // Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
+    loadPersistentRecords = async function() {
     await syncAllDataFromBackend();
     if (typeof renderMain === 'function') {
         renderMain();
@@ -973,12 +984,12 @@ submitStudentEnrollment = async function() {
   const name = document.getElementById('std-name')?.value.trim();
   const dob = document.getElementById('std-dob')?.value;
   const gender = document.getElementById('std-gender')?.value;
-  const studentClass = document.getElementById('std-class')?.value;
+  const classId = document.getElementById('std-class')?.value;
   const address = document.getElementById('std-address')?.value.trim();
   const parentName = document.getElementById('std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('std-parent-phone')?.value.trim();
 
-  if (!name || !dob || !gender || !studentClass) {
+  if (!name || !dob || !gender || !classId) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
@@ -987,7 +998,7 @@ submitStudentEnrollment = async function() {
     name,
     dob,
     gender,
-    student_class: studentClass,
+    class_id: parseInt(classId, 10),
     address,
     guardian_name: parentName,
     guardian_phone: parentPhone,
@@ -1005,13 +1016,13 @@ submitStudentEnrollment = async function() {
 
 saveStudentChanges = async function(studentId) {
   const name = document.getElementById('edit-std-name')?.value.trim();
-  const studentClass = document.getElementById('edit-std-class')?.value;
+  const classId = document.getElementById('edit-std-class')?.value;
   const status = document.getElementById('edit-std-status')?.value;
   const address = document.getElementById('edit-std-address')?.value.trim();
   const parentName = document.getElementById('edit-std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('edit-std-parent-phone')?.value.trim();
 
-  if (!name || !studentClass) {
+  if (!name || !classId) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
@@ -1021,7 +1032,7 @@ saveStudentChanges = async function(studentId) {
 
   const res = await API.students.update(id, {
     name,
-    student_class: studentClass,
+    class_id: parseInt(classId, 10),
     status,
     address,
     guardian_name: parentName,
@@ -1129,6 +1140,8 @@ submitEditTeacher = async function(teacherId) {
   const phone = document.getElementById('teacher-phone')?.value;
   const classAssigned = document.getElementById('teacher-class')?.value;
   const schedule = document.getElementById('teacher-schedule')?.value;
+  const basicSalary = Number(document.getElementById('teacher-basic')?.value || 3000);
+  const status = document.getElementById('teacher-status')?.value || 'Active';
 
   if (!name || !subject || department === '-- Select --' || !experience || !email || !phone) {
     showToast('Please fill all required fields', 'error');
@@ -1144,12 +1157,13 @@ submitEditTeacher = async function(teacherId) {
     subject,
     class_assigned: classAssigned || 'Not Assigned',
     experience: parseInt(experience, 10),
-    schedule: schedule || 'Mon-Fri'
+    schedule: schedule || 'Mon-Fri',
+    salary_grade: String(basicSalary),
+    status: status === 'Archived' ? 'Inactive' : status
   });
 
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher updated successfully!', 'success');
-    closeModal();
     await syncAllDataFromBackend();
     navTo('teachers');
   } else {
@@ -1201,28 +1215,38 @@ restoreTeacher = async function(teacherId) {
 };
 
 // ── CLASSES ACTIONS OVERRIDES ───────────────────────────
-submitClassForm = async function() {
-  const name = document.getElementById('class-name')?.value.trim();
-  const level = document.getElementById('class-level')?.value;
-  const stream = document.getElementById('class-stream')?.value;
-  const teacherId = document.getElementById('class-teacher')?.value;
-  const capacity = document.getElementById('class-capacity')?.value;
-  const subjectsStr = document.getElementById('class-subjects')?.value.trim();
+createClass = async function() {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can create classes', 'error');
+    return;
+  }
 
-  if (!name || !level || !stream || !teacherId || !capacity) {
+  const name = document.getElementById('new-class-name')?.value.trim();
+  const levelVal = document.getElementById('new-class-level')?.value;
+  const stream = document.getElementById('new-class-stream')?.value;
+  const teacherId = document.getElementById('new-class-teacher')?.value;
+  const capacity = document.getElementById('new-class-capacity')?.value;
+  const subjectsStr = document.getElementById('new-class-subjects')?.value.trim();
+
+  if (!name || !levelVal || !stream || !teacherId || !capacity) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
 
-  const tId = getTeacherDbId(teacherId) || null;
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  const teacherName = teacher ? teacher.name : null;
+
+  let mappedLevel = 'Primary';
+  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
+    mappedLevel = 'Early Childhood';
+  } else if (levelVal === 'JHS') {
+    mappedLevel = 'Junior High';
+  }
 
   const res = await API.classes.create({
     name,
-    level,
-    stream,
-    teacher_id: tId,
-    capacity: parseInt(capacity, 10),
-    subjects: subjectsStr
+    level: mappedLevel,
+    class_teacher: teacherName
   });
 
   if (res && res.success) {
@@ -1231,6 +1255,31 @@ submitClassForm = async function() {
     navTo('classes');
   } else {
     showToast(res?.message || 'Failed to create class', 'error');
+  }
+};
+
+deleteClass = async function(classId) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can delete classes', 'error');
+    return;
+  }
+
+  if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
+
+  const clsObj = classesData.find(c => c.class_id === classId);
+  if (!clsObj) {
+    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+    return;
+  }
+
+  const res = await API.classes.delete(clsObj.id);
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
+    await syncAllDataFromBackend();
+    navTo('classes');
+  } else {
+    showToast(res?.message || 'Failed to delete class', 'error');
   }
 };
 
@@ -1261,3 +1310,83 @@ rejectAdmission = async function(admId) {
       showToast(res?.message || 'Failed to reject admission', 'error');
   }
 };
+
+saveParentChanges = async function(parentId) {
+  const name = document.getElementById('edit-parent-name')?.value.trim();
+  const phone = document.getElementById('edit-parent-phone')?.value.trim();
+  const email = document.getElementById('edit-parent-email')?.value.trim();
+  const address = document.getElementById('edit-parent-address')?.value.trim();
+  const children = document.getElementById('edit-parent-children')?.value.trim();
+  
+  if (!name || !phone || !email || !children) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const id = parseInt(String(parentId).replace(/[^0-9]/g, ''), 10);
+  if (!id) return showToast('Parent not found', 'error');
+
+  const res = await API.parents.update(id, {
+    name,
+    phone,
+    email,
+    address,
+    children
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Parent updated successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('parents');
+  } else {
+    showToast(res?.message || 'Failed to update parent', 'error');
+  }
+};
+
+deleteRecord = async function(id, type) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can delete records', 'error', 3000);
+    return;
+  }
+
+  if (type === 'Teacher') {
+    archiveTeacher(id);
+    return;
+  }
+
+  if (type === 'Student') {
+    withdrawStudent(id);
+    return;
+  }
+
+  if (confirm(`Are you sure you want to delete this ${type}?`)) {
+    if (type === 'Parent') {
+      const dbId = parseInt(String(id).replace(/[^0-9]/g, ''), 10);
+      const res = await API.parents.delete(dbId);
+      if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Parent deleted successfully!', 'success');
+        await syncAllDataFromBackend();
+        navTo('parents');
+      } else {
+        showToast(res?.message || 'Failed to delete parent', 'error');
+      }
+    } else if (type === 'Admission') {
+      const dbId = getAdmissionDbId(id);
+      const res = await API.admissions.updateStatus(dbId, 'Rejected', 'Deleted by Administrator');
+      if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Admission record deleted!', 'success');
+        await syncAllDataFromBackend();
+        navTo('admissions');
+      } else {
+        showToast(res?.message || 'Failed to delete admission record', 'error');
+      }
+    } else {
+      showToast('<i class="fas fa-check-circle"></i> Record deleted!', 'success');
+    }
+  }
+};
+
+};
+
+// Run overrides immediately as script is loaded after script.js
+window.applyApiClientOverrides();

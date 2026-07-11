@@ -1718,7 +1718,11 @@ function switchRole(role, preferredMod) {
   renderMain();
   saveNavigationState();
 }
-function navTo(id) {
+function navTo(id, keepTopbarSearch = false) {
+  if (!keepTopbarSearch) {
+    const topInput = document.getElementById('topbar-search-input');
+    if (topInput) topInput.value = '';
+  }
   if (!canAccessModule(id)) {
     showToast('<i class="fas fa-lock"></i> This section is not available for your role', 'error');
     id = 'dashboard';
@@ -1929,6 +1933,58 @@ document.addEventListener('DOMContentLoaded', () => {
 // Also call it immediately if DOM is already loaded
 if (document.readyState !== 'loading') {
   initializePublicMenu();
+}
+
+function handleTopbarSearch() {
+  const topInput = document.getElementById('topbar-search-input');
+  if (!topInput) return;
+  const val = topInput.value;
+
+  const mapping = {
+    students: { id: 'student-search', fn: filterStudents },
+    teachers: currentRole === 'Admin' ? { id: 'teacher-management-search', fn: filterTeachersManagement } : { id: 'teacher-search', fn: filterTeachers },
+    parents: { id: 'parent-search', fn: filterParents },
+    classes: { id: 'class-search', fn: filterClasses },
+    admissions: { id: 'admission-search', fn: filterAdmissions },
+    subjects: { id: 'subject-search', fn: filterSubjects },
+    users: { id: 'user-search', fn: filterUsers },
+    staff: { id: 'staff-search', fn: filterStaffList },
+    alumni: { id: 'alumni-search', fn: filterAlumni },
+    fees: { id: 'fee-search', fn: filterFeeRecords },
+    notices: { id: 'notice-search', fn: filterNotices }
+  };
+
+  const target = mapping[currentMod];
+  if (target) {
+    const localInput = document.getElementById(target.id);
+    if (localInput) {
+      localInput.value = val;
+      if (typeof target.fn === 'function') {
+        target.fn();
+      }
+    }
+  }
+}
+
+function handleTopbarSearchKey(event) {
+  if (event.key === 'Enter') {
+    const topInput = document.getElementById('topbar-search-input');
+    if (!topInput) return;
+    const val = topInput.value.trim();
+    if (!val) return;
+
+    const searchable = ['students', 'teachers', 'parents', 'classes', 'admissions', 'subjects', 'users', 'staff', 'alumni', 'fees', 'notices'];
+    if (!searchable.includes(currentMod)) {
+      navTo('students', true);
+      setTimeout(() => {
+        const topInputNew = document.getElementById('topbar-search-input');
+        if (topInputNew) {
+          topInputNew.value = val;
+          handleTopbarSearch();
+        }
+      }, 100);
+    }
+  }
 }
 
 // -----------------------------------
@@ -4414,7 +4470,10 @@ function showEnrollStudentForm() {
       </div>
       <div class="form-field">
         <label>Class *</label>
-        <select id="std-class"><option>-- Select Class --</option><option>Creche</option><option>Nursery</option><option>KG 1</option><option>KG 2</option><option>Basic 1</option><option>Basic 2</option><option>Basic 3</option><option>Basic 4</option><option>Basic 5</option><option>Basic 6</option><option>JHS 1</option><option>JHS 2</option><option>JHS 3</option></select>
+        <select id="std-class">
+          <option value="">-- Select Class --</option>
+          ${classesData.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+        </select>
       </div>
       <div class="form-field" style="grid-column:1/-1">
         <label>Address</label>
@@ -4610,7 +4669,7 @@ function editStudent(studentId) {
       <div class="form-field">
         <label>Class</label>
         <select id="edit-std-class">
-          ${classesData.map(c => `<option value="${escapeAttr(c.name)}" ${student.student_class === c.name ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
+          ${classesData.map(c => `<option value="${c.id}" ${student.student_class === c.name ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
         </select>
       </div>
       <div class="form-field">
@@ -4742,7 +4801,7 @@ function updateStudentTable(students) {
 function studentTableRowHtml(s, i, isAdmin) {
   const studentId = escapeAttr(s.student_id);
   const actions = '<details class="row-action-menu"><summary title="Student actions"><i class="fas fa-bars"></i></summary><div class="row-action-list"><button onclick="viewStudent(\'' + studentId + '\')"><i class="fas fa-eye"></i> View</button>' + (isAdmin ? '<button onclick="editStudent(\'' + studentId + '\')"><i class="fas fa-edit"></i> Edit</button><button class="danger" onclick="withdrawStudent(\'' + studentId + '\')"><i class="fas fa-user-slash"></i> Withdraw</button>' : '') + '</div></details>';
-  return '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'.student-actions-cell\') && !event.target.closest(\'details\')) viewStudent(\'' + studentId + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + (s.avatar_color || 'blue') + '">' + (s.name || 'S')[0] + '</div><span style="font-weight:600">' + escapeHtml(s.name || '') + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td><span class="badge ' + ((s.gender_abbr === 'F' || s.gender === 'Female') ? 'b-purple' : 'b-info') + '">' + escapeHtml(s.gender || '') + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + escapeHtml(s.dob || '') + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + escapeHtml(s.attendance || '') + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + escapeHtml(s.fees_status || '') + '</span></td><td><span class="badge ' + (s.status === 'Withdrawn' ? 'b-danger' : 'b-success') + '">' + escapeHtml(s.status || 'Active') + '</span></td><td class="student-actions-cell">' + actions + '</td></tr>';
+  return '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'.student-actions-cell\') && !event.target.closest(\'details\')) viewStudent(\'' + studentId + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + (s.avatar_color || 'blue') + '">' + (s.name || 'S')[0] + '</div><span style="font-weight:600">' + escapeHtml(s.name || '') + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td><span class="badge ' + ((s.gender_abbr === 'F' || s.gender === 'Female') ? 'b-purple' : 'b-info') + '">' + escapeHtml(s.gender || '') + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + escapeHtml(s.dob || '') + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + escapeHtml(s.attendance || '') + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + escapeHtml(s.fees_status || '') + '</span></td><td><span class="badge ' + (({ 'Active': 'b-success', 'Inactive': 'b-warning', 'Graduated': 'b-info', 'Suspended': 'b-gold', 'Withdrawn': 'b-danger' }[s.status] || 'b-success')) + '">' + escapeHtml(s.status || 'Active') + '</span></td><td class="student-actions-cell">' + actions + '</td></tr>';
 }
 
 function withdrawStudent(studentId) {
@@ -10696,7 +10755,8 @@ const SETTINGS_DATA = {
     academicYear: '2024/2025',
     currentTerm: 'Term 1',
     termStartDate: '2025-01-13',
-    termEndDate: '2025-04-11'
+    termEndDate: '2025-04-11',
+    academicYears: '2024/2025,2025/2026,2026/2027'
   },
   system: {
     maintenanceMode: false,
@@ -10805,7 +10865,7 @@ function settingsModule() {
 
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Academic Calendar</span></div>
-        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year">${['2024/2025', '2025/2026', '2026/2027'].map(y => `<option ${y === SETTINGS_DATA.academic.academicYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="f-field"><label>Current Term</label><select id="current-term">${['Term 1', 'Term 2', 'Term 3'].map(t => `<option ${t === SETTINGS_DATA.academic.currentTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div>
+        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year">${(SETTINGS_DATA.academic.academicYears || '2024/2025,2025/2026,2026/2027').split(',').map(y => `<option ${y === SETTINGS_DATA.academic.academicYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="f-field"><label>Current Term</label><select id="current-term">${['Term 1', 'Term 2', 'Term 3'].map(t => `<option ${t === SETTINGS_DATA.academic.currentTerm ? 'selected' : ''}\>${t}</option>`).join('')}</select></div></div>
         <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="${SETTINGS_DATA.academic.termStartDate}"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="${SETTINGS_DATA.academic.termEndDate}"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
@@ -10817,6 +10877,27 @@ function settingsModule() {
           </div>`).join('')}
         </div>
         <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveAcademicCalendar()"><i class="fas fa-check"></i> Update Calendar</button><button class="btn btn-secondary" onclick="resetAcademicForm()">Reset</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Manage Academic Years</span></div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Active Academic Years</label>
+          <div id="settings-academic-years-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+            ${(SETTINGS_DATA.academic.academicYears || '2024/2025,2025/2026,2026/2027').split(',').map(y => `
+              <span class="badge b-info" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:12px">
+                ${escapeHtml(y)}
+                <i class="fas fa-times" style="cursor:pointer;color:var(--danger)" onclick="deleteAcademicYear('${escapeAttr(y)}')"></i>
+              </span>
+            `).join('')}
+          </div>
+          <div class="f-row" style="align-items: flex-end; gap: 8px;">
+            <div class="f-field" style="margin-bottom:0; flex: 1;">
+              <input type="text" id="new-academic-year-input" placeholder="e.g. 2027/2028" style="margin-bottom:0">
+            </div>
+            <button class="btn btn-primary" onclick="addAcademicYear()"><i class="fas fa-plus"></i> Add Year</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -11016,7 +11097,8 @@ function saveAcademicCalendar() {
     academicYear: document.getElementById('academic-year').value,
     currentTerm: document.getElementById('current-term').value,
     termStartDate: document.getElementById('term-start-date').value,
-    termEndDate: document.getElementById('term-end-date').value
+    termEndDate: document.getElementById('term-end-date').value,
+    academicYears: SETTINGS_DATA.academic.academicYears
   };
   saveSettingsToStorage();
   showToast('<i class="fas fa-check-circle"></i> Academic calendar updated successfully!', 'success');
@@ -11028,6 +11110,58 @@ function resetAcademicForm() {
   document.getElementById('term-start-date').value = SETTINGS_DATA.academic.termStartDate;
   document.getElementById('term-end-date').value = SETTINGS_DATA.academic.termEndDate;
   showToast('Form reset to saved values', 'info');
+}
+
+async function addAcademicYear() {
+  const input = document.getElementById('new-academic-year-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) {
+    showToast('Please enter an academic year.', 'error');
+    return;
+  }
+  
+  const regex = /^\d{4}\/\d{4}$/;
+  if (!regex.test(val)) {
+    showToast('Invalid format. Please use YYYY/YYYY (e.g. 2025/2026)', 'error');
+    return;
+  }
+
+  let years = (SETTINGS_DATA.academic.academicYears || '').split(',').map(y => y.trim()).filter(Boolean);
+  if (years.includes(val)) {
+    showToast('This academic year already exists.', 'error');
+    return;
+  }
+
+  years.push(val);
+  SETTINGS_DATA.academic.academicYears = years.join(',');
+  
+  if (typeof saveSettingsToStorage === 'function') {
+    await saveSettingsToStorage();
+  }
+  showToast('<i class="fas fa-check-circle"></i> Academic year added!', 'success');
+  navTo('settings');
+}
+
+async function deleteAcademicYear(year) {
+  if (!confirm(`Are you sure you want to delete the academic year ${year}?`)) return;
+
+  let years = (SETTINGS_DATA.academic.academicYears || '').split(',').map(y => y.trim()).filter(Boolean);
+  const index = years.indexOf(year);
+  if (index === -1) return;
+
+  years.splice(index, 1);
+  SETTINGS_DATA.academic.academicYears = years.join(',');
+
+  if (SETTINGS_DATA.academic.academicYear === year) {
+    SETTINGS_DATA.academic.academicYear = years[0] || '';
+  }
+
+  if (typeof saveSettingsToStorage === 'function') {
+    await saveSettingsToStorage();
+  }
+  showToast('<i class="fas fa-check-circle"></i> Academic year deleted!', 'success');
+  navTo('settings');
 }
 
 function saveSystemSettings() {
@@ -15725,13 +15859,87 @@ function visitorAdmission() {
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-file-alt"></i> Application Form</span></div>
-      <div class="f-row"><div class="f-field"><label>First Name</label><input placeholder="First name"></div><div class="f-field"><label>Last Name</label><input placeholder="Last name"></div></div>
-      <div class="f-row"><div class="f-field"><label>Date of Birth</label><input type="date"></div><div class="f-field"><label>Gender</label><select><option>Female</option><option>Male</option></select></div></div>
-      <div class="f-row"><div class="f-field"><label>Parent/Guardian Name</label><input placeholder="Full name"></div><div class="f-field"><label>Contact Number</label><input placeholder="+233..."></div></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Email Address</label><input placeholder="email@example.com"></div>
-      <button class="btn btn-primary" style="width:100%" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Application received. Admissions will contact you.', 'success')">Submit Application</button>
+      <div class="f-row">
+        <div class="f-field"><label>First Name *</label><input id="adm-first-name" placeholder="First name" required></div>
+        <div class="f-field"><label>Last Name *</label><input id="adm-last-name" placeholder="Last name" required></div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Date of Birth *</label><input id="adm-dob" type="date" required></div>
+        <div class="f-field">
+          <label>Gender *</label>
+          <select id="adm-gender" required>
+            <option>Female</option>
+            <option>Male</option>
+          </select>
+        </div>
+      </div>
+      <div class="f-row">
+        <div class="f-field">
+          <label>Class Applying *</label>
+          <select id="adm-class-applying" required>
+            <option value="">-- Select Class --</option>
+            ${classesData.map(c => `<option value="${escapeAttr(c.name)}">${escapeHtml(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="f-field"><label>Parent/Guardian Name *</label><input id="adm-parent-name" placeholder="Full name" required></div>
+      </div>
+      <div class="f-row">
+        <div class="f-field"><label>Contact Number *</label><input id="adm-parent-phone" placeholder="+233..." maxlength="13" required></div>
+        <div class="f-field"><label>Email Address</label><input id="adm-parent-email" placeholder="email@example.com" type="email"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="submitVisitorAdmission()">Submit Application</button>
     </div>
   </div>`;
+}
+
+async function submitVisitorAdmission() {
+  const firstName = document.getElementById('adm-first-name')?.value.trim();
+  const lastName = document.getElementById('adm-last-name')?.value.trim();
+  const dob = document.getElementById('adm-dob')?.value;
+  const gender = document.getElementById('adm-gender')?.value;
+  const classApplying = document.getElementById('adm-class-applying')?.value;
+  const parentName = document.getElementById('adm-parent-name')?.value.trim();
+  const parentPhone = document.getElementById('adm-parent-phone')?.value.trim();
+  const parentEmail = document.getElementById('adm-parent-email')?.value.trim();
+
+  if (!firstName || !lastName || !dob || !gender || !classApplying || !parentName || !parentPhone) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields.', 'error');
+    return;
+  }
+
+  if (parentPhone.length > 13) {
+    showToast('<i class="fas fa-times-circle"></i> Contact number cannot exceed 13 characters.', 'error');
+    return;
+  }
+
+  const applicantName = `${firstName} ${lastName}`;
+
+  try {
+    const res = await API.admissions.apply({
+      applicant_name: applicantName,
+      dob: dob,
+      gender: gender,
+      class_applying: classApplying,
+      parent_name: parentName,
+      parent_phone: parentPhone,
+      parent_email: parentEmail
+    });
+
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Application received successfully! Admissions will contact you.', 'success');
+      document.getElementById('adm-first-name').value = '';
+      document.getElementById('adm-last-name').value = '';
+      document.getElementById('adm-dob').value = '';
+      document.getElementById('adm-parent-name').value = '';
+      document.getElementById('adm-parent-phone').value = '';
+      document.getElementById('adm-parent-email').value = '';
+    } else {
+      showToast(res?.message || 'Failed to submit application. Please try again.', 'error');
+    }
+  } catch (e) {
+    showToast('An error occurred during submission.', 'error');
+    console.error(e);
+  }
 }
 
 function visitorNews() {

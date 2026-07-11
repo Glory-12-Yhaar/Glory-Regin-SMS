@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -36,7 +36,7 @@
 <div id="app-shell" class="active">
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-brand">
+    <div class="topbar-brand" style="cursor:pointer" onclick="navTo('dashboard')">
       <div class="brand-mark"><img src="images/Logo.png" alt="School Logo" style="width:100%;height:100%;object-fit:contain"></div>
       <div>
         <div class="brand-name">Glory Reign Preparatory School</div>
@@ -45,7 +45,7 @@
     </div>
     <div class="topbar-search">
       <span style="font-size:14px;color:var(--gray-400)"><i class="fas fa-magnifying-glass"></i></span>
-      <input placeholder="Search students, classes, reports...">
+      <input id="topbar-search-input" placeholder="Search students, classes, reports..." onkeyup="handleTopbarSearchKey(event)" oninput="handleTopbarSearch()">
     </div>
     <div class="topbar-right">
       <div class="tb-btn" onclick="toggleDark()" title="Toggle Dark Mode"><i class="fas fa-moon"></i></div>
@@ -91,7 +91,7 @@
   <script src="scripts/analytics-dashboard.js"></script>
   <script src="scripts/script.js?v=20260708-reminder-summary"></script>
   <!-- PHP Backend API Client — must load after script.js -->
-  <script src="scripts/api-client.js?v=20260702-1934"></script>
+  <script src="scripts/api-client.js?v=20260711-2000"></script>
 
 </body>
 

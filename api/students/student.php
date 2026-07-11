@@ -21,7 +21,9 @@ if (!$id) jsonResponse(['success' => false, 'message' => 'Student ID required'],
 function fetchStudent(PDO $db, int $id): array|false {
     $stmt = $db->prepare(
         "SELECT s.id, s.student_code, s.name, s.gender, s.dob, s.attendance, s.status,
-                s.stream, s.user_id, c.id AS class_id, c.name AS class_name, c.class_teacher
+                s.stream, s.user_id, c.id AS class_id, c.name AS class_name, c.class_teacher,
+                (SELECT p.name FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE ps.student_id = s.id LIMIT 1) AS guardian_name,
+                (SELECT p.phone FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE ps.student_id = s.id LIMIT 1) AS guardian_phone
          FROM students s
          LEFT JOIN classes c ON c.id = s.class_id
          WHERE s.id = ?"
@@ -70,10 +72,16 @@ if ($method === 'PUT') {
         }
     }
 
-    if (empty($fields)) jsonResponse(['success' => false, 'message' => 'No fields to update'], 422);
+    if (empty($fields) && !isset($body['guardian_name'])) jsonResponse(['success' => false, 'message' => 'No fields to update'], 422);
 
-    $params[] = $id;
-    $db->prepare("UPDATE students SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
+    if (!empty($fields)) {
+        $params[] = $id;
+        $db->prepare("UPDATE students SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
+    }
+
+    if (isset($body['guardian_name'])) {
+        associateParentWithStudent($db, $id, $body['guardian_name'], $body['guardian_phone'] ?? null);
+    }
 
     jsonResponse(['success' => true, 'message' => 'Student updated']);
 }
