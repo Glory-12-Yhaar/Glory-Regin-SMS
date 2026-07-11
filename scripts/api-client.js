@@ -1186,32 +1186,93 @@ deleteTeacher = async function(teacherId) {
   }
 };
 
-archiveTeacher = async function(teacherId) {
+// Use window.* to guarantee these override the hoisted function declarations in script.js
+window.archiveTeacher = async function(teacherId) {
+  console.log('[API] archiveTeacher called with:', teacherId);
   const id = getTeacherDbId(teacherId);
-  if (!id) return;
+  if (!id) { console.error('[API] archiveTeacher: could not resolve DB id for', teacherId); return; }
 
   const res = await API.staff.update(id, { status: 'Inactive' });
+  console.log('[API] archiveTeacher PUT result:', res);
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
-    await syncAllDataFromBackend();
+    // Optimistic in-memory update — mark teacher as Archived immediately
+    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
+    if (t) {
+      t.status = 'Archived';
+      t.archived_date = new Date().toISOString().split('T')[0];
+    } else {
+      console.warn('[API] archiveTeacher: teacher not found in teachersData for id', id);
+    }
     navTo('teachers');
+    // Background re-sync to keep data fresh
+    syncAllDataFromBackend();
   } else {
     showToast(res?.message || 'Failed to archive teacher', 'error');
   }
 };
 
-restoreTeacher = async function(teacherId) {
+window.restoreTeacher = async function(teacherId) {
+  console.log('[API] restoreTeacher called with:', teacherId);
   const id = getTeacherDbId(teacherId);
   if (!id) return;
 
   const res = await API.staff.update(id, { status: 'Active' });
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
-    await syncAllDataFromBackend();
+    // Optimistic in-memory update — mark teacher as Active immediately
+    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
+    if (t) {
+      t.status = 'Active';
+      delete t.archived_date;
+    }
     navTo('teachers');
+    // Background re-sync to keep data fresh
+    syncAllDataFromBackend();
   } else {
     showToast(res?.message || 'Failed to restore teacher', 'error');
   }
+};
+
+// Override viewArchivedTeachers to fetch directly from API — no stale in-memory reliance
+window.viewArchivedTeachers = async function() {
+  document.getElementById('main-content').innerHTML = hdr('Archived Teachers', 'Teachers who have been archived', 'Teachers') +
+    '<div class="toolbar"><button class="btn btn-secondary" onclick="navTo(\'teachers\')"><i class="fas fa-arrow-left"></i> Back to Teachers</button></div>' +
+    '<div class="card records-table-card"><div class="table-wrapper"><table class="tbl"><thead><tr><th>#</th><th>Teacher</th><th>ID</th><th>Subject</th><th>Department</th><th>Class</th><th>Phone</th><th>Email</th><th>Archived Date</th><th>Actions</th></tr></thead><tbody id="archived-teachers-body"><tr><td colspan="10" style="text-align:center;padding:30px"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div></div>';
+
+  const res = await API.staff.list({ limit: 200 });
+  const tbody = document.getElementById('archived-teachers-body');
+  if (!tbody) return;
+
+  if (!res || !res.success) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:red">Failed to load archived teachers</td></tr>';
+    return;
+  }
+
+  const archived = res.data.filter(t => t.category === 'Teaching' && t.status === 'Inactive');
+  if (!archived.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No archived teachers</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = archived.map((t, i) => {
+    const tid = 'T' + String(t.id).padStart(3, '0');
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${t.name}</td>
+      <td>${tid}</td>
+      <td>${t.subject || '-'}</td>
+      <td>${t.department || '-'}</td>
+      <td>${t.class_assigned || '-'}</td>
+      <td>${t.phone || '-'}</td>
+      <td>${t.email || '-'}</td>
+      <td>-</td>
+      <td>
+        <button class="btn btn-secondary btn-xs" onclick="viewTeacherProfile('${tid}')">View</button>
+        <button class="btn btn-primary btn-xs" style="margin-left:6px" onclick="restoreTeacher('${tid}')">Restore</button>
+      </td>
+    </tr>`;
+  }).join('');
 };
 
 // ── CLASSES ACTIONS OVERRIDES ───────────────────────────
