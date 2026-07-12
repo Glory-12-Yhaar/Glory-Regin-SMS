@@ -3394,7 +3394,7 @@ function admissionsModule() {
         </div>
         <div class="form-field">
           <label>Parent Phone *</label>
-          <input type="tel" id="adm-parent-phone" placeholder="0244567890">
+          <input type="tel" id="adm-parent-phone" placeholder="0244567890" max="10">
         </div>
         <div class="form-field">
           <label>Parent Email *</label>
@@ -3402,7 +3402,10 @@ function admissionsModule() {
         </div>
         <div class="form-field">
           <label>Parent Gender *</label>
-          <select id="adm-parent-gender"><option>-- Select --</option><option>Male</option><option>Female</option></select>
+          <select id="adm-parent-gender"><option>-- Select --</option>
+          <option>Male</option>
+          <option>Female</option>
+          </select>
         </div>
         <div class="form-field">
           <label>Primary Contact Person *</label>
