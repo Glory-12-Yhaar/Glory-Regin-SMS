@@ -22,7 +22,7 @@ if ($user['role'] !== 'Admin' && $user['id'] !== $id) {
 }
 
 function fetchUser(PDO $db, int $id): array|false {
-    $stmt = $db->prepare("SELECT id, user_code, name, username, email, role, status, avatar, last_login, created_at FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, user_code, name, username, email, role, status, avatar, phone, address, last_login, created_at FROM users WHERE id = ?");
     $stmt->execute([$id]);
     return $stmt->fetch();
 }
@@ -39,8 +39,8 @@ if ($method === 'PUT') {
     $fields = [];
     $params = [];
 
-    // Admin can change role/status; anyone can change name, email, avatar
-    $allowed = ['name', 'email', 'avatar'];
+    // Admin can change role/status; anyone can change name, email, avatar, phone, address
+    $allowed = ['name', 'email', 'avatar', 'phone', 'address'];
     if ($user['role'] === 'Admin') {
         $allowed = array_merge($allowed, ['username', 'role', 'status']);
     }

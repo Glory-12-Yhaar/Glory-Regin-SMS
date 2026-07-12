@@ -27,7 +27,7 @@ if ($method === 'GET') {
 
     $whereStr = implode(' AND ', $where);
     $stmt = $db->prepare(
-        "SELECT id, user_code, name, username, email, role, status, avatar, last_login, created_at
+        "SELECT id, user_code, name, username, email, role, status, avatar, phone, address, last_login, created_at
          FROM users WHERE $whereStr ORDER BY name ASC"
     );
     $stmt->execute($params);
@@ -51,8 +51,8 @@ if ($method === 'POST') {
     $hash  = password_hash($body['password'], PASSWORD_BCRYPT, ['cost' => 12]);
 
     $stmt = $db->prepare(
-        "INSERT INTO users (user_code, name, username, email, password_hash, role, status, avatar)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO users (user_code, name, username, email, password_hash, role, status, avatar, phone, address)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $stmt->execute([
         $code,
@@ -63,6 +63,8 @@ if ($method === 'POST') {
         $body['role'],
         $body['status'] ?? 'Active',
         $body['avatar'] ?? strtoupper(substr($body['name'], 0, 2)),
+        $body['phone'] ?? null,
+        $body['address'] ?? null
     ]);
     jsonResponse(['success' => true, 'message' => 'User created', 'id' => $db->lastInsertId()], 201);
 }
