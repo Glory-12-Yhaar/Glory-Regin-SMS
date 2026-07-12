@@ -273,6 +273,28 @@ try {
     foreach ($yearbooks as $y) $insYb->execute($y);
     ok('Yearbooks seeded.');
 
+    // 15e. Seed Parents
+    $parentUserId = (int)$pdo->query("SELECT id FROM users WHERE username='serwaa.parent'")->fetchColumn();
+    $amaStudentId = (int)$pdo->query("SELECT id FROM students WHERE name='Ama Serwaa'")->fetchColumn();
+    if ($parentUserId && $amaStudentId) {
+        $pdo->prepare("INSERT INTO parents (name, email, phone, address, user_id) VALUES (?, ?, ?, ?, ?)")
+            ->execute(['Mr. Serwaa', 'parent@gloryreign.edu.gh', '0241234567', 'Jirapa, Upper West', $parentUserId]);
+        $parentId = $pdo->lastInsertId();
+        $pdo->prepare("INSERT INTO parent_student (parent_id, student_id) VALUES (?, ?)")
+            ->execute([$parentId, $amaStudentId]);
+        ok('Parents and parent student links seeded.');
+    }
+
+    // 15f. Seed Admissions
+    $admissions = [
+        ['Kofi Mensah', '2016-04-12', 'Male', 'Primary 1', 'Kwabena Mensah', '0245551234', 'kwabena@gmail.com', 'Jirapa', 'Jirapa Nursery', 'Pending', 'Awaiting document verification'],
+        ['Yaa Asantewaa', '2015-08-20', 'Female', 'Primary 2', 'Akua Asantewaa', '0245555678', 'akua@gmail.com', 'Wa', 'Methodist Primary', 'Approved', 'Excellent exam performance'],
+        ['Yaw Kyeremeh', '2014-11-05', 'Male', 'JHS 1', 'Kofi Kyeremeh', '0245559012', 'kofi@gmail.com', 'Jirapa', 'Roman Catholic', 'Rejected', 'Class is full']
+    ];
+    $insAdm = $pdo->prepare("INSERT INTO admissions (applicant_name, dob, gender, class_applying, parent_name, parent_phone, parent_email, address, previous_school, status, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+    foreach ($admissions as $a) $insAdm->execute($a);
+    ok('Admissions seeded.');
+
 
     // 16. Unique constraints for upserts
     $pdo->exec("ALTER TABLE student_scores ADD UNIQUE KEY uq_score (student_id, subject(100), term, academic_year)");
@@ -282,7 +304,7 @@ try {
 
     // 17. Row counts
     $counts = [];
-    foreach (['users','classes','subjects','staff','students','student_scores','fees','events','notices','alumni','settings','hero_slides','news_articles','yearbooks'] as $t) {
+    foreach (['users','classes','subjects','staff','students','student_scores','fees','events','notices','alumni','settings','hero_slides','news_articles','yearbooks','parents','parent_student','admissions'] as $t) {
         $counts[$t] = (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
     }
 
@@ -343,7 +365,7 @@ th{background:#f8fafc;font-weight:600;color:#475569}code{background:#f1f5f9;padd
     <tr><td>Parent</td>    <td><code>serwaa.parent</code></td><td><code>parent123</code></td></tr>
   </table>
   <p style="color:#64748b;font-size:13px;margin-top:12px">⚠ Change passwords after first login via Settings → User Accounts.</p>
-  <a href="/SCH/Index.html" class="btn">🚀 Open School Portal</a>
+  <a href="Index.html" class="btn">🚀 Open School Portal</a>
   <a href="?delete=1" class="btn red" onclick="return confirm('Delete setup.php?')">🗑 Delete setup.php</a>
 </div>
 <?php endif ?>

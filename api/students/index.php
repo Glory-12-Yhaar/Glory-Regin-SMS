@@ -51,7 +51,9 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare(
         "SELECT s.id, s.student_code, s.name, s.gender, s.dob, s.attendance, s.status,
-                s.stream, c.name AS class_name, c.class_teacher
+                s.stream, c.name AS class_name, c.class_teacher,
+                (SELECT p.name FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE ps.student_id = s.id LIMIT 1) AS guardian_name,
+                (SELECT p.phone FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE ps.student_id = s.id LIMIT 1) AS guardian_phone
          FROM students s
          LEFT JOIN classes c ON c.id = s.class_id
          WHERE $whereStr
@@ -104,6 +106,9 @@ if ($method === 'POST') {
     ]);
 
     $id = $db->lastInsertId();
+    if (!empty($body['guardian_name'])) {
+        associateParentWithStudent($db, $id, $body['guardian_name'], $body['guardian_phone'] ?? null);
+    }
     jsonResponse(['success' => true, 'message' => 'Student created', 'id' => $id, 'student_code' => $code], 201);
 }
 

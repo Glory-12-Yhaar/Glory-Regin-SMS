@@ -3,7 +3,11 @@
 // Replaces in-memory data with real backend calls
 // ═══════════════════════════════════════════════════════════════
 
-const API_BASE = '/SCH/api';
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const baseDir = path.substring(0, path.lastIndexOf('/'));
+    return baseDir + '/api';
+})();
 
 // ── Core fetch wrapper ────────────────────────────────────────
 async function apiRequest(endpoint, method = 'GET', body = null) {
@@ -63,6 +67,8 @@ const API = {
     classes: {
         list:   ()     => apiRequest('/classes/index.php'),
         create: (data) => apiRequest('/classes/index.php', 'POST', data),
+        update: (id, data) => apiRequest('/classes/index.php?id=' + id, 'PUT', data),
+        delete: (id)   => apiRequest('/classes/index.php?id=' + id, 'DELETE'),
     },
 
     // ── Fees ─────────────────────────────────────────────────
@@ -149,8 +155,10 @@ const API = {
 
     // ── Parents ──────────────────────────────────────────────
     parents: {
-        list:      (params = {}) => apiRequest('/parents/index.php?' + new URLSearchParams(params)),
-        linkChild: (user_id, student_id) => apiRequest('/parents/index.php', 'POST', { user_id, student_id }),
+        list:        (params = {}) => apiRequest('/parents/index.php?' + new URLSearchParams(params)),
+        update:      (id, data)    => apiRequest('/parents/index.php?id=' + id, 'PUT', data),
+        delete:      (id)          => apiRequest('/parents/index.php?id=' + id, 'DELETE'),
+        linkChild:   (user_id, student_id) => apiRequest('/parents/index.php', 'POST', { user_id, student_id }),
         unlinkChild: (user_id, student_id) => apiRequest('/parents/index.php?' + new URLSearchParams({ user_id, student_id }), 'DELETE'),
     },
 
@@ -289,6 +297,61 @@ async function logoutAPI() {
 // MONOLITHIC APP OVERRIDES & SYNC HOOKS
 // ═══════════════════════════════════════════════════════════════
 
+// Helper to extract a reliable database integer ID from a student object/ID
+function getStudentDbId(studentId) {
+    if (!studentId) return 0;
+    if (Number.isInteger(studentId)) return studentId;
+    const num = parseInt(studentId, 10);
+    if (!isNaN(num) && String(num) === String(studentId)) return num;
+
+    const student = enrolledStudents.find(s => s.student_id === studentId || s.id == studentId);
+    if (student && student.id) return student.id;
+
+    if (typeof studentId === 'string' && studentId.includes('-')) {
+        const parts = studentId.split('-');
+        const parsed = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(parsed)) return parsed;
+    }
+    const clean = parseInt(String(studentId).replace(/[^0-9]/g, ''), 10);
+    return isNaN(clean) ? 0 : clean;
+}
+
+// Helper to extract a reliable database integer ID from a teacher/staff object/ID
+function getTeacherDbId(teacherId) {
+    if (!teacherId) return 0;
+    if (Number.isInteger(teacherId)) return teacherId;
+    const num = parseInt(teacherId, 10);
+    if (!isNaN(num) && String(num) === String(teacherId)) return num;
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId || t.id == teacherId);
+    if (teacher && teacher.id) return teacher.id;
+
+    if (typeof teacherId === 'string') {
+        const clean = parseInt(teacherId.replace('T', ''), 10);
+        if (!isNaN(clean)) return clean;
+    }
+    const clean = parseInt(String(teacherId).replace(/[^0-9]/g, ''), 10);
+    return isNaN(clean) ? 0 : clean;
+}
+
+// Helper to extract a reliable database integer ID from an admission object/ID
+function getAdmissionDbId(admId) {
+    if (!admId) return 0;
+    if (Number.isInteger(admId)) return admId;
+    const num = parseInt(admId, 10);
+    if (!isNaN(num) && String(num) === String(admId)) return num;
+
+    const adm = admissionsData.find(a => a.adm_id === admId || a.id == admId);
+    if (adm && adm.id) return adm.id;
+
+    if (typeof admId === 'string') {
+        const clean = parseInt(admId.replace('ADM', ''), 10);
+        if (!isNaN(clean)) return clean;
+    }
+    const clean = parseInt(String(admId).replace(/[^0-9]/g, ''), 10);
+    return isNaN(clean) ? 0 : clean;
+}
+
 // Sync utility to populate global arrays with data from backend MySQL APIs
 async function syncAllDataFromBackend() {
     console.log("Syncing all data with MySQL backend...");
@@ -335,7 +398,7 @@ async function syncAllDataFromBackend() {
                 avatar_color: t.avatar_color || 'blue',
                 dob: t.dob || '1990-01-01',
                 hiring_date: t.join_date || '2020-01-01',
-                status: t.status || 'Active'
+                status: t.status === 'Inactive' ? 'Archived' : (t.status || 'Active')
             })));
         }
     } catch (e) { console.error("Error syncing staff:", e); }
@@ -348,7 +411,7 @@ async function syncAllDataFromBackend() {
                 student_id: s.student_code || ('2024-' + String(s.id).padStart(4, '0')),
                 id: s.id,
                 name: s.name,
-                student_class: s.student_class,
+                student_class: s.class_name || 'Not Assigned',
                 gender: s.gender || 'Male',
                 dob: s.dob || '2015-01-01',
                 attendance: (s.attendance || 95) + '%',
@@ -373,11 +436,15 @@ async function syncAllDataFromBackend() {
                 parent_id: 'P' + String(p.id).padStart(3, '0'),
                 id: p.id,
                 name: p.name,
-                email: p.email || '',
+                contact_person: p.name,
+                gender: 'Male',
+                avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][p.id % 5],
                 phone: p.phone || '',
+                email: p.email || '',
                 address: p.address || '',
-                student: p.student_name || '',
-                student_id: p.student_id || ''
+                children: p.children && p.children.length ? p.children.map(c => c.student_name + ' (' + (c.class_name || 'Not Assigned') + ')').join(', ') : 'None',
+                fees_status: 'All Paid',
+                occupation: 'Parent'
             })));
         }
     } catch (e) { console.error("Error syncing parents:", e); }
@@ -389,17 +456,17 @@ async function syncAllDataFromBackend() {
             admissionsData.splice(0, admissionsData.length, ...res.data.map(a => ({
                 adm_id: 'ADM' + String(a.id).padStart(3, '0'),
                 id: a.id,
-                name: a.student_name,
+                name: a.applicant_name,
                 gender: a.gender || 'Male',
                 dob: a.dob || '2015-01-01',
-                class_applying: a.class_level || '',
+                class_applying: a.class_applying || '',
                 address: a.address || '',
-                parent_name: a.guardian_name || '',
-                parent_phone: a.guardian_phone || '',
-                parent_email: a.guardian_email || '',
+                parent_name: a.parent_name || '',
+                parent_phone: a.parent_phone || '',
+                parent_email: a.parent_email || '',
                 status: a.status || 'Pending',
                 notes: a.notes || '',
-                date: a.created_at ? a.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
+                created: a.applied_date || new Date().toISOString().split('T')[0]
             })));
         }
     } catch (e) { console.error("Error syncing admissions:", e); }
@@ -416,7 +483,8 @@ async function syncAllDataFromBackend() {
                 type: s.type || 'Core',
                 teacher: s.teacher_name || 'Not assigned',
                 teacher_id: s.teacher_id ? 'T' + String(s.teacher_id).padStart(3, '0') : null,
-                classes: s.classes || 'All Forms',
+                classes: s.class_name || s.classes || 'All Forms',
+                class_id: s.class_id,
                 hours: s.hours || '4 hrs/wk',
                 description: s.description || ''
             })));
@@ -485,10 +553,17 @@ async function syncAllDataFromBackend() {
             window.cachedHeroSlides = res.data;
         }
     } catch (e) { console.error("Error syncing hero slides:", e); }
+
+    if (typeof renderSidebar === 'function') {
+        renderSidebar();
+    }
 }
 
-// Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
-loadPersistentRecords = async function() {
+window.applyApiClientOverrides = function() {
+    console.log("Applying API client overrides...");
+
+    // Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
+    loadPersistentRecords = async function() {
     await syncAllDataFromBackend();
     if (typeof renderMain === 'function') {
         renderMain();
@@ -507,17 +582,17 @@ submitSubjectForm = async function() {
     const name = document.getElementById('add-subject-name')?.value?.trim();
     const type = document.getElementById('add-subject-type')?.value;
     const teacherId = document.getElementById('add-subject-teacher')?.value;
-    const classes = document.getElementById('add-subject-classes')?.value?.trim();
+    const classId = document.getElementById('add-subject-class-id')?.value;
     const hours = document.getElementById('add-subject-hours')?.value?.trim();
     const desc = document.getElementById('add-subject-desc')?.value?.trim();
 
-    if (!name || !classes || !hours) {
+    if (!name || !classId || !hours) {
         showToast('Please fill in all required fields', 'error');
         return;
     }
 
     const tId = teacherId ? parseInt(teacherId.replace('T', ''), 10) : null;
-    const data = { icon, name, type, teacher_id: tId, classes, hours, description: desc };
+    const data = { icon, name, type, teacher_id: tId, class_id: parseInt(classId, 10), hours, description: desc };
     const res = await API.subjects.create(data);
     if (res && res.success) {
         showToast(`Subject "${name}" added successfully`, 'success');
@@ -534,18 +609,18 @@ saveSubjectChanges = async function(subjectId) {
     const name = document.getElementById('edit-subject-name')?.value?.trim();
     const type = document.getElementById('edit-subject-type')?.value;
     const teacherId = document.getElementById('edit-subject-teacher')?.value;
-    const classes = document.getElementById('edit-subject-classes')?.value?.trim();
+    const classId = document.getElementById('edit-subject-class-id')?.value;
     const hours = document.getElementById('edit-subject-hours')?.value?.trim();
     const desc = document.getElementById('edit-subject-desc')?.value?.trim();
 
-    if (!name || !classes || !hours) {
+    if (!name || !classId || !hours) {
         showToast('Please fill in all required fields', 'error');
         return;
     }
 
     const id = parseInt(subjectId.replace('SUB', ''), 10);
     const tId = teacherId ? parseInt(teacherId.replace('T', ''), 10) : null;
-    const data = { icon, name, type, teacher_id: tId, classes, hours, description: desc };
+    const data = { icon, name, type, teacher_id: tId, class_id: parseInt(classId, 10), hours, description: desc };
     const res = await API.subjects.update(id, data);
     if (res && res.success) {
         showToast('Subject updated successfully', 'success');
@@ -910,12 +985,12 @@ submitStudentEnrollment = async function() {
   const name = document.getElementById('std-name')?.value.trim();
   const dob = document.getElementById('std-dob')?.value;
   const gender = document.getElementById('std-gender')?.value;
-  const studentClass = document.getElementById('std-class')?.value;
+  const classId = document.getElementById('std-class')?.value;
   const address = document.getElementById('std-address')?.value.trim();
   const parentName = document.getElementById('std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('std-parent-phone')?.value.trim();
 
-  if (!name || !dob || !gender || !studentClass) {
+  if (!name || !dob || !gender || !classId) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
@@ -924,7 +999,7 @@ submitStudentEnrollment = async function() {
     name,
     dob,
     gender,
-    student_class: studentClass,
+    class_id: parseInt(classId, 10),
     address,
     guardian_name: parentName,
     guardian_phone: parentPhone,
@@ -942,24 +1017,23 @@ submitStudentEnrollment = async function() {
 
 saveStudentChanges = async function(studentId) {
   const name = document.getElementById('edit-std-name')?.value.trim();
-  const studentClass = document.getElementById('edit-std-class')?.value;
+  const classId = document.getElementById('edit-std-class')?.value;
   const status = document.getElementById('edit-std-status')?.value;
   const address = document.getElementById('edit-std-address')?.value.trim();
   const parentName = document.getElementById('edit-std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('edit-std-parent-phone')?.value.trim();
 
-  if (!name || !studentClass) {
+  if (!name || !classId) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
 
-  const student = enrolledStudents.find(s => s.student_id === studentId);
-  if (!student) return;
+  const id = getStudentDbId(studentId);
+  if (!id) return;
 
-  const id = student.id;
   const res = await API.students.update(id, {
     name,
-    student_class: studentClass,
+    class_id: parseInt(classId, 10),
     status,
     address,
     guardian_name: parentName,
@@ -977,10 +1051,10 @@ saveStudentChanges = async function(studentId) {
 
 withdrawStudent = async function(studentId) {
   if (!confirm('Are you sure you want to withdraw this student?')) return;
-  const student = enrolledStudents.find(s => s.student_id === studentId);
-  if (!student) return;
+  const id = getStudentDbId(studentId);
+  if (!id) return;
   
-  const res = await API.students.update(student.id, { status: 'Withdrawn' });
+  const res = await API.students.update(id, { status: 'Withdrawn' });
   if (res && res.success) {
       showToast('<i class="fas fa-check-circle"></i> Student withdrawn', 'success');
       await syncAllDataFromBackend();
@@ -991,10 +1065,10 @@ withdrawStudent = async function(studentId) {
 };
 
 restoreStudent = async function(studentId) {
-  const student = enrolledStudents.find(s => s.student_id === studentId);
-  if (!student) return;
+  const id = getStudentDbId(studentId);
+  if (!id) return;
   
-  const res = await API.students.update(student.id, { status: 'Active' });
+  const res = await API.students.update(id, { status: 'Active' });
   if (res && res.success) {
       showToast('<i class="fas fa-check-circle"></i> Student restored', 'success');
       await syncAllDataFromBackend();
@@ -1056,8 +1130,8 @@ submitTeacherForm = async function() {
 };
 
 submitEditTeacher = async function(teacherId) {
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return showToast('Teacher not found', 'error');
+  const id = getTeacherDbId(teacherId);
+  if (!id) return showToast('Teacher not found', 'error');
 
   const name = document.getElementById('teacher-name')?.value;
   const subject = document.getElementById('teacher-subject')?.value;
@@ -1067,13 +1141,15 @@ submitEditTeacher = async function(teacherId) {
   const phone = document.getElementById('teacher-phone')?.value;
   const classAssigned = document.getElementById('teacher-class')?.value;
   const schedule = document.getElementById('teacher-schedule')?.value;
+  const basicSalary = Number(document.getElementById('teacher-basic')?.value || 3000);
+  const status = document.getElementById('teacher-status')?.value || 'Active';
 
   if (!name || !subject || department === '-- Select --' || !experience || !email || !phone) {
     showToast('Please fill all required fields', 'error');
     return;
   }
 
-  const res = await API.staff.update(teacher.id, {
+  const res = await API.staff.update(id, {
     name,
     email,
     phone,
@@ -1082,12 +1158,13 @@ submitEditTeacher = async function(teacherId) {
     subject,
     class_assigned: classAssigned || 'Not Assigned',
     experience: parseInt(experience, 10),
-    schedule: schedule || 'Mon-Fri'
+    schedule: schedule || 'Mon-Fri',
+    salary_grade: String(basicSalary),
+    status: status === 'Archived' ? 'Inactive' : status
   });
 
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher updated successfully!', 'success');
-    closeModal();
     await syncAllDataFromBackend();
     navTo('teachers');
   } else {
@@ -1097,10 +1174,10 @@ submitEditTeacher = async function(teacherId) {
 
 deleteTeacher = async function(teacherId) {
   if (!confirm('Are you sure you want to delete this teacher? This cannot be undone.')) return;
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return;
+  const id = getTeacherDbId(teacherId);
+  if (!id) return;
 
-  const res = await API.staff.delete(teacher.id);
+  const res = await API.staff.delete(id);
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher deleted successfully!', 'success');
     await syncAllDataFromBackend();
@@ -1110,58 +1187,133 @@ deleteTeacher = async function(teacherId) {
   }
 };
 
-archiveTeacher = async function(teacherId) {
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return;
+// Use window.* to guarantee these override the hoisted function declarations in script.js
+window.archiveTeacher = async function(teacherId) {
+  console.log('[API] archiveTeacher called with:', teacherId);
+  const id = getTeacherDbId(teacherId);
+  if (!id) { console.error('[API] archiveTeacher: could not resolve DB id for', teacherId); return; }
 
-  const res = await API.staff.update(teacher.id, { status: 'Inactive' });
+  const res = await API.staff.update(id, { status: 'Inactive' });
+  console.log('[API] archiveTeacher PUT result:', res);
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
-    await syncAllDataFromBackend();
+    // Optimistic in-memory update — mark teacher as Archived immediately
+    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
+    if (t) {
+      t.status = 'Archived';
+      t.archived_date = new Date().toISOString().split('T')[0];
+    } else {
+      console.warn('[API] archiveTeacher: teacher not found in teachersData for id', id);
+    }
     navTo('teachers');
+    // Background re-sync to keep data fresh
+    syncAllDataFromBackend();
   } else {
     showToast(res?.message || 'Failed to archive teacher', 'error');
   }
 };
 
-restoreTeacher = async function(teacherId) {
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  if (!teacher) return;
+window.restoreTeacher = async function(teacherId) {
+  console.log('[API] restoreTeacher called with:', teacherId);
+  const id = getTeacherDbId(teacherId);
+  if (!id) return;
 
-  const res = await API.staff.update(teacher.id, { status: 'Active' });
+  const res = await API.staff.update(id, { status: 'Active' });
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
-    await syncAllDataFromBackend();
+    // Optimistic in-memory update — mark teacher as Active immediately
+    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
+    if (t) {
+      t.status = 'Active';
+      delete t.archived_date;
+    }
     navTo('teachers');
+    // Background re-sync to keep data fresh
+    syncAllDataFromBackend();
   } else {
     showToast(res?.message || 'Failed to restore teacher', 'error');
   }
 };
 
-// ── CLASSES ACTIONS OVERRIDES ───────────────────────────
-submitClassForm = async function() {
-  const name = document.getElementById('class-name')?.value.trim();
-  const level = document.getElementById('class-level')?.value;
-  const stream = document.getElementById('class-stream')?.value;
-  const teacherId = document.getElementById('class-teacher')?.value;
-  const capacity = document.getElementById('class-capacity')?.value;
-  const subjectsStr = document.getElementById('class-subjects')?.value.trim();
+// Override viewArchivedTeachers to fetch directly from API — no stale in-memory reliance
+window.viewArchivedTeachers = async function() {
+  document.getElementById('main-content').innerHTML = hdr('Archived Teachers', 'Teachers who have been archived', 'Teachers') +
+    '<div class="toolbar"><button class="btn btn-secondary" onclick="navTo(\'teachers\')"><i class="fas fa-arrow-left"></i> Back to Teachers</button></div>' +
+    '<div class="card records-table-card"><div class="table-wrapper"><table class="tbl"><thead><tr><th>#</th><th>Teacher</th><th>ID</th><th>Subject</th><th>Department</th><th>Class</th><th>Phone</th><th>Email</th><th>Archived Date</th><th>Actions</th></tr></thead><tbody id="archived-teachers-body"><tr><td colspan="10" style="text-align:center;padding:30px"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div></div>';
 
-  if (!name || !level || !stream || !teacherId || !capacity) {
+  const res = await API.staff.list({ limit: 200 });
+  const tbody = document.getElementById('archived-teachers-body');
+  if (!tbody) return;
+
+  if (!res || !res.success) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:red">Failed to load archived teachers</td></tr>';
+    return;
+  }
+
+  const archived = res.data.filter(t => t.category === 'Teaching' && t.status === 'Inactive');
+  if (!archived.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No archived teachers</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = archived.map((t, i) => {
+    const tid = 'T' + String(t.id).padStart(3, '0');
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${t.name}</td>
+      <td>${tid}</td>
+      <td>${t.subject || '-'}</td>
+      <td>${t.department || '-'}</td>
+      <td>${t.class_assigned || '-'}</td>
+      <td>${t.phone || '-'}</td>
+      <td>${t.email || '-'}</td>
+      <td>-</td>
+      <td>
+        <button class="btn btn-secondary btn-xs" onclick="viewTeacherProfile('${tid}')">View</button>
+        <button class="btn btn-primary btn-xs" style="margin-left:6px" onclick="restoreTeacher('${tid}')">Restore</button>
+      </td>
+    </tr>`;
+  }).join('');
+};
+
+// ── CLASSES ACTIONS OVERRIDES ───────────────────────────
+createClass = async function() {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can create classes', 'error');
+    return;
+  }
+
+  const name = document.getElementById('new-class-name')?.value.trim();
+  const levelVal = document.getElementById('new-class-level')?.value;
+  const stream = document.getElementById('new-class-stream')?.value;
+  const teacherId = document.getElementById('new-class-teacher')?.value;
+  const capacity = document.getElementById('new-class-capacity')?.value;
+  const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+  if (!name || !levelVal || !stream || !capacity) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
 
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  const tId = teacher ? teacher.id : null;
+  const dbTeacherId = teacher ? teacher.id : null;
+
+  let mappedLevel = 'Primary';
+  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
+    mappedLevel = 'Early Childhood';
+  } else if (levelVal === 'JHS') {
+    mappedLevel = 'Junior High';
+  } else if (levelVal === 'Basic') {
+    mappedLevel = 'Primary';
+  }
 
   const res = await API.classes.create({
     name,
-    level,
+    level: mappedLevel,
     stream,
-    teacher_id: tId,
+    teacher_id: dbTeacherId,
     capacity: parseInt(capacity, 10),
-    subjects: subjectsStr
+    subjects
   });
 
   if (res && res.success) {
@@ -1173,11 +1325,89 @@ submitClassForm = async function() {
   }
 };
 
+saveClassChanges = async function(classId) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can manage classes', 'error');
+    return;
+  }
+
+  const clsObj = classesData.find(c => c.class_id === classId);
+  if (!clsObj) {
+    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+    return;
+  }
+
+  const name = document.getElementById('manage-class-name')?.value.trim();
+  const levelVal = document.getElementById('manage-class-level')?.value;
+  const stream = document.getElementById('manage-class-stream')?.value;
+  const teacherId = document.getElementById('manage-class-teacher')?.value;
+  const capacity = document.getElementById('manage-class-capacity')?.value;
+  const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+  if (!name || !levelVal || !stream || !capacity) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  const dbTeacherId = teacher ? teacher.id : null;
+
+  let mappedLevel = 'Primary';
+  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
+    mappedLevel = 'Early Childhood';
+  } else if (levelVal === 'JHS') {
+    mappedLevel = 'Junior High';
+  } else if (levelVal === 'Basic') {
+    mappedLevel = 'Primary';
+  }
+
+  const res = await API.classes.update(clsObj.id, {
+    name,
+    level: mappedLevel,
+    stream,
+    teacher_id: dbTeacherId,
+    capacity: parseInt(capacity, 10),
+    subjects
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Class updated successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('classes');
+  } else {
+    showToast(res?.message || 'Failed to update class', 'error');
+  }
+};
+
+deleteClass = async function(classId) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can delete classes', 'error');
+    return;
+  }
+
+  if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
+
+  const clsObj = classesData.find(c => c.class_id === classId);
+  if (!clsObj) {
+    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+    return;
+  }
+
+  const res = await API.classes.delete(clsObj.id);
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
+    await syncAllDataFromBackend();
+    navTo('classes');
+  } else {
+    showToast(res?.message || 'Failed to delete class', 'error');
+  }
+};
+
 // ── ADMISSIONS ACTIONS OVERRIDES ────────────────────────
 approveAdmission = async function(admId, studentName) {
-  const adm = admissionsData.find(a => a.adm_id === admId);
-  if (!adm) return;
-  const id = adm.id;
+  const id = getAdmissionDbId(admId);
+  if (!id) return;
   const res = await API.admissions.updateStatus(id, 'Approved', 'Approved by administrator');
   if (res && res.success) {
       showToast('<i class="fas fa-check-circle"></i> Admission Approved!', 'success');
@@ -1190,9 +1420,8 @@ approveAdmission = async function(admId, studentName) {
 
 rejectAdmission = async function(admId) {
   if (!confirm('Are you sure you want to reject this application?')) return;
-  const adm = admissionsData.find(a => a.adm_id === admId);
-  if (!adm) return;
-  const id = adm.id;
+  const id = getAdmissionDbId(admId);
+  if (!id) return;
   const res = await API.admissions.updateStatus(id, 'Rejected', 'Rejected by administrator');
   if (res && res.success) {
       showToast('Application rejected.', 'info');
@@ -1202,3 +1431,83 @@ rejectAdmission = async function(admId) {
       showToast(res?.message || 'Failed to reject admission', 'error');
   }
 };
+
+saveParentChanges = async function(parentId) {
+  const name = document.getElementById('edit-parent-name')?.value.trim();
+  const phone = document.getElementById('edit-parent-phone')?.value.trim();
+  const email = document.getElementById('edit-parent-email')?.value.trim();
+  const address = document.getElementById('edit-parent-address')?.value.trim();
+  const children = document.getElementById('edit-parent-children')?.value.trim();
+  
+  if (!name || !phone || !email || !children) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const id = parseInt(String(parentId).replace(/[^0-9]/g, ''), 10);
+  if (!id) return showToast('Parent not found', 'error');
+
+  const res = await API.parents.update(id, {
+    name,
+    phone,
+    email,
+    address,
+    children
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Parent updated successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('parents');
+  } else {
+    showToast(res?.message || 'Failed to update parent', 'error');
+  }
+};
+
+deleteRecord = async function(id, type) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can delete records', 'error', 3000);
+    return;
+  }
+
+  if (type === 'Teacher') {
+    archiveTeacher(id);
+    return;
+  }
+
+  if (type === 'Student') {
+    withdrawStudent(id);
+    return;
+  }
+
+  if (confirm(`Are you sure you want to delete this ${type}?`)) {
+    if (type === 'Parent') {
+      const dbId = parseInt(String(id).replace(/[^0-9]/g, ''), 10);
+      const res = await API.parents.delete(dbId);
+      if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Parent deleted successfully!', 'success');
+        await syncAllDataFromBackend();
+        navTo('parents');
+      } else {
+        showToast(res?.message || 'Failed to delete parent', 'error');
+      }
+    } else if (type === 'Admission') {
+      const dbId = getAdmissionDbId(id);
+      const res = await API.admissions.updateStatus(dbId, 'Rejected', 'Deleted by Administrator');
+      if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Admission record deleted!', 'success');
+        await syncAllDataFromBackend();
+        navTo('admissions');
+      } else {
+        showToast(res?.message || 'Failed to delete admission record', 'error');
+      }
+    } else {
+      showToast('<i class="fas fa-check-circle"></i> Record deleted!', 'success');
+    }
+  }
+};
+
+};
+
+// Run overrides immediately as script is loaded after script.js
+window.applyApiClientOverrides();

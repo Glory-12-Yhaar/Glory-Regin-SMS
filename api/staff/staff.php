@@ -89,6 +89,28 @@ if ($method === 'PUT') {
             }
         }
 
+        // Update users table status and details if user_id exists
+        if ($staff['user_id']) {
+            $uFields = [];
+            $uParams = [];
+            if (array_key_exists('name', $body)) {
+                $uFields[] = "name = ?";
+                $uParams[] = $body['name'];
+            }
+            if (array_key_exists('email', $body)) {
+                $uFields[] = "email = ?";
+                $uParams[] = $body['email'];
+            }
+            if (array_key_exists('status', $body)) {
+                $uFields[] = "status = ?";
+                $uParams[] = $body['status'];
+            }
+            if (!empty($uFields)) {
+                $uParams[] = $staff['user_id'];
+                $db->prepare("UPDATE users SET " . implode(', ', $uFields) . " WHERE id = ?")->execute($uParams);
+            }
+        }
+
         $db->commit();
         jsonResponse(['success' => true, 'message' => 'Staff updated']);
     } catch (PDOException $e) {
@@ -99,9 +121,21 @@ if ($method === 'PUT') {
 
 if ($method === 'DELETE') {
     requireRole(['Admin']);
-    if (!fetchStaff($db, $id)) jsonResponse(['success' => false, 'message' => 'Staff not found'], 404);
-    $db->prepare("DELETE FROM staff WHERE id = ?")->execute([$id]);
-    jsonResponse(['success' => true, 'message' => 'Staff deleted']);
+    $staff = fetchStaff($db, $id);
+    if (!$staff) jsonResponse(['success' => false, 'message' => 'Staff not found'], 404);
+
+    $db->beginTransaction();
+    try {
+        $db->prepare("DELETE FROM staff WHERE id = ?")->execute([$id]);
+        if ($staff['user_id']) {
+            $db->prepare("DELETE FROM users WHERE id = ?")->execute([$staff['user_id']]);
+        }
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'Staff deleted']);
+    } catch (PDOException $e) {
+        $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Failed to delete staff: ' . $e->getMessage()], 500);
+    }
 }
 
 jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);
