@@ -1942,10 +1942,10 @@ function handleTopbarSearch() {
 
   const mapping = {
     students: { id: 'student-search', fn: filterStudents },
-    teachers: currentRole === 'Admin' ? { id: 'teacher-management-search', fn: filterTeachersManagement } : { id: 'teacher-search', fn: filterTeachers },
+    teachers: { id: 'teacher-search', fn: currentRole === 'Admin' ? filterTeachersManagement : filterTeachers },
     parents: { id: 'parent-search', fn: filterParents },
     classes: { id: 'class-search', fn: filterClasses },
-    admissions: { id: 'admission-search', fn: filterAdmissions },
+    admissions: { id: 'adm-search', fn: filterAdmissions },
     subjects: { id: 'subject-search', fn: filterSubjects },
     users: { id: 'user-search', fn: filterUsers },
     staff: { id: 'staff-search', fn: filterStaffList },
@@ -5733,32 +5733,48 @@ function manageClass(classId) {
       </div>
       <div class="form-field">
         <label>Class Level *</label>
-        <select id="manage-class-level"><option value="Creche" ${classData.level === 'Creche' ? 'selected' : ''}>Creche</option><option value="Nursery" ${classData.level === 'Nursery' ? 'selected' : ''}>Nursery</option><option value="KG 1" ${classData.level === 'KG 1' ? 'selected' : ''}>KG 1</option><option value="KG 2" ${classData.level === 'KG 2' ? 'selected' : ''}>KG 2</option><option value="Basic" ${classData.level === 'Basic' ? 'selected' : ''}>Basic</option><option value="JHS" ${classData.level === 'JHS' ? 'selected' : ''}>JHS</option></select>
+        <select id="manage-class-level">
+          <option value="Creche" ${classData.level === 'Creche' ? 'selected' : ''}>Creche</option>
+          <option value="Nursery" ${classData.level === 'Nursery' ? 'selected' : ''}>Nursery</option>
+          <option value="KG 1" ${classData.level === 'KG 1' ? 'selected' : ''}>KG 1</option>
+          <option value="KG 2" ${classData.level === 'KG 2' ? 'selected' : ''}>KG 2</option>
+          <option value="Basic" ${classData.level === 'Basic' ? 'selected' : ''}>Basic</option>
+          <option value="JHS" ${classData.level === 'JHS' ? 'selected' : ''}>JHS</option>
+        </select>
       </div>
       <div class="form-field">
         <label>Stream *</label>
-        <select id="manage-class-stream"><option value="General" ${classData.stream === 'General' ? 'selected' : ''}>General</option><option value="Mixed" ${classData.stream === 'Mixed' ? 'selected' : ''}>Mixed</option></select>
+        <select id="manage-class-stream">
+          <option value="General" ${classData.stream === 'General' ? 'selected' : ''}>General</option>
+          <option value="Mixed" ${classData.stream === 'Mixed' ? 'selected' : ''}>Mixed</option>
+        </select>
       </div>
       <div class="form-field">
         <label>Class Teacher *</label>
         <select id="manage-class-teacher">
-          <option>-- Select Teacher --</option>
+          <option value="">-- Select Teacher --</option>
           ${teachersData.map(t => '<option value="' + t.teacher_id + '" ' + ((t.teacher_id === classData.teacher_id) ? 'selected' : '') + '> ' + t.name + '</option>').join('')}
         </select>
       </div>
       <div class="form-field">
-        <label>Current Students *</label>
-        <input type="number" id="manage-class-students" value="${classData.students}">
+        <label>Current Students</label>
+        <input type="number" id="manage-class-students" value="${classData.students}" readonly style="background:var(--gray-50);cursor:not-allowed" title="Student count is determined by active enrollments">
       </div>
       <div class="form-field">
         <label>Class Capacity *</label>
         <input type="number" id="manage-class-capacity" value="${classData.capacity}">
       </div>
       <div style="grid-column:1/-1">
-        <label>Subjects (Comma-separated) *</label>
-        <input type="text" id="manage-class-subjects" value="${classData.subjects.join(', ')}">
+        <label style="font-weight:600;display:block;margin-bottom:8px">Select Subjects *</label>
+        <div id="class-subjects-container" style="display:flex;gap:12px;flex-wrap:wrap;padding:12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:6px;max-height:150px;overflow-y:auto;margin-bottom:8px">
+          <!-- Rendered dynamically -->
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="custom-subject-input" placeholder="Or type custom subject name..." style="flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--gray-300);border-radius:4px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomSubjectToClassForm()" style="padding:4px 12px;font-size:12px">Add</button>
+        </div>
       </div>
-      <div style="grid-column:1/-1;display:flex;gap:8px">
+      <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:10px">
         <button class="btn btn-primary" style="flex:1" onclick="saveClassChanges('${classId}')"><i class="fas fa-save"></i> Save Changes</button>
         <button class="btn btn-secondary" style="flex:1" onclick="navTo('classes')">Cancel</button>
       </div>
@@ -5766,6 +5782,7 @@ function manageClass(classId) {
   </div>`;
 
   document.getElementById('main-content').innerHTML = html;
+  renderSubjectCheckboxes('class-subjects-container', classData.subjects || []);
 }
 
 function saveClassChanges(classId) {
@@ -5801,6 +5818,45 @@ function saveClassChanges(classId) {
   setTimeout(() => {
     navTo('classes');
   }, 2000);
+}
+
+function renderSubjectCheckboxes(containerId, selectedNames = []) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const allNames = [...new Set([
+    ...subjectsData.map(s => s.name),
+    ...selectedNames
+  ])].sort();
+
+  if (allNames.length === 0) {
+    container.innerHTML = '<span style="color:var(--gray-400);font-size:12px">No subjects found. Add a custom subject below.</span>';
+    return;
+  }
+
+  container.innerHTML = allNames.map(name => {
+    const checked = selectedNames.includes(name) ? 'checked' : '';
+    return `
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;background:white;padding:4px 8px;border:1px solid var(--gray-200);border-radius:4px;user-select:none">
+        <input type="checkbox" name="class-subjects" value="${name}" ${checked}>
+        <span>${name}</span>
+      </label>
+    `;
+  }).join('');
+}
+
+function addCustomSubjectToClassForm() {
+  const input = document.getElementById('custom-subject-input');
+  const name = input ? input.value.trim() : '';
+  if (!name) return;
+
+  const checked = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+  if (!checked.includes(name)) {
+    checked.push(name);
+  }
+
+  input.value = '';
+  renderSubjectCheckboxes('class-subjects-container', checked);
 }
 
 function openCreateClass() {
@@ -5843,18 +5899,20 @@ function openCreateClass() {
         </select>
       </div>
       <div class="form-field">
-        <label>Current Students *</label>
-        <input type="number" id="new-class-students" placeholder="0">
-      </div>
-      <div class="form-field">
         <label>Class Capacity *</label>
-        <input type="number" id="new-class-capacity" placeholder="0">
+        <input type="number" id="new-class-capacity" value="40">
       </div>
       <div style="grid-column:1/-1">
-        <label>Subjects (Comma-separated) *</label>
-        <input type="text" id="new-class-subjects" placeholder="Mathematics, English, Science">
+        <label style="font-weight:600;display:block;margin-bottom:8px">Select Subjects *</label>
+        <div id="class-subjects-container" style="display:flex;gap:12px;flex-wrap:wrap;padding:12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:6px;max-height:150px;overflow-y:auto;margin-bottom:8px">
+          <!-- Rendered dynamically -->
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="custom-subject-input" placeholder="Or type custom subject name..." style="flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--gray-300);border-radius:4px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addCustomSubjectToClassForm()" style="padding:4px 12px;font-size:12px">Add</button>
+        </div>
       </div>
-      <div style="grid-column:1/-1;display:flex;gap:8px">
+      <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:10px">
         <button class="btn btn-primary" style="flex:1" onclick="createClass()"><i class="fas fa-check"></i> Create Class</button>
         <button class="btn btn-secondary" style="flex:1" onclick="navTo('classes')">Cancel</button>
       </div>
@@ -5862,6 +5920,7 @@ function openCreateClass() {
   </div>`;
 
   document.getElementById('main-content').innerHTML = html;
+  renderSubjectCheckboxes('class-subjects-container', []);
 }
 
 function createClass() {
@@ -5922,12 +5981,17 @@ function deleteClass(classId) {
 }
 
 function filterClasses() {
+  const searchInput = document.getElementById('class-search');
+  const searchText = (searchInput ? searchInput.value : '').toLowerCase();
   const streamFilter = document.getElementById('class-stream-filter');
   const selectedStream = streamFilter ? streamFilter.value : 'All Streams';
 
   let filtered = getVisibleClassesForRole(classesData).filter((c) => {
+    const matchSearch = !searchText || c.name.toLowerCase().includes(searchText) || 
+                        (c.teacher && c.teacher.toLowerCase().includes(searchText)) ||
+                        (c.level && c.level.toLowerCase().includes(searchText));
     const matchStream = selectedStream === 'All Streams' || c.stream === selectedStream;
-    return matchStream;
+    return matchSearch && matchStream;
   });
 
   updateClassCards(filtered);
@@ -5954,10 +6018,11 @@ function updateClassCards(classes) {
         <span style="color:var(--success);font-weight:700">${c.attendance}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewClassStudents('${c.class_id}')">View Students</button>
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewClassTimetable('${c.name}')">Timetable</button>
         ${isAdmin ? `<button class="btn btn-primary btn-xs" style="flex:1" onclick="manageClass('${c.class_id}')">Manage</button>` : ''}
+        ${isAdmin ? `<button class="btn btn-danger btn-xs" style="flex:1" onclick="deleteClass('${c.class_id}')">Delete</button>` : ''}
       </div>
     </div>`).join('');
 }
@@ -5977,12 +6042,20 @@ function classesModule() {
     ${statCard('<i class="fas fa-chalkboard-user"></i>', visibleClasses.length, 'Class Teachers', isAdmin ? 'One per class' : 'Your assignments', 'neu', 'si-green')}
     ${statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')}
   </div>
-  ${isAdmin ? `
   <div class="toolbar" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-    <div style="font-size:12px;color:var(--gray-600)">Manage classes, assign teachers, and keep class records updated.</div>
-    <button class="btn btn-primary" onclick="openCreateClass()"><i class="fas fa-plus"></i> Add Class</button>
+    <div class="search-bar" style="max-width:300px;flex:1">
+      <span><i class="fas fa-search"></i></span>
+      <input id="class-search" placeholder="Search classes..." onkeyup="filterClasses()" style="cursor:text">
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="class-stream-filter" class="select-sm" onchange="filterClasses()">
+        <option value="All Streams">All Streams</option>
+        <option value="General">General</option>
+        <option value="Mixed">Mixed</option>
+      </select>
+      ${isAdmin ? `<button class="btn btn-primary" onclick="openCreateClass()"><i class="fas fa-plus"></i> Add Class</button>` : ''}
+    </div>
   </div>
-  ` : ''}
   ${!isAdmin ? `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>` : ''}
   <div class="g3 mb20">
     ${visibleClasses.map((c) => `
@@ -6329,8 +6402,11 @@ function showAddSubjectForm() {
         </select>
       </div>
       <div class="form-field">
-        <label>Applicable Classes</label>
-        <input type="text" id="add-subject-classes" placeholder="e.g., JHS 1-3 or All Forms">
+        <label>Class Assignment *</label>
+        <select id="add-subject-class-id">
+          <option value="">-- Select Class --</option>
+          ${classesData.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
       </div>
       <div class="form-field">
         <label>Hours Per Week</label>
@@ -6464,8 +6540,11 @@ function editSubject(subjectId) {
         </select>
       </div>
       <div class="form-field">
-        <label>Applicable Classes</label>
-        <input type="text" id="edit-subject-classes" value="${subject.classes}">
+        <label>Class Assignment *</label>
+        <select id="edit-subject-class-id">
+          <option value="">-- Select Class --</option>
+          ${classesData.map(c => `<option value="${c.id}" ${(c.id === subject.class_id || c.name === subject.classes) ? 'selected' : ''}>${c.name}</option>`).join('')}
+        </select>
       </div>
       <div class="form-field">
         <label>Hours Per Week</label>

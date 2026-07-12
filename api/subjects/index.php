@@ -18,9 +18,10 @@ $id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 function fetchSubject(PDO $db, int $id): array|false {
     $stmt = $db->prepare(
-        "SELECT sub.*, s.name AS teacher_name 
+        "SELECT sub.*, s.name AS teacher_name, c.name AS class_name 
          FROM subjects sub 
          LEFT JOIN staff s ON s.id = sub.teacher_id 
+         LEFT JOIN classes c ON c.id = sub.class_id
          WHERE sub.id = ?"
     );
     $stmt->execute([$id]);
@@ -34,9 +35,10 @@ if ($method === 'GET') {
         jsonResponse(['success' => true, 'data' => $subject]);
     } else {
         $stmt = $db->query(
-            "SELECT sub.*, s.name AS teacher_name 
+            "SELECT sub.*, s.name AS teacher_name, c.name AS class_name 
              FROM subjects sub 
              LEFT JOIN staff s ON s.id = sub.teacher_id 
+             LEFT JOIN classes c ON c.id = sub.class_id
              ORDER BY sub.name ASC"
         );
         jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
@@ -49,17 +51,26 @@ if ($method === 'POST') {
     if (empty($body['name'])) {
         jsonResponse(['success' => false, 'message' => 'Subject name is required'], 422);
     }
+    if (empty($body['class_id'])) {
+        jsonResponse(['success' => false, 'message' => 'Class assignment is required'], 422);
+    }
+
+    $classId = (int)$body['class_id'];
+    $clQuery = $db->prepare("SELECT name FROM classes WHERE id = ?");
+    $clQuery->execute([$classId]);
+    $className = $clQuery->fetchColumn() ?: 'Unknown Class';
 
     $stmt = $db->prepare(
-        "INSERT INTO subjects (name, icon, teacher_id, type, classes, hours, description) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO subjects (name, icon, teacher_id, type, classes, class_id, hours, description) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $stmt->execute([
         htmlspecialchars(trim($body['name']), ENT_QUOTES),
         $body['icon']        ?? null,
         !empty($body['teacher_id']) ? (int)$body['teacher_id'] : null,
         $body['type']        ?? 'Core',
-        $body['classes']     ?? null,
+        $className,
+        $classId,
         $body['hours']       ?? null,
         $body['description'] ?? null
     ]);
@@ -77,7 +88,14 @@ if ($method === 'PUT') {
     $body    = getRequestBody();
     $fields  = [];
     $params  = [];
-    $allowed = ['name', 'icon', 'teacher_id', 'type', 'classes', 'hours', 'description'];
+    $allowed = ['name', 'icon', 'teacher_id', 'type', 'class_id', 'classes', 'hours', 'description'];
+
+    if (!empty($body['class_id'])) {
+        $classId = (int)$body['class_id'];
+        $clQuery = $db->prepare("SELECT name FROM classes WHERE id = ?");
+        $clQuery->execute([$classId]);
+        $body['classes'] = $clQuery->fetchColumn() ?: 'Unknown Class';
+    }
 
     foreach ($allowed as $f) {
         if (array_key_exists($f, $body)) {
@@ -86,6 +104,8 @@ if ($method === 'PUT') {
                 $params[] = htmlspecialchars(trim($body[$f]), ENT_QUOTES);
             } else if ($f === 'teacher_id') {
                 $params[] = !empty($body[$f]) ? (int)$body[$f] : null;
+            } else if ($f === 'class_id') {
+                $params[] = (int)$body[$f];
             } else {
                 $params[] = $body[$f];
             }

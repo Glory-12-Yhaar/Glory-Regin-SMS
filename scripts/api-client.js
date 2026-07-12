@@ -483,7 +483,8 @@ async function syncAllDataFromBackend() {
                 type: s.type || 'Core',
                 teacher: s.teacher_name || 'Not assigned',
                 teacher_id: s.teacher_id ? 'T' + String(s.teacher_id).padStart(3, '0') : null,
-                classes: s.classes || 'All Forms',
+                classes: s.class_name || s.classes || 'All Forms',
+                class_id: s.class_id,
                 hours: s.hours || '4 hrs/wk',
                 description: s.description || ''
             })));
@@ -581,17 +582,17 @@ submitSubjectForm = async function() {
     const name = document.getElementById('add-subject-name')?.value?.trim();
     const type = document.getElementById('add-subject-type')?.value;
     const teacherId = document.getElementById('add-subject-teacher')?.value;
-    const classes = document.getElementById('add-subject-classes')?.value?.trim();
+    const classId = document.getElementById('add-subject-class-id')?.value;
     const hours = document.getElementById('add-subject-hours')?.value?.trim();
     const desc = document.getElementById('add-subject-desc')?.value?.trim();
 
-    if (!name || !classes || !hours) {
+    if (!name || !classId || !hours) {
         showToast('Please fill in all required fields', 'error');
         return;
     }
 
     const tId = teacherId ? parseInt(teacherId.replace('T', ''), 10) : null;
-    const data = { icon, name, type, teacher_id: tId, classes, hours, description: desc };
+    const data = { icon, name, type, teacher_id: tId, class_id: parseInt(classId, 10), hours, description: desc };
     const res = await API.subjects.create(data);
     if (res && res.success) {
         showToast(`Subject "${name}" added successfully`, 'success');
@@ -608,18 +609,18 @@ saveSubjectChanges = async function(subjectId) {
     const name = document.getElementById('edit-subject-name')?.value?.trim();
     const type = document.getElementById('edit-subject-type')?.value;
     const teacherId = document.getElementById('edit-subject-teacher')?.value;
-    const classes = document.getElementById('edit-subject-classes')?.value?.trim();
+    const classId = document.getElementById('edit-subject-class-id')?.value;
     const hours = document.getElementById('edit-subject-hours')?.value?.trim();
     const desc = document.getElementById('edit-subject-desc')?.value?.trim();
 
-    if (!name || !classes || !hours) {
+    if (!name || !classId || !hours) {
         showToast('Please fill in all required fields', 'error');
         return;
     }
 
     const id = parseInt(subjectId.replace('SUB', ''), 10);
     const tId = teacherId ? parseInt(teacherId.replace('T', ''), 10) : null;
-    const data = { icon, name, type, teacher_id: tId, classes, hours, description: desc };
+    const data = { icon, name, type, teacher_id: tId, class_id: parseInt(classId, 10), hours, description: desc };
     const res = await API.subjects.update(id, data);
     if (res && res.success) {
         showToast('Subject updated successfully', 'success');
@@ -1287,27 +1288,32 @@ createClass = async function() {
   const stream = document.getElementById('new-class-stream')?.value;
   const teacherId = document.getElementById('new-class-teacher')?.value;
   const capacity = document.getElementById('new-class-capacity')?.value;
-  const subjectsStr = document.getElementById('new-class-subjects')?.value.trim();
+  const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
 
-  if (!name || !levelVal || !stream || !teacherId || !capacity) {
+  if (!name || !levelVal || !stream || !capacity) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
 
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  const teacherName = teacher ? teacher.name : null;
+  const dbTeacherId = teacher ? teacher.id : null;
 
   let mappedLevel = 'Primary';
   if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
     mappedLevel = 'Early Childhood';
   } else if (levelVal === 'JHS') {
     mappedLevel = 'Junior High';
+  } else if (levelVal === 'Basic') {
+    mappedLevel = 'Primary';
   }
 
   const res = await API.classes.create({
     name,
     level: mappedLevel,
-    class_teacher: teacherName
+    stream,
+    teacher_id: dbTeacherId,
+    capacity: parseInt(capacity, 10),
+    subjects
   });
 
   if (res && res.success) {
@@ -1316,6 +1322,60 @@ createClass = async function() {
     navTo('classes');
   } else {
     showToast(res?.message || 'Failed to create class', 'error');
+  }
+};
+
+saveClassChanges = async function(classId) {
+  if (currentRole !== 'Admin') {
+    showToast('Only administrators can manage classes', 'error');
+    return;
+  }
+
+  const clsObj = classesData.find(c => c.class_id === classId);
+  if (!clsObj) {
+    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+    return;
+  }
+
+  const name = document.getElementById('manage-class-name')?.value.trim();
+  const levelVal = document.getElementById('manage-class-level')?.value;
+  const stream = document.getElementById('manage-class-stream')?.value;
+  const teacherId = document.getElementById('manage-class-teacher')?.value;
+  const capacity = document.getElementById('manage-class-capacity')?.value;
+  const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+  if (!name || !levelVal || !stream || !capacity) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    return;
+  }
+
+  const teacher = teachersData.find(t => t.teacher_id === teacherId);
+  const dbTeacherId = teacher ? teacher.id : null;
+
+  let mappedLevel = 'Primary';
+  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
+    mappedLevel = 'Early Childhood';
+  } else if (levelVal === 'JHS') {
+    mappedLevel = 'Junior High';
+  } else if (levelVal === 'Basic') {
+    mappedLevel = 'Primary';
+  }
+
+  const res = await API.classes.update(clsObj.id, {
+    name,
+    level: mappedLevel,
+    stream,
+    teacher_id: dbTeacherId,
+    capacity: parseInt(capacity, 10),
+    subjects
+  });
+
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Class updated successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('classes');
+  } else {
+    showToast(res?.message || 'Failed to update class', 'error');
   }
 };
 
