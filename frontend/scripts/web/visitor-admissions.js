@@ -418,20 +418,18 @@ async function enrollStudent(admissionId) {
   };
 
   try {
-    if (typeof API !== 'undefined' && API.admissions && admission.id) {
-      const res = API.admissions.enroll
-        ? await API.admissions.enroll(admission.id, 'Enrolled by administrator')
-        : await API.admissions.updateStatus(admission.id, 'Enrolled', 'Enrolled by administrator');
-      if (!res || !res.success) {
-        showToast('<i class="fas fa-times-circle"></i> ' + (res?.message || 'Unable to enroll student'), 'error');
-        return;
-      }
-      if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
-    } else {
-      enrolledStudents.push(newStudent);
-      admission.status = 'Enrolled';
-      createOrUpdateParentFromAdmission(admission, newStudent);
+    if (typeof API === 'undefined' || !API.admissions || !admission.id) {
+      showToast('<i class="fas fa-times-circle"></i> Backend admission record is required before enrollment', 'error');
+      return;
     }
+    const res = API.admissions.enroll
+      ? await API.admissions.enroll(admission.id, 'Enrolled by administrator')
+      : await API.admissions.updateStatus(admission.id, 'Enrolled', 'Enrolled by administrator');
+    if (!res || !res.success) {
+      showToast('<i class="fas fa-times-circle"></i> ' + (res?.message || 'Unable to enroll student'), 'error');
+      return;
+    }
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     showToast('<i class="fas fa-check-circle"></i> Student marked as enrolled<br/>Name: ' + admission.name + '<br/>ID: ' + studentID, 'success', 4000);
     renderMain('admissions');
   } catch (error) {

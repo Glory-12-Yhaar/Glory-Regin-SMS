@@ -160,25 +160,41 @@ if ($method === 'POST') {
         if (empty($body[$f])) jsonResponse(['success' => false, 'message' => "Field '$f' required"], 422);
     }
 
-    $stmt = $db->prepare(
-        "INSERT INTO admissions (applicant_name, dob, gender, class_applying, parent_name,
-                                  parent_phone, parent_email, address, previous_school, photo, status, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)"
-    );
-    $stmt->execute([
-        htmlspecialchars(trim($body['applicant_name']), ENT_QUOTES),
-        $body['dob']             ?? null,
-        $body['gender']          ?? null,
-        $body['class_applying'],
-        htmlspecialchars(trim($body['parent_name']),    ENT_QUOTES),
-        $body['parent_phone'],
-        filter_var($body['parent_email'] ?? '', FILTER_SANITIZE_EMAIL) ?: null,
-        $body['address']         ?? null,
-        $body['previous_school'] ?? null,
-        $body['photo']           ?? null,
-        $body['notes']           ?? null,
-    ]);
-    jsonResponse(['success' => true, 'message' => 'Application submitted', 'id' => $db->lastInsertId()], 201);
+    $db->beginTransaction();
+    try {
+        $parentEmail = filter_var($body['parent_email'] ?? '', FILTER_SANITIZE_EMAIL) ?: null;
+        $stmt = $db->prepare(
+            "INSERT INTO admissions (applicant_name, dob, gender, class_applying, parent_name,
+                                      parent_phone, parent_email, address, previous_school, photo, status, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)"
+        );
+        $stmt->execute([
+            htmlspecialchars(trim($body['applicant_name']), ENT_QUOTES),
+            $body['dob']             ?? null,
+            $body['gender']          ?? null,
+            $body['class_applying'],
+            htmlspecialchars(trim($body['parent_name']),    ENT_QUOTES),
+            $body['parent_phone'],
+            $parentEmail,
+            $body['address']         ?? null,
+            $body['previous_school'] ?? null,
+            $body['photo']           ?? null,
+            $body['notes']           ?? null,
+        ]);
+        $admissionId = (int)$db->lastInsertId();
+        $parentId = ensureParentRecord(
+            $db,
+            $body['parent_name'],
+            $body['parent_phone'] ?? null,
+            $parentEmail,
+            $body['address'] ?? null
+        );
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'Application submitted', 'id' => $admissionId, 'parent_id' => $parentId], 201);
+    } catch (Throwable $e) {
+        $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Failed to submit application: ' . $e->getMessage()], 500);
+    }
 }
 
 if ($method === 'PUT') {

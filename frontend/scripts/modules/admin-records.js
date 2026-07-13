@@ -612,7 +612,7 @@ function showEnrollStudentForm() {
   document.getElementById('main-content').innerHTML = html;
 }
 
-function submitStudentEnrollment() {
+async function submitStudentEnrollment() {
   const name = document.getElementById('std-name')?.value.trim();
   const dob = document.getElementById('std-dob')?.value;
   const gender = document.getElementById('std-gender')?.value;
@@ -626,39 +626,30 @@ function submitStudentEnrollment() {
     return;
   }
 
-  const studentId = '2024-' + String(enrolledStudents.length + 1000).slice(-4);
-  const newStudent = {
-    student_id: studentId,
-    name: name,
-    student_class: studentClass,
-    gender: gender,
-    dob: dob,
-    attendance: '95%',
-    fees_status: 'Pending',
-    status: 'Active',
-    avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][Math.floor(Math.random() * 5)],
-    gender_abbr: gender === 'Male' ? 'M' : 'F',
-    address: address,
-    parent_name: parentName,
-    parent_phone: parentPhone,
-    picture: null,
-    enrolled_date: new Date().toISOString().split('T')[0]
-  };
+  if (typeof API === 'undefined' || !API.students) {
+    showToast('<i class="fas fa-times-circle"></i> Backend student API is unavailable', 'error');
+    return;
+  }
 
-  enrolledStudents.push(newStudent);
-  saveStudentRecords();
-  showToast('<i class="fas fa-check-circle"></i> Student enrolled!<br/>ID: ' + studentId + '<br/>Name: ' + name, 'success', 4000);
+  const res = await API.students.create({
+    name,
+    dob,
+    gender,
+    class_id: parseInt(studentClass, 10),
+    address,
+    guardian_name: parentName,
+    guardian_phone: parentPhone,
+    status: 'Active'
+  });
 
-  setTimeout(() => {
-    navTo('students');
-    setTimeout(() => {
-      const classFilter = document.getElementById('student-class-filter');
-      if (classFilter) {
-        classFilter.value = studentClass;
-        filterStudents();
-      }
-    }, 80);
-  }, 800);
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to enroll student', 'error');
+    return;
+  }
+
+  showToast('<i class="fas fa-check-circle"></i> Student enrolled in database!<br/>ID: ' + res.student_code + '<br/>Name: ' + name, 'success', 4000);
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  navTo('students');
 }
 
 function viewAdmissionDetail(admId) {
@@ -821,17 +812,28 @@ function editStudent(studentId) {
   document.getElementById('main-content').innerHTML = html;
 }
 
-function saveStudentChanges(studentId) {
+async function saveStudentChanges(studentId) {
   const student = enrolledStudents.find(s => s.student_id === studentId);
   if (!student) return;
 
-  student.name = document.getElementById('edit-std-name')?.value || student.name;
-  student.student_class = document.getElementById('edit-std-class')?.value || student.student_class;
-  student.status = document.getElementById('edit-std-status')?.value || student.status;
-  student.address = document.getElementById('edit-std-address')?.value || '';
-  student.parent_name = document.getElementById('edit-std-parent-name')?.value || '';
-  student.parent_phone = document.getElementById('edit-std-parent-phone')?.value || '';
-  saveStudentRecords();
+  if (typeof API === 'undefined' || !API.students || !student.id) {
+    showToast('<i class="fas fa-times-circle"></i> Backend student API is unavailable', 'error');
+    return;
+  }
+
+  const res = await API.students.update(student.id, {
+    name: document.getElementById('edit-std-name')?.value || student.name,
+    class_id: parseInt(document.getElementById('edit-std-class')?.value || student.class_id || 0, 10) || null,
+    status: document.getElementById('edit-std-status')?.value || student.status,
+    address: document.getElementById('edit-std-address')?.value || '',
+    guardian_name: document.getElementById('edit-std-parent-name')?.value || '',
+    guardian_phone: document.getElementById('edit-std-parent-phone')?.value || ''
+  });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to update student', 'error');
+    return;
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
 
   showToast('<i class="fas fa-check-circle"></i> Student details updated!<br/>Name: ' + student.name, 'success', 3000);
 
@@ -916,24 +918,24 @@ function studentTableRowHtml(s, i, isAdmin) {
   return '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'.student-actions-cell\') && !event.target.closest(\'details\')) viewStudent(\'' + studentId + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + (s.avatar_color || 'blue') + '">' + (s.name || 'S')[0] + '</div><span style="font-weight:600">' + escapeHtml(s.name || '') + '</span></div></td><td style="font-size:11px;color:var(--gray-400)">' + escapeHtml(s.student_id || '') + '</td><td>' + escapeHtml(s.student_class || '') + '</td><td><span class="badge ' + ((s.gender_abbr === 'F' || s.gender === 'Female') ? 'b-purple' : 'b-info') + '">' + escapeHtml(s.gender || '') + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + escapeHtml(s.dob || '') + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + escapeHtml(s.attendance || '') + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + escapeHtml(s.fees_status || '') + '</span></td><td><span class="badge ' + (({ 'Active': 'b-success', 'Inactive': 'b-warning', 'Graduated': 'b-info', 'Suspended': 'b-gold', 'Withdrawn': 'b-danger' }[s.status] || 'b-success')) + '">' + escapeHtml(s.status || 'Active') + '</span></td><td class="student-actions-cell">' + actions + '</td></tr>';
 }
 
-function withdrawStudent(studentId) {
+async function withdrawStudent(studentId) {
   const student = enrolledStudents.find(s => s.student_id === studentId);
   if (!student) return showToast('Student not found', 'error');
-  student.status = 'Withdrawn';
-  student.withdrawn_date = new Date().toISOString().split('T')[0];
-  student.withdrawn_by = currentRole || 'Admin';
-  saveStudentRecords();
+  if (typeof API === 'undefined' || !API.students || !student.id) return showToast('Backend student API is unavailable', 'error');
+  const res = await API.students.update(student.id, { status: 'Withdrawn' });
+  if (!res || !res.success) return showToast(res?.message || 'Failed to withdraw student', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Student moved to withdrawn records', 'success');
   navTo('students');
 }
 
-function restoreStudent(studentId) {
+async function restoreStudent(studentId) {
   const student = enrolledStudents.find(s => s.student_id === studentId);
   if (!student) return showToast('Student not found', 'error');
-  student.status = 'Active';
-  delete student.withdrawn_date;
-  delete student.withdrawn_by;
-  saveStudentRecords();
+  if (typeof API === 'undefined' || !API.students || !student.id) return showToast('Backend student API is unavailable', 'error');
+  const res = await API.students.update(student.id, { status: 'Active' });
+  if (!res || !res.success) return showToast(res?.message || 'Failed to restore student', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Student restored to active records', 'success');
   viewWithdrawnStudents();
 }
