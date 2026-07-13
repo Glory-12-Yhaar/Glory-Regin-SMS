@@ -1,7 +1,7 @@
 <?php
 /**
  * Glory Reign School — One-Click Database Setup
- * Visit: http://localhost/SCH/setup.php  then delete this file.
+ * Visit this copied setup page from /backend/setup.php, then delete this file.
  */
 
 define('DB_HOST', 'localhost');
@@ -365,7 +365,7 @@ th{background:#f8fafc;font-weight:600;color:#475569}code{background:#f1f5f9;padd
     <tr><td>Parent</td>    <td><code>serwaa.parent</code></td><td><code>parent123</code></td></tr>
   </table>
   <p style="color:#64748b;font-size:13px;margin-top:12px">⚠ Change passwords after first login via Settings → User Accounts.</p>
-  <a href="Index.html" class="btn">🚀 Open School Portal</a>
+  <a href="../frontend/index.html" class="btn">🚀 Open School Portal</a>
   <a href="?delete=1" class="btn red" onclick="return confirm('Delete setup.php?')">🗑 Delete setup.php</a>
 </div>
 <?php endif ?>

@@ -6,7 +6,7 @@
 const API_BASE = (() => {
     const path = window.location.pathname;
     const baseDir = path.substring(0, path.lastIndexOf('/'));
-    return baseDir + '/api';
+    return baseDir.replace(/\/frontend\/?$/, '') + '/backend/api';
 })();
 
 // ── Core fetch wrapper ────────────────────────────────────────
