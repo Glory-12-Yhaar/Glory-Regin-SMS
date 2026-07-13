@@ -16,6 +16,9 @@ $method = $_SERVER['REQUEST_METHOD'];
 $id     = (int)($_GET['id'] ?? 0);
 if (!$id) jsonResponse(['success' => false, 'message' => 'Staff ID required'], 422);
 
+$db->exec("ALTER TABLE staff ADD COLUMN IF NOT EXISTS archived_at DATETIME DEFAULT NULL");
+$db->exec("UPDATE staff SET archived_at = NOW() WHERE category = 'Teaching' AND status IN ('Inactive','Archived') AND archived_at IS NULL");
+
 function fetchStaff(PDO $db, int $id): array|false {
     $stmt = $db->prepare("SELECT s.*, t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color FROM staff s LEFT JOIN teachers t ON t.staff_id = s.id WHERE s.id = ?");
     $stmt->execute([$id]);
@@ -47,6 +50,13 @@ if ($method === 'PUT') {
             if (array_key_exists($f, $body)) {
                 $fields[] = "$f = ?";
                 $params[] = in_array($f, ['name']) ? htmlspecialchars(trim($body[$f]), ENT_QUOTES) : $body[$f];
+            }
+        }
+        if (array_key_exists('status', $body)) {
+            if (in_array($body['status'], ['Inactive', 'Archived'], true)) {
+                $fields[] = "archived_at = COALESCE(archived_at, NOW())";
+            } elseif ($body['status'] === 'Active') {
+                $fields[] = "archived_at = NULL";
             }
         }
         if (!empty($fields)) {

@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `classes` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(50) UNIQUE NOT NULL,
   `level` ENUM('Early Childhood','Primary','Junior High') NOT NULL,
+  `teacher_id` INT DEFAULT NULL,
   `class_teacher` VARCHAR(100),
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -112,9 +113,10 @@ CREATE TABLE IF NOT EXISTS `staff` (
   `emergency_contact` VARCHAR(100),
   `emergency_phone` VARCHAR(30),
   `performance` VARCHAR(20),
-  `status` ENUM('Active','Inactive','On Leave') DEFAULT 'Active',
+  `status` ENUM('Active','Inactive','On Leave','Archived') DEFAULT 'Active',
   `avatar` VARCHAR(10),
   `user_id` INT,
+  `archived_at` DATETIME DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -124,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `staff` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `teachers` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `staff_id` INT NOT NULL,
+  `staff_id` INT NOT NULL UNIQUE,
   `subject` VARCHAR(100),
   `class_assigned` VARCHAR(50),
   `experience` INT DEFAULT 0,
@@ -451,5 +453,6 @@ CREATE TABLE IF NOT EXISTS `yearbooks` (
 -- ADDITIONAL RELATIONSHIPS
 -- ───────────────────────────────────────────
 ALTER TABLE `subjects` ADD CONSTRAINT `fk_subjects_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
+ALTER TABLE `classes` ADD CONSTRAINT `fk_classes_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
 
 -- End of DDL. Seed data is inserted by setup.php.

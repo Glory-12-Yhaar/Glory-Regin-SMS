@@ -1190,6 +1190,10 @@ function showAddTeacherForm() {
 function editTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
+  const isArchived = teacher.status === 'Archived';
+  const archiveAction = isArchived
+    ? `<button class="btn btn-primary" style="flex:1" onclick="restoreTeacher('${teacherId}')"><i class="fas fa-rotate-left"></i> Restore</button>`
+    : `<button class="btn btn-danger" style="flex:1" onclick="archiveTeacher('${teacherId}')"><i class="fas fa-box-archive"></i> Archive</button>`;
 
   let html = hdr('Edit Teacher Profile', `Update details for ${teacher.name}`, 'Teachers') + `
   <div class="card">
@@ -1240,11 +1244,11 @@ function editTeacher(teacherId) {
       </div>
       <div class="form-field">
         <label>Status</label>
-        <select id="teacher-status"><option ${teacher.status === 'Active' ? 'selected' : ''}>Active</option><option ${teacher.status === 'On Leave' ? 'selected' : ''}>On Leave</option><option ${teacher.status === 'Inactive' ? 'selected' : ''}>Inactive</option></select>
+        <select id="teacher-status"><option ${teacher.status === 'Active' ? 'selected' : ''}>Active</option><option ${teacher.status === 'On Leave' ? 'selected' : ''}>On Leave</option><option ${(teacher.status === 'Inactive' || teacher.status === 'Archived') ? 'selected' : ''}>Inactive</option></select>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="submitEditTeacher('${teacherId}')"><i class="fas fa-save"></i> Save Changes</button>
-        <button class="btn btn-danger" style="flex:1" onclick="archiveTeacher('${teacherId}')"><i class="fas fa-box-archive"></i> Archive</button>
+        ${archiveAction}
         <button class="btn btn-secondary" style="flex:1" onclick="navTo('teachers')">Cancel</button>
       </div>
     </div>
@@ -1259,6 +1263,11 @@ function viewTeacherProfile(teacherId) {
     showToast('<i class="fas fa-lock"></i> You can only view your children’s teachers', 'error');
     return;
   }
+
+  const isArchived = teacher.status === 'Archived';
+  const adminAction = isArchived
+    ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="restoreTeacher('${teacher.teacher_id}')"><i class="fas fa-rotate-left"></i> Restore Teacher</button>`
+    : `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="editTeacher('${teacher.teacher_id}')"><i class="fas fa-edit"></i> Edit Profile</button><button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="archiveTeacher('${teacher.teacher_id}')"><i class="fas fa-box-archive"></i> Archive Teacher</button>`;
 
   let html = hdr('Teacher Profile', teacher.name, 'Teachers') + `
   <div class="g2">
@@ -1311,68 +1320,92 @@ function viewTeacherProfile(teacherId) {
           <span class="label"><i class="fas fa-calendar-check"></i> Hired</span>
           <span>${teacher.hiring_date || 'Not provided'}</span>
         </div>
+        ${isArchived ? `<div class="info-row"><span class="label"><i class="fas fa-box-archive"></i> Archived</span><span>${teacher.archived_date || 'Not provided'}</span></div>` : ''}
       </div>
-      ${currentRole === 'Admin' ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="editTeacher('${teacher.teacher_id}')"><i class="fas fa-edit"></i> Edit Profile</button><button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="archiveTeacher('${teacher.teacher_id}')"><i class="fas fa-box-archive"></i> Archive Teacher</button>` : ''}
+      ${currentRole === 'Admin' ? adminAction : ''}
       ${currentRole === 'Parent' ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="currentChat='${escapeAttr(teacher.name)}';navTo('messaging')"><i class="fas fa-envelope"></i> Message Teacher</button>` : ''}
     </div>
   </div>`;
   document.getElementById('main-content').innerHTML = html;
 }
 
-function submitTeacherForm() {
-  const name = document.getElementById('teacher-name').value;
-  const subject = document.getElementById('teacher-subject').value;
+async function submitTeacherForm() {
+  const name = document.getElementById('teacher-name').value.trim();
+  const subject = document.getElementById('teacher-subject').value.trim();
   const department = document.getElementById('teacher-department').value;
   const experience = document.getElementById('teacher-experience').value;
-  const email = document.getElementById('teacher-email').value;
-  const phone = document.getElementById('teacher-phone').value;
+  const email = document.getElementById('teacher-email').value.trim();
+  const phone = document.getElementById('teacher-phone').value.trim();
   const classAssigned = document.getElementById('teacher-class').value;
-  const schedule = document.getElementById('teacher-schedule').value;
+  const schedule = document.getElementById('teacher-schedule').value.trim();
   const defaultBasic = getTeacherPayrollBasic({ experience });
   const basicSalary = Number(document.getElementById('teacher-basic')?.value || defaultBasic);
-  const allowances = Number(document.getElementById('teacher-allowance')?.value || Math.round(basicSalary * 0.25));
-  const deductions = Number(document.getElementById('teacher-deduction')?.value || Math.round(basicSalary * 0.10));
 
   if (!name || !subject || department === '-- Select --' || !experience || !email || !phone) {
     return showToast('Please fill all required fields', 'error');
   }
 
-  const newTeacher = {
-    teacher_id: 'T' + (teachersData.length + 1).toString().padStart(3, '0'),
-    name, subject, department, experience: experience.toString(),
-    email, phone, class_assigned: classAssigned || 'Not Assigned',
-    basicSalary, allowances, deductions,
-    schedule: schedule || 'Not specified', gender: 'Male', avatar_color: 'blue',
-    dob: document.getElementById('teacher-dob').value,
-    hiring_date: new Date().toISOString().split('T')[0],
-    status: 'Active'
-  };
+  if (typeof API === 'undefined' || !API.staff) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
 
-  teachersData.push(newTeacher);
-  saveTeacherRecords();
+  const res = await API.staff.create({
+    name,
+    email,
+    phone,
+    category: 'Teaching',
+    department,
+    position: subject,
+    qualifications: 'Degree',
+    salary_grade: String(basicSalary),
+    join_date: new Date().toISOString().split('T')[0],
+    gender: 'Male',
+    dob: document.getElementById('teacher-dob').value,
+    address: 'Glory Reign Campus',
+    subject,
+    class_assigned: classAssigned || 'Not Assigned',
+    experience: parseInt(experience, 10),
+    schedule: schedule || 'Mon-Fri',
+    avatar_color: 'blue',
+    status: 'Active'
+  });
+
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to add teacher', 'error');
+  }
   showToast('<i class="fas fa-check-circle"></i> ' + name + ' added successfully!', 'success');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   const returnToPayroll = window.returnToPayrollAfterTeacherAdd;
   window.returnToPayrollAfterTeacherAdd = false;
   navTo(returnToPayroll ? 'salary' : 'teachers');
 }
 
-function submitEditTeacher(teacherId) {
+async function submitEditTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
+  if (typeof API === 'undefined' || !API.staff || !teacher.id) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
 
-  teacher.name = document.getElementById('teacher-name').value;
-  teacher.subject = document.getElementById('teacher-subject').value;
-  teacher.department = document.getElementById('teacher-department').value;
-  teacher.experience = document.getElementById('teacher-experience').value;
-  teacher.email = document.getElementById('teacher-email').value;
-  teacher.phone = document.getElementById('teacher-phone').value;
-  teacher.class_assigned = document.getElementById('teacher-class').value;
-  teacher.schedule = document.getElementById('teacher-schedule').value;
-  teacher.basicSalary = Number(document.getElementById('teacher-basic')?.value || getTeacherPayrollBasic(teacher));
-  teacher.allowances = Number(document.getElementById('teacher-allowance')?.value || Math.round(teacher.basicSalary * 0.25));
-  teacher.deductions = Number(document.getElementById('teacher-deduction')?.value || Math.round(teacher.basicSalary * 0.10));
-  teacher.status = document.getElementById('teacher-status').value;
-  saveTeacherRecords();
+  const status = document.getElementById('teacher-status').value;
+  const basicSalary = Number(document.getElementById('teacher-basic')?.value || getTeacherPayrollBasic(teacher));
+  const res = await API.staff.update(teacher.id, {
+    name: document.getElementById('teacher-name').value.trim(),
+    email: document.getElementById('teacher-email').value.trim(),
+    phone: document.getElementById('teacher-phone').value.trim(),
+    department: document.getElementById('teacher-department').value,
+    position: document.getElementById('teacher-subject').value.trim(),
+    subject: document.getElementById('teacher-subject').value.trim(),
+    class_assigned: document.getElementById('teacher-class').value || 'Not Assigned',
+    experience: parseInt(document.getElementById('teacher-experience').value || '0', 10),
+    schedule: document.getElementById('teacher-schedule').value.trim() || 'Mon-Fri',
+    salary_grade: String(basicSalary),
+    status: status === 'Archived' ? 'Inactive' : status
+  });
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to update teacher', 'error');
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
 
   showToast('<i class="fas fa-check-circle"></i> Teacher profile updated successfully!', 'success');
   navTo('teachers');
@@ -1382,24 +1415,32 @@ function deleteTeacher(teacherId) {
   archiveTeacher(teacherId);
 }
 
-function archiveTeacher(teacherId) {
+async function archiveTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
-  teacher.status = 'Archived';
-  teacher.archived_date = new Date().toISOString().split('T')[0];
-  teacher.archived_by = currentRole || 'Admin';
-  saveTeacherRecords();
+  if (typeof API === 'undefined' || !API.staff || !teacher.id) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
+  const res = await API.staff.update(teacher.id, { status: 'Inactive' });
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to archive teacher', 'error');
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Teacher moved to archived records', 'success');
   navTo('teachers');
 }
 
-function restoreTeacher(teacherId) {
+async function restoreTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
-  teacher.status = 'Active';
-  delete teacher.archived_date;
-  delete teacher.archived_by;
-  saveTeacherRecords();
+  if (typeof API === 'undefined' || !API.staff || !teacher.id) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
+  const res = await API.staff.update(teacher.id, { status: 'Active' });
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to restore teacher', 'error');
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Teacher restored to active records', 'success');
   viewArchivedTeachers();
 }

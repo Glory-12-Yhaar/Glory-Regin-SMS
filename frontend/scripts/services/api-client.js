@@ -398,8 +398,10 @@ async function syncAllDataFromBackend() {
                 gender: t.gender || 'Male',
                 avatar_color: t.avatar_color || 'blue',
                 dob: t.dob || '1990-01-01',
+                address: t.address || '',
                 hiring_date: t.join_date || '2020-01-01',
-                status: t.status === 'Inactive' ? 'Archived' : (t.status || 'Active')
+                archived_date: t.archived_at ? t.archived_at.split(' ')[0] : '',
+                status: (t.status === 'Inactive' || t.status === 'Archived') ? 'Archived' : (t.status || 'Active')
             })));
         }
     } catch (e) { console.error("Error syncing staff:", e); }
@@ -1211,13 +1213,6 @@ apiOverrides.archiveTeacher = async function(teacherId) {
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
     // Optimistic in-memory update — mark teacher as Archived immediately
-    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
-    if (t) {
-      t.status = 'Archived';
-      t.archived_date = new Date().toISOString().split('T')[0];
-    } else {
-      console.warn('[API] archiveTeacher: teacher not found in teachersData for id', id);
-    }
     navTo('teachers');
     // Background re-sync to keep data fresh
     syncAllDataFromBackend();
@@ -1235,11 +1230,6 @@ apiOverrides.restoreTeacher = async function(teacherId) {
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
     // Optimistic in-memory update — mark teacher as Active immediately
-    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
-    if (t) {
-      t.status = 'Active';
-      delete t.archived_date;
-    }
     navTo('teachers');
     // Background re-sync to keep data fresh
     syncAllDataFromBackend();
@@ -1263,7 +1253,7 @@ apiOverrides.viewArchivedTeachers = async function() {
     return;
   }
 
-  const archived = res.data.filter(t => t.category === 'Teaching' && t.status === 'Inactive');
+  const archived = res.data.filter(t => t.category === 'Teaching' && (t.status === 'Inactive' || t.status === 'Archived'));
   if (!archived.length) {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No archived teachers</td></tr>';
     return;
@@ -1280,7 +1270,7 @@ apiOverrides.viewArchivedTeachers = async function() {
       <td>${t.class_assigned || '-'}</td>
       <td>${t.phone || '-'}</td>
       <td>${t.email || '-'}</td>
-      <td>-</td>
+      <td>${t.archived_at ? String(t.archived_at).split(' ')[0] : 'Not recorded'}</td>
       <td>
         <button class="btn btn-secondary btn-xs" onclick="viewTeacherProfile('${tid}')">View</button>
         <button class="btn btn-primary btn-xs" style="margin-left:6px" onclick="restoreTeacher('${tid}')">Restore</button>
@@ -1524,6 +1514,95 @@ apiOverrides.deleteRecord = async function(id, type) {
       showToast('<i class="fas fa-check-circle"></i> Record deleted!', 'success');
     }
   }
+};
+
+apiOverrides.archiveTeacher = async function(teacherId) {
+  const id = getTeacherDbId(teacherId);
+  if (!id) return showToast('Teacher not found', 'error');
+  const res = await API.staff.update(id, { status: 'Inactive' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to archive teacher', 'error');
+  }
+};
+
+apiOverrides.restoreTeacher = async function(teacherId) {
+  const id = getTeacherDbId(teacherId);
+  if (!id) return showToast('Teacher not found', 'error');
+  const res = await API.staff.update(id, { status: 'Active' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to restore teacher', 'error');
+  }
+};
+
+apiOverrides.viewArchivedTeachers = async function() {
+  document.getElementById('main-content').innerHTML = hdr('Archived Teachers', 'Teachers who have been archived', 'Teachers') +
+    '<div class="toolbar"><button class="btn btn-secondary" onclick="navTo(\'teachers\')"><i class="fas fa-arrow-left"></i> Back to Teachers</button></div>' +
+    '<div class="card records-table-card"><div class="table-wrapper"><table class="tbl"><thead><tr><th>#</th><th>Teacher</th><th>ID</th><th>Subject</th><th>Department</th><th>Class</th><th>Phone</th><th>Email</th><th>Archived Date</th><th>Actions</th></tr></thead><tbody id="archived-teachers-body"><tr><td colspan="10" style="text-align:center;padding:30px"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div></div>';
+
+  const res = await API.staff.list({ limit: 200 });
+  const tbody = document.getElementById('archived-teachers-body');
+  if (!tbody) return;
+  if (!res || !res.success) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:red">Failed to load archived teachers</td></tr>';
+    return;
+  }
+
+  teachersData.splice(0, teachersData.length, ...res.data.filter(t => t.category === 'Teaching').map(t => ({
+    teacher_id: 'T' + String(t.id).padStart(3, '0'),
+    id: t.id,
+    name: t.name,
+    subject: t.subject || 'General',
+    department: t.department || 'Academic',
+    experience: String(t.experience || 0),
+    email: t.email || '',
+    phone: t.phone || '',
+    class_assigned: t.class_assigned || 'Not Assigned',
+    basicSalary: parseFloat(t.salary_grade) || 3000,
+    allowances: Math.round((parseFloat(t.salary_grade) || 3000) * 0.25),
+    deductions: Math.round((parseFloat(t.salary_grade) || 3000) * 0.10),
+    schedule: t.schedule || 'Mon-Fri',
+    gender: t.gender || 'Male',
+    avatar_color: t.avatar_color || 'blue',
+    dob: t.dob || '1990-01-01',
+    address: t.address || '',
+    hiring_date: t.join_date || '2020-01-01',
+    archived_date: t.archived_at ? t.archived_at.split(' ')[0] : '',
+    status: (t.status === 'Inactive' || t.status === 'Archived') ? 'Archived' : (t.status || 'Active')
+  })));
+
+  const archived = res.data.filter(t => t.category === 'Teaching' && (t.status === 'Inactive' || t.status === 'Archived'));
+  if (!archived.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No archived teachers</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = archived.map((t, i) => {
+    const tid = 'T' + String(t.id).padStart(3, '0');
+    const archivedDate = t.archived_at ? String(t.archived_at).split(' ')[0] : 'Not recorded';
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${escapeHtml(t.name || '')}</td>
+      <td>${tid}</td>
+      <td>${escapeHtml(t.subject || '-')}</td>
+      <td>${escapeHtml(t.department || '-')}</td>
+      <td>${escapeHtml(t.class_assigned || '-')}</td>
+      <td>${escapeHtml(t.phone || '-')}</td>
+      <td>${escapeHtml(t.email || '-')}</td>
+      <td>${escapeHtml(archivedDate)}</td>
+      <td>
+        <button class="btn btn-secondary btn-xs" onclick="viewTeacherProfile('${tid}')">View</button>
+        <button class="btn btn-primary btn-xs" style="margin-left:6px" onclick="restoreTeacher('${tid}')">Restore</button>
+      </td>
+    </tr>`;
+  }).join('');
 };
 
     Object.assign(window, apiOverrides);
