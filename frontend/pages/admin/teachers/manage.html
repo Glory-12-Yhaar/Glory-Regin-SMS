@@ -1,0 +1,20 @@
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="showAddTeacherForm()" style="cursor:pointer"><i class="fas fa-user-plus"></i> Add Teacher</button>
+  <button class="btn btn-secondary" onclick="viewArchivedTeachers()" style="cursor:pointer"><i class="fas fa-box-archive"></i> Archived Teachers ({{archivedCount}})</button>
+  <button class="btn btn-secondary" onclick="importTeachersCSV()" style="cursor:pointer"><i class="fas fa-upload"></i> Import</button>
+  <button class="btn btn-secondary" onclick="exportTeachersData()" style="cursor:pointer"><i class="fas fa-download"></i> Export</button>
+  <div class="search-bar">
+    <span><i class="fas fa-search"></i></span>
+    <input id="teacher-search" placeholder="Search teachers..." onkeyup="filterTeachersManagement()" style="cursor:text">
+  </div>
+  <select id="teacher-dept-filter" class="select-sm" onchange="filterTeachersManagement()">
+    <option value="">All Departments</option>
+    <option value="Mathematics">Mathematics</option>
+    <option value="Science">Sciences</option>
+    <option value="Languages">Languages</option>
+  </select>
+</div>
+
+<div class="g3">
+  {{teacherCards}}
+</div>

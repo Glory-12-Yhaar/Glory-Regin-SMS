@@ -1,0 +1,18 @@
+<div class="toolbar">
+  <div class="search-bar" style="flex:1">
+    <span><i class="fas fa-search"></i></span>
+    <input id="teacher-search" placeholder="Search teachers..." onkeyup="filterTeachers()" style="cursor:text">
+  </div>
+  <select id="teacher-dept-filter" class="select-sm" onchange="filterTeachers()">
+    <option value="All Departments">All Departments</option>
+    <option>Mathematics</option>
+    <option>Sciences</option>
+    <option>Languages</option>
+  </select>
+</div>
+
+{{roleNotice}}
+
+<div class="g3">
+  {{teacherCards}}
+</div>

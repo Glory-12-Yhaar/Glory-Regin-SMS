@@ -1,0 +1,17 @@
+<div class="toolbar">
+  <div class="search-bar">
+    <span><i class="fas fa-search"></i></span>
+    <input id="parent-search" placeholder="Search parents..." onkeyup="filterParents()" style="cursor:text">
+  </div>
+</div>
+
+<div class="card">
+  <table class="tbl">
+    <thead>
+      <tr><th>#</th><th>Parent/Guardian</th><th>Children</th><th>Contact</th><th>Email</th><th>Fees Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {{parentRows}}
+    </tbody>
+  </table>
+</div>

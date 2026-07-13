@@ -1,0 +1,35 @@
+<div class="visitor-hero" style="margin-bottom:26px">
+  <h1><i class="fas fa-graduation-cap"></i> Welcome, {{alumniName}}</h1>
+  <p>Stay connected with your alma mater, reconnect with classmates, and give back to Glory Reign Preparatory School</p>
+  <div class="hero-btns">
+    <button class="hero-btn-gold" onclick="openAlumniDirectory()"><i class="fas fa-users"></i> Browse Directory</button>
+    <button class="hero-btn-outline" onclick="openAlumniJobs()"><i class="fas fa-briefcase"></i> Job Listings</button>
+    <button class="hero-btn-outline" onclick="openDonationHub()"><i class="fas fa-hand-holding-heart"></i> Donate</button>
+  </div>
+</div>
+
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="g2 mb20">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Announcements</span><span class="card-act" onclick="showAllAnnouncements()">View All</span></div>
+    {{announcementRows}}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-hand-holding-heart"></i> Donation Campaigns</span><span class="card-act" onclick="openDonationHub()">Donate</span></div>
+    {{campaignRows}}
+  </div>
+</div>
+
+<div class="g2 mb20">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span><span class="card-act" onclick="viewAllEvents()">Calendar</span></div>
+    {{eventRows}}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-gift"></i> Recent Donors</span><span class="card-act" onclick="viewDonationHistory()">History</span></div>
+    {{donorRows}}
+  </div>
+</div>

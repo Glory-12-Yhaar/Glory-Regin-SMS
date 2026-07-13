@@ -1,0 +1,63 @@
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="g21 mb20 accountant-dashboard-grid" style="align-items:start">
+  <div class="card accountant-payments-card" style="align-self:start;height:auto">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-credit-card"></i> Recent Payments</span><button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button></div>
+    <div class="payments-filter-bar">
+      <input id="payments-search" placeholder="Search student or receipt..." style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;flex:1;min-width:180px;font-size:12px">
+      <select id="payments-status" style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px"><option value="">All Status</option><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Pending">Pending</option></select>
+      <input id="payments-date-from" type="date" style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px">
+      <input id="payments-date-to" type="date" style="padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px">
+      <button class="btn btn-sm" onclick="renderRecentPaymentsTable()"><i class="fas fa-filter"></i> Filter</button>
+      <button class="btn btn-gold btn-sm" onclick="exportPaymentsCSV()"><i class="fas fa-download"></i> CSV</button>
+    </div>
+    <div class="table-wrapper">
+      <table class="tbl">
+        <thead><tr><th>Student</th><th>Amount</th><th>Date</th><th>Receipt</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="payments-tbody"></tbody>
+      </table>
+    </div>
+    <div class="payments-table-footer">
+      <div id="payments-info" style="color:var(--gray-600)">Loading...</div>
+      <div style="display:flex;gap:6px" id="payments-pagination"></div>
+    </div>
+  </div>
+  <div>
+    <div class="fee-hero mb16">
+      <h3>Total Collected - Term 1, 2025</h3>
+      <div class="amount">GHS {{collectedAmount}}</div>
+      <div class="sub">Target: GHS {{targetAmount}} - {{collectedPct}}% achieved</div>
+      <div style="margin-top:12px;background:rgba(255,255,255,.15);border-radius:4px;height:8px">
+        <div class="prog-fill" style="width:{{collectedPct}}%;background:var(--gold);height:8px;border-radius:4px"></div>
+      </div>
+    </div>
+    {{debtorNotice}}
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-bolt"></i> Quick Actions</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" onclick="navTo('payments')"><i class="fas fa-money-bill"></i> Record Cash Payment</button>
+        <button class="btn btn-secondary" onclick="openReceiptIssuePage()"><i class="fas fa-receipt"></i> Issue Receipt</button>
+        <button class="btn btn-gold" onclick="navTo('reports')"><i class="fas fa-chart-line"></i> Financial Report</button>
+        <button class="btn btn-secondary" onclick="navTo('expenses')"><i class="fas fa-chart-line"></i> Add Expense</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="g3">
+  <div class="card" style="cursor:pointer" onclick="navTo('fees')">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Revenue Breakdown</span></div>
+    {{revenueRows}}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> Payroll Status</span></div>
+    {{payrollRows}}
+    <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px" onclick="navTo('salary')">Process Payroll</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Calendar</span></div>
+    {{calendar}}
+  </div>
+</div>

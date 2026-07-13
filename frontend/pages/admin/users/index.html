@@ -1,0 +1,73 @@
+<div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+  <button class="btn btn-primary" onclick="toggleUserForm()"><i class="fas fa-plus"></i> Create Account</button>
+  <div class="search-bar" style="flex:1;min-width:200px">
+    <span><i class="fas fa-search"></i></span>
+    <input id="user-search" placeholder="Search by name, username, or email..." onkeyup="refreshUsersTable()">
+  </div>
+  <select id="user-role-filter" class="select-sm" onchange="refreshUsersTable()">
+    <option>All Roles</option>
+    <option>Admin</option>
+    <option>Teacher</option>
+    <option>Student</option>
+    <option>Accountant</option>
+    <option>Parent</option>
+    <option>Alumni</option>
+  </select>
+</div>
+
+<div id="user-form-wrap" style="display:none;margin-bottom:20px">
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title"><i class="fas fa-user-plus"></i> <span id="form-title">Create New User Account</span></span>
+      <button class="btn btn-secondary btn-xs" onclick="toggleUserForm()">Cancel</button>
+    </div>
+    <div style="padding:20px">
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" id="user-name" placeholder="e.g., John Doe" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+      </div>
+      <div class="g2" style="gap:15px">
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" id="user-username" placeholder="e.g., john.doe" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="user-email" placeholder="e.g., john@school.edu.gh" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+        </div>
+      </div>
+      <div class="g2" style="gap:15px">
+        <div class="form-group">
+          <label>Role *</label>
+          <select id="user-role" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+            <option>Admin</option><option>Teacher</option><option>Student</option>
+            <option>Accountant</option><option>Parent</option><option>Alumni</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="user-password" placeholder="Min. 6 characters" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:15px">
+        <button class="btn btn-primary" onclick="saveUser()" id="save-user-btn">Create Account</button>
+        <button class="btn btn-secondary" onclick="toggleUserForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><i class="fas fa-users"></i> All Users</span>
+    <span id="users-loading" style="font-size:12px;color:var(--gray-400)"><i class="fas fa-spinner fa-spin"></i> Loading...</span>
+  </div>
+  <table class="tbl">
+    <thead>
+      <tr><th>#</th><th>User</th><th>Username</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="users-table-body">
+      <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray-400)"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>
+    </tbody>
+  </table>
+</div>

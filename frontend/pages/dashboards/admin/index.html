@@ -1,0 +1,72 @@
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="g21 mb20">
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title"><i class="fas fa-chart-line"></i> Monthly Enrollment & Attendance</span>
+      <span class="card-act" onclick="showMonthlyEnrollmentAttendanceReport()" style="cursor:pointer">Full Report</span>
+    </div>
+    <div style="display:flex;gap:4px;align-items:flex-end;height:140px">
+      {{enrollmentBars}}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-top:6px;padding:0 2px">
+      {{monthLabels}}
+    </div>
+    <div style="display:flex;gap:16px;margin-top:10px">
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray-600)"><span style="width:10px;height:10px;background:var(--blue-main);border-radius:2px;display:inline-block"></span>Enrollment</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray-600)"><span style="width:10px;height:10px;background:var(--gold);border-radius:2px;display:inline-block"></span>Attendance</span>
+    </div>
+  </div>
+  <div class="card">{{calendar}}</div>
+</div>
+
+<div class="g2 mb20">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-graduation-cap"></i> Recent Students</span><span class="card-act" onclick="navTo('students')">View All</span></div>
+    <table class="tbl">
+      <thead><tr><th>Student</th><th>Class</th><th>Status</th><th>Fees</th></tr></thead>
+      <tbody>
+        {{recentStudentRows}}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bell"></i> Recent Activity</span></div>
+    <div class="activity">
+      {{activityRows}}
+    </div>
+  </div>
+</div>
+
+<div class="g3">
+  <div class="card" style="cursor:pointer" onclick="navTo('classes')">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Classes Overview</span></div>
+    {{classesOverview}}
+  </div>
+  <div class="card" style="cursor:pointer" onclick="navTo('fees')">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fees Status</span></div>
+    <div style="display:flex;justify-content:center;margin:10px 0">
+      <svg viewBox="0 0 120 120" width="120" height="120">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--gray-200)" stroke-width="14"/>
+        <circle data-ring-value="{{paidPct}}" data-ring-circumference="{{ringCircumference}}" cx="60" cy="60" r="50" fill="none" stroke="var(--blue-main)" stroke-width="14"
+          stroke-dasharray="{{paidDash}} {{ringCircumference}}" stroke-linecap="round"
+          transform="rotate(-90 60 60)"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--gold)" stroke-width="14"
+          stroke-dasharray="{{partialDash}} {{ringCircumference}}" stroke-linecap="round"
+          stroke-dashoffset="-{{paidDash}}" transform="rotate(-90 60 60)"/>
+        <text x="60" y="64" text-anchor="middle" font-size="16" font-weight="800" fill="var(--blue-dark)">{{paidPct}}%</text>
+      </svg>
+    </div>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--blue-main);border-radius:2px;display:inline-block"></span>Paid {{paidPct}}%</span>
+      <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--gold);border-radius:2px;display:inline-block"></span>Partial {{partialPct}}%</span>
+      <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--gray-200);border-radius:2px;display:inline-block"></span>Unpaid {{pendingPct}}%</span>
+    </div>
+  </div>
+  <div class="card" style="cursor:pointer" onclick="navTo('subjects')">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-trophy"></i> Subject Performance</span></div>
+    {{subjectPerformance}}
+  </div>
+</div>

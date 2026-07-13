@@ -1,0 +1,55 @@
+<div class="g2">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-save"></i> Database Backup</span></div>
+    <div style="padding:20px;background:var(--blue-xpale);border-radius:var(--radius);text-align:center;margin-bottom:16px">
+      <div style="font-size:40px;margin-bottom:10px"><i class="fas fa-save"></i></div>
+      <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">Last Backup: {{lastBackupDate}}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:4px">All data backed up successfully - Size: {{lastBackupSize}}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="performBackup()"><i class="fas fa-sync"></i> Backup Now</button>
+      <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="downloadLatestBackup()"><i class="fas fa-download"></i> Download</button>
+      <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="syncToCloud()"><i class="fas fa-cloud"></i> Cloud</button>
+    </div>
+
+    <div style="margin-bottom:15px">
+      <input id="backup-search" type="text" placeholder="Search backups by date or size..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:12px" onkeyup="filterBackups()">
+    </div>
+
+    <table class="tbl" id="backups-table">
+      <thead><tr><th>Date</th><th>Size</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="backups-tbody">
+        {{backupRows}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> System Logs</span></div>
+    <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+      <input id="logs-search" type="text" placeholder="Search logs..." style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:12px" onkeyup="filterLogs()">
+      <select id="logs-filter" class="select-sm" onchange="filterLogs()">
+        <option value="">All Levels</option>
+        <option value="INFO">INFO</option>
+        <option value="WARNING">WARNING</option>
+        <option value="ERROR">ERROR</option>
+      </select>
+      <select id="logs-type-filter" class="select-sm" onchange="filterLogs()">
+        <option value="">All Types</option>
+        <option value="login">Login</option>
+        <option value="enrollment">Enrollment</option>
+        <option value="security">Security</option>
+        <option value="payment">Payment</option>
+        <option value="admin">Admin</option>
+        <option value="system">System</option>
+        <option value="academic">Academic</option>
+        <option value="report">Report</option>
+      </select>
+      <button class="btn btn-secondary" onclick="exportLogs()"><i class="fas fa-download"></i> Export</button>
+    </div>
+
+    <div style="max-height:400px;overflow-y:auto" id="logs-container">
+      {{systemLogRows}}
+    </div>
+  </div>
+</div>

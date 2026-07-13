@@ -1,0 +1,22 @@
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="card">
+  <div class="card-hdr">
+    <span class="card-title"><i class="fas fa-users"></i> Staff Payroll - March 2025</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="window.returnToPayrollAfterTeacherAdd=true;showAddTeacherForm()"><i class="fas fa-user-plus"></i> Add Teacher</button>
+      <button class="btn btn-gold" onclick="openPayrollProcessPage()">Process All</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportData('CSV')"><i class="fas fa-download"></i> Export</button>
+    </div>
+  </div>
+  <table class="tbl">
+    <thead>
+      <tr><th>Staff Member</th><th>Role</th><th>Grade</th><th>Basic (GHS)</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {{payrollRows}}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,24 @@
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="toolbar" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+  <div class="search-bar" style="max-width:300px;flex:1">
+    <span><i class="fas fa-search"></i></span>
+    <input id="class-search" placeholder="Search classes..." onkeyup="filterClasses()" style="cursor:text">
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <select id="class-stream-filter" class="select-sm" onchange="filterClasses()">
+      <option value="All Streams">All Streams</option>
+      <option value="General">General</option>
+      <option value="Mixed">Mixed</option>
+    </select>
+    {{adminActions}}
+  </div>
+</div>
+
+{{roleNotice}}
+
+<div class="g3 mb20">
+  {{classCards}}
+</div>

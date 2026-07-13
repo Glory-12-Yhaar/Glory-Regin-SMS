@@ -1,0 +1,50 @@
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="card mb20">
+  <div class="card-hdr"><span class="card-title"><i class="fas fa-balance-scale"></i> SBA Module</span><span class="card-act" onclick="navTo('sba')">Open SBA</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+    <button class="btn btn-secondary" style="justify-content:flex-start;white-space:normal;text-align:left" onclick="currentSbaView='subject';navTo('sba')"><i class="fas fa-chalkboard-teacher"></i> Subject Teacher SBA</button>
+    <button class="btn btn-secondary" style="justify-content:flex-start;white-space:normal;text-align:left" onclick="currentSbaView='class';navTo('sba')"><i class="fas fa-users"></i> Class Teacher SBA</button>
+  </div>
+</div>
+
+<div class="g21 mb20">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar"></i> Today's Schedule</span><span class="card-act" onclick="navTo('timetable')">Full Timetable</span></div>
+    <table class="tbl">
+      <thead><tr><th>Time</th><th>Subject</th><th>Class</th><th>Room</th><th>Status</th></tr></thead>
+      <tbody>
+        {{scheduleRows}}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Assignments</span><span class="card-act" onclick="openAddAssignmentForm()">Add New</span></div>
+    {{assignmentCards}}
+  </div>
+</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> Class Attendance</span><span class="card-act" onclick="navTo('attendance')">Open Module</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px;background:var(--gray-50);border-radius:8px">
+      <div>
+        <div style="font-weight:700;color:var(--blue-dark);font-size:14px">{{primaryClass}}</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Record today's attendance from the Attendance Module.</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="navTo('attendance')"><i class="fas fa-clipboard-check"></i> Mark Attendance</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Messages</span><span class="card-act" onclick="navTo('messaging')">Open Chat</span></div>
+    <div class="chat-msgs">
+      {{messageRows}}
+    </div>
+    <div class="chat-input-row">
+      <textarea id="teacher-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Mr. Amponsah', 'Admin Office', 'teacher-chat-input')"></textarea>
+      <button class="chat-send" onclick="sendTeacherChatButton()"><i class="fa-regular fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>

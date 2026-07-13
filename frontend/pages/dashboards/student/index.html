@@ -1,0 +1,55 @@
+<div class="student-profile-card">
+  <div class="profile-left">
+    <div class="profile-avatar av av-xl av-{{avatarColor}}">{{studentInitials}}</div>
+    <div class="profile-info">
+      <h3 class="profile-name">{{studentName}}</h3>
+      <p class="profile-id">ID: {{studentId}}</p>
+      <p class="profile-class">{{studentClass}} - General</p>
+    </div>
+  </div>
+  <button class="profile-idcard-btn" onclick="showStudentIDCard()" title="View ID Card">
+    <i class="fas fa-id-card"></i>
+  </button>
+</div>
+
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="g21 mb20">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-file-alt"></i> My Assignments</span><span class="card-act" onclick="navTo('assignments')">All Assignments</span></div>
+    <table class="tbl">
+      <thead><tr><th>Subject</th><th>Assignment</th><th>Due Date</th><th>Status</th></tr></thead>
+      <tbody>
+        {{assignmentRows}}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-target"></i> My Performance</span></div>
+    {{performanceRows}}
+  </div>
+</div>
+
+<div class="g3">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar"></i> Today's Timetable</span></div>
+    {{timetableRows}}
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Notices</span></div>
+    {{noticeRows}}
+  </div>
+  <div class="card" style="cursor:pointer" onclick="navTo('fees')">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fees Status</span></div>
+    <div class="fee-hero" style="margin-bottom:12px">
+      <h3>Term 1, 2025</h3>
+      <div class="amount">GHS 2,400</div>
+      <div class="sub">Fully Paid - March 15, 2025</div>
+    </div>
+    <div style="font-size:12px;color:var(--gray-600);text-align:center;padding:8px 0">
+      <span class="badge b-success" style="font-size:12px;padding:6px 16px"><i class="fas fa-check-circle"></i> All Fees Cleared</span>
+    </div>
+  </div>
+</div>

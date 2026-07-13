@@ -1,0 +1,25 @@
+<div class="stats-row">
+  {{statsCards}}
+</div>
+
+<div class="g21">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-gift"></i> Active Grants & Waivers</span></div>
+    <table class="tbl">
+      <thead><tr><th>Student</th><th>Class</th><th>Grant Type</th><th>Discount Value</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {{grantRows}}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Apply New Discount</span></div>
+    <div class="f-field" style="margin-bottom:12px"><label>Select Student</label><input type="text" placeholder="Search student name..."></div>
+    <div class="f-field" style="margin-bottom:12px"><label>Discount Type</label>
+      <select><option>Academic Scholarship</option><option>Sibling Discount</option><option>Staff Dependent</option><option>Sports Bursary</option><option>Other Hardship Waiver</option></select>
+    </div>
+    <div class="f-field" style="margin-bottom:12px"><label>Discount Value</label><input type="text" placeholder="e.g. 50% or GHS 500"></div>
+    <div class="f-field" style="margin-bottom:16px"><label>Remarks / Approval</label><textarea placeholder="Reason or approver info..." style="min-height:50px"></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="showToast('Discount applied successfully!', 'success')">Apply Discount</button>
+  </div>
+</div>

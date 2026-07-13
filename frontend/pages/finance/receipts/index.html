@@ -1,0 +1,17 @@
+<div class="card">
+  <div class="toolbar">
+    <button class="btn btn-gold" onclick="openReceiptIssuePage()">+ Issue New Receipt</button>
+    <div class="search-bar">
+      <span><i class="fas fa-search"></i></span>
+      <input id="receipt-search" placeholder="Search receipt no. or student..." oninput="filterReceiptsTable()">
+    </div>
+  </div>
+  <table class="tbl">
+    <thead>
+      <tr><th>Receipt No.</th><th>Student</th><th>Class</th><th>Amount</th><th>Term</th><th>Date</th><th>Issued By</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="receipts-tbody">
+      {{receiptRows}}
+    </tbody>
+  </table>
+</div>
