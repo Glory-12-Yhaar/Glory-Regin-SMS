@@ -561,6 +561,7 @@ async function syncAllDataFromBackend() {
 
 window.applyApiClientOverrides = function() {
     console.log("Applying API client overrides...");
+    const apiOverrides = {};
 
     // Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
     loadPersistentRecords = async function() {
@@ -577,7 +578,7 @@ saveParentRecords = () => {};
 saveAdmissionRecords = () => {};
 
 // ── SUBJECTS ACTIONS OVERRIDES ──────────────────────────
-submitSubjectForm = async function() {
+apiOverrides.submitSubjectForm = async function() {
     const icon = document.getElementById('add-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
     const name = document.getElementById('add-subject-name')?.value?.trim();
     const type = document.getElementById('add-subject-type')?.value;
@@ -604,7 +605,7 @@ submitSubjectForm = async function() {
     }
 };
 
-saveSubjectChanges = async function(subjectId) {
+apiOverrides.saveSubjectChanges = async function(subjectId) {
     const icon = document.getElementById('edit-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
     const name = document.getElementById('edit-subject-name')?.value?.trim();
     const type = document.getElementById('edit-subject-type')?.value;
@@ -632,7 +633,7 @@ saveSubjectChanges = async function(subjectId) {
     }
 };
 
-deleteSubject = async function(subjectId) {
+apiOverrides.deleteSubject = async function(subjectId) {
     if (!confirm('Are you sure you want to delete this subject?')) return;
     const id = parseInt(subjectId.replace('SUB', ''), 10);
     const res = await API.subjects.delete(id);
@@ -646,7 +647,7 @@ deleteSubject = async function(subjectId) {
 };
 
 // ── TIMETABLE ACTIONS OVERRIDES ─────────────────────────
-saveNewTimetable = async function() {
+apiOverrides.saveNewTimetable = async function() {
     const clsEl = document.getElementById('create-tt-class');
     const termEl = document.getElementById('create-tt-term');
     if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
@@ -684,7 +685,7 @@ saveNewTimetable = async function() {
     }
 };
 
-saveEditedTimetable = async function(cls, term) {
+apiOverrides.saveEditedTimetable = async function(cls, term) {
     const schedule = timetablesData[cls] && timetablesData[cls][term];
     if (!schedule) return;
     
@@ -713,7 +714,7 @@ saveEditedTimetable = async function(cls, term) {
     }
 };
 
-deleteTimetable = async function() {
+apiOverrides.deleteTimetable = async function() {
     const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
     const termEl = document.getElementById('tt-term-select');
     const term = termEl ? termEl.value : 'Term 1, 2025';
@@ -731,14 +732,14 @@ deleteTimetable = async function() {
 };
 
 // ── HERO SLIDES ACTIONS OVERRIDES ───────────────────────
-getHeroSlides = function() {
+apiOverrides.getHeroSlides = function() {
     const slides = Object.values(window.cachedHeroSlides || []);
     return slides.sort((a,b) => (b.status === 'Active') - (a.status === 'Active'));
 };
 
 saveHeroSlides = () => {};
 
-uploadHeroSlide = async function() {
+apiOverrides.uploadHeroSlide = async function() {
     const title = document.getElementById('hero-slide-title')?.value?.trim() || 'Glory Reign Preparatory School';
     const caption = document.getElementById('hero-slide-caption')?.value?.trim() || 'Nurturing minds, building character, and shaping futures.';
     const file = document.getElementById('hero-slide-file')?.files?.[0];
@@ -775,7 +776,7 @@ uploadHeroSlide = async function() {
     reader.readAsDataURL(file);
 };
 
-setHeroSlideActive = async function(slideId) {
+apiOverrides.setHeroSlideActive = async function(slideId) {
     const res = await API.heroSlides.setActive(slideId);
     if (res && res.success) {
         showToast('<i class="fas fa-check-circle"></i> Hero slide activated', 'success');
@@ -789,7 +790,7 @@ setHeroSlideActive = async function(slideId) {
     }
 };
 
-deleteHeroSlide = async function(slideId) {
+apiOverrides.deleteHeroSlide = async function(slideId) {
     if (!confirm('Are you sure you want to delete this hero slide?')) return;
     const res = await API.heroSlides.delete(slideId);
     if (res && res.success) {
@@ -805,7 +806,7 @@ deleteHeroSlide = async function(slideId) {
 };
 
 // ── NEWS ACTIONS OVERRIDES ──────────────────────────────
-publishNews = async function() {
+apiOverrides.publishNews = async function() {
     const title = document.getElementById('blogTitle')?.value?.trim() || '';
     const icon = document.getElementById('blogIcon')?.value?.trim() || '';
     const date = document.getElementById('blogDate')?.value || '';
@@ -836,7 +837,7 @@ publishNews = async function() {
     }
 };
 
-saveArticleChanges = async function(articleId) {
+apiOverrides.saveArticleChanges = async function(articleId) {
     const title = document.getElementById('editTitle')?.value?.trim() || '';
     const icon = document.getElementById('editIcon')?.value?.trim() || '';
     const date = document.getElementById('editDate')?.value || '';
@@ -862,7 +863,7 @@ saveArticleChanges = async function(articleId) {
     }
 };
 
-deleteArticle = async function(articleId) {
+apiOverrides.deleteArticle = async function(articleId) {
     if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
     const res = await API.news.delete(articleId);
     if (res && res.success) {
@@ -875,7 +876,7 @@ deleteArticle = async function(articleId) {
 };
 
 // ── YEARBOOK ACTIONS OVERRIDES ──────────────────────────
-adminYearbookModule = function() {
+apiOverrides.adminYearbookModule = function() {
     const ybs = Object.values(YEARBOOK_DATA);
     const rows = ybs.map(yb => `
       <tr>
@@ -909,7 +910,7 @@ adminYearbookModule = function() {
     </div>`;
 };
 
-openCreateYearbookModal = function() {
+apiOverrides.openCreateYearbookModal = function() {
     openModal(`
       <div style="padding:24px;width:400px;max-width:90vw">
         <h3 style="margin-top:0;color:var(--blue-dark)"><i class="fas fa-plus-circle"></i> Create New Yearbook</h3>
@@ -924,7 +925,7 @@ openCreateYearbookModal = function() {
     `, true);
 };
 
-submitCreateYearbookForm = async function() {
+apiOverrides.submitCreateYearbookForm = async function() {
     const year = document.getElementById('new-yb-year')?.value?.trim();
     const title = document.getElementById('new-yb-title')?.value?.trim();
     const theme = document.getElementById('new-yb-theme')?.value;
@@ -954,7 +955,7 @@ submitCreateYearbookForm = async function() {
     }
 };
 
-publishYearbook = async function(year) {
+apiOverrides.publishYearbook = async function(year) {
     const yb = YEARBOOK_DATA[year];
     if (!yb) return;
     const res = await API.yearbook.save({
@@ -981,7 +982,7 @@ publishYearbook = async function(year) {
 };
 
 // ── STUDENTS ACTIONS OVERRIDES ──────────────────────────
-submitStudentEnrollment = async function() {
+apiOverrides.submitStudentEnrollment = async function() {
   const name = document.getElementById('std-name')?.value.trim();
   const dob = document.getElementById('std-dob')?.value;
   const gender = document.getElementById('std-gender')?.value;
@@ -1015,7 +1016,7 @@ submitStudentEnrollment = async function() {
   }
 };
 
-saveStudentChanges = async function(studentId) {
+apiOverrides.saveStudentChanges = async function(studentId) {
   const name = document.getElementById('edit-std-name')?.value.trim();
   const classId = document.getElementById('edit-std-class')?.value;
   const status = document.getElementById('edit-std-status')?.value;
@@ -1049,7 +1050,7 @@ saveStudentChanges = async function(studentId) {
   }
 };
 
-withdrawStudent = async function(studentId) {
+apiOverrides.withdrawStudent = async function(studentId) {
   if (!confirm('Are you sure you want to withdraw this student?')) return;
   const id = getStudentDbId(studentId);
   if (!id) return;
@@ -1064,7 +1065,7 @@ withdrawStudent = async function(studentId) {
   }
 };
 
-restoreStudent = async function(studentId) {
+apiOverrides.restoreStudent = async function(studentId) {
   const id = getStudentDbId(studentId);
   if (!id) return;
   
@@ -1079,7 +1080,7 @@ restoreStudent = async function(studentId) {
 };
 
 // ── TEACHERS ACTIONS OVERRIDES ──────────────────────────
-submitTeacherForm = async function() {
+apiOverrides.submitTeacherForm = async function() {
   const name = document.getElementById('teacher-name')?.value;
   const subject = document.getElementById('teacher-subject')?.value;
   const department = document.getElementById('teacher-department')?.value;
@@ -1129,7 +1130,7 @@ submitTeacherForm = async function() {
   }
 };
 
-submitEditTeacher = async function(teacherId) {
+apiOverrides.submitEditTeacher = async function(teacherId) {
   const id = getTeacherDbId(teacherId);
   if (!id) return showToast('Teacher not found', 'error');
 
@@ -1172,7 +1173,7 @@ submitEditTeacher = async function(teacherId) {
   }
 };
 
-deleteTeacher = async function(teacherId) {
+apiOverrides.deleteTeacher = async function(teacherId) {
   if (!confirm('Are you sure you want to delete this teacher? This cannot be undone.')) return;
   const id = getTeacherDbId(teacherId);
   if (!id) return;
@@ -1188,7 +1189,7 @@ deleteTeacher = async function(teacherId) {
 };
 
 // Use window.* to guarantee these override the hoisted function declarations in script.js
-window.archiveTeacher = async function(teacherId) {
+apiOverrides.archiveTeacher = async function(teacherId) {
   console.log('[API] archiveTeacher called with:', teacherId);
   const id = getTeacherDbId(teacherId);
   if (!id) { console.error('[API] archiveTeacher: could not resolve DB id for', teacherId); return; }
@@ -1213,7 +1214,7 @@ window.archiveTeacher = async function(teacherId) {
   }
 };
 
-window.restoreTeacher = async function(teacherId) {
+apiOverrides.restoreTeacher = async function(teacherId) {
   console.log('[API] restoreTeacher called with:', teacherId);
   const id = getTeacherDbId(teacherId);
   if (!id) return;
@@ -1236,7 +1237,7 @@ window.restoreTeacher = async function(teacherId) {
 };
 
 // Override viewArchivedTeachers to fetch directly from API — no stale in-memory reliance
-window.viewArchivedTeachers = async function() {
+apiOverrides.viewArchivedTeachers = async function() {
   document.getElementById('main-content').innerHTML = hdr('Archived Teachers', 'Teachers who have been archived', 'Teachers') +
     '<div class="toolbar"><button class="btn btn-secondary" onclick="navTo(\'teachers\')"><i class="fas fa-arrow-left"></i> Back to Teachers</button></div>' +
     '<div class="card records-table-card"><div class="table-wrapper"><table class="tbl"><thead><tr><th>#</th><th>Teacher</th><th>ID</th><th>Subject</th><th>Department</th><th>Class</th><th>Phone</th><th>Email</th><th>Archived Date</th><th>Actions</th></tr></thead><tbody id="archived-teachers-body"><tr><td colspan="10" style="text-align:center;padding:30px"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div></div>';
@@ -1277,7 +1278,7 @@ window.viewArchivedTeachers = async function() {
 };
 
 // ── CLASSES ACTIONS OVERRIDES ───────────────────────────
-createClass = async function() {
+apiOverrides.createClass = async function() {
   if (currentRole !== 'Admin') {
     showToast('Only administrators can create classes', 'error');
     return;
@@ -1325,7 +1326,7 @@ createClass = async function() {
   }
 };
 
-saveClassChanges = async function(classId) {
+apiOverrides.saveClassChanges = async function(classId) {
   if (currentRole !== 'Admin') {
     showToast('Only administrators can manage classes', 'error');
     return;
@@ -1379,7 +1380,7 @@ saveClassChanges = async function(classId) {
   }
 };
 
-deleteClass = async function(classId) {
+apiOverrides.deleteClass = async function(classId) {
   if (currentRole !== 'Admin') {
     showToast('Only administrators can delete classes', 'error');
     return;
@@ -1405,7 +1406,7 @@ deleteClass = async function(classId) {
 };
 
 // ── ADMISSIONS ACTIONS OVERRIDES ────────────────────────
-approveAdmission = async function(admId, studentName) {
+apiOverrides.approveAdmission = async function(admId, studentName) {
   const id = getAdmissionDbId(admId);
   if (!id) return;
   const res = await API.admissions.updateStatus(id, 'Approved', 'Approved by administrator');
@@ -1418,7 +1419,7 @@ approveAdmission = async function(admId, studentName) {
   }
 };
 
-rejectAdmission = async function(admId) {
+apiOverrides.rejectAdmission = async function(admId) {
   if (!confirm('Are you sure you want to reject this application?')) return;
   const id = getAdmissionDbId(admId);
   if (!id) return;
@@ -1432,7 +1433,7 @@ rejectAdmission = async function(admId) {
   }
 };
 
-saveParentChanges = async function(parentId) {
+apiOverrides.saveParentChanges = async function(parentId) {
   const name = document.getElementById('edit-parent-name')?.value.trim();
   const phone = document.getElementById('edit-parent-phone')?.value.trim();
   const email = document.getElementById('edit-parent-email')?.value.trim();
@@ -1464,7 +1465,7 @@ saveParentChanges = async function(parentId) {
   }
 };
 
-deleteRecord = async function(id, type) {
+apiOverrides.deleteRecord = async function(id, type) {
   if (currentRole !== 'Admin') {
     showToast('Only administrators can delete records', 'error', 3000);
     return;
@@ -1507,6 +1508,7 @@ deleteRecord = async function(id, type) {
   }
 };
 
+    Object.assign(window, apiOverrides);
 };
 
 // Run overrides immediately as script is loaded after script.js

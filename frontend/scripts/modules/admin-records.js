@@ -967,28 +967,21 @@ function studentsModule() {
   const visibleClassNames = getVisibleClassesForRole(classesData).map(c => c.name);
   const classOptions = (isAdmin ? classesData.map(c => c.name) : visibleClassNames)
     .map(className => `<option>${className}</option>`).join('');
-  const html = hdr('Students Module', isAdmin ? 'Manage all student records, enrollment and academic data' : 'Students in your assigned classes', 'Students') + `
-  <div class="toolbar">
-    ${isAdmin ? `<button class="btn btn-primary" onclick="showEnrollStudentForm()" style="cursor:pointer"><i class="fas fa-user-plus"></i> Add Student</button>
+  const adminActions = isAdmin ? `<button class="btn btn-primary" onclick="showEnrollStudentForm()" style="cursor:pointer"><i class="fas fa-user-plus"></i> Add Student</button>
     <button class="btn btn-secondary" onclick="viewWithdrawnStudents()" style="cursor:pointer"><i class="fas fa-user-slash"></i> Withdrawn Students (${getWithdrawnStudents().length})</button>
     <button class="btn btn-secondary" onclick="importStudentsCSV()" style="cursor:pointer"><i class="fas fa-upload"></i> Import CSV</button>
-    <button class="btn btn-secondary" onclick="exportStudentsData()" style="cursor:pointer"><i class="fas fa-download"></i> Export</button>` : ''}
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="student-search" placeholder="Search students..." onkeyup="filterStudents()" style="cursor:text"></div>
-    <select id="student-class-filter" class="select-sm" onchange="filterStudents()"><option value="All Classes">All Classes</option>${classOptions}</select>
-    <select id="student-status-filter" class="select-sm" onchange="filterStudents()"><option value="All Status">All Status</option><option>Active</option><option>Inactive</option><option>Suspended</option></select>
-  </div>
-  ${!isAdmin ? `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only students in your assigned classes.</div>` : ''}
-  <div class="card">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Student</th><th>ID No.</th><th>Class</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Fees</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${visibleStudents.map((s, i) => studentTableRowHtml(s, i, isAdmin)).join('')}
-      </tbody>
-    </table>
-    ${paginationHtml()}
-  </div>`;
+    <button class="btn btn-secondary" onclick="exportStudentsData()" style="cursor:pointer"><i class="fas fa-download"></i> Export</button>` : '';
+  const roleNotice = !isAdmin ? '<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only students in your assigned classes.</div>' : '';
+  const studentRows = visibleStudents.map((s, i) => studentTableRowHtml(s, i, isAdmin)).join('');
 
-  return html;
+  return hdr('Students Module', isAdmin ? 'Manage all student records, enrollment and academic data' : 'Students in your assigned classes', 'Students') +
+    renderPageTemplate('pages/admin/students/index.html', {
+      adminActions,
+      classOptions,
+      roleNotice,
+      studentRows,
+      pagination: paginationHtml()
+    });
 }
 
 // Message a teacher (for students only)
@@ -1502,18 +1495,11 @@ function teachersModule() {
     filteredTeachers = getActiveTeachers(teachersData).filter(t => visibleTeacherIds.has(t.teacher_id));
   }
 
-  return hdr(isParent ? 'Messages with Teachers' : 'Teachers Module', isParent ? 'Communicate directly with your childrens teachers' : 'View teacher profiles and subject assignments', 'Teachers') + `
-  <div class="toolbar">
-    <div class="search-bar" style="flex:1"><span><i class="fas fa-search"></i></span><input id="teacher-search" placeholder="Search teachers..." onkeyup="filterTeachers()" style="cursor:text"></div>
-    <select id="teacher-dept-filter" class="select-sm" onchange="filterTeachers()"><option value="All Departments">All Departments</option><option>Mathematics</option><option>Sciences</option><option>Languages</option></select>
-  </div>
-  ${isStudent ? `
-  <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
-    <i class="fas fa-info-circle"></i> Viewing teachers who teach your subjects and your form class teacher
-  </div>
-  ` : ''}
-  <div class="g3">
-    ${filteredTeachers.map((t) => `
+  const roleNotice = isStudent ? `
+    <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
+      <i class="fas fa-info-circle"></i> Viewing teachers who teach your subjects and your form class teacher
+    </div>` : '';
+  const teacherCards = filteredTeachers.map((t) => `
     <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewTeacherProfile('${t.teacher_id}')">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}">${t.gender === 'Female' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-user"></i>'}</div>
@@ -1529,8 +1515,10 @@ function teachersModule() {
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewTeacherProfile('${t.teacher_id}')">View Profile</button>
         <button class="btn btn-primary btn-xs" style="flex:1" onclick="messageTeacher('${t.teacher_id}', '${t.name}')"><i class="fas fa-envelope"></i> Message</button>
       </div>
-    </div>`).join('')}
-  </div>`;
+    </div>`).join('');
+
+  return hdr(isParent ? 'Messages with Teachers' : 'Teachers Module', isParent ? 'Communicate directly with your childrens teachers' : 'View teacher profiles and subject assignments', 'Teachers') +
+    renderPageTemplate('pages/admin/teachers/index.html', { roleNotice, teacherCards });
 }
 
 // -----------------------------------
@@ -1538,17 +1526,7 @@ function teachersModule() {
 // -----------------------------------
 function teachersManagementModule() {
   const activeTeachers = getActiveTeachers(teachersData);
-  let html = hdr('Teachers Module', 'Manage all teacher profiles and subject assignments', 'Teachers') + `
-  <div class="toolbar">
-    <button class="btn btn-primary" onclick="showAddTeacherForm()" style="cursor:pointer"><i class="fas fa-user-plus"></i> Add Teacher</button>
-    <button class="btn btn-secondary" onclick="viewArchivedTeachers()" style="cursor:pointer"><i class="fas fa-box-archive"></i> Archived Teachers (${getArchivedTeachers().length})</button>
-    <button class="btn btn-secondary" onclick="importTeachersCSV()" style="cursor:pointer"><i class="fas fa-upload"></i> Import</button>
-    <button class="btn btn-secondary" onclick="exportTeachersData()" style="cursor:pointer"><i class="fas fa-download"></i> Export</button>
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="teacher-search" placeholder="Search teachers..." onkeyup="filterTeachersManagement()" style="cursor:text"></div>
-    <select id="teacher-dept-filter" class="select-sm" onchange="filterTeachersManagement()"><option value="">All Departments</option><option value="Mathematics">Mathematics</option><option value="Science">Sciences</option><option value="Languages">Languages</option></select>
-  </div>
-  <div class="g3">
-    ${activeTeachers.map((t) => `
+  const teacherCards = activeTeachers.map((t) => `
     <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewTeacherProfile('${t.teacher_id}')">
       <div style="display:flex;gap:14px;margin-bottom:14px">
         <div class="av av-lg av-${t.avatar_color}"><i class="fas fa-user"></i></div>
@@ -1567,9 +1545,13 @@ function teachersManagementModule() {
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewTeacherProfile('${t.teacher_id}')"><i class="fas fa-eye"></i> View Profile</button>
         <button class="btn btn-primary btn-xs" style="flex:1" onclick="editTeacher('${t.teacher_id}')"><i class="fas fa-edit"></i> Edit</button>
       </div>
-    </div>`).join('')}
-  </div>`;
-  return html;
+    </div>`).join('');
+
+  return hdr('Teachers Module', 'Manage all teacher profiles and subject assignments', 'Teachers') +
+    renderPageTemplate('pages/admin/teachers/manage.html', {
+      archivedCount: getArchivedTeachers().length,
+      teacherCards
+    });
 }
 
 function viewParentProfile(parentId) {
@@ -1762,18 +1744,10 @@ function updateParentTable(parents) {
 // -----------------------------------
 // -----------------------------------
 function parentsModule() {
-  return hdr('Parents Module', 'Parent/Guardian records and communication', 'Parents') + `
-  <div class="toolbar">
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="parent-search" placeholder="Search parents..." onkeyup="filterParents()" style="cursor:text"></div>
-  </div>
-  <div class="card">
-    <table class="tbl">
-      <thead><tr><th>#</th><th>Parent/Guardian</th><th>Children</th><th>Contact</th><th>Email</th><th>Fees Status</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${parentsData.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('')}
-      </tbody>
-    </table>
-  </div>`;
+  const parentRows = parentsData.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
+
+  return hdr('Parents Module', 'Parent/Guardian records and communication', 'Parents') +
+    renderPageTemplate('pages/admin/parents/index.html', { parentRows });
 }
 
 // -----------------------------------
@@ -2151,31 +2125,15 @@ function classesModule() {
   const visibleClasses = getVisibleClassesForRole(classesData);
   const totalStudents = visibleClasses.reduce((sum, c) => sum + getClassActiveStudentCount(c.name), 0);
   const avgClassSize = visibleClasses.length ? Math.round(totalStudents / visibleClasses.length) : 0;
-
-  return hdr('Classes Module', isAdmin ? 'Manage classes and teacher assignments' : 'Your assigned classes', 'Classes') + `
-  <div class="stats-row">
-    ${statCard('<i class="fas fa-building"></i>', visibleClasses.length, isAdmin ? 'Total Classes' : 'My Classes', isAdmin ? 'All levels' : 'Assigned to you', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-graduation-cap"></i>', totalStudents, 'Total Students', isAdmin ? 'All classes' : 'My classes', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>', visibleClasses.length, 'Class Teachers', isAdmin ? 'One per class' : 'Your assignments', 'neu', 'si-green')}
-    ${statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')}
-  </div>
-  <div class="toolbar" style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-    <div class="search-bar" style="max-width:300px;flex:1">
-      <span><i class="fas fa-search"></i></span>
-      <input id="class-search" placeholder="Search classes..." onkeyup="filterClasses()" style="cursor:text">
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <select id="class-stream-filter" class="select-sm" onchange="filterClasses()">
-        <option value="All Streams">All Streams</option>
-        <option value="General">General</option>
-        <option value="Mixed">Mixed</option>
-      </select>
-      ${isAdmin ? `<button class="btn btn-primary" onclick="openCreateClass()"><i class="fas fa-plus"></i> Add Class</button>` : ''}
-    </div>
-  </div>
-  ${!isAdmin ? `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>` : ''}
-  <div class="g3 mb20">
-    ${visibleClasses.map((c) => `
+  const statsCards = [
+    statCard('<i class="fas fa-building"></i>', visibleClasses.length, isAdmin ? 'Total Classes' : 'My Classes', isAdmin ? 'All levels' : 'Assigned to you', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-graduation-cap"></i>', totalStudents, 'Total Students', isAdmin ? 'All classes' : 'My classes', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-chalkboard-user"></i>', visibleClasses.length, 'Class Teachers', isAdmin ? 'One per class' : 'Your assignments', 'neu', 'si-green'),
+    statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')
+  ].join('');
+  const adminActions = isAdmin ? '<button class="btn btn-primary" onclick="openCreateClass()"><i class="fas fa-plus"></i> Add Class</button>' : '';
+  const roleNotice = !isAdmin ? '<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>' : '';
+  const classCards = visibleClasses.map((c) => `
     <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewClassStudents('${c.class_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
@@ -2192,8 +2150,10 @@ function classesModule() {
         ${isAdmin ? `<button class="btn btn-primary btn-xs" style="flex:1" onclick="manageClass('${c.class_id}')">Manage</button>` : ''}
         ${isAdmin ? `<button class="btn btn-danger btn-xs" style="flex:1" onclick="deleteClass('${c.class_id}')">Delete</button>` : ''}
       </div>
-    </div>`).join('')}
-  </div>`;
+    </div>`).join('');
+
+  return hdr('Classes Module', isAdmin ? 'Manage classes and teacher assignments' : 'Your assigned classes', 'Classes') +
+    renderPageTemplate('pages/admin/classes/index.html', { statsCards, adminActions, roleNotice, classCards });
 }
 
 // SUBJECTS MODULE
@@ -2208,25 +2168,22 @@ function subjectsModule() {
       ? 'Subjects assigned to you'
       : 'Subjects for your class';
 
-  return hdr('Subjects Module', moduleSubtitle, 'Subjects') + `
-  ${isAdmin ? `
-  <div class="toolbar">
-    <input type="text" id="subject-search" class="input-search" placeholder="Search subjects..." onkeyup="filterSubjects()">
-    <button class="btn btn-primary" onclick="showAddSubjectForm()"><i class="fas fa-plus"></i> Add Subject</button>
-  </div>
-  <div style="margin-bottom:18px">
-    <label style="font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block">Filter by Type</label>
-    <div class="mod-tabs">
-      ${['All Subjects', 'Core', 'Elective', 'Extracurricular'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="filterSubjectsByType('${t === 'All Subjects' ? 'All' : t}')">${t}</div>`).join('')}
+  const controlPanel = isAdmin ? `
+    <div class="toolbar">
+      <input type="text" id="subject-search" class="input-search" placeholder="Search subjects..." onkeyup="filterSubjects()">
+      <button class="btn btn-primary" onclick="showAddSubjectForm()"><i class="fas fa-plus"></i> Add Subject</button>
     </div>
-  </div>
-  ` : `
-  <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
-    <i class="fas fa-info-circle"></i> ${isTeacher ? 'You are viewing only subjects assigned to you.' : 'You are viewing only subjects for your class.'}
-  </div>
-  `}
-  <div class="g4">
-    ${filteredSubjects.map(s => `
+    <div style="margin-bottom:18px">
+      <label style="font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block">Filter by Type</label>
+      <div class="mod-tabs">
+        ${['All Subjects', 'Core', 'Elective', 'Extracurricular'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="filterSubjectsByType('${t === 'All Subjects' ? 'All' : t}')">${t}</div>`).join('')}
+      </div>
+    </div>` : `
+    <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
+      <i class="fas fa-info-circle"></i> ${isTeacher ? 'You are viewing only subjects assigned to you.' : 'You are viewing only subjects for your class.'}
+    </div>`;
+
+  const subjectCards = filteredSubjects.map(s => `
     <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button') && !event.target.closest('.subject-menu-wrapper')) viewSubject('${s.subject_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div style="font-size:32px">${s.icon}</div>
@@ -2248,8 +2205,10 @@ function subjectsModule() {
         <span class="badge b-gray">${s.classes}</span>
       </div>
       <div style="font-size:11px;color:var(--gray-500)">${s.hours}</div>
-    </div>`).join('')}
-  </div>`;
+    </div>`).join('');
+
+  return hdr('Subjects Module', moduleSubtitle, 'Subjects') +
+    renderPageTemplate('pages/admin/subjects/index.html', { controlPanel, subjectCards });
 }
 
 // SUBJECTS MODULE HELPER FUNCTIONS

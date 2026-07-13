@@ -1,0 +1,31 @@
+<div class="toolbar">
+  {{adminActions}}
+  <div class="search-bar">
+    <span><i class="fas fa-search"></i></span>
+    <input id="student-search" placeholder="Search students..." onkeyup="filterStudents()" style="cursor:text">
+  </div>
+  <select id="student-class-filter" class="select-sm" onchange="filterStudents()">
+    <option value="All Classes">All Classes</option>
+    {{classOptions}}
+  </select>
+  <select id="student-status-filter" class="select-sm" onchange="filterStudents()">
+    <option value="All Status">All Status</option>
+    <option>Active</option>
+    <option>Inactive</option>
+    <option>Suspended</option>
+  </select>
+</div>
+
+{{roleNotice}}
+
+<div class="card">
+  <table class="tbl">
+    <thead>
+      <tr><th>#</th><th>Student</th><th>ID No.</th><th>Class</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Fees</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {{studentRows}}
+    </tbody>
+  </table>
+  {{pagination}}
+</div>

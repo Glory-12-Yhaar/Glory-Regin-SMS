@@ -1,0 +1,25 @@
+{{reminderNotice}}
+
+<div class="toolbar" style="margin-bottom:20px;display:flex;gap:12px">
+  <div class="search-bar" style="flex:1">
+    <span><i class="fas fa-search"></i></span>
+    <input id="debtor-search" placeholder="Search student or parent name..." oninput="renderDebtorsTable()">
+  </div>
+  <select id="debtor-class-filter" class="select-sm" onchange="renderDebtorsTable()">
+    {{classOptions}}
+  </select>
+  <select id="debtor-overdue-filter" class="select-sm" onchange="renderDebtorsTable()">
+    <option>All Debtors</option>
+    <option>Overdue > 30 Days</option>
+    <option>Overdue > 60 Days</option>
+  </select>
+  <button class="btn btn-gold" onclick="openBulkDebtorReminderPage()"><i class="fas fa-sms"></i> Send Bulk Reminders</button>
+</div>
+
+<div class="card">
+  <div class="card-hdr"><span class="card-title"><i class="fas fa-users-slash"></i> Outstanding Balances</span></div>
+  <table class="tbl">
+    <thead><tr><th>Student</th><th>Class</th><th>Parent Name</th><th>Contact</th><th>Outstanding Balance</th><th>Days Overdue</th><th>Actions</th></tr></thead>
+    <tbody id="debtors-tbody">{{debtorRows}}</tbody>
+  </table>
+</div>

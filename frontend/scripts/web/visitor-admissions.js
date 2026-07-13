@@ -236,170 +236,18 @@ function admissionsModule() {
   const approved = admissionsData.filter(a => a.status === 'Approved').length;
   const pending = admissionsData.filter(a => a.status === 'Pending').length;
   const rejected = admissionsData.filter(a => a.status === 'Rejected').length;
-  return hdr('Admissions Module', 'Process new student admissions and generate student IDs', 'Admissions') + `
-  <div class="stats-row">
-    ${statCard('<i class="fas fa-clipboard-list"></i>', '12', 'Total Applications', 'This academic year', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-check-circle"></i>', '' + approved, 'Approved', 'Ready for enrollment', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-hourglass-half"></i>', '' + pending, 'Pending', 'Awaiting review', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-times-circle"></i>', '' + rejected, 'Rejected', 'Did not meet criteria', 'dn', 'si-red')}
-  </div>
-  <div class="toolbar">
-    <button class="btn btn-primary" onclick="toggleAdmForm()"><i class="fas fa-plus"></i> New Admission Form</button>
-    <button class="btn btn-secondary" onclick="showAdmissionStatistics()"><i class="fas fa-chart-bar"></i> Statistics</button>
-    <button class="btn btn-secondary" onclick="exportAdmissionsToCSV()" style="cursor:pointer"><i class="fas fa-download"></i> CSV</button>
-    <button class="btn btn-secondary" onclick="exportAdmissionsToExcel()" style="cursor:pointer"><i class="fas fa-chart-bar"></i> Excel</button>
-    <button class="btn btn-secondary" onclick="downloadAdmissionsPDF()" style="cursor:pointer"><i class="fas fa-file-pdf"></i> PDF</button>
-    <div class="search-bar"><span><i class="fas fa-magnifying-glass"></i></span><input id="adm-search" placeholder="Search by name or ID..." onkeyup="filterAdmissions()" style="cursor:text"></div>
-  </div>
-  
-  <!-- FORM -->
-  <div id="adm-form-wrap" style="display:none;margin-bottom:20px">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-file-alt"></i> New Admission Form</span></div>
-      <div class="form-grid">
-        <div style="grid-column:1/-1">
-          <h3 style="color:var(--blue-dark);font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-user"></i> Student Personal Details</h3>
-        </div>
-        <div class="form-field">
-          <label>Full Name *</label>
-          <input type="text" id="adm-name" placeholder="Enter full name as on birth certificate">
-        </div>
-        <div class="form-field">
-          <label>Date of Birth *</label>
-          <input type="date" id="adm-dob">
-        </div>
-        <div class="form-field">
-          <label>Gender *</label>
-          <select id="adm-gender">
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label>Class Applying For *</label>
-          <select id="adm-class">
-            <option value="Early Childhood">Early Childhood</option>
-            <option value="Primary 1">Primary 1</option>
-            <option value="Primary 2">Primary 2</option>
-            <option value="Primary 3">Primary 3</option>
-            <option value="Primary 4">Primary 4</option>
-            <option value="Primary 5">Primary 5</option>
-            <option value="Primary 6">Primary 6</option>
-            <option value="JHS 1">JHS 1</option>
-            <option value="JHS 2">JHS 2</option>
-            <option value="JHS 3">JHS 3</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label>Previous School (If any)</label>
-          <input type="text" id="adm-prev-school" placeholder="Name of previous school attended">
-        </div>
-        
-        <div style="grid-column:1/-1;margin-top:10px">
-          <h3 style="color:var(--blue-dark);font-size:14px;font-weight:700;margin-bottom:12px"><i class="fas fa-users"></i> Parent / Guardian Details</h3>
-        </div>
-        <div class="form-field">
-          <label>Parent/Guardian Full Name *</label>
-          <input type="text" id="adm-parent-name" placeholder="Enter parent full name">
-        </div>
-        <div class="form-field">
-          <label>Contact Phone Number *</label>
-          <input type="tel" id="adm-parent-phone" placeholder="e.g. +233 24 000 0000">
-        </div>
-        <div class="form-field">
-          <label>Email Address</label>
-          <input type="email" id="adm-parent-email" placeholder="e.g. parent@email.com">
-        </div>
-        <div class="form-field">
-          <label>Residential Address</label>
-          <input type="text" id="adm-parent-address" placeholder="Enter house number / area">
-        </div>
-        <div class="form-field" style="display:flex;align-items:center;gap:12px;margin-top:16px">
-          <div>
-            <label style="cursor:pointer;background:var(--gray-100);padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;color:var(--blue-dark);border:1.5px dashed var(--gray-300)" for="adm-pic-input"><i class="fas fa-upload"></i> Upload Passport Photo</label>
-            <input type="file" id="adm-pic-input" accept="image/*" style="display:none" onchange="previewAdmPic(event)">
-          </div>
-          <div>
-            <div id="adm-pic-preview" style="width:80px;height:100px;background:var(--gray-100);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:32px;overflow:hidden;flex-shrink:0"><i class="fas fa-camera"></i></div>
-          </div>
-        </div>
-        <div class="form-field" style="grid-column:1/-1">
-          <label>Medical Conditions / Special Needs</label>
-          <textarea id="adm-medical" placeholder="Any health issues or special requirements?" style="min-height:60px;font-family:Poppins,sans-serif;border:1.5px solid var(--gray-200);border-radius:6px;padding:8px;font-size:12px"></textarea>
-        </div>
-        
-        <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:16px">
-          <button class="btn btn-primary" style="flex:1" onclick="submitAdmission()"><i class="fas fa-check"></i> Submit Application</button>
-          <button class="btn btn-secondary" style="flex:1" onclick="toggleAdmForm()">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- PENDING ADMISSIONS -->
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-hourglass-half"></i> Pending Admissions</span></div>
-    <table class="tbl" style="font-size:12px">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Application No.</th>
-          <th>Student Name</th>
-          <th>DOB</th>
-          <th>Class Applying</th>
-          <th>Parent</th>
-          <th>Date Applied</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="pending-admissions-tbody">
-        ${admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('')}
-      </tbody>
-    </table>
-  </div>
-  
-  <!-- APPROVED ADMISSIONS (READY FOR ENROLLMENT) -->
-  <div class="card" style="margin-top:20px">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> Approved Admissions (Ready for Enrollment)</span></div>
-    <table class="tbl" style="font-size:12px">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Application No.</th>
-          <th>Generated Student ID</th>
-          <th>Student Name</th>
-          <th>Class</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="approved-admissions-tbody">
-        ${admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('')}
-      </tbody>
-    </table>
-  </div>
-  
-  <!-- REJECTED & WITHDRAWN -->
-  <div class="card" style="margin-top:20px">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-times-circle"></i> Rejected / Withdrawn</span></div>
-    <table class="tbl" style="font-size:12px">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Application No.</th>
-          <th>Student Name</th>
-          <th>Class Applied</th>
-          <th>Status</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody id="rejected-admissions-tbody">
-        ${admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('')}
-      </tbody>
-    </table>
-  </div>
-  `;
+  const statsCards = [
+    statCard('<i class="fas fa-clipboard-list"></i>', '12', 'Total Applications', 'This academic year', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-check-circle"></i>', '' + approved, 'Approved', 'Ready for enrollment', 'up', 'si-green'),
+    statCard('<i class="fas fa-hourglass-half"></i>', '' + pending, 'Pending', 'Awaiting review', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-times-circle"></i>', '' + rejected, 'Rejected', 'Did not meet criteria', 'dn', 'si-red')
+  ].join('');
+  const pendingRows = admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('');
+  const approvedRows = admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('');
+  const rejectedRows = admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('');
+
+  return hdr('Admissions Module', 'Process new student admissions and generate student IDs', 'Admissions') +
+    renderPageTemplate('pages/admin/admissions/index.html', { statsCards, pendingRows, approvedRows, rejectedRows });
 }
 
 function toggleAdmForm() {

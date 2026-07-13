@@ -1242,25 +1242,13 @@ function salaryModule() {
   const payrollRows = buildPayrollRows();
   const monthlyPayroll = payrollRows.reduce((sum, row) => sum + Number(row.net || 0), 0);
   const pendingCount = payrollRows.filter(row => row.status !== 'Paid').length;
-  return hdr('Salary & Payroll', 'Staff salary management and payroll processing', 'Payroll') + `
-  <div class="stats-row">
-    ${statCard('<i class="fas fa-briefcase"></i>', String(payrollRows.length), 'Total Staff', 'For payroll', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(monthlyPayroll).toLocaleString(), 'Monthly Payroll', 'Total outgoing', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-check-circle"></i>', String(pendingCount), 'Pending', pendingCount ? 'Needs processing' : 'All current', pendingCount ? 'dn' : 'up', pendingCount ? 'si-red' : 'si-green')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>', 'Mar 28', 'Next Pay Date', 'In 11 days', 'neu', 'si-purple')}
-  </div>
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-users"></i> Staff Payroll â€” March 2025</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="window.returnToPayrollAfterTeacherAdd=true;showAddTeacherForm()"><i class="fas fa-user-plus"></i> Add Teacher</button>
-        <button class="btn btn-gold" onclick="openPayrollProcessPage()">Process All</button>
-        <button class="btn btn-secondary btn-sm" onclick="exportData('CSV')"><i class="fas fa-download"></i> Export</button>
-      </div>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>Staff Member</th><th>Role</th><th>Grade</th><th>Basic (GHâ‚µ)</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${payrollRows.map(({name: n, role: r, grade: g, basic: b, allowance: al, deduction: d, net, status: s}) => `
+  const statsCards = [
+    statCard('<i class="fas fa-briefcase"></i>', String(payrollRows.length), 'Total Staff', 'For payroll', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(monthlyPayroll).toLocaleString(), 'Monthly Payroll', 'Total outgoing', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-check-circle"></i>', String(pendingCount), 'Pending', pendingCount ? 'Needs processing' : 'All current', pendingCount ? 'dn' : 'up', pendingCount ? 'si-red' : 'si-green'),
+    statCard('<i class="fas fa-calendar-alt"></i>', 'Mar 28', 'Next Pay Date', 'In 11 days', 'neu', 'si-purple')
+  ].join('');
+  const payrollRowsHtml = payrollRows.map(({name: n, role: r, grade: g, basic: b, allowance: al, deduction: d, net, status: s}) => `
         <tr>
           <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
           <td>${r}</td><td><span class="badge b-gray">${g}</span></td>
@@ -1269,11 +1257,11 @@ function salaryModule() {
           <td style="color:var(--danger);font-weight:600">-GHâ‚µ${Number(d).toLocaleString()}</td>
           <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${Number(net).toLocaleString()}</td>
           <td><span class="badge ${s === 'Paid' ? 'b-success' : 'b-warning'}">${s}</span></td>
-          <td><button class="btn btn-secondary btn-xs" onclick="openPayslipPage('${escapeAttr(n).replace(/'/g, "\\'")}', '${escapeAttr(r).replace(/'/g, "\\'")}', '${escapeAttr(g).replace(/'/g, "\\'")}', '${Number(net).toLocaleString()}')">?? Slip</button></td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-  </div>`;
+          <td><button class="btn btn-secondary btn-xs" onclick="openPayslipPage('${escapeAttr(n).replace(/'/g, "\\'")}', '${escapeAttr(r).replace(/'/g, "\\'")}', '${escapeAttr(g).replace(/'/g, "\\'")}', '${Number(net).toLocaleString()}')">Slip</button></td>
+        </tr>`).join('');
+
+  return hdr('Salary & Payroll', 'Staff salary management and payroll processing', 'Payroll') +
+    renderPageTemplate('pages/finance/salary/index.html', { statsCards, payrollRows: payrollRowsHtml });
 }
 
 function processAllPayroll() {
@@ -2015,19 +2003,8 @@ function deleteEvent(eventId) {
 // RECEIPTS MODULE
 function receiptsModule() {
   const receiptRows = getPayments().filter(p => p.receipt).slice(0, 10);
-  return hdr('Invoice & Receipts', 'Generate and manage invoices and payment receipts', 'Invoice & Receipts') + `
-  <div class="card">
-    <div class="toolbar">
-      <button class="btn btn-gold" onclick="openReceiptIssuePage()">+ Issue New Receipt</button>
-      <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="receipt-search" placeholder="Search receipt no. or student..." oninput="filterReceiptsTable()"></div>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>Receipt No.</th><th>Student</th><th>Class</th><th>Amount</th><th>Term</th><th>Date</th><th>Issued By</th><th>Actions</th></tr></thead>
-      <tbody id="receipts-tbody">
-        ${renderReceiptRows(receiptRows)}
-      </tbody>
-    </table>
-  </div>`;
+  return hdr('Invoice & Receipts', 'Generate and manage invoices and payment receipts', 'Invoice & Receipts') +
+    renderPageTemplate('pages/finance/receipts/index.html', { receiptRows: renderReceiptRows(receiptRows) });
 }
 
 function renderReceiptRows(rows) {
@@ -2134,19 +2111,12 @@ function issueReceiptFromPage() {
 
 // SCHOLARSHIPS / DISCOUNTS MODULE
 function scholarshipsModule() {
-  return hdr('Scholarships & Discounts', 'Manage fee reductions and special waivers', 'Grants') + `
-  <div class="stats-row">
-    ${statCard('<i class="fas fa-gift"></i>', '24', 'Active Scholarships', 'This term', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-users"></i>', '15', 'Sibling Discounts', 'Applied automatically', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-chalkboard-teacher"></i>', '8', 'Staff Discounts', 'For staff dependents', 'neu', 'si-green')}
-  </div>
-  <div class="g21">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-gift"></i> Active Grants & Waivers</span></div>
-      <table class="tbl">
-        <thead><tr><th>Student</th><th>Class</th><th>Grant Type</th><th>Discount Value</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${[['Kwame Nkrumah', 'JHS 3', 'Academic Scholarship', '100% Tuition', 'Active'],
+  const statsCards = [
+    statCard('<i class="fas fa-gift"></i>', '24', 'Active Scholarships', 'This term', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-users"></i>', '15', 'Sibling Discounts', 'Applied automatically', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-chalkboard-teacher"></i>', '8', 'Staff Discounts', 'For staff dependents', 'neu', 'si-green')
+  ].join('');
+  const grantRows = [['Kwame Nkrumah', 'JHS 3', 'Academic Scholarship', '100% Tuition', 'Active'],
              ['Ama Serwaa', 'JHS 1', 'Sibling Discount', '20% Tuition', 'Active'],
              ['Kofi Owusu', 'Basic 6', 'Staff Dependent', '50% Tuition', 'Active'],
              ['Esi Appiah', 'Primary 6', 'Sports Bursary', '50% Full Fee', 'Pending Review']].map(([n, c, t, v, s]) => `
@@ -2156,21 +2126,10 @@ function scholarshipsModule() {
             <td style="font-weight:700;color:var(--gold)">${v}</td>
             <td><span class="badge ${s === 'Active' ? 'b-success' : 'b-warning'}">${s}</span></td>
             <td><button class="btn btn-secondary btn-xs" onclick="showToast('Edit grant dialog opened', 'info')"><i class="fas fa-edit"></i> Edit</button></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Apply New Discount</span></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Select Student</label><input type="text" placeholder="Search student name..."></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Discount Type</label>
-        <select><option>Academic Scholarship</option><option>Sibling Discount</option><option>Staff Dependent</option><option>Sports Bursary</option><option>Other Hardship Waiver</option></select>
-      </div>
-      <div class="f-field" style="margin-bottom:12px"><label>Discount Value</label><input type="text" placeholder="e.g. 50% or GHâ‚µ500"></div>
-      <div class="f-field" style="margin-bottom:16px"><label>Remarks / Approval</label><textarea placeholder="Reason or approver info..." style="min-height:50px"></textarea></div>
-      <button class="btn btn-primary" style="width:100%" onclick="showToast('Discount applied successfully!', 'success')">Apply Discount</button>
-    </div>
-  </div>`;
+          </tr>`).join('');
+
+  return hdr('Scholarships & Discounts', 'Manage fee reductions and special waivers', 'Grants') +
+    renderPageTemplate('pages/finance/scholarships/index.html', { statsCards, grantRows });
 }
 
 // DEBTORS LIST MODULE
@@ -2229,21 +2188,12 @@ function debtorReminderNoticePanel(limit = 3, compact = false) {
 function debtorsModule() {
   const debtors = getDebtors();
   const classes = ['All Classes', ...Array.from(new Set(debtors.map(d => d.className)))];
-  return hdr('Debtors List', 'Monitor outstanding fee balances and recovery', 'Debtors') + `
-  ${debtorReminderNoticePanel()}
-  <div class="toolbar" style="margin-bottom:20px;display:flex;gap:12px">
-    <div class="search-bar" style="flex:1"><span><i class="fas fa-search"></i></span><input id="debtor-search" placeholder="Search student or parent name..." oninput="renderDebtorsTable()"></div>
-    <select id="debtor-class-filter" class="select-sm" onchange="renderDebtorsTable()">${classes.map(c => `<option>${escapeHtml(c)}</option>`).join('')}</select>
-    <select id="debtor-overdue-filter" class="select-sm" onchange="renderDebtorsTable()"><option>All Debtors</option><option>Overdue > 30 Days</option><option>Overdue > 60 Days</option></select>
-    <button class="btn btn-gold" onclick="openBulkDebtorReminderPage()"><i class="fas fa-sms"></i> Send Bulk Reminders</button>
-  </div>
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-users-slash"></i> Outstanding Balances</span></div>
-    <table class="tbl">
-      <thead><tr><th>Student</th><th>Class</th><th>Parent Name</th><th>Contact</th><th>Outstanding Balance</th><th>Days Overdue</th><th>Actions</th></tr></thead>
-      <tbody id="debtors-tbody">${renderDebtorRows(debtors)}</tbody>
-    </table>
-  </div>`;
+  return hdr('Debtors List', 'Monitor outstanding fee balances and recovery', 'Debtors') +
+    renderPageTemplate('pages/finance/debtors/index.html', {
+      reminderNotice: debtorReminderNoticePanel(),
+      classOptions: classes.map(c => `<option>${escapeHtml(c)}</option>`).join(''),
+      debtorRows: renderDebtorRows(debtors)
+    });
 }
 
 function getFilteredDebtors() {
@@ -2432,45 +2382,23 @@ function receiveDebtorPayment(debtorId) {
 
 // EXPENSES MODULE
 function expensesModule() {
-  return hdr('Expenses', 'Record and manage school expenditure', 'Expenses') + `
-  <div class="stats-row">
-    ${statCard('<i class="fas fa-chart-line"></i>', 'GHâ‚µ89K', 'Total Expenses', 'This term', 'neu', 'si-red')}
-    ${statCard('<i class="fas fa-briefcase"></i>', 'GHâ‚µ59K', 'Staff Salaries', '63% of expenses', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-wrench"></i>', 'GHâ‚µ18K', 'Operations', '20%', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-chart-bar"></i>', 'GHâ‚µ12K', 'Other', '13%', 'neu', 'si-green')}
-  </div>
-  <div class="g21">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Expense Records</span><button class="btn btn-primary btn-sm">+ Add Expense</button></div>
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Approved By</th><th>Status</th></tr></thead>
-        <tbody>
-          ${[['Mar 17', 'Electricity Bill â€” March', 'Utilities', 'GHâ‚µ4,200', 'Principal', 'Paid'], ['Mar 15', 'Stationery Supplies', 'Admin', 'GHâ‚µ1,800', 'Accountant', 'Paid'], ['Mar 12', 'Sports Equipment', 'Athletics', 'GHâ‚µ3,500', 'HOD Sports', 'Paid'], ['Mar 10', 'Lab Chemicals Restock', 'Science', 'GHâ‚µ2,100', 'HOD Science', 'Pending'], ['Mar 8', 'Maintenance Repair', 'Facilities', 'GHâ‚µ850', 'Admin', 'Paid']].map(([d, desc, c, a, ap, s]) => `
+  const statsCards = [
+    statCard('<i class="fas fa-chart-line"></i>', 'GHâ‚µ89K', 'Total Expenses', 'This term', 'neu', 'si-red'),
+    statCard('<i class="fas fa-briefcase"></i>', 'GHâ‚µ59K', 'Staff Salaries', '63% of expenses', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-wrench"></i>', 'GHâ‚µ18K', 'Operations', '20%', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-chart-bar"></i>', 'GHâ‚µ12K', 'Other', '13%', 'neu', 'si-green')
+  ].join('');
+  const expenseRows = [['Mar 17', 'Electricity Bill - March', 'Utilities', 'GHâ‚µ4,200', 'Principal', 'Paid'], ['Mar 15', 'Stationery Supplies', 'Admin', 'GHâ‚µ1,800', 'Accountant', 'Paid'], ['Mar 12', 'Sports Equipment', 'Athletics', 'GHâ‚µ3,500', 'HOD Sports', 'Paid'], ['Mar 10', 'Lab Chemicals Restock', 'Science', 'GHâ‚µ2,100', 'HOD Science', 'Pending'], ['Mar 8', 'Maintenance Repair', 'Facilities', 'GHâ‚µ850', 'Admin', 'Paid']].map(([d, desc, c, a, ap, s]) => `
           <tr>
             <td>${d}</td><td>${desc}</td>
             <td><span class="badge b-info">${c}</span></td>
             <td style="font-weight:700;color:var(--danger)">${a}</td>
             <td>${ap}</td>
             <td><span class="badge ${s === 'Paid' ? 'b-success' : 'b-warning'}">${s}</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Add Expense</span></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Description</label><input placeholder="Expense description..."></div>
-      <div class="f-row">
-        <div class="f-field"><label>Category</label><select><option>Utilities</option><option>Admin</option><option>Salaries</option><option>Facilities</option></select></div>
-        <div class="f-field"><label>Amount (GHâ‚µ)</label><input type="number" placeholder="0.00"></div>
-      </div>
-      <div class="f-row">
-        <div class="f-field"><label>Date</label><input type="date"></div>
-        <div class="f-field"><label>Approved By</label><input placeholder="Approver name..."></div>
-      </div>
-      <div class="f-field" style="margin-bottom:14px"><label>Notes</label><textarea placeholder="Additional notes..."></textarea></div>
-      <button class="btn btn-primary" style="width:100%">Record Expense</button>
-    </div>
-  </div>`;
+          </tr>`).join('');
+
+  return hdr('Expenses', 'Record and manage school expenditure', 'Expenses') +
+    renderPageTemplate('pages/finance/expenses/index.html', { statsCards, expenseRows });
 }
 
 // BALANCE SHEET

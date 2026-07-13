@@ -2864,118 +2864,33 @@ function resetNotificationForm() {
 
 // ROLES MODULE
 function rolesModule() {
-  return hdr('Roles & Permissions', 'Manage user roles and access control', 'Roles') + `
-  <div class="g2">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-shield"></i> System Roles</span><button class="btn btn-primary btn-sm" onclick="alert('Opening role creation form...')">+ Add Role</button></div>
-      <table class="tbl">
-        <thead><tr><th>Role</th><th>Users</th><th>Access Level</th><th>Dashboard</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-          ${[['Admin', '3', 'Full System Access', 'Admin', 'Active', 'danger'], ['Accountant', '2', 'Financial Modules', 'Accountant', 'Active', 'warning'], ['Teacher', '64', 'Academic Modules', 'Teacher', 'Active', 'info'], ['Student', '842', 'Student View Only', 'Student', 'Active', 'success'], ['Parent', '520', 'Parent View Only', 'Parent', 'Active', 'info'], ['Alumni', '1,240', 'Alumni Portal', 'Alumni', 'Active', 'purple'], ['Visitor', 'â€“', 'Public Pages Only', 'Visitor', 'Active', 'gray']].map(([r, u, a, d, s, c]) => `
-          <tr>
-            <td style="font-weight:700">${r}</td>
-            <td>${u}</td>
-            <td><span class="badge b-${c}">${a}</span></td>
-            <td><span class="badge b-gray">${d}</span></td>
-            <td><span class="badge b-success">${s}</span></td>
-            <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert('Editing role')">Edit</button><button class="btn btn-primary btn-xs" onclick="alert('Managing permissions')">Perms</button></div></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-key"></i> Permission Matrix â€” Admin Role</span></div>
-      <table class="tbl">
-        <thead><tr><th>Module</th><th style="text-align:center">View</th><th style="text-align:center">Create</th><th style="text-align:center">Edit</th><th style="text-align:center">Delete</th></tr></thead>
-        <tbody>
-          ${['Students', 'Teachers', 'Classes', 'Fees', 'Reports', 'Settings', 'Users', 'Notices', 'Events'].map(m => `
-          <tr>
-            <td style="font-weight:600">${m}</td>
-            ${[true, true, true, m !== 'Settings' && m !== 'Reports'].map(p => `<td style="text-align:center;font-size:16px;color:${p ? 'var(--success)' : 'var(--danger)'}">${p ? '?' : '?'}</td>`).join('')}
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
+  const rolesRows = [['Admin', '3', 'Full System Access', 'Admin', 'Active', 'danger'], ['Accountant', '2', 'Financial Modules', 'Accountant', 'Active', 'warning'], ['Teacher', '64', 'Academic Modules', 'Teacher', 'Active', 'info'], ['Student', '842', 'Student View Only', 'Student', 'Active', 'success'], ['Parent', '520', 'Parent View Only', 'Parent', 'Active', 'info'], ['Alumni', '1,240', 'Alumni Portal', 'Alumni', 'Active', 'purple'], ['Visitor', '-', 'Public Pages Only', 'Visitor', 'Active', 'gray']].map(([r, u, a, d, s, c]) => `
+    <tr>
+      <td style="font-weight:700">${r}</td>
+      <td>${u}</td>
+      <td><span class="badge b-${c}">${a}</span></td>
+      <td><span class="badge b-gray">${d}</span></td>
+      <td><span class="badge b-success">${s}</span></td>
+      <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert('Editing role')">Edit</button><button class="btn btn-primary btn-xs" onclick="alert('Managing permissions')">Perms</button></div></td>
+    </tr>`).join('');
+
+  const permissionsRows = ['Students', 'Teachers', 'Classes', 'Fees', 'Reports', 'Settings', 'Users', 'Notices', 'Events'].map(m => `
+    <tr>
+      <td style="font-weight:600">${m}</td>
+      ${[true, true, true, m !== 'Settings' && m !== 'Reports'].map(p => `<td style="text-align:center;font-size:16px;color:${p ? 'var(--success)' : 'var(--danger)'}">${p ? '?' : '?'}</td>`).join('')}
+    </tr>`).join('');
+
+  return hdr('Roles & Permissions', 'Manage user roles and access control', 'Roles') +
+    renderPageTemplate('pages/admin/roles/index.html', { rolesRows, permissionsRows });
 }
 
 // USERS MODULE
 function usersModule() {
-  const roleColors = { Admin: 'danger', Teacher: 'info', Student: 'success', Accountant: 'warning', Parent: 'purple', Alumni: 'teal', Visitor: 'gray' };
-
   // Fetch live data after render
   setTimeout(refreshUsersTable, 50);
 
-  return hdr('User Accounts', 'Manage all system user accounts', 'User Accounts') + `
-  <div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
-    <button class="btn btn-primary" onclick="toggleUserForm()"><i class="fas fa-plus"></i> Create Account</button>
-    <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="user-search" placeholder="Search by name, username, or email..." onkeyup="refreshUsersTable()"></div>
-    <select id="user-role-filter" class="select-sm" onchange="refreshUsersTable()">
-      <option>All Roles</option>
-      <option>Admin</option>
-      <option>Teacher</option>
-      <option>Student</option>
-      <option>Accountant</option>
-      <option>Parent</option>
-      <option>Alumni</option>
-    </select>
-  </div>
-
-  <!-- CREATE/EDIT USER FORM -->
-  <div id="user-form-wrap" style="display:none;margin-bottom:20px">
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title"><i class="fas fa-user-plus"></i> <span id="form-title">Create New User Account</span></span>
-        <button class="btn btn-secondary btn-xs" onclick="toggleUserForm()">Cancel</button>
-      </div>
-      <div style="padding:20px">
-        <div class="form-group">
-          <label>Full Name *</label>
-          <input type="text" id="user-name" placeholder="e.g., John Doe" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
-        </div>
-        <div class="g2" style="gap:15px">
-          <div class="form-group">
-            <label>Username *</label>
-            <input type="text" id="user-username" placeholder="e.g., john.doe" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
-          </div>
-          <div class="form-group">
-            <label>Email *</label>
-            <input type="email" id="user-email" placeholder="e.g., john@school.edu.gh" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
-          </div>
-        </div>
-        <div class="g2" style="gap:15px">
-          <div class="form-group">
-            <label>Role *</label>
-            <select id="user-role" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
-              <option>Admin</option><option>Teacher</option><option>Student</option>
-              <option>Accountant</option><option>Parent</option><option>Alumni</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Password *</label>
-            <input type="password" id="user-password" placeholder="Min. 6 characters" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:4px">
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:15px">
-          <button class="btn btn-primary" onclick="saveUser()" id="save-user-btn">Create Account</button>
-          <button class="btn btn-secondary" onclick="toggleUserForm()">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr">
-      <span class="card-title"><i class="fas fa-users"></i> All Users</span>
-      <span id="users-loading" style="font-size:12px;color:var(--gray-400)"><i class="fas fa-spinner fa-spin"></i> Loading...</span>
-    </div>
-    <table class="tbl">
-      <thead><tr><th>#</th><th>User</th><th>Username</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody id="users-table-body">
-        <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray-400)"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>
-      </tbody>
-    </table>
-  </div>`;
+  return hdr('User Accounts', 'Manage all system user accounts', 'User Accounts') +
+    renderPageTemplate('pages/admin/users/index.html');
 }
 
 // Refresh users table from API
@@ -4029,78 +3944,33 @@ const SYSTEM_LOGS = [
 ];
 
 function backupModule() {
-  return hdr('Backup & System Logs', 'Data backup management and activity logs', 'Backup & Logs') + `
-  <div class="g2">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-save"></i> Database Backup</span></div>
-      <div style="padding:20px;background:var(--blue-xpale);border-radius:var(--radius);text-align:center;margin-bottom:16px">
-        <div style="font-size:40px;margin-bottom:10px"><i class="fas fa-save"></i></div>
-        <div style="font-size:13px;font-weight:700;color:var(--blue-dark)">Last Backup: ${BACKUPS_DATA[0].date}</div>
-        <div style="font-size:11px;color:var(--gray-500);margin-top:4px">All data backed up successfully Â· Size: ${BACKUPS_DATA[0].size}</div>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <button class="btn btn-primary" style="flex:1;min-width:120px" onclick="performBackup()"><i class="fas fa-sync"></i> Backup Now</button>
-        <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="downloadLatestBackup()"><i class="fas fa-download"></i> Download</button>
-        <button class="btn btn-secondary" style="flex:1;min-width:120px" onclick="syncToCloud()"><i class="fas fa-cloud"></i> Cloud</button>
-      </div>
-      
-      <div style="margin-bottom:15px">
-        <input id="backup-search" type="text" placeholder="Search backups by date or size..." style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:12px" onkeyup="filterBackups()">
-      </div>
-      
-      <table class="tbl" id="backups-table">
-        <thead><tr><th>Date</th><th>Size</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="backups-tbody">
-          ${BACKUPS_DATA.map(b => `
-          <tr class="backup-row" data-date="${b.date.toLowerCase()}" data-size="${b.size.toLowerCase()}">
-            <td>${b.date}</td>
-            <td>${b.size}</td>
-            <td><span class="badge ${b.type === 'Auto' ? 'b-info' : 'b-warning'}">${b.type}</span></td>
-            <td><span class="badge b-success">${b.status}</span></td>
-            <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="downloadBackup('${b.id}')"><i class="fas fa-download"></i> Download</button></div></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> System Logs</span></div>
-      <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
-        <input id="logs-search" type="text" placeholder="Search logs..." style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:6px;font-size:12px" onkeyup="filterLogs()">
-        <select id="logs-filter" class="select-sm" onchange="filterLogs()">
-          <option value="">All Levels</option>
-          <option value="INFO">INFO</option>
-          <option value="WARNING">WARNING</option>
-          <option value="ERROR">ERROR</option>
-        </select>
-        <select id="logs-type-filter" class="select-sm" onchange="filterLogs()">
-          <option value="">All Types</option>
-          <option value="login">Login</option>
-          <option value="enrollment">Enrollment</option>
-          <option value="security">Security</option>
-          <option value="payment">Payment</option>
-          <option value="admin">Admin</option>
-          <option value="system">System</option>
-          <option value="academic">Academic</option>
-          <option value="report">Report</option>
-        </select>
-        <button class="btn btn-secondary" onclick="exportLogs()"><i class="fas fa-download"></i> Export</button>
-      </div>
-      
-      <div style="max-height:400px;overflow-y:auto" id="logs-container">
-        ${SYSTEM_LOGS.map((log, i) => {
+  const latestBackup = BACKUPS_DATA[0] || { date: 'Never', size: '0 MB' };
+  const backupRows = BACKUPS_DATA.map(b => `
+    <tr class="backup-row" data-date="${b.date.toLowerCase()}" data-size="${b.size.toLowerCase()}">
+      <td>${b.date}</td>
+      <td>${b.size}</td>
+      <td><span class="badge ${b.type === 'Auto' ? 'b-info' : 'b-warning'}">${b.type}</span></td>
+      <td><span class="badge b-success">${b.status}</span></td>
+      <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="downloadBackup('${b.id}')"><i class="fas fa-download"></i> Download</button></div></td>
+    </tr>`).join('');
+  const systemLogRows = SYSTEM_LOGS.map((log) => {
     const color = log.level === 'INFO' ? 'b-info' : (log.level === 'WARNING' ? 'b-warning' : 'b-danger');
     return `<div class="system-log" data-level="${log.level}" data-type="${log.type}" data-message="${log.message.toLowerCase()}" style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100);font-size:11px;align-items:flex-start">
-            <span class="badge ${color}" style="font-size:9px;height:fit-content;white-space:nowrap">${log.level}</span>
-            <div style="flex:1">
-              <div style="font-weight:600;color:var(--gray-700);margin-bottom:4px">${log.message}</div>
-              <div style="color:var(--gray-400)">${log.time}</div>
-            </div>
-          </div>`;
-  }).join('')}
+      <span class="badge ${color}" style="font-size:9px;height:fit-content;white-space:nowrap">${log.level}</span>
+      <div style="flex:1">
+        <div style="font-weight:600;color:var(--gray-700);margin-bottom:4px">${log.message}</div>
+        <div style="color:var(--gray-400)">${log.time}</div>
       </div>
-    </div>
-  </div>`;
+    </div>`;
+  }).join('');
+
+  return hdr('Backup & System Logs', 'Data backup management and activity logs', 'Backup & Logs') +
+    renderPageTemplate('pages/admin/backup/index.html', {
+      lastBackupDate: latestBackup.date,
+      lastBackupSize: latestBackup.size,
+      backupRows,
+      systemLogRows
+    });
 }
 
 // BACKUP FUNCTIONS
