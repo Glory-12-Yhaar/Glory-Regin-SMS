@@ -29,11 +29,13 @@ function getDB(): PDO {
     return $pdo;
 }
 
-function associateParentWithStudent(PDO $db, int $studentId, string $guardianName, ?string $guardianPhone): void {
+function associateParentWithStudent(PDO $db, int $studentId, string $guardianName, ?string $guardianPhone, ?string $guardianEmail = null, ?string $guardianAddress = null): void {
     $guardianName = trim($guardianName);
     if (empty($guardianName)) return;
 
     $guardianPhone = trim($guardianPhone ?? '');
+    $guardianEmail = filter_var(trim($guardianEmail ?? ''), FILTER_SANITIZE_EMAIL) ?: null;
+    $guardianAddress = trim($guardianAddress ?? '') ?: null;
 
     // 1. Check if parent record already exists by phone (or name if phone is empty)
     $pId = null;
@@ -68,7 +70,7 @@ function associateParentWithStudent(PDO $db, int $studentId, string $guardianNam
             $username = $username . rand(100, 999);
         }
         
-        $email = $username . '@gloryreign.edu.gh';
+        $email = $guardianEmail ?: $username . '@gloryreign.edu.gh';
         $userCode = 'user' . str_pad((int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn() + 1, 3, '0', STR_PAD_LEFT);
         
         $pwHash = password_hash('parent123', PASSWORD_BCRYPT, ['cost' => 10]);
@@ -78,8 +80,8 @@ function associateParentWithStudent(PDO $db, int $studentId, string $guardianNam
         $insUser->execute([$userCode, $guardianName, $username, $email, $pwHash, $avatarInitials]);
         $uId = (int)$db->lastInsertId();
 
-        $insParent = $db->prepare("INSERT INTO parents (name, email, phone, user_id) VALUES (?, ?, ?, ?)");
-        $insParent->execute([$guardianName, $email, $guardianPhone, $uId]);
+        $insParent = $db->prepare("INSERT INTO parents (name, email, phone, address, contact_person, user_id) VALUES (?, ?, ?, ?, ?, ?)");
+        $insParent->execute([$guardianName, $email, $guardianPhone, $guardianAddress, $guardianName, $uId]);
         $pId = (int)$db->lastInsertId();
     } else {
         // If parent exists, update their phone and name if provided
@@ -92,6 +94,14 @@ function associateParentWithStudent(PDO $db, int $studentId, string $guardianNam
         if (!empty($guardianPhone)) {
             $updateFields[] = "phone = ?";
             $updateParams[] = $guardianPhone;
+        }
+        if (!empty($guardianEmail)) {
+            $updateFields[] = "email = ?";
+            $updateParams[] = $guardianEmail;
+        }
+        if (!empty($guardianAddress)) {
+            $updateFields[] = "address = ?";
+            $updateParams[] = $guardianAddress;
         }
         if (!empty($updateFields)) {
             $updateParams[] = $pId;

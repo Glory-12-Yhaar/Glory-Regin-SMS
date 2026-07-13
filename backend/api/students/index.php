@@ -13,6 +13,9 @@ $user = requireAuth();
 $db   = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
+$db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL");
+$db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS photo LONGTEXT DEFAULT NULL");
+
 // ── GET ───────────────────────────────────────────────────────
 if ($method === 'GET') {
     $where  = ['1=1'];
@@ -51,7 +54,14 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare(
         "SELECT s.id, s.student_code, s.name, s.gender, s.dob, s.attendance, s.status,
-                s.stream, c.name AS class_name, c.class_teacher,
+                s.stream, s.class_id, s.address, s.photo, c.name AS class_name, c.class_teacher,
+                COALESCE((
+                    SELECT f.status
+                    FROM fees f
+                    WHERE f.student_id = s.id
+                    ORDER BY f.academic_year DESC, f.term DESC, f.created_at DESC, f.id DESC
+                    LIMIT 1
+                ), 'Pending') AS fees_status,
                 (SELECT p.name FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE ps.student_id = s.id LIMIT 1) AS guardian_name,
                 (SELECT p.phone FROM parent_student ps JOIN parents p ON p.id = ps.parent_id WHERE ps.student_id = s.id LIMIT 1) AS guardian_phone
          FROM students s
@@ -92,8 +102,8 @@ if ($method === 'POST') {
     $code = $year . '-' . str_pad($count, 2, '0', STR_PAD_LEFT);
 
     $stmt = $db->prepare(
-        "INSERT INTO students (student_code, name, class_id, stream, gender, dob, attendance, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')"
+        "INSERT INTO students (student_code, name, class_id, stream, gender, dob, address, photo, attendance, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')"
     );
     $stmt->execute([
         $code,
@@ -102,12 +112,14 @@ if ($method === 'POST') {
         $body['stream'] ?? 'General',
         $body['gender'],
         $body['dob']    ?? null,
+        $body['address'] ?? null,
+        $body['photo']  ?? null,
         $body['attendance'] ?? 0,
     ]);
 
     $id = $db->lastInsertId();
     if (!empty($body['guardian_name'])) {
-        associateParentWithStudent($db, $id, $body['guardian_name'], $body['guardian_phone'] ?? null);
+        associateParentWithStudent($db, $id, $body['guardian_name'], $body['guardian_phone'] ?? null, $body['guardian_email'] ?? null, $body['address'] ?? null);
     }
     jsonResponse(['success' => true, 'message' => 'Student created', 'id' => $id, 'student_code' => $code], 201);
 }

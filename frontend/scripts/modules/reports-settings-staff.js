@@ -1,4 +1,4 @@
-﻿
+
 // Report-card-specific grading thresholds.
 function calculateReportGrade(score) {
   if (score >= 90) return 'A';
@@ -263,8 +263,8 @@ function generateReportCard(studentId) {
         <div style="text-align:center"><img src="assets/images/Logo.png" alt="Logo" style="width:58px;height:58px;object-fit:contain"><div style="font-size:9px">School Logo</div></div>
         <div>
           <div class="rc-school">Glory Reign Preparatory School</div>
-          <div class="rc-subline">Terminal Report Card Â· ${student.term} Term Â· ${student.year}</div>
-          <div class="rc-subline">P.O. Box AN 1234, Accra North Â· Tel: +233-123-456-789</div>
+          <div class="rc-subline">Terminal Report Card · ${student.term} Term · ${student.year}</div>
+          <div class="rc-subline">P.O. Box AN 1234, Accra North · Tel: +233-123-456-789</div>
         </div>
         <div class="rc-photo">${photoHTML}<span>Student Photo</span></div>
       </div>
@@ -301,7 +301,7 @@ function generateReportCard(studentId) {
             <td></td>
             <td></td>
             <td class="rc-total">${student.totalMarks}</td>
-            <td colspan="3">Average: ${student.average}% Â· Overall Grade: ${student.grade} Â· Max: ${maxMarks}</td>
+            <td colspan="3">Average: ${student.average}% · Overall Grade: ${student.grade} · Max: ${maxMarks}</td>
           </tr>
         </tbody>
       </table>
@@ -331,11 +331,11 @@ function generateReportCard(studentId) {
         </div>
         <div class="rc-box">
           <h4>School Fees / Next Term</h4>
-          <div class="rc-line"><span>Arrears from Last Term</span><strong>GHâ‚µ ${arrears.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Fees Paid</span><strong>GHâ‚µ ${paidFees.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Balance Fee</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Books / PTA / Other</span><strong>GHâ‚µ 0</strong></div>
-          <div class="rc-line"><span>Total</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Arrears from Last Term</span><strong>GH₵ ${arrears.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Fees Paid</span><strong>GH₵ ${paidFees.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Balance Fee</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Books / PTA / Other</span><strong>GH₵ 0</strong></div>
+          <div class="rc-line"><span>Total</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
         </div>
       </div>
 
@@ -626,7 +626,7 @@ function viewAssignment(assignmentId) {
     <div style="background:var(--blue-main);color:white;padding:40px 20px;margin-bottom:30px;border-radius:8px">
       <div style="max-width:1200px;margin:0 auto">
         <h1 style="margin:0 0 12px 0;font-size:32px">${assignment.title}</h1>
-        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} â€¢ ${assignment.class}</p>
+        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} • ${assignment.class}</p>
       </div>
     </div>
     
@@ -886,7 +886,7 @@ function feesModule() {
     const statusClass = student.fees_status === 'Paid' ? 'b-success' : student.fees_status === 'Partial' ? 'b-warning' : 'b-danger';
     return hdr('My Fees Status', 'View your own fee balance and receipts', 'Fees') + `
     <div class="stats-row" style="margin-bottom:20px">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(student.feeAmount || 0).toLocaleString(), 'Term Fee', 'Term 1, 2025', 'neu', 'si-blue')}
+      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(student.feeAmount || 0).toLocaleString(), 'Term Fee', 'Term 1, 2025', 'neu', 'si-blue')}
       ${statCard('<i class="fas fa-check-circle"></i>', student.fees_status, 'Payment Status', 'Your account only', student.fees_status === 'Paid' ? 'up' : 'dn', student.fees_status === 'Paid' ? 'si-green' : 'si-red')}
       ${statCard('<i class="fas fa-receipt"></i>', '#R-0482', 'Latest Receipt', 'Available', 'neu', 'si-gold')}
       ${statCard('<i class="fas fa-calendar-alt"></i>', 'Next Term', 'Next Payment', 'June 2025', 'neu', 'si-purple')}
@@ -898,7 +898,7 @@ function feesModule() {
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
             <div>
               <div style="font-size:12px;color:var(--gray-600)">TERM FEE (2025 - Term 1)</div>
-              <div style="font-size:24px;font-weight:800;color:var(--blue-dark)">GHâ‚µ ${Number(student.feeAmount || 0).toLocaleString()}</div>
+              <div style="font-size:24px;font-weight:800;color:var(--blue-dark)">GH₵ ${Number(student.feeAmount || 0).toLocaleString()}</div>
             </div>
             <span class="badge ${statusClass}">${student.fees_status}</span>
           </div>
@@ -906,7 +906,7 @@ function feesModule() {
         <table class="tbl" style="font-size:12px">
           <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
           <tbody>
-            <tr><td>Mar 15, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GHâ‚µ${Number(student.feeAmount || 0).toLocaleString()}</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
+            <tr><td>Mar 15, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GH₵${Number(student.feeAmount || 0).toLocaleString()}</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
           </tbody>
         </table>
       </div>
@@ -921,9 +921,9 @@ function feesModule() {
     // Parent view: Show fees for their children only
     return hdr('Fees & Payments', 'Manage your children\'s school fees and payment history', 'Fees') + `
     <div class="stats-row" style="margin-bottom:20px">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ4,600', 'Total Fees Due', 'Both children', 'neu', 'si-blue')}
-      ${statCard('<i class="fas fa-check-circle"></i>', 'GHâ‚µ4,600', 'Total Paid', '100%', 'up', 'si-green')}
-      ${statCard('<i class="fas fa-hourglass-half"></i>', 'GHâ‚µ0', 'Outstanding Balance', 'All Clear', 'up', 'si-gold')}
+      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵4,600', 'Total Fees Due', 'Both children', 'neu', 'si-blue')}
+      ${statCard('<i class="fas fa-check-circle"></i>', 'GH₵4,600', 'Total Paid', '100%', 'up', 'si-green')}
+      ${statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵0', 'Outstanding Balance', 'All Clear', 'up', 'si-gold')}
       ${statCard('<i class="fas fa-calendar-alt"></i>', 'Next Term', 'Payment Due', 'June 2025', 'neu', 'si-purple')}
     </div>
 
@@ -937,7 +937,7 @@ function feesModule() {
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
             <div>
               <div style="font-size:12px;color:var(--gray-600)">TERM FEE (2025 - Term 1)</div>
-              <div style="font-size:24px;font-weight:800;color:var(--success)">GHâ‚µ 2,400</div>
+              <div style="font-size:24px;font-weight:800;color:var(--success)">GH₵ 2,400</div>
             </div>
             <div style="text-align:right">
               <div style="font-size:12px;color:var(--success);font-weight:700">? PAID</div>
@@ -948,8 +948,8 @@ function feesModule() {
         <table class="tbl" style="font-size:12px">
           <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
           <tbody>
-            <tr><td>Mar 15, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GHâ‚µ2,400</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
-            <tr><td>Dec 10, 2024</td><td>Exam Registration Fee</td><td style="color:var(--success);font-weight:700">GHâ‚µ150</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
+            <tr><td>Mar 15, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GH₵2,400</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
+            <tr><td>Dec 10, 2024</td><td>Exam Registration Fee</td><td style="color:var(--success);font-weight:700">GH₵150</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
           </tbody>
         </table>
       </div>
@@ -963,7 +963,7 @@ function feesModule() {
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
             <div>
               <div style="font-size:12px;color:var(--gray-600)">TERM FEE (2025 - Term 1)</div>
-              <div style="font-size:24px;font-weight:800;color:var(--success)">GHâ‚µ 2,200</div>
+              <div style="font-size:24px;font-weight:800;color:var(--success)">GH₵ 2,200</div>
             </div>
             <div style="text-align:right">
               <div style="font-size:12px;color:var(--success);font-weight:700">? PAID</div>
@@ -974,8 +974,8 @@ function feesModule() {
         <table class="tbl" style="font-size:12px">
           <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
           <tbody>
-            <tr><td>Mar 10, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GHâ‚µ2,200</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
-            <tr><td>Dec 08, 2024</td><td>Exam Registration Fee</td><td style="color:var(--success);font-weight:700">GHâ‚µ150</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
+            <tr><td>Mar 10, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GH₵2,200</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
+            <tr><td>Dec 08, 2024</td><td>Exam Registration Fee</td><td style="color:var(--success);font-weight:700">GH₵150</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
           </tbody>
         </table>
       </div>
@@ -1000,11 +1000,11 @@ function feesModule() {
         <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:12px;cursor:pointer" onclick="viewGeneralPaymentHistory()"><i class="fas fa-eye"></i> View Full History</button>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="padding:10px;background:var(--gray-50);border-radius:8px;font-size:12px;border-left:3px solid var(--success)">
-            <div style="font-weight:600;color:var(--success)">âœ“ GHâ‚µ2,400 - Ama's Term 1 Fees</div>
+            <div style="font-weight:600;color:var(--success)">✓ GH₵2,400 - Ama's Term 1 Fees</div>
             <div style="color:var(--gray-500);font-size:11px">March 15, 2025 | Receipt: #R-0482</div>
           </div>
           <div style="padding:10px;background:var(--gray-50);border-radius:8px;font-size:12px;border-left:3px solid var(--success)">
-            <div style="font-weight:600;color:var(--success)">âœ“ GHâ‚µ2,200 - Kweku's Term 1 Fees</div>
+            <div style="font-weight:600;color:var(--success)">✓ GH₵2,200 - Kweku's Term 1 Fees</div>
             <div style="color:var(--gray-500);font-size:11px">March 10, 2025 | Receipt: #R-0481</div>
           </div>
         </div>
@@ -1032,8 +1032,8 @@ function feesModule() {
 
   let html = hdr('Fees & Payments', 'Student fee management and payment records', 'Fees') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ248K', 'Total Collected', '88.6% of target', 'up', 'si-blue')}
-    ${statCard('<i class="fas fa-hourglass-half"></i>', 'GHâ‚µ32K', 'Outstanding', '37 students', 'dn', 'si-red')}
+    ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵248K', 'Total Collected', '88.6% of target', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵32K', 'Outstanding', '37 students', 'dn', 'si-red')}
     ${statCard('<i class="fas fa-check-circle"></i>', '805', 'Paid Students', '95.6%', 'up', 'si-green')}
     ${statCard('<i class="fas fa-exclamation-triangle"></i>', '37', 'Defaulters', 'Action needed', 'dn', 'si-gold')}
   </div>
@@ -1069,16 +1069,16 @@ function feesModule() {
 
   // Fee records data
   const feeRecords = [
-    { name: 'Ama Serwaa', class: 'JHS 1', termFee: 'GHâ‚µ2,500', paid: 'GHâ‚µ2,500', balance: 'GHâ‚µ0', date: 'Mar 15', receipt: '#R-0482', status: 'Paid' },
-    { name: 'Kwame Asante', class: 'Basic 6', termFee: 'GHâ‚µ2,400', paid: 'GHâ‚µ1,200', balance: 'GHâ‚µ1,200', date: 'Mar 15', receipt: '#R-0481', status: 'Partial' },
-    { name: 'Abena Mensah', class: 'Basic 6', termFee: 'GHâ‚µ2,400', paid: 'GHâ‚µ2,400', balance: 'GHâ‚µ0', date: 'Mar 14', receipt: '#R-0480', status: 'Paid' },
-    { name: 'Kofi Boateng', class: 'JHS 2', termFee: 'GHâ‚µ2,600', paid: 'GHâ‚µ0', balance: 'GHâ‚µ2,600', date: 'â€”', receipt: 'â€”', status: 'Pending' },
-    { name: 'Akosua Darko', class: 'JHS 1', termFee: 'GHâ‚µ2,500', paid: 'GHâ‚µ2,500', balance: 'GHâ‚µ0', date: 'Mar 13', receipt: '#R-0479', status: 'Paid' },
-    { name: 'Yaw Mensah', class: 'Basic 5', termFee: 'GHâ‚µ2,350', paid: 'GHâ‚µ2,350', balance: 'GHâ‚µ0', date: 'Mar 12', receipt: '#R-0478', status: 'Paid' },
-    { name: 'Adwoa Frimpong', class: 'Basic 5', termFee: 'GHâ‚µ2,350', paid: 'GHâ‚µ1,175', balance: 'GHâ‚µ1,175', date: 'Mar 11', receipt: '#R-0477', status: 'Partial' },
-    { name: 'Kweku Ofori', class: 'JHS 3', termFee: 'GHâ‚µ2,700', paid: 'GHâ‚µ0', balance: 'GHâ‚µ2,700', date: 'â€”', receipt: 'â€”', status: 'Pending' },
-    { name: 'Theresa Mensah', class: 'Basic 4', termFee: 'GHâ‚µ2,300', paid: 'GHâ‚µ2,300', balance: 'GHâ‚µ0', date: 'Mar 10', receipt: '#R-0476', status: 'Paid' },
-    { name: 'Samuel Boateng', class: 'JHS 2', termFee: 'GHâ‚µ2,600', paid: 'GHâ‚µ1,300', balance: 'GHâ‚µ1,300', date: 'Mar 9', receipt: '#R-0475', status: 'Partial' }
+    { name: 'Ama Serwaa', class: 'JHS 1', termFee: 'GH₵2,500', paid: 'GH₵2,500', balance: 'GH₵0', date: 'Mar 15', receipt: '#R-0482', status: 'Paid' },
+    { name: 'Kwame Asante', class: 'Basic 6', termFee: 'GH₵2,400', paid: 'GH₵1,200', balance: 'GH₵1,200', date: 'Mar 15', receipt: '#R-0481', status: 'Partial' },
+    { name: 'Abena Mensah', class: 'Basic 6', termFee: 'GH₵2,400', paid: 'GH₵2,400', balance: 'GH₵0', date: 'Mar 14', receipt: '#R-0480', status: 'Paid' },
+    { name: 'Kofi Boateng', class: 'JHS 2', termFee: 'GH₵2,600', paid: 'GH₵0', balance: 'GH₵2,600', date: '—', receipt: '—', status: 'Pending' },
+    { name: 'Akosua Darko', class: 'JHS 1', termFee: 'GH₵2,500', paid: 'GH₵2,500', balance: 'GH₵0', date: 'Mar 13', receipt: '#R-0479', status: 'Paid' },
+    { name: 'Yaw Mensah', class: 'Basic 5', termFee: 'GH₵2,350', paid: 'GH₵2,350', balance: 'GH₵0', date: 'Mar 12', receipt: '#R-0478', status: 'Paid' },
+    { name: 'Adwoa Frimpong', class: 'Basic 5', termFee: 'GH₵2,350', paid: 'GH₵1,175', balance: 'GH₵1,175', date: 'Mar 11', receipt: '#R-0477', status: 'Partial' },
+    { name: 'Kweku Ofori', class: 'JHS 3', termFee: 'GH₵2,700', paid: 'GH₵0', balance: 'GH₵2,700', date: '—', receipt: '—', status: 'Pending' },
+    { name: 'Theresa Mensah', class: 'Basic 4', termFee: 'GH₵2,300', paid: 'GH₵2,300', balance: 'GH₵0', date: 'Mar 10', receipt: '#R-0476', status: 'Paid' },
+    { name: 'Samuel Boateng', class: 'JHS 2', termFee: 'GH₵2,600', paid: 'GH₵1,300', balance: 'GH₵1,300', date: 'Mar 9', receipt: '#R-0475', status: 'Partial' }
   ];
 
   feeRecords.forEach((record, idx) => {
@@ -1089,7 +1089,7 @@ function feesModule() {
         <td>${record.class}</td>
         <td>${record.termFee}</td>
         <td style="color:var(--success);font-weight:700">${record.paid}</td>
-        <td style="color:${record.balance === 'GHâ‚µ0' ? 'var(--success)' : 'var(--danger)'};font-weight:700">${record.balance}</td>
+        <td style="color:${record.balance === 'GH₵0' ? 'var(--success)' : 'var(--danger)'};font-weight:700">${record.balance}</td>
         <td>${record.date}</td>
         <td style="color:var(--blue-main)">${record.receipt}</td>
         <td><span class="badge ${statusColor}">${record.status}</span></td>
@@ -1099,12 +1099,12 @@ function feesModule() {
   html += `</tbody>
       </table>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--gray-200)">
-        <span style="font-size:12px;color:var(--gray-500)">Showing 1â€“10 of ${feeRecords.length} results</span>
+        <span style="font-size:12px;color:var(--gray-500)">Showing 1–10 of ${feeRecords.length} results</span>
         <div class="pagination">
           <button class="pg-btn active" onclick="goToPage(1)">1</button>
           <button class="pg-btn" onclick="goToPage(2)">2</button>
           <button class="pg-btn" onclick="goToPage(3)">3</button>
-          <button class="pg-btn" onclick="goToPage('...')">â€¦</button>
+          <button class="pg-btn" onclick="goToPage('...')">…</button>
           <button class="pg-btn" onclick="goToPage(22)">22</button>
         </div>
       </div>
@@ -1112,8 +1112,8 @@ function feesModule() {
     <div>
       <div class="fee-hero mb16">
         <h3>Collected This Term</h3>
-        <div class="amount">GHâ‚µ 248,000</div>
-        <div class="sub">Target: GHâ‚µ280,000</div>
+        <div class="amount">GH₵ 248,000</div>
+        <div class="sub">Target: GH₵280,000</div>
         <div style="margin-top:12px;background:rgba(255,255,255,.15);border-radius:4px;height:8px">
           <div style="width:88.6%;background:var(--gold);height:8px;border-radius:4px"></div>
         </div>
@@ -1123,27 +1123,27 @@ function feesModule() {
         <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Fee Structure</span><span class="card-act" onclick="navTo('feestructure')">Edit</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <span style="font-size:13px;font-weight:600">Basic 4</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GHâ‚µ2,300</span>
+          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,300</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <span style="font-size:13px;font-weight:600">Basic 5</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GHâ‚µ2,350</span>
+          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,350</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <span style="font-size:13px;font-weight:600">Basic 6</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GHâ‚µ2,400</span>
+          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,400</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <span style="font-size:13px;font-weight:600">JHS 1</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GHâ‚µ2,500</span>
+          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,500</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <span style="font-size:13px;font-weight:600">JHS 2</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GHâ‚µ2,600</span>
+          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,600</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
           <span style="font-size:13px;font-weight:600">JHS 3</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GHâ‚µ2,700</span>
+          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,700</span>
         </div>
         <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="navTo('feestructure')">View Full Structure</button>
       </div>
@@ -1229,7 +1229,7 @@ function paymentsModule() {
           </div>
         </div>
         <div class="f-row">
-          <div class="f-field"><label>Amount Paying (GHâ‚µ)</label><input type="number" id="pay-amount" placeholder="0.00" required></div>
+          <div class="f-field"><label>Amount Paying (GH₵)</label><input type="number" id="pay-amount" placeholder="0.00" required></div>
           <div class="f-field"><label>Term</label><select id="pay-term" required><option>Term 1, 2025</option><option>Term 2, 2025</option><option>Term 3, 2025</option></select></div>
         </div>
         <div class="f-row">
@@ -1250,11 +1250,11 @@ function paymentsModule() {
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Today's Collections</span></div>
       <div class="fee-hero" style="margin-bottom:16px">
-        <h3>Today â€” March 17, 2025</h3>
-        <div class="amount">GHâ‚µ 12,800</div>
+        <h3>Today — March 17, 2025</h3>
+        <div class="amount">GH₵ 12,800</div>
         <div class="sub">14 payments processed today</div>
       </div>
-      ${[['8:30 AM', 'Ama Serwaa', 'GHâ‚µ2,400', '#R-0482'], ['9:15 AM', 'Kwame Asante', 'GHâ‚µ1,200', '#R-0481'], ['10:00 AM', 'Theresa Mensah', 'GHâ‚µ2,400', '#R-0480'], ['11:30 AM', 'Abena Mensah', 'GHâ‚µ2,200', '#R-0479']].map(([t, n, a, r]) => `
+      ${[['8:30 AM', 'Ama Serwaa', 'GH₵2,400', '#R-0482'], ['9:15 AM', 'Kwame Asante', 'GH₵1,200', '#R-0481'], ['10:00 AM', 'Theresa Mensah', 'GH₵2,400', '#R-0480'], ['11:30 AM', 'Abena Mensah', 'GH₵2,200', '#R-0479']].map(([t, n, a, r]) => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
         <div style="font-size:11px;color:var(--gray-400);min-width:55px">${t}</div>
         <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${n}</div><div style="font-size:10px;color:var(--gray-400)">${r}</div></div>
@@ -1663,7 +1663,7 @@ function renderRoleChatModule(title, subtitle) {
         <div class="av av-sm av-${avatar}">${getInitials(msg.sender, 'U').slice(0, 1)}</div>
         <div>
           <div class="chat-bubble${isSender ? ' me-bubble' : ' them'}">${escapeHtml(msg.text)}</div>
-          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} Â· ${escapeHtml(msg.time || '')}</div>
+          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} · ${escapeHtml(msg.time || '')}</div>
         </div>
       </div>`;
   }).join('');
@@ -1682,7 +1682,7 @@ function renderRoleChatModule(title, subtitle) {
             <div class="av av-sm av-${currentContact.avatar || 'blue'}">${getInitials(currentChat, 'C').slice(0, 1)}</div>
             <div>
               <div style="font-size:13px;font-weight:700">${escapeHtml(currentContact.name || currentChat)}</div>
-              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} Â· ${escapeHtml(currentContact.status || 'Available')}</div>
+              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} · ${escapeHtml(currentContact.status || 'Available')}</div>
             </div>
             <div style="margin-left:auto;display:flex;gap:8px">
               ${currentRole === 'Parent' && currentContact.role === 'Teacher' ? `<button class="btn btn-secondary btn-xs" onclick="viewTeacherProfileByName('${escapeAttr(currentChat)}')"><i class="fas fa-user"></i> Profile</button>` : ''}
@@ -1702,7 +1702,7 @@ function renderRoleChatModule(title, subtitle) {
 }
 
 function studentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your teachers and school office'); }
-function parentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your childrenâ€™s teachers and school office'); }
+function parentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your children’s teachers and school office'); }
 function teacherMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your assigned students, parents, and administration'); }
 function adminMessagingModule() { return renderRoleChatModule('Messages', 'Manage school communications'); }
 
@@ -1728,7 +1728,7 @@ function sendChatMessage(sender, recipient, message) {
     return;
   }
   if (currentRole === 'Parent' && !isParentAllowedTeacherName(recipient)) {
-    showToast('<i class="fas fa-lock"></i> Parents can only message their childrenâ€™s teachers', 'error');
+    showToast('<i class="fas fa-lock"></i> Parents can only message their children’s teachers', 'error');
     return;
   }
 
@@ -1867,7 +1867,7 @@ function contactMessagesModule() {
             <h4 style="font-size:13px;font-weight:700;color:var(--gray-800)">${msg.name}</h4>
             ${msg.read ? '' : '<span class="badge b-success" style="font-size:10px">New</span>'}
           </div>
-          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> Â· ${msg.date} at ${msg.time}</div>
+          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> · ${msg.date} at ${msg.time}</div>
         </div>
         <button class="btn btn-icon danger" onclick="deleteContactMessage(${msg.id})"><i class="fas fa-trash"></i></button>
       </div>
@@ -1882,13 +1882,13 @@ function contactMessagesModule() {
     </div>
   `).join('');
 
-  return hdr('Contact Messages', `${contactMessages.length} total â€¢ ${unreadCount} unread`, 'Contact Messages') + `
+  return hdr('Contact Messages', `${contactMessages.length} total • ${unreadCount} unread`, 'Contact Messages') + `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-secondary btn-sm" onclick="markAllAsRead()">Mark All Read</button>
       <button class="btn btn-secondary btn-sm" onclick="deleteAllMessages()" style="color:var(--danger)">Delete All</button>
     </div>
-    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages Â· ${unreadCount} unread</div>
+    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages · ${unreadCount} unread</div>
   </div>
   ${messagesHTML}`;
 }
@@ -2035,7 +2035,7 @@ function reportsModule() {
     const pending = payments.filter(p => p.status === 'Pending').length;
     return hdr('Financial Reports', 'Revenue, collections, outstanding fees, and payroll summaries', 'Reports') + `
     <div class="stats-row">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
+      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
       ${statCard('<i class="fas fa-hourglass-half"></i>', pending, 'Pending Accounts', 'Need follow-up', pending ? 'dn' : 'up', pending ? 'si-red' : 'si-green')}
       ${statCard('<i class="fas fa-receipt"></i>', payments.length, 'Receipts', 'Generated records', 'neu', 'si-gold')}
       ${statCard('<i class="fas fa-briefcase"></i>', 'Payroll', 'Next Run', 'Month end', 'neu', 'si-purple')}
@@ -2341,7 +2341,7 @@ function generateReportPDF(reportType) {
   }
 
   html += '</div><div class="footer"><p>This report was automatically generated by Glory Reign School Management System</p>';
-  html += '<p>Â© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
+  html += '<p>© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const link = document.createElement('a');
@@ -2401,28 +2401,13 @@ const SETTINGS_DATA = {
   }
 };
 
-// SETTINGS PERSISTENCE - Save/Load from localStorage
+// SETTINGS DATA IS SERVER/AUTHORITY OWNED
 function saveSettingsToStorage() {
-  try {
-    localStorage.setItem('gloryReginSettings', JSON.stringify(SETTINGS_DATA));
-  } catch (e) {
-    console.log('Could not save settings to storage:', e);
-  }
 }
 
 function loadSettingsFromStorage() {
-  try {
-    const saved = localStorage.getItem('gloryReginSettings');
-    if (saved) {
-      const savedData = JSON.parse(saved);
-      // Merge saved data with SETTINGS_DATA
-      Object.assign(SETTINGS_DATA, savedData);
-    }
-    if (SETTINGS_DATA.schoolInfo) {
-      SETTINGS_DATA.schoolInfo.email = SCHOOL_EMAIL;
-    }
-  } catch (e) {
-    console.log('Could not load settings from storage:', e);
+  if (SETTINGS_DATA.schoolInfo) {
+    SETTINGS_DATA.schoolInfo.email = SCHOOL_EMAIL;
   }
 }
 
@@ -2486,7 +2471,7 @@ function settingsModule() {
         <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="${SETTINGS_DATA.academic.termStartDate}"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="${SETTINGS_DATA.academic.termEndDate}"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
-          ${[['A', '80â€“100', 'Excellent'], ['B', '70â€“79', 'Very Good'], ['C', '60â€“69', 'Good'], ['D', '50â€“59', 'Average'], ['F', '0â€“49', 'Fail']].map(([g, r, l]) => `
+          ${[['A', '80–100', 'Excellent'], ['B', '70–79', 'Very Good'], ['C', '60–69', 'Good'], ['D', '50–59', 'Average'], ['F', '0–49', 'Fail']].map(([g, r, l]) => `
           <div style="display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
             <div class="grade-pill g${g}">${g}</div>
             <span style="font-size:12px;flex:1">${r}</span>
@@ -2830,7 +2815,6 @@ function saveAppearanceSettings() {
   // Apply theme immediately if it changed
   darkMode = selectedTheme === 'Dark';
   applyTheme();
-  localStorage.setItem('gloryReignTheme', darkMode ? 'dark' : 'light');
   saveSettingsToStorage();
   showToast('<i class="fas fa-check-circle"></i> Appearance settings saved successfully!', 'success');
 }
@@ -3026,7 +3010,7 @@ async function editUser(userId) {
   const u = res.data;
 
   const form = document.getElementById('user-form-wrap');
-  if (!form) { showToast('User form not found â€” navigate to User Accounts first', 'warning'); return; }
+  if (!form) { showToast('User form not found — navigate to User Accounts first', 'warning'); return; }
 
   document.getElementById('user-name').value     = u.name;
   document.getElementById('user-username').value  = u.username;
@@ -3754,9 +3738,9 @@ function exportStaffToExcel() {
 function alumniModule() {
   return hdr('Alumni Module', 'Manage alumni records and engagement', 'Alumni') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985â€“2024', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985–2024', 'neu', 'si-blue')}
     ${statCard('<i class="fas fa-globe"></i>', '48', 'Countries', 'Alumni worldwide', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-handshake"></i>', 'GHâ‚µ42K', 'Donations', 'This year', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Donations', 'This year', 'up', 'si-green')}
     ${statCard('<i class="fas fa-file-alt"></i>', '14', 'Pending Requests', 'Certificates etc', 'dn', 'si-red')}
   </div>
   ${alumniDirectory()}`;
@@ -4187,7 +4171,7 @@ async function updateProfilePassword() {
 
   const sessionUser = getSessionUser();
   const userId = sessionUser?.id;
-  if (!userId) { showToast('Session error â€” please log in again', 'error'); return; }
+  if (!userId) { showToast('Session error — please log in again', 'error'); return; }
   const localOnlySession = String(userId).startsWith('local-') || Object.prototype.hasOwnProperty.call(USERS_DATA, userId);
   if (localOnlySession || typeof API === 'undefined') {
     const result = updateStoredUserPassword(sessionUser, cur, nw);
@@ -4262,7 +4246,7 @@ function renderSessionProfile(container, sessionUser) {
         <div class="av av-xl av-${color}" style="font-size:26px">${getInitials(name, role)}</div>
         <div style="flex:1">
           <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${escapeHtml(name)}</div>
-          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' Â· @' + escapeHtml(username) : ''}</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' · @' + escapeHtml(username) : ''}</div>
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-success">${escapeHtml(displayUser.status || 'Active')}</span><span class="badge b-info">${escapeHtml(role)}</span></div>
         </div>
       </div>
@@ -4292,7 +4276,7 @@ function renderSessionProfile(container, sessionUser) {
 
 function saveLocalProfileChanges() {
   const sessionUser = getSessionUser();
-  if (!sessionUser) { showToast('Session error â€” please log in again', 'error'); return; }
+  if (!sessionUser) { showToast('Session error — please log in again', 'error'); return; }
   const updated = {
     ...sessionUser,
     name: document.getElementById('prof-name')?.value.trim() || sessionUser.name,
@@ -4355,7 +4339,7 @@ async function loadProfileFromAPI() {
               <div class="av av-sm av-blue">${c.student_name.slice(0,2).toUpperCase()}</div>
               <strong>${c.student_name}</strong>
             </div></td>
-            <td>${c.class_name || 'â€”'}</td>
+            <td>${c.class_name || '—'}</td>
             <td style="color:var(--gray-500);font-size:12px">${c.student_code}</td>
           </tr>`).join('')}
         </tbody>
@@ -4396,7 +4380,7 @@ async function loadProfileFromAPI() {
           <div class="av av-xl av-${color}" style="font-size:26px">${initials}</div>
           <div style="flex:1">
             <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${u.name}</div>
-            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} Â· @${u.username}</div>
+            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} · @${u.username}</div>
             <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
               <span class="badge b-${u.status === 'Active' ? 'success' : 'danger'}">${u.status}</span>
               <span class="badge b-info">${u.role}</span>

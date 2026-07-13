@@ -29,8 +29,10 @@ if ($method === 'GET') {
     }
 
     $stmt = $db->prepare(
-        "SELECT COALESCE(p.id, u.id) AS id, u.id AS user_id, u.user_code, u.name, u.username, u.email,
-                p.phone, p.address, u.status, u.last_login, u.created_at
+        "SELECT COALESCE(p.id, u.id) AS id, u.id AS user_id, u.user_code,
+                COALESCE(p.name, u.name) AS name, u.username, COALESCE(p.email, u.email) AS email,
+                p.phone, p.address, p.contact_person, p.gender, p.occupation, p.avatar_color,
+                u.status, u.last_login, u.created_at
          FROM users u
          LEFT JOIN parents p ON p.user_id = u.id
          WHERE $where
@@ -42,7 +44,14 @@ if ($method === 'GET') {
     // Attach children for each parent
     $childStmt = $db->prepare(
         "SELECT ps.parent_id, s.id AS student_id, s.student_code,
-                s.name AS student_name, c.name AS class_name
+                s.name AS student_name, c.name AS class_name,
+                COALESCE((
+                    SELECT f.status
+                    FROM fees f
+                    WHERE f.student_id = s.id
+                    ORDER BY f.academic_year DESC, f.term DESC, f.created_at DESC, f.id DESC
+                    LIMIT 1
+                ), 'Pending') AS fees_status
          FROM parent_student ps
          JOIN students s ON s.id = ps.student_id
          LEFT JOIN classes c ON c.id = s.class_id"
@@ -58,6 +67,16 @@ if ($method === 'GET') {
 
     foreach ($parents as &$p) {
         $p['children'] = $childMap[$p['id']] ?? [];
+        $statuses = array_map(fn($child) => $child['fees_status'] ?? 'Pending', $p['children']);
+        if (!$statuses) {
+            $p['fees_status'] = 'No Children';
+        } elseif (in_array('Pending', $statuses, true)) {
+            $p['fees_status'] = 'Pending';
+        } elseif (in_array('Partial', $statuses, true)) {
+            $p['fees_status'] = 'Partial';
+        } else {
+            $p['fees_status'] = 'All Paid';
+        }
     }
 
     jsonResponse(['success' => true, 'data' => $parents]);
@@ -130,7 +149,7 @@ if ($method === 'PUT') {
         // Update parents table
         $pFields = [];
         $pParams = [];
-        $allowed = ['name', 'email', 'phone', 'address'];
+        $allowed = ['name', 'email', 'phone', 'address', 'contact_person', 'gender', 'occupation', 'avatar_color'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
                 $pFields[] = "$f = ?";

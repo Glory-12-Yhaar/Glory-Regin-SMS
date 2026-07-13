@@ -132,6 +132,7 @@ const API = {
         list:         (params = {}) => apiRequest('/admissions/index.php?'  + new URLSearchParams(params)),
         apply:        (data)        => apiRequest('/admissions/index.php',   'POST', data),
         updateStatus: (id, status, notes) => apiRequest('/admissions/index.php?id=' + id, 'PUT', { status, notes }),
+        enroll:       (id, notes)   => apiRequest('/admissions/index.php?id=' + id, 'PUT', { status: 'Enrolled', notes }),
     },
 
     // ── Users ────────────────────────────────────────────────
@@ -411,18 +412,19 @@ async function syncAllDataFromBackend() {
                 student_id: s.student_code || ('2024-' + String(s.id).padStart(4, '0')),
                 id: s.id,
                 name: s.name,
+                class_id: s.class_id || null,
                 student_class: s.class_name || 'Not Assigned',
                 gender: s.gender || 'Male',
                 dob: s.dob || '2015-01-01',
                 attendance: (s.attendance || 95) + '%',
-                fees_status: 'Paid',
+                fees_status: s.fees_status || 'Pending',
                 status: s.status || 'Active',
                 avatar_color: s.avatar_color || ['blue', 'gold', 'purple', 'green', 'teal'][s.id % 5],
                 gender_abbr: (s.gender || 'Male') === 'Male' ? 'M' : 'F',
                 address: s.address || '',
                 parent_name: s.guardian_name || '',
                 parent_phone: s.guardian_phone || '',
-                picture: null,
+                picture: s.photo || null,
                 enrolled_date: s.created_at ? s.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]
             })));
         }
@@ -436,22 +438,23 @@ async function syncAllDataFromBackend() {
                 parent_id: 'P' + String(p.id).padStart(3, '0'),
                 id: p.id,
                 name: p.name,
-                contact_person: p.name,
-                gender: 'Male',
-                avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][p.id % 5],
+                contact_person: p.contact_person || p.name,
+                gender: p.gender || 'Not provided',
+                avatar_color: p.avatar_color || ['blue', 'gold', 'purple', 'green', 'teal'][p.id % 5],
                 phone: p.phone || '',
                 email: p.email || '',
                 address: p.address || '',
                 children: p.children && p.children.length ? p.children.map(c => c.student_name + ' (' + (c.class_name || 'Not Assigned') + ')').join(', ') : 'None',
-                fees_status: 'All Paid',
-                occupation: 'Parent'
+                child_records: p.children || [],
+                fees_status: p.fees_status || 'No Children',
+                occupation: p.occupation || 'Not provided'
             })));
         }
     } catch (e) { console.error("Error syncing parents:", e); }
 
     // 5. Admissions
     try {
-        const res = await API.admissions.list();
+        const res = await API.admissions.list({ limit: 200 });
         if (res && res.success && res.data) {
             admissionsData.splice(0, admissionsData.length, ...res.data.map(a => ({
                 adm_id: 'ADM' + String(a.id).padStart(3, '0'),
@@ -464,10 +467,19 @@ async function syncAllDataFromBackend() {
                 parent_name: a.parent_name || '',
                 parent_phone: a.parent_phone || '',
                 parent_email: a.parent_email || '',
+                photo: a.photo || null,
+                picture: a.photo || null,
                 status: a.status || 'Pending',
                 notes: a.notes || '',
                 created: a.applied_date || new Date().toISOString().split('T')[0]
             })));
+            const fallbackCounts = admissionsData.reduce((counts, admission) => {
+                const status = admission.status || 'Pending';
+                counts[status] = (counts[status] || 0) + 1;
+                counts.total += 1;
+                return counts;
+            }, { total: 0, Pending: 0, Approved: 0, Rejected: 0, Enrolled: 0 });
+            window.ADMISSIONS_COUNTS = { ...fallbackCounts, ...(res.counts || {}) };
         }
     } catch (e) { console.error("Error syncing admissions:", e); }
 
@@ -563,7 +575,7 @@ window.applyApiClientOverrides = function() {
     console.log("Applying API client overrides...");
     const apiOverrides = {};
 
-    // Intercept original loadPersistentRecords to use MySQL API instead of LocalStorage
+    // Intercept original loadPersistentRecords to use MySQL API.
     loadPersistentRecords = async function() {
     await syncAllDataFromBackend();
     if (typeof renderMain === 'function') {
@@ -675,8 +687,8 @@ apiOverrides.saveNewTimetable = async function() {
     });
     if (res && res.success) {
         closeModal();
-        localStorage.setItem('tt-selected-class', cls);
-        localStorage.setItem('tt-selected-term', term);
+        window.selectedTimetableClass = cls;
+        window.selectedTimetableTerm = term;
         await syncAllDataFromBackend();
         renderMain();
         showToast('<i class="fas fa-check-circle"></i> Timetable created successfully', 'success');
@@ -715,7 +727,7 @@ apiOverrides.saveEditedTimetable = async function(cls, term) {
 };
 
 apiOverrides.deleteTimetable = async function() {
-    const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
+    const cls = window.selectedTimetableClass || classesData[0].name;
     const termEl = document.getElementById('tt-term-select');
     const term = termEl ? termEl.value : 'Term 1, 2025';
     if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
@@ -1435,12 +1447,15 @@ apiOverrides.rejectAdmission = async function(admId) {
 
 apiOverrides.saveParentChanges = async function(parentId) {
   const name = document.getElementById('edit-parent-name')?.value.trim();
+  const contactPerson = document.getElementById('edit-parent-contact-person')?.value.trim();
+  const gender = document.getElementById('edit-parent-gender')?.value;
   const phone = document.getElementById('edit-parent-phone')?.value.trim();
   const email = document.getElementById('edit-parent-email')?.value.trim();
+  const occupation = document.getElementById('edit-parent-occupation')?.value.trim();
   const address = document.getElementById('edit-parent-address')?.value.trim();
   const children = document.getElementById('edit-parent-children')?.value.trim();
   
-  if (!name || !phone || !email || !children) {
+  if (!name || !contactPerson || !gender || !phone || !email || !children) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
@@ -1450,8 +1465,11 @@ apiOverrides.saveParentChanges = async function(parentId) {
 
   const res = await API.parents.update(id, {
     name,
+    contact_person: contactPerson,
+    gender,
     phone,
     email,
+    occupation,
     address,
     children
   });

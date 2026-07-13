@@ -1,19 +1,25 @@
-﻿
+
 function getUsers() {
-  const saved = localStorage.getItem('gr_users');
-  if (saved) return JSON.parse(saved);
-  const arr = Object.values(USERS_DATA || {}).map(u => ({ ...u }));
-  localStorage.setItem('gr_users', JSON.stringify(arr));
-  return arr;
+  return window.USER_RECORDS || [];
 }
 
 function saveUsers(users) {
-  localStorage.setItem('gr_users', JSON.stringify(users));
+  window.USER_RECORDS = Array.isArray(users) ? users : [];
 }
 
 function renderUsersTable() {
   const tbody = document.getElementById('users-tbody');
   if (!tbody) return;
+  if (typeof API !== 'undefined' && API.users && !window.USER_RECORDS_LOADING && !window.USER_RECORDS_LOADED) {
+    window.USER_RECORDS_LOADING = true;
+    API.users.list({ limit: 200 }).then(res => {
+      if (res && res.success) {
+        window.USER_RECORDS = res.data || [];
+        window.USER_RECORDS_LOADED = true;
+        renderUsersTable();
+      }
+    }).finally(() => { window.USER_RECORDS_LOADING = false; });
+  }
   const users = getUsers();
   document.getElementById('users-count').textContent = users.length;
   tbody.innerHTML = users.map((u, i) => {
@@ -24,7 +30,7 @@ function renderUsersTable() {
       <td style="padding:12px 10px">${escapeHtml(u.username)}</td>
       <td style="padding:12px 10px">${escapeHtml(u.email)}</td>
       <td style="padding:12px 10px">${escapeHtml(u.role)}</td>
-      <td style="padding:12px 10px">${u.lastLogin || 'â€”'}</td>
+      <td style="padding:12px 10px">${u.lastLogin || '—'}</td>
       <td style="padding:12px 10px">${u.status || 'Active'}</td>
       <td style="padding:12px 10px"><button class="btn btn-primary btn-xs" onclick="editUser('${u.id}')">Edit</button><button class="btn btn-secondary btn-xs" onclick="toggleUserStatus('${u.id}')" style="margin-left:6px">${u.status==='Disabled'?'Enable':'Disable'}</button></td>
     </tr>`;
@@ -68,7 +74,7 @@ function openCreateUserModal(editId) {
   });
 }
 
-function handleCreateOrUpdateUser(editId) {
+async function handleCreateOrUpdateUser(editId) {
   clearFieldErrors();
   const name = document.getElementById('cu-name').value.trim();
   const username = document.getElementById('cu-username').value.trim();
@@ -94,31 +100,23 @@ function handleCreateOrUpdateUser(editId) {
 
   if (hasError) { showToast('<i class="fas fa-exclamation-triangle"></i> Please fix the highlighted fields', 'error'); return; }
 
-  const users = getUsers();
-
   if (editId) {
-    const idx = users.findIndex(u => u.id === editId);
-    if (idx === -1) return showToast('User not found', 'error');
-    users[idx].name = name;
-    users[idx].username = username;
-    users[idx].email = email;
-    users[idx].role = role;
-    if (password) users[idx].password = password;
-    saveUsers(users);
+    const res = await API.users.update(editId, { name, username, email, role, ...(password ? { password } : {}) });
+    if (!res || !res.success) return showToast(res?.message || 'Failed to update user', 'error');
     closeModal();
     showToast('<i class="fas fa-check-circle"></i> User updated', 'success');
+    window.USER_RECORDS = [];
+    window.USER_RECORDS_LOADED = false;
     renderUsersTable();
     return;
   }
 
-  const id = 'user' + Date.now();
-  const initials = name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();
-  const newUser = { id, name, username, email, role, password: password || 'changeme', lastLogin: '', status: 'Active', createdDate: new Date().toISOString().split('T')[0], avatar: initials };
-
-  users.unshift(newUser);
-  saveUsers(users);
+  const res = await API.users.create({ name, username, email, role, password });
+  if (!res || !res.success) return showToast(res?.message || 'Failed to create user', 'error');
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> User created', 'success');
+  window.USER_RECORDS = [];
+  window.USER_RECORDS_LOADED = false;
   renderUsersTable();
 }
 
@@ -214,7 +212,7 @@ function importUsers(list) {
   });
   saveUsers(existing);
   renderUsersTable();
-  showToast(`<i class="fas fa-file-import"></i> Import complete â€” ${added} added, ${updated} updated`, 'success');
+  showToast(`<i class="fas fa-file-import"></i> Import complete — ${added} added, ${updated} updated`, 'success');
 }
 
 // Initialize users table on load
@@ -543,7 +541,7 @@ function showMonthlyEnrollmentAttendanceReport() {
       return `<tr>
             <td style="font-weight:600">${months[i]}</td>
             <td style="text-align:center;font-weight:600">${enr}</td>
-            <td style="text-align:center;color:${change > 0 ? 'var(--success)' : 'var(--gray-500)'}">${change > 0 ? '+' + change : change === 0 ? 'â€”' : change}</td>
+            <td style="text-align:center;color:${change > 0 ? 'var(--success)' : 'var(--gray-500)'}">${change > 0 ? '+' + change : change === 0 ? '—' : change}</td>
             <td style="text-align:center;font-weight:600;color:var(--${perfColor})">${att}%</td>
             <td style="text-align:center;font-size:16px">${trend}</td>
             <td><span class="badge b-${perfColor === 'success' ? 'success' : 'info'}">${att >= 95 ? 'Excellent' : att >= 90 ? 'Very Good' : 'Good'}</span></td>
@@ -636,7 +634,7 @@ function submitStudentEnrollment() {
     gender: gender,
     dob: dob,
     attendance: '95%',
-    fees_status: 'Paid',
+    fees_status: 'Pending',
     status: 'Active',
     avatar_color: ['blue', 'gold', 'purple', 'green', 'teal'][Math.floor(Math.random() * 5)],
     gender_abbr: gender === 'Male' ? 'M' : 'F',
@@ -791,10 +789,8 @@ function editStudent(studentId) {
       </div>
       <div class="form-field">
         <label>Fees Status</label>
-        <select id="edit-std-fees">
-          <option value="${student.fees_status}" selected>${student.fees_status}</option>
-          <option>Paid</option><option>Pending</option><option>Partial</option>
-        </select>
+        <div class="readonly-field"><span class="badge ${student.fees_status === 'Paid' ? 'b-success' : (student.fees_status === 'Pending' ? 'b-danger' : 'b-warning')}">${escapeHtml(student.fees_status || 'Pending')}</span></div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:6px">Managed from Finance / Fees.</div>
       </div>
       <div class="form-field">
         <label>Status</label>
@@ -831,7 +827,6 @@ function saveStudentChanges(studentId) {
 
   student.name = document.getElementById('edit-std-name')?.value || student.name;
   student.student_class = document.getElementById('edit-std-class')?.value || student.student_class;
-  student.fees_status = document.getElementById('edit-std-fees')?.value || student.fees_status;
   student.status = document.getElementById('edit-std-status')?.value || student.status;
   student.address = document.getElementById('edit-std-address')?.value || '';
   student.parent_name = document.getElementById('edit-std-parent-name')?.value || '';
@@ -995,7 +990,7 @@ function messageTeacher(teacherId, teacherName) {
     <div style="margin-bottom:16px;padding:12px;background:var(--blue-xpale);border-radius:var(--radius);border:1px solid var(--blue-light)">
       <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px"><i class="fas fa-info-circle"></i> Teacher Info</div>
       <div style="font-size:12px;color:var(--blue-dark)">
-        <strong>${teacher.name}</strong> Â· ${teacher.subject}<br>
+        <strong>${teacher.name}</strong> · ${teacher.subject}<br>
         <small>Email: ${teacher.email} | Phone: ${teacher.phone}</small>
       </div>
     </div>
@@ -1166,15 +1161,15 @@ function showAddTeacherForm() {
         <input type="date" id="teacher-dob">
       </div>
       <div class="form-field">
-        <label>Basic Salary (GHâ‚µ)</label>
+        <label>Basic Salary (GH₵)</label>
         <input type="number" id="teacher-basic" min="0" placeholder="e.g., 3200">
       </div>
       <div class="form-field">
-        <label>Allowances (GHâ‚µ)</label>
+        <label>Allowances (GH₵)</label>
         <input type="number" id="teacher-allowance" min="0" placeholder="e.g., 800">
       </div>
       <div class="form-field">
-        <label>Deductions (GHâ‚µ)</label>
+        <label>Deductions (GH₵)</label>
         <input type="number" id="teacher-deduction" min="0" placeholder="e.g., 320">
       </div>
       <div class="form-field">
@@ -1230,15 +1225,15 @@ function editTeacher(teacherId) {
         <input type="text" id="teacher-schedule" value="${teacher.schedule}">
       </div>
       <div class="form-field">
-        <label>Basic Salary (GHâ‚µ)</label>
+        <label>Basic Salary (GH₵)</label>
         <input type="number" id="teacher-basic" min="0" value="${teacher.basicSalary || getTeacherPayrollBasic(teacher)}">
       </div>
       <div class="form-field">
-        <label>Allowances (GHâ‚µ)</label>
+        <label>Allowances (GH₵)</label>
         <input type="number" id="teacher-allowance" min="0" value="${teacher.allowances ?? Math.round(getTeacherPayrollBasic(teacher) * 0.25)}">
       </div>
       <div class="form-field">
-        <label>Deductions (GHâ‚µ)</label>
+        <label>Deductions (GH₵)</label>
         <input type="number" id="teacher-deduction" min="0" value="${teacher.deductions ?? Math.round(getTeacherPayrollBasic(teacher) * 0.10)}">
       </div>
       <div class="form-field">
@@ -1259,7 +1254,7 @@ function viewTeacherProfile(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
   if (currentRole === 'Parent' && !getParentTeacherContacts().some(t => t.teacher_id === teacherId)) {
-    showToast('<i class="fas fa-lock"></i> You can only view your childrenâ€™s teachers', 'error');
+    showToast('<i class="fas fa-lock"></i> You can only view your children’s teachers', 'error');
     return;
   }
 
@@ -1662,8 +1657,9 @@ function editParent(parentId) {
         <input type="text" id="edit-parent-children" value="${parent.children}">
       </div>
       <div class="form-field" style="grid-column:1/-1">
-        <label>Fees Status *</label>
-        <select id="edit-parent-fees-status"><option value="All Paid" ${parent.fees_status === 'All Paid' ? 'selected' : ''}>All Paid</option><option value="Pending" ${parent.fees_status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Partial" ${parent.fees_status === 'Partial' ? 'selected' : ''}>Partial</option></select>
+        <label>Fees Status</label>
+        <div class="readonly-field"><span class="badge ${parent.fees_status === 'All Paid' ? 'b-success' : parent.fees_status === 'Pending' ? 'b-danger' : 'b-warning'}">${escapeHtml(parent.fees_status || 'No Children')}</span></div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:6px">Calculated from linked children fee records.</div>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="saveParentChanges('${parentId}')"><i class="fas fa-save"></i> Save Changes</button>
@@ -1687,9 +1683,8 @@ function saveParentChanges(parentId) {
   const occupation = document.getElementById('edit-parent-occupation')?.value.trim();
   const address = document.getElementById('edit-parent-address')?.value.trim();
   const children = document.getElementById('edit-parent-children')?.value.trim();
-  const feesStatus = document.getElementById('edit-parent-fees-status')?.value;
 
-  if (!name || !contactPerson || !gender || !phone || !email || !children || !feesStatus) {
+  if (!name || !contactPerson || !gender || !phone || !email || !children) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
     return;
   }
@@ -1702,7 +1697,6 @@ function saveParentChanges(parentId) {
   parent.occupation = occupation || 'Not specified';
   parent.address = address || 'Not provided';
   parent.children = children;
-  parent.fees_status = feesStatus;
   saveParentRecords();
 
   showToast('<i class="fas fa-check-circle"></i> Parent updated!<br/>Name: ' + name, 'success', 3000);
@@ -2281,12 +2275,12 @@ function getCurrentStudentRecord() {
   if (matched) return { ...matched, feeAmount: matched.feeAmount || 2400 };
 
   return {
-    student_id: '2024-0042',
-    name: 'Ama Serwaa',
-    student_class: 'JHS 1',
-    attendance: '96%',
-    fees_status: 'Paid',
-    feeAmount: 2400,
+    student_id: '',
+    name: 'No linked student',
+    student_class: 'Not assigned',
+    attendance: '0%',
+    fees_status: 'Pending',
+    feeAmount: 0,
     avatar_color: 'blue'
   };
 }
@@ -2311,11 +2305,11 @@ function getReadableClassForRole(fallbackClass) {
   if (currentRole === 'Admin') return fallbackClass;
   if (currentRole === 'Teacher') {
     const assignedClassNames = getAssignedClassNamesForTeacher();
-    const savedClass = localStorage.getItem('tt-selected-class');
+    const savedClass = window.selectedTimetableClass;
     if (savedClass && assignedClassNames.includes(savedClass)) return savedClass;
     return assignedClassNames[0] || fallbackClass;
   }
-  return localStorage.getItem('currentUserClass') || fallbackClass;
+  return fallbackClass;
 }
 
 function getCurrentStudentClass() {
@@ -2731,29 +2725,29 @@ function getPeriodsForClass(className) {
 
   const periods = [];
   // Morning Assembly for all
-  periods.push({ id: 'Assembly', label: 'Assembly Â· 7:00â€“7:30', type: 'assembly' });
+  periods.push({ id: 'Assembly', label: 'Assembly · 7:00–7:30', type: 'assembly' });
   // Special slot for upper classes
   if (isUpper) {
     periods.push({
-      id: 'Special', label: '7:30â€“8:00', type: 'special',
+      id: 'Special', label: '7:30–8:00', type: 'special',
       dayLabels: ['Reading', 'Spellings', 'Dictation', 'Reading', isJHS && className === 'JHS 3' ? 'Preps' : 'PE']
     });
   }
-  periods.push({ id: 'P1', label: 'P1 Â· 8:00â€“8:50', type: 'period' });
-  periods.push({ id: 'P2', label: 'P2 Â· 8:50â€“9:40', type: 'period' });
-  periods.push({ id: 'P3', label: 'P3 Â· 9:40â€“10:30', type: 'period' });
-  periods.push({ id: 'P4', label: 'P4 Â· 10:30â€“11:20', type: 'period' });
-  periods.push({ id: 'Break1', label: 'Break Â· 11:20â€“11:40', type: 'break' });
-  periods.push({ id: 'P5', label: 'P5 Â· 11:40â€“12:25', type: 'period' });
-  periods.push({ id: 'P6', label: 'P6 Â· 12:25â€“1:05', type: 'period' });
-  periods.push({ id: 'Break2', label: 'Break Â· 1:05â€“1:35', type: 'break' });
-  periods.push({ id: 'P7', label: 'P7 Â· 1:35â€“2:35', type: 'period' });
-  periods.push({ id: 'P8', label: 'P8 Â· 2:35â€“3:30', type: 'period' });
+  periods.push({ id: 'P1', label: 'P1 · 8:00–8:50', type: 'period' });
+  periods.push({ id: 'P2', label: 'P2 · 8:50–9:40', type: 'period' });
+  periods.push({ id: 'P3', label: 'P3 · 9:40–10:30', type: 'period' });
+  periods.push({ id: 'P4', label: 'P4 · 10:30–11:20', type: 'period' });
+  periods.push({ id: 'Break1', label: 'Break · 11:20–11:40', type: 'break' });
+  periods.push({ id: 'P5', label: 'P5 · 11:40–12:25', type: 'period' });
+  periods.push({ id: 'P6', label: 'P6 · 12:25–1:05', type: 'period' });
+  periods.push({ id: 'Break2', label: 'Break · 1:05–1:35', type: 'break' });
+  periods.push({ id: 'P7', label: 'P7 · 1:35–2:35', type: 'period' });
+  periods.push({ id: 'P8', label: 'P8 · 2:35–3:30', type: 'period' });
   // P9 only for JHS
   if (isJHS) {
-    periods.push({ id: 'P9', label: 'P9 Â· 3:30â€“4:00', type: 'period' });
+    periods.push({ id: 'P9', label: 'P9 · 3:30–4:00', type: 'period' });
   } else if (['Basic 4', 'Basic 5', 'Basic 6'].includes(className)) {
-    periods.push({ id: 'Close', label: 'Closing Â· 3:30', type: 'close' });
+    periods.push({ id: 'Close', label: 'Closing · 3:30', type: 'close' });
   }
   return periods;
 }
@@ -2766,11 +2760,11 @@ function timetableModule() {
   const allClasses = classesData.map(c => c.name);
   let selectedClass;
   if (isAdmin) {
-    selectedClass = localStorage.getItem('tt-selected-class') || allClasses[0];
+    selectedClass = window.selectedTimetableClass || allClasses[0];
   } else {
     selectedClass = getReadableClassForRole('Basic 2');
   }
-  const selectedTerm = localStorage.getItem('tt-selected-term') || 'Term 1, 2025';
+  const selectedTerm = window.selectedTimetableTerm || 'Term 1, 2025';
   ensureTimetablesForAllClasses(selectedTerm);
 
   // Build class tabs for admin
@@ -2824,31 +2818,18 @@ function timetableModule() {
   <div id="tt-display-area">${timetableHtml}</div>`;
 }
 
-// -- localStorage persistence --
+// -- backend-backed timetable state --
 function loadTimetablesFromStorage() {
-  const saved = localStorage.getItem('gloryReginTimetables');
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      Object.keys(parsed).forEach(cls => {
-        if (!timetablesData[cls]) timetablesData[cls] = {};
-        Object.keys(parsed[cls]).forEach(term => {
-          timetablesData[cls][term] = parsed[cls][term];
-        });
-      });
-    } catch (e) { }
-  }
-  ensureTimetablesForAllClasses(localStorage.getItem('tt-selected-term') || 'Term 1, 2025');
+  ensureTimetablesForAllClasses(window.selectedTimetableTerm || 'Term 1, 2025');
 }
 function saveTimetablesToStorage() {
-  try { localStorage.setItem('gloryReginTimetables', JSON.stringify(timetablesData)); } catch (e) { }
 }
 function saveTTTerm() {
   const el = document.getElementById('tt-term-select');
-  if (el) localStorage.setItem('tt-selected-term', el.value);
+  if (el) window.selectedTimetableTerm = el.value;
 }
 function selectTimetableClass(className) {
-  localStorage.setItem('tt-selected-class', className);
+  window.selectedTimetableClass = className;
   document.querySelectorAll('.tt-class-tab').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.trim() === className);
   });
@@ -2856,9 +2837,9 @@ function selectTimetableClass(className) {
 }
 function refreshTimetableView() {
   const el = document.getElementById('tt-term-select');
-  const term = el ? el.value : (localStorage.getItem('tt-selected-term') || 'Term 1, 2025');
+  const term = el ? el.value : (window.selectedTimetableTerm || 'Term 1, 2025');
   const cls = currentRole === 'Admin'
-    ? (localStorage.getItem('tt-selected-class') || classesData[0].name)
+    ? (window.selectedTimetableClass || classesData[0].name)
     : getReadableClassForRole('Basic 2');
   ensureTimetablesForAllClasses(term);
   const area = document.getElementById('tt-display-area');
@@ -2872,7 +2853,7 @@ function getTimetableDisplay(className, term) {
     return `<div class="card" style="text-align:center;padding:60px 30px">
       <div style="font-size:64px;color:var(--gray-300);margin-bottom:16px"><i class="fas fa-calendar-xmark"></i></div>
       <h3 style="color:var(--gray-500);font-size:16px;margin-bottom:8px">No Timetable Available</h3>
-      <p style="color:var(--gray-400);font-size:13px;margin-bottom:20px">No schedule for <strong>${className}</strong> Â· <strong>${term}</strong></p>
+      <p style="color:var(--gray-400);font-size:13px;margin-bottom:20px">No schedule for <strong>${className}</strong> · <strong>${term}</strong></p>
       ${currentRole === 'Admin' ? '<button class="btn btn-primary" onclick="openCreateTimetableForm()"><i class="fas fa-plus"></i> Create Timetable Now</button>' : '<p style="color:var(--gray-400);font-size:12px">Contact your admin to set up the schedule.</p>'}
     </div>`;
   }
@@ -2886,7 +2867,7 @@ function getTimetableDisplay(className, term) {
     'Assembly': '#64748b'
   };
   function dot(subj) {
-    if (!subj || subj === 'â€”') return '';
+    if (!subj || subj === '—') return '';
     const e = Object.entries(subjectColors).find(([k]) => subj.toLowerCase().includes(k.toLowerCase()));
     return `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${e ? e[1] : '#94a3b8'};margin-right:5px"></span>`;
   }
@@ -2897,7 +2878,7 @@ function getTimetableDisplay(className, term) {
 
   return `<div class="card">
     <div class="card-hdr" style="flex-wrap:wrap;gap:10px">
-      <span class="card-title"><i class="fas fa-calendar-alt"></i> Weekly Timetable â€” ${className} Â· ${term}</span>
+      <span class="card-title"><i class="fas fa-calendar-alt"></i> Weekly Timetable — ${className} · ${term}</span>
       <div style="display:flex;gap:12px;align-items:center;font-size:11px;color:var(--gray-500)">
         <span><i class="fas fa-chalkboard-user"></i> ${teacher}</span>
         <span><i class="fas fa-users"></i> ${students} students</span>
@@ -2919,7 +2900,7 @@ function getTimetableDisplay(className, term) {
     return `<tr class="${rowClass}">
               <td class="period">${isBreak ? '<i class="fas fa-mug-hot" style="margin-right:4px;opacity:.6"></i>' : (isAssembly ? '<i class="fas fa-flag" style="margin-right:4px;opacity:.6"></i>' : '')}${period}</td>
               ${subjects.map(s => {
-      if (s === 'â€”' || isBreak) return `<td class="break">${s}</td>`;
+      if (s === '—' || isBreak) return `<td class="break">${s}</td>`;
       if (isAssembly) return `<td style="background:rgba(100,116,139,.04);color:var(--gray-500);font-style:italic;font-size:10px">${s}</td>`;
       return `<td class="sub-cell"><div style="display:flex;align-items:center;justify-content:center">${dot(s)}${s}</div></td>`;
     }).join('')}
@@ -2943,7 +2924,7 @@ function getTimetableDisplay(className, term) {
 function openCreateTimetableForm() {
   if (currentRole !== 'Admin') { showToast('<i class="fas fa-lock"></i> Admin only', 'error'); return; }
   currentMod = 'timetable';
-  const selClass = localStorage.getItem('tt-selected-class') || classesData[0].name;
+  const selClass = window.selectedTimetableClass || classesData[0].name;
   const classOpts = classesData.map(c => `<option value="${c.name}" ${c.name === selClass ? 'selected' : ''}>${c.name}</option>`).join('');
   const el = document.getElementById('main-content');
   if (!el) return;
@@ -2994,7 +2975,7 @@ function buildCreateGrid(className) {
     for (let d = 0; d < 5; d++) {
       let defaultVal = '';
       let readonly = false;
-      if (isBreak) { defaultVal = 'â€”'; readonly = true; }
+      if (isBreak) { defaultVal = '—'; readonly = true; }
       else if (isAssembly) { defaultVal = 'Morning Assembly'; readonly = true; }
       else if (isSpecial && p.dayLabels) { defaultVal = p.dayLabels[d]; readonly = true; }
 
@@ -3024,7 +3005,7 @@ function saveNewTimetable() {
   if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
   const cls = clsEl.value, term = termEl.value;
   if (timetablesData[cls] && timetablesData[cls][term]) {
-    if (!confirm('Timetable exists for ' + cls + ' Â· ' + term + '. Overwrite?')) return;
+    if (!confirm('Timetable exists for ' + cls + ' · ' + term + '. Overwrite?')) return;
   }
   const periods = getPeriodsForClass(cls);
   const schedule = [];
@@ -3034,8 +3015,8 @@ function saveNewTimetable() {
     for (let d = 0; d < 5; d++) {
       const input = document.getElementById('create-p-' + idx + '-' + d);
       const val = input ? input.value.trim() : '';
-      subjects.push(val || 'â€”');
-      if (val && val !== 'â€”' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
+      subjects.push(val || '—');
+      if (val && val !== '—' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
     }
     schedule.push([p.label, subjects]);
   });
@@ -3044,27 +3025,27 @@ function saveNewTimetable() {
   timetablesData[cls][term] = schedule;
   saveTimetablesToStorage();
   closeModal();
-  localStorage.setItem('tt-selected-class', cls);
-  localStorage.setItem('tt-selected-term', term);
+  window.selectedTimetableClass = cls;
+  window.selectedTimetableTerm = term;
   renderMain();
-  showToast('<i class="fas fa-check-circle"></i> Timetable created for ' + cls + ' Â· ' + term, 'success');
+  showToast('<i class="fas fa-check-circle"></i> Timetable created for ' + cls + ' · ' + term, 'success');
 }
 
 // -- Edit Timetable (Admin) --
 function openEditTimetableForm() {
   if (currentRole !== 'Admin') { showToast('<i class="fas fa-lock"></i> Admin only', 'error'); return; }
-  const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
+  const cls = window.selectedTimetableClass || classesData[0].name;
   const termEl = document.getElementById('tt-term-select');
   const term = termEl ? termEl.value : 'Term 1, 2025';
   const schedule = timetablesData[cls] && timetablesData[cls][term];
-  if (!schedule) { showToast('No timetable for ' + cls + ' Â· ' + term, 'error'); return; }
+  if (!schedule) { showToast('No timetable for ' + cls + ' · ' + term, 'error'); return; }
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const form = `
   <div style="background:white;border-radius:12px;padding:24px;width:95vw;max-width:1400px;overflow-y:auto;max-height:95vh;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px"><i class="fas fa-edit"></i></div>
-      <div><h2 style="margin:0;font-size:18px;font-weight:700">Edit â€” ${cls} Â· ${term}</h2>
+      <div><h2 style="margin:0;font-size:18px;font-weight:700">Edit — ${cls} · ${term}</h2>
       <p style="margin:0;font-size:12px;color:var(--gray-500)">Modify subjects for each period</p></div>
     </div>
     <div style="overflow-x:auto;border:1.5px solid var(--gray-200);border-radius:10px;background:white;margin-bottom:16px">
@@ -3107,7 +3088,7 @@ function saveEditedTimetable(cls, term) {
     if (isFixed) return;
     for (let d = 0; d < 5; d++) {
       const input = document.getElementById('edit-p-' + idx + '-' + d);
-      if (input) schedule[idx][1][d] = input.value.trim() || 'â€”';
+      if (input) schedule[idx][1][d] = input.value.trim() || '—';
     }
   });
   saveTimetablesToStorage();
@@ -3119,11 +3100,11 @@ function saveEditedTimetable(cls, term) {
 // -- Delete --
 function deleteTimetable() {
   if (currentRole !== 'Admin') return;
-  const cls = localStorage.getItem('tt-selected-class') || classesData[0].name;
+  const cls = window.selectedTimetableClass || classesData[0].name;
   const termEl = document.getElementById('tt-term-select');
   const term = termEl ? termEl.value : 'Term 1, 2025';
   if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
-  if (!confirm('Delete timetable for ' + cls + ' Â· ' + term + '?')) return;
+  if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
   delete timetablesData[cls][term];
   if (Object.keys(timetablesData[cls]).length === 0) delete timetablesData[cls];
   saveTimetablesToStorage();
@@ -3135,7 +3116,7 @@ function deleteTimetable() {
 function printTimetable() {
   const table = document.getElementById('tt-table');
   if (!table) { showToast('No timetable to print', 'error'); return; }
-  const cls = currentRole === 'Admin' ? (localStorage.getItem('tt-selected-class') || classesData[0].name) : getReadableClassForRole('Basic 2');
+  const cls = currentRole === 'Admin' ? (window.selectedTimetableClass || classesData[0].name) : getReadableClassForRole('Basic 2');
   const termEl = document.getElementById('tt-term-select');
   const term = termEl ? termEl.value : 'Term 1, 2025';
   const ci = classesData.find(c => c.name === cls);
@@ -3158,7 +3139,7 @@ function printTimetable() {
     <table><thead><tr><th style="text-align:left">Period / Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead><tbody>
     ${(timetablesData[cls][term] || []).map(([p, s]) => { const brk = p.toLowerCase().includes('break') || p.toLowerCase().includes('closing'); return '<tr class="' + (brk ? 'brk' : '') + '"><td class="period">' + p + '</td>' + s.map(v => '<td>' + v + '</td>').join('') + '</tr>'; }).join('')}
     </tbody></table>
-    <div class="footer">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} Â· Glory Reign Preparatory School</div>
+    <div class="footer">Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} · Glory Reign Preparatory School</div>
     </body></html>`);
   w.document.close();
   setTimeout(() => w.print(), 300);
@@ -3166,7 +3147,7 @@ function printTimetable() {
 
 // -- Export PDF --
 function exportTimetablePDF() {
-  const cls = currentRole === 'Admin' ? (localStorage.getItem('tt-selected-class') || classesData[0].name) : getReadableClassForRole('Basic 2');
+  const cls = currentRole === 'Admin' ? (window.selectedTimetableClass || classesData[0].name) : getReadableClassForRole('Basic 2');
   const termEl = document.getElementById('tt-term-select');
   const term = termEl ? termEl.value : 'Term 1, 2025';
   const schedule = timetablesData[cls] && timetablesData[cls][term];
@@ -3178,7 +3159,7 @@ function exportTimetablePDF() {
   h += '<div class="info"><span><strong>Class:</strong> ' + cls + '</span><span><strong>Term:</strong> ' + term + '</span><span><strong>Teacher:</strong> ' + teacher + '</span></div>';
   h += '<table><thead><tr><th style="text-align:left">Period / Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead><tbody>';
   schedule.forEach(function ([p, s]) { const brk = p.toLowerCase().includes('break') || p.toLowerCase().includes('closing'); h += '<tr><td class="period">' + p + '</td>'; s.forEach(function (v) { h += '<td class="' + (brk ? 'brk' : '') + '">' + v + '</td>'; }); h += '</tr>'; });
-  h += '</tbody></table><div class="footer">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' Â· Glory Reign Preparatory School</div></body></html>';
+  h += '</tbody></table><div class="footer">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' · Glory Reign Preparatory School</div></body></html>';
   const blob = new Blob([h], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'Timetable_' + cls.replace(/\s/g, '_') + '_' + term.replace(/[\s,]/g, '_') + '.html';
@@ -3188,11 +3169,11 @@ function exportTimetablePDF() {
 
 // ATTENDANCE MODULE
 function getAttendanceBatches() {
-  try { return JSON.parse(localStorage.getItem(ATTENDANCE_BATCHES_KEY) || '[]'); } catch (e) { return []; }
+  return window.ATTENDANCE_BATCHES || [];
 }
 
 function saveAttendanceBatches(batches) {
-  localStorage.setItem(ATTENDANCE_BATCHES_KEY, JSON.stringify(batches.slice(0, 100)));
+  window.ATTENDANCE_BATCHES = batches.slice(0, 100);
 }
 
 function formatAttendanceDate(dateString) {
@@ -3226,7 +3207,7 @@ function attendanceModule() {
 
   if (currentRole === 'Teacher') {
     const assignedClasses = getAssignedClassNamesForTeacher();
-    const selectedClass = localStorage.getItem('attendance-selected-class');
+    const selectedClass = window.selectedAttendanceClass;
     const className = assignedClasses.includes(selectedClass) ? selectedClass : (assignedClasses[0] || '');
     const students = className ? getAttendanceStudentsForClass(className) : [];
     return hdr('Attendance Module', 'Record daily class attendance', 'Attendance') + `
@@ -3234,7 +3215,7 @@ function attendanceModule() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Class Attendance</span></div>
       <div class="f-row" style="margin-bottom:16px">
         <div class="f-field"><label>Date</label><input id="attendance-date" type="date" value="${today}"></div>
-        <div class="f-field"><label>Class</label><select id="attendance-class" onchange="localStorage.setItem('attendance-selected-class', this.value);renderMain()">${assignedClasses.map(c => `<option value="${escapeAttr(c)}" ${c === className ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select></div>
+        <div class="f-field"><label>Class</label><select id="attendance-class" onchange="window.selectedAttendanceClass=this.value;renderMain()">${assignedClasses.map(c => `<option value="${escapeAttr(c)}" ${c === className ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select></div>
       </div>
       ${className ? `
       <table class="tbl">
@@ -3553,8 +3534,8 @@ function viewClassTimetable(className) {
     return;
   }
 
-  localStorage.setItem('tt-selected-class', className);
-  localStorage.setItem('tt-selected-term', 'Term 1, 2025');
+  window.selectedTimetableClass = className;
+  window.selectedTimetableTerm = 'Term 1, 2025';
   navTo('timetable');
 }
 
@@ -3562,14 +3543,14 @@ function viewClassTimetable(className) {
 const timetablesData = {
   'Basic 2': {
     'Term 1, 2025': [
-      ['P1 Â· 7:30â€“8:20', ['English Language', 'Mathematics', 'Integrated Science', 'English', 'Assembly']],
-      ['P2 Â· 8:20â€“9:10', ['Mathematics', 'English', 'Physical Education', 'Science', 'Mathematics']],
-      ['Break Â· 9:10â€“9:30', ['â€”', 'â€”', 'â€”', 'â€”', 'â€”']],
-      ['P3 Â· 9:30â€“10:20', ['Science', 'Social Studies', 'Mathematics', 'English', 'Science']],
-      ['P4 Â· 10:20â€“11:10', ['Social Studies', 'English', 'English', 'Science', 'English']],
-      ['Lunch Â· 11:10â€“12:00', ['â€”', 'â€”', 'â€”', 'â€”', 'â€”']],
-      ['P5 Â· 12:00â€“12:50', ['ICT', 'Science', 'Social Studies', 'Mathematics', 'Social Studies']],
-      ['P6 Â· 12:50â€“13:40', ['Physical Education', 'Social Studies', 'ICT', 'Physical Education', 'ICT']]
+      ['P1 · 7:30–8:20', ['English Language', 'Mathematics', 'Integrated Science', 'English', 'Assembly']],
+      ['P2 · 8:20–9:10', ['Mathematics', 'English', 'Physical Education', 'Science', 'Mathematics']],
+      ['Break · 9:10–9:30', ['—', '—', '—', '—', '—']],
+      ['P3 · 9:30–10:20', ['Science', 'Social Studies', 'Mathematics', 'English', 'Science']],
+      ['P4 · 10:20–11:10', ['Social Studies', 'English', 'English', 'Science', 'English']],
+      ['Lunch · 11:10–12:00', ['—', '—', '—', '—', '—']],
+      ['P5 · 12:00–12:50', ['ICT', 'Science', 'Social Studies', 'Mathematics', 'Social Studies']],
+      ['P6 · 12:50–13:40', ['Physical Education', 'Social Studies', 'ICT', 'Physical Education', 'ICT']]
     ]
   }
 };
@@ -3579,7 +3560,7 @@ function buildDefaultTimetableForClass(className) {
   const periods = getPeriodsForClass(className);
   let subjectIndex = 0;
   return periods.map(period => {
-    if (period.type === 'break' || period.type === 'close') return [period.label, ['â€”', 'â€”', 'â€”', 'â€”', 'â€”']];
+    if (period.type === 'break' || period.type === 'close') return [period.label, ['—', '—', '—', '—', '—']];
     if (period.type === 'assembly') return [period.label, ['Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly']];
     if (period.type === 'special' && period.dayLabels) return [period.label, period.dayLabels];
     return [period.label, Array.from({ length: 5 }, () => {
@@ -3602,53 +3583,10 @@ function ensureTimetablesForAllClasses(term = 'Term 1, 2025') {
 // REPORT CARD DATA & CALCULATIONS
 // -----------------------------------
 
-// Admissions data
-const admissionsData = [
-  { adm_id: 'ADM2025-001', name: 'Kofi Mensah', dob: '2014-03-15', gender: 'Male', address: 'Accra', phone: '0244567890', school: 'Presec JHS', class_applying: 'JHS 1', academic_year: '2025/2026', status: 'Pending', parent_name: 'Mr. Mensah', parent_phone: '0244567890', parent_occupation: 'Trader', picture: null, created: '2025-03-20' },
-  { adm_id: 'ADM2025-002', name: 'Ama Boateng', dob: '2014-06-22', gender: 'Female', address: 'Tema', phone: '0245678901', school: 'Achimota JHS', class_applying: 'JHS 1', academic_year: '2025/2026', status: 'Approved', parent_name: 'Mrs. Boateng', parent_phone: '0245678901', parent_occupation: 'Teacher', picture: null, created: '2025-03-18' },
-  { adm_id: 'ADM2025-003', name: 'Yaw Osei', dob: '2014-01-10', gender: 'Male', address: 'Kumasi', phone: '0246789012', school: 'Adum JHS', class_applying: 'JHS 2', academic_year: '2025/2026', status: 'Pending', parent_name: 'Mr. Osei', parent_phone: '0246789012', parent_occupation: 'Engineer', picture: null, created: '2025-03-19' },
-  { adm_id: 'ADM2025-004', name: 'Abena Nyarko', dob: '2013-11-05', gender: 'Female', address: 'Cape Coast', phone: '0247890123', school: 'Aggrey JHS', class_applying: 'JHS 2', academic_year: '2025/2026', status: 'Rejected', parent_name: 'Mrs. Nyarko', parent_phone: '0247890123', parent_occupation: 'Nurse', picture: null, created: '2025-03-15' },
-  { adm_id: 'ADM2025-005', name: 'Kwame Asare', dob: '2014-08-30', gender: 'Male', address: 'Accra', phone: '0248901234', school: 'Osu JHS', class_applying: 'JHS 1', academic_year: '2025/2026', status: 'Approved', parent_name: 'Mr. Asare', parent_phone: '0248901234', parent_occupation: 'Banker', picture: null, created: '2025-03-17' },
-];
-
-// Enrolled Students Data
-const enrolledStudents = [
-  { student_id: '2024-0042', name: 'Ama Serwaa', student_class: 'JHS 1', gender: 'Female', dob: '2008-04-15', attendance: '96%', fees_status: 'Paid', status: 'Active', avatar_color: 'blue', gender_abbr: 'F' },
-  { student_id: '2024-0043', name: 'Kwame Asante', student_class: 'Basic 6', gender: 'Male', dob: '2009-06-10', attendance: '88%', fees_status: 'Pending', status: 'Active', avatar_color: 'gold', gender_abbr: 'M' },
-  { student_id: '2024-0044', name: 'Abena Mensah', student_class: 'Basic 5', gender: 'Female', dob: '2010-01-05', attendance: '93%', fees_status: 'Paid', status: 'Active', avatar_color: 'purple', gender_abbr: 'F' },
-  { student_id: '2024-0045', name: 'Kofi Boateng', student_class: 'JHS 3', gender: 'Male', dob: '2007-09-20', attendance: '81%', fees_status: 'Partial', status: 'Active', avatar_color: 'blue', gender_abbr: 'M' },
-  { student_id: '2024-0046', name: 'Akosua Darko', student_class: 'JHS 2', gender: 'Female', dob: '2009-03-08', attendance: '97%', fees_status: 'Paid', status: 'Active', avatar_color: 'green', gender_abbr: 'F' },
-  { student_id: '2024-0047', name: 'Yaw Mensah', student_class: 'Basic 4', gender: 'Male', dob: '2010-07-03', attendance: '85%', fees_status: 'Paid', status: 'Active', avatar_color: 'blue', gender_abbr: 'M' },
-  { student_id: '2024-0048', name: 'Adwoa Frimpong', student_class: 'JHS 1', gender: 'Female', dob: '2007-12-12', attendance: '94%', fees_status: 'Paid', status: 'Active', avatar_color: 'purple', gender_abbr: 'F' },
-  { student_id: '2024-0049', name: 'Kweku Ofori', student_class: 'Basic 6', gender: 'Male', dob: '2009-02-28', attendance: '79%', fees_status: 'Pending', status: 'Active', avatar_color: 'gold', gender_abbr: 'M' },
-];
-
-// TEACHERS DATA
-const teachersData = [
-  { teacher_id: 'T001', name: 'Mr. Kweku Amponsah', subject: 'Mathematics', department: 'Science', experience: '12', class_assigned: 'JHS 2', gender: 'Male', avatar_color: 'blue', phone: '+233 24 111 0001', email: 'amponsah@school.edu.gh', dob: '1985-03-15', schedule: 'Mon/Tue/Thu', hiring_date: '2012-08-01', status: 'Active' },
-  { teacher_id: 'T002', name: 'Mrs. Akua Asante', subject: 'English Language', department: 'Languages', experience: '8', class_assigned: 'JHS 3', gender: 'Female', avatar_color: 'purple', phone: '+233 24 111 0002', email: 'asante@school.edu.gh', dob: '1990-07-22', schedule: 'Mon/Wed/Fri', hiring_date: '2016-01-15', status: 'Active' },
-  { teacher_id: 'T003', name: 'Mr. Samuel Oduro', subject: 'Integrated Science', department: 'Science', experience: '6', class_assigned: 'JHS 1', gender: 'Male', avatar_color: 'blue', phone: '+233 24 111 0003', email: 'oduro@school.edu.gh', dob: '1992-11-10', schedule: 'Tue/Thu/Fri', hiring_date: '2018-06-01', status: 'Active' },
-  { teacher_id: 'T004', name: 'Ms. Grace Frimpong', subject: 'ICT & Computing', department: 'Science', experience: '4', class_assigned: 'Not Assigned', gender: 'Female', avatar_color: 'green', phone: '+233 24 111 0004', email: 'frimpong@school.edu.gh', dob: '1994-05-03', schedule: 'Mon/Wed/Fri', hiring_date: '2020-08-01', status: 'Active' },
-  { teacher_id: 'T005', name: 'Mr. Kofi Boateng Sr.', subject: 'History & Social Studies', department: 'Languages', experience: '15', class_assigned: 'Not Assigned', gender: 'Male', avatar_color: 'gold', phone: '+233 24 111 0005', email: 'boateng@school.edu.gh', dob: '1982-09-17', schedule: 'Mon-Fri', hiring_date: '2009-01-01', status: 'Active' },
-  { teacher_id: 'T006', name: 'Mrs. Esi Aidoo', subject: 'French Language', department: 'Languages', experience: '10', class_assigned: 'Not Assigned', gender: 'Female', avatar_color: 'teal', phone: '+233 24 111 0006', email: 'aidoo@school.edu.gh', dob: '1988-02-08', schedule: 'Tue/Thu', hiring_date: '2014-03-15', status: 'Active' },
-];
-
-// CLASSES DATA
-const classesData = [
-  { class_id: 'C001', name: 'Creche', level: 'Creche', stream: 'General', teacher: 'Mrs. Esi Aidoo', teacher_id: 'T006', students: 25, attendance: '88%', capacity: 30, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
-  { class_id: 'C002', name: 'Nursery', level: 'Nursery', stream: 'General', teacher: 'Mr. Samuel Oduro', teacher_id: 'T003', students: 28, attendance: '90%', capacity: 35, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
-  { class_id: 'C003', name: 'KG 1', level: 'KG 1', stream: 'General', teacher: 'Ms. Grace Frimpong', teacher_id: 'T004', students: 32, attendance: '92%', capacity: 40, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
-  { class_id: 'C004', name: 'KG 2', level: 'KG 2', stream: 'General', teacher: 'Mr. Kofi Boateng Sr.', teacher_id: 'T005', students: 35, attendance: '94%', capacity: 40, subjects: ['Numeracy', 'Literacy', 'Creative Art', 'Writing', 'Environmental Studies'] },
-  { class_id: 'C005', name: 'Basic 1', level: 'Basic', stream: 'General', teacher: 'Mrs. Akua Asante', teacher_id: 'T002', students: 38, attendance: '93%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
-  { class_id: 'C006', name: 'Basic 2', level: 'Basic', stream: 'General', teacher: 'Mr. Amponsah', teacher_id: 'T001', students: 40, attendance: '95%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
-  { class_id: 'C007', name: 'Basic 3', level: 'Basic', stream: 'General', teacher: 'Mrs. Esi Aidoo', teacher_id: 'T006', students: 42, attendance: '92%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
-  { class_id: 'C008', name: 'Basic 4', level: 'Basic', stream: 'General', teacher: 'Mr. Oduro', teacher_id: 'T003', students: 38, attendance: '90%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
-  { class_id: 'C009', name: 'Basic 5', level: 'Basic', stream: 'General', teacher: 'Ms. Frimpong', teacher_id: 'T004', students: 40, attendance: '91%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
-  { class_id: 'C010', name: 'Basic 6', level: 'Basic', stream: 'General', teacher: 'Mr. Boateng Sr.', teacher_id: 'T005', students: 36, attendance: '89%', capacity: 45, subjects: ['Mathematics', 'Science', 'English', 'Dagaare', 'Computing', 'History', 'RME', 'Creative Art'] },
-  { class_id: 'C011', name: 'JHS 1', level: 'JHS', stream: 'Mixed', teacher: 'Mr. Amponsah', teacher_id: 'T001', students: 42, attendance: '87%', capacity: 50, subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'] },
-  { class_id: 'C012', name: 'JHS 2', level: 'JHS', stream: 'Mixed', teacher: 'Mrs. Asante', teacher_id: 'T002', students: 40, attendance: '89%', capacity: 50, subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'] },
-  { class_id: 'C013', name: 'JHS 3', level: 'JHS', stream: 'Mixed', teacher: 'Mr. Oduro', teacher_id: 'T003', students: 38, attendance: '91%', capacity: 50, subjects: ['Mathematics', 'Science', 'English', 'Social Studies', 'Computing', 'Career Technology', 'RME', 'Creative Art', 'Dagaare'] },
-];
+const admissionsData = [];
+const enrolledStudents = [];
+const teachersData = [];
+const classesData = [];
 
 const STUDENT_RECORDS_KEY = 'gr_student_records';
 const TEACHER_RECORDS_KEY = 'gr_teacher_records';
@@ -3662,56 +3600,19 @@ function stripLegacyAverageFields(student) {
 }
 
 function loadPersistentRecords() {
-  try {
-    const savedStudents = JSON.parse(localStorage.getItem(STUDENT_RECORDS_KEY) || 'null');
-    if (Array.isArray(savedStudents)) {
-      enrolledStudents.splice(0, enrolledStudents.length, ...savedStudents.map(stripLegacyAverageFields));
-    } else {
-      enrolledStudents.forEach(stripLegacyAverageFields);
-    }
-  } catch (e) {
-    enrolledStudents.forEach(stripLegacyAverageFields);
-  }
-  saveStudentRecords();
-
-  try {
-    const savedTeachers = JSON.parse(localStorage.getItem(TEACHER_RECORDS_KEY) || 'null');
-    if (Array.isArray(savedTeachers)) teachersData.splice(0, teachersData.length, ...savedTeachers);
-  } catch (e) {}
-
-  try {
-    const savedParents = JSON.parse(localStorage.getItem(PARENT_RECORDS_KEY) || 'null');
-    if (Array.isArray(savedParents)) parentsData.splice(0, parentsData.length, ...savedParents);
-  } catch (e) {}
-
-  try {
-    const savedAdmissions = JSON.parse(localStorage.getItem(ADMISSION_RECORDS_KEY) || 'null');
-    if (Array.isArray(savedAdmissions)) admissionsData.splice(0, admissionsData.length, ...savedAdmissions);
-  } catch (e) {}
+  enrolledStudents.forEach(stripLegacyAverageFields);
 }
 
 function saveStudentRecords() {
-  try {
-    localStorage.setItem(STUDENT_RECORDS_KEY, JSON.stringify(enrolledStudents.map(s => stripLegacyAverageFields({ ...s }))));
-  } catch (e) {}
 }
 
 function saveTeacherRecords() {
-  try {
-    localStorage.setItem(TEACHER_RECORDS_KEY, JSON.stringify(teachersData));
-  } catch (e) {}
 }
 
 function saveParentRecords() {
-  try {
-    localStorage.setItem(PARENT_RECORDS_KEY, JSON.stringify(parentsData));
-  } catch (e) {}
 }
 
 function saveAdmissionRecords() {
-  try {
-    localStorage.setItem(ADMISSION_RECORDS_KEY, JSON.stringify(admissionsData));
-  } catch (e) {}
 }
 
 function getActiveStudents(students = enrolledStudents) {
@@ -3800,12 +3701,7 @@ let subjectsData = [
 
 
 // PARENTS DATA
-const parentsData = [
-  { parent_id: 'P001', name: 'Mr. & Mrs. Serwaa', contact_person: 'Mr. Joseph Serwaa', gender: 'Male', avatar_color: 'gold', phone: '+233 24 000 0001', email: 'serwaa@email.com', address: 'Accra, Ghana', children: 'Ama Serwaa (JHS 1), Kweku Serwaa (Basic 3)', fees_status: 'All Paid', occupation: 'Businessman', picture: null },
-  { parent_id: 'P002', name: 'Mr. Asante', contact_person: 'Mr. David Asante', gender: 'Male', avatar_color: 'blue', phone: '+233 24 000 0002', email: 'asante@email.com', address: 'Kumasi, Ghana', children: 'Kwame Asante (Basic 6)', fees_status: 'Pending', occupation: 'Teacher', picture: null },
-  { parent_id: 'P003', name: 'Mrs. Mensah', contact_person: 'Mrs. Ama Mensah', gender: 'Female', avatar_color: 'purple', phone: '+233 24 000 0003', email: 'mensah@email.com', address: 'Takoradi, Ghana', children: 'Abena Mensah (Basic 1)', fees_status: 'All Paid', occupation: 'Healthcare Worker', picture: null },
-  { parent_id: 'P004', name: 'Mr. Boateng', contact_person: 'Mr. Eric Boateng', gender: 'Male', avatar_color: 'green', phone: '+233 24 000 0004', email: 'boateng@email.com', address: 'Cape Coast, Ghana', children: 'Kofi Boateng (JHS 2)', fees_status: 'Partial', occupation: 'Engineer', picture: null },
-];
+const parentsData = [];
 
 // Student scores data
 const studentScores = {

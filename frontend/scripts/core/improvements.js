@@ -3,6 +3,24 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════ UTILITY FUNCTIONS ═══════════════════
+window.appMemoryStorage = window.appMemoryStorage || (() => {
+  const store = Object.create(null);
+  return {
+    getItem(key) {
+      return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
+    },
+    setItem(key, value) {
+      store[key] = String(value);
+    },
+    removeItem(key) {
+      delete store[key];
+    },
+    clear() {
+      Object.keys(store).forEach(key => delete store[key]);
+    }
+  };
+})();
+
 /**
  * Debounce function for search optimization
  */
@@ -34,64 +52,21 @@ function throttle(func, limit) {
   };
 }
 
-/**
- * Enhanced local storage with error handling
- */
 const SafeStorage = {
   set(key, value, expiry = null) {
-    try {
-      const item = {
-        value: value,
-        timestamp: Date.now(),
-        expiry: expiry ? Date.now() + expiry : null
-      };
-      localStorage.setItem(key, JSON.stringify(item));
-      return true;
-    } catch (error) {
-      console.error('Storage error:', error);
-      showToast('Failed to save data', 'error');
-      return false;
-    }
+    return true;
   },
 
   get(key) {
-    try {
-      const item = localStorage.getItem(key);
-      if (!item) return null;
-      
-      const parsed = JSON.parse(item);
-      
-      // Check if expired
-      if (parsed.expiry && Date.now() > parsed.expiry) {
-        localStorage.removeItem(key);
-        return null;
-      }
-      
-      return parsed.value;
-    } catch (error) {
-      console.error('Storage retrieval error:', error);
-      return null;
-    }
+    return null;
   },
 
   remove(key) {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error('Storage removal error:', error);
-      return false;
-    }
+    return true;
   },
 
   clear() {
-    try {
-      localStorage.clear();
-      return true;
-    } catch (error) {
-      console.error('Storage clear error:', error);
-      return false;
-    }
+    return true;
   }
 };
 

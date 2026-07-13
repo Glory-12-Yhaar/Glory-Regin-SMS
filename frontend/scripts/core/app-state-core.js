@@ -1,4 +1,4 @@
-﻿
+
 // -----------------------------------
 // STATE & CONFIG
 // -----------------------------------
@@ -11,11 +11,7 @@ let miniCalDate = new Date();  // Track mini calendar navigation
 // DARK MODE INITIALIZATION
 // -----------------------------------
 function initializeDarkMode() {
-  // Load saved theme preference from localStorage
-  const savedTheme = localStorage.getItem('gloryReignTheme');
-  if (savedTheme) {
-    darkMode = savedTheme === 'dark';
-  } else if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
+  if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
     darkMode = SETTINGS_DATA.appearance.theme === 'Dark';
   }
   applyTheme();
@@ -324,16 +320,16 @@ const ASSIGNMENTS_DATA = {
 
 // ALUMNI DATA STRUCTURE
 const ALUMNI_DATA = {
-  'ALM001': { id: 'ALM001', name: 'Abena Owusu', classYear: 2018, profession: 'Software Engineer', location: 'Accra Â· Google Ghana', avatar: 'AO', avatarColor: 'purple', bio: 'Working as Senior Developer at Google Ghana', email: 'abena.owusu@gmail.com', phone: '+233 24 111 0001', instagram: '@abenaotech', linkedin: 'linkedin.com/in/abenaowusu', twitter: '@abenaotech', facebook: 'facebook.com/abena.owusu' },
-  'ALM002': { id: 'ALM002', name: 'Kwabena Asare', classYear: 2016, profession: 'Medical Doctor', location: 'London Â· NHS', avatar: 'KA', avatarColor: 'blue', bio: 'Consultant Physician at London NHS Hospital', email: 'kwabena.asare@nhs.uk', phone: '+44 7911 123456', instagram: '@kwabenadr', linkedin: 'linkedin.com/in/kwabenaasare', twitter: '@kwabenaasare', facebook: 'facebook.com/kwabena.asare' },
-  'ALM003': { id: 'ALM003', name: 'Esi Mensah', classYear: 2020, profession: 'Teacher', location: 'Kumasi Â· College', avatar: 'EM', avatarColor: 'green', bio: 'Secondary School Teacher - English & Literature', email: 'esi.mensah@college.edu.gh', phone: '+233 24 222 0003', instagram: '@esimenteach', linkedin: 'linkedin.com/in/esimensah', twitter: '@esiteacher', facebook: 'facebook.com/esi.mensah' },
-  'ALM004': { id: 'ALM004', name: 'Yaw Boateng', classYear: 2015, profession: 'Lawyer', location: 'Toronto Â· Law Firm', avatar: 'YB', avatarColor: 'gold', bio: 'Senior Associate at Toronto Law Partnership', email: 'yaw.boateng@lawfirm.ca', phone: '+1 416 987 6543', instagram: '@yawlawyer', linkedin: 'linkedin.com/in/yawboateng', twitter: '@yawboatenglaw', facebook: 'facebook.com/yaw.boateng' },
-  'ALM005': { id: 'ALM005', name: 'Akua Adjei', classYear: 2019, profession: 'Nurse', location: 'Accra Â· Korle Bu', avatar: 'AA', avatarColor: 'teal', bio: 'Registered Nurse at Korle Bu Teaching Hospital', email: 'akua.adjei@korlebu.org', phone: '+233 24 333 0005', instagram: '@akuanurse', linkedin: 'linkedin.com/in/akuaadjei', twitter: '@akuahealth', facebook: 'facebook.com/akua.adjei' },
-  'ALM006': { id: 'ALM006', name: 'Kofi Antwi', classYear: 2014, profession: 'Civil Engineer', location: 'Takoradi Â· GHA', avatar: 'KA', avatarColor: 'orange', bio: 'Project Manager - Civil Engineering Division', email: 'kofi.antwi@gha-eng.com.gh', phone: '+233 24 444 0006', instagram: '@kofieng', linkedin: 'linkedin.com/in/kofiantwi', twitter: '@kofiengineering', facebook: 'facebook.com/kofi.antwi' },
-  'ALM007': { id: 'ALM007', name: 'Nadia Hassan', classYear: 2017, profession: 'Business Analyst', location: 'Dubai Â· Tech Corp', avatar: 'NH', avatarColor: 'purple', bio: 'Business Solutions Analyst - Middle East Tech', email: 'nadia.hassan@techcorp.ae', phone: '+971 50 123 4567', instagram: '@nadiabiz', linkedin: 'linkedin.com/in/nadiahassan', twitter: '@nadiatech', facebook: 'facebook.com/nadia.hassan' },
-  'ALM008': { id: 'ALM008', name: 'Samuel Boadi', classYear: 2013, profession: 'Banking Executive', location: 'Accra Â· Bank HQ', avatar: 'SB', avatarColor: 'blue', bio: 'Head of Business Development - Banking Sector', email: 'samuel.boadi@bank.com.gh', phone: '+233 24 555 0008', instagram: '@samuelbanks', linkedin: 'linkedin.com/in/samuelboadi', twitter: '@samuelboadi', facebook: 'facebook.com/samuel.boadi' },
-  'ALM009': { id: 'ALM009', name: 'Grace Mensah', classYear: 2021, profession: 'Graphic Designer', location: 'Accra Â· Creative Studio', avatar: 'GM', avatarColor: 'pink', bio: 'UI/UX Designer at Accra Creative Studio', email: 'grace.mensah@creative.com.gh', phone: '+233 24 666 0009', instagram: '@gracedesi_gns', linkedin: 'linkedin.com/in/gracemensah', twitter: '@gracedesigns', facebook: 'facebook.com/grace.mensah' },
-  'ALM010': { id: 'ALM010', name: 'David Owusu', classYear: 2012, profession: 'Architect', location: 'Singapore Â· Design Firm', avatar: 'DO', avatarColor: 'teal', bio: 'Senior Architect - International Design Projects', email: 'david.owusu@designfirm.sg', phone: '+65 6789 0123', instagram: '@davidarch', linkedin: 'linkedin.com/in/davidowusu', twitter: '@davidarchitect', facebook: 'facebook.com/david.owusu' }
+  'ALM001': { id: 'ALM001', name: 'Abena Owusu', classYear: 2018, profession: 'Software Engineer', location: 'Accra · Google Ghana', avatar: 'AO', avatarColor: 'purple', bio: 'Working as Senior Developer at Google Ghana', email: 'abena.owusu@gmail.com', phone: '+233 24 111 0001', instagram: '@abenaotech', linkedin: 'linkedin.com/in/abenaowusu', twitter: '@abenaotech', facebook: 'facebook.com/abena.owusu' },
+  'ALM002': { id: 'ALM002', name: 'Kwabena Asare', classYear: 2016, profession: 'Medical Doctor', location: 'London · NHS', avatar: 'KA', avatarColor: 'blue', bio: 'Consultant Physician at London NHS Hospital', email: 'kwabena.asare@nhs.uk', phone: '+44 7911 123456', instagram: '@kwabenadr', linkedin: 'linkedin.com/in/kwabenaasare', twitter: '@kwabenaasare', facebook: 'facebook.com/kwabena.asare' },
+  'ALM003': { id: 'ALM003', name: 'Esi Mensah', classYear: 2020, profession: 'Teacher', location: 'Kumasi · College', avatar: 'EM', avatarColor: 'green', bio: 'Secondary School Teacher - English & Literature', email: 'esi.mensah@college.edu.gh', phone: '+233 24 222 0003', instagram: '@esimenteach', linkedin: 'linkedin.com/in/esimensah', twitter: '@esiteacher', facebook: 'facebook.com/esi.mensah' },
+  'ALM004': { id: 'ALM004', name: 'Yaw Boateng', classYear: 2015, profession: 'Lawyer', location: 'Toronto · Law Firm', avatar: 'YB', avatarColor: 'gold', bio: 'Senior Associate at Toronto Law Partnership', email: 'yaw.boateng@lawfirm.ca', phone: '+1 416 987 6543', instagram: '@yawlawyer', linkedin: 'linkedin.com/in/yawboateng', twitter: '@yawboatenglaw', facebook: 'facebook.com/yaw.boateng' },
+  'ALM005': { id: 'ALM005', name: 'Akua Adjei', classYear: 2019, profession: 'Nurse', location: 'Accra · Korle Bu', avatar: 'AA', avatarColor: 'teal', bio: 'Registered Nurse at Korle Bu Teaching Hospital', email: 'akua.adjei@korlebu.org', phone: '+233 24 333 0005', instagram: '@akuanurse', linkedin: 'linkedin.com/in/akuaadjei', twitter: '@akuahealth', facebook: 'facebook.com/akua.adjei' },
+  'ALM006': { id: 'ALM006', name: 'Kofi Antwi', classYear: 2014, profession: 'Civil Engineer', location: 'Takoradi · GHA', avatar: 'KA', avatarColor: 'orange', bio: 'Project Manager - Civil Engineering Division', email: 'kofi.antwi@gha-eng.com.gh', phone: '+233 24 444 0006', instagram: '@kofieng', linkedin: 'linkedin.com/in/kofiantwi', twitter: '@kofiengineering', facebook: 'facebook.com/kofi.antwi' },
+  'ALM007': { id: 'ALM007', name: 'Nadia Hassan', classYear: 2017, profession: 'Business Analyst', location: 'Dubai · Tech Corp', avatar: 'NH', avatarColor: 'purple', bio: 'Business Solutions Analyst - Middle East Tech', email: 'nadia.hassan@techcorp.ae', phone: '+971 50 123 4567', instagram: '@nadiabiz', linkedin: 'linkedin.com/in/nadiahassan', twitter: '@nadiatech', facebook: 'facebook.com/nadia.hassan' },
+  'ALM008': { id: 'ALM008', name: 'Samuel Boadi', classYear: 2013, profession: 'Banking Executive', location: 'Accra · Bank HQ', avatar: 'SB', avatarColor: 'blue', bio: 'Head of Business Development - Banking Sector', email: 'samuel.boadi@bank.com.gh', phone: '+233 24 555 0008', instagram: '@samuelbanks', linkedin: 'linkedin.com/in/samuelboadi', twitter: '@samuelboadi', facebook: 'facebook.com/samuel.boadi' },
+  'ALM009': { id: 'ALM009', name: 'Grace Mensah', classYear: 2021, profession: 'Graphic Designer', location: 'Accra · Creative Studio', avatar: 'GM', avatarColor: 'pink', bio: 'UI/UX Designer at Accra Creative Studio', email: 'grace.mensah@creative.com.gh', phone: '+233 24 666 0009', instagram: '@gracedesi_gns', linkedin: 'linkedin.com/in/gracemensah', twitter: '@gracedesigns', facebook: 'facebook.com/grace.mensah' },
+  'ALM010': { id: 'ALM010', name: 'David Owusu', classYear: 2012, profession: 'Architect', location: 'Singapore · Design Firm', avatar: 'DO', avatarColor: 'teal', bio: 'Senior Architect - International Design Projects', email: 'david.owusu@designfirm.sg', phone: '+65 6789 0123', instagram: '@davidarch', linkedin: 'linkedin.com/in/davidowusu', twitter: '@davidarchitect', facebook: 'facebook.com/david.owusu' }
 };
 
 // STAFF DATA STRUCTURE
@@ -619,13 +615,6 @@ function getSessionUser() {
     window.SESSION_USER = normalizeSessionUser(window.SESSION_USER);
     return window.SESSION_USER;
   }
-  try {
-    const saved = localStorage.getItem('gr_session_user');
-    if (saved) {
-      window.SESSION_USER = normalizeSessionUser(JSON.parse(saved));
-      return window.SESSION_USER;
-    }
-  } catch (e) {}
   return null;
 }
 
@@ -645,10 +634,6 @@ function normalizeSessionUser(user) {
 
 function setSessionUser(user) {
   window.SESSION_USER = normalizeSessionUser(user);
-  try {
-    if (window.SESSION_USER) localStorage.setItem('gr_session_user', JSON.stringify(window.SESSION_USER));
-    else localStorage.removeItem('gr_session_user');
-  } catch (e) {}
 }
 
 function normalizeIdentity(value) {
@@ -910,7 +895,7 @@ function createStyledDropdownButton(selectElement, label = 'Select') {
 
 function getModuleBadgeCount(moduleId) {
   try {
-    if (moduleId === 'admissions') return admissionsData.filter(a => a.status === 'Pending').length;
+    if (moduleId === 'admissions') return (window.ADMISSIONS_COUNTS && typeof window.ADMISSIONS_COUNTS.Pending !== 'undefined') ? Number(window.ADMISSIONS_COUNTS.Pending) || 0 : admissionsData.filter(a => a.status === 'Pending').length;
     if (moduleId === 'students') return getActiveStudents(enrolledStudents).length;
     if (moduleId === 'teachers') return getActiveTeachers(teachersData).length;
     if (moduleId === 'parents') return parentsData.length;
@@ -1378,7 +1363,6 @@ function doAdminLogin() {
 function toggleDark() {
   darkMode = !darkMode;
   applyTheme();
-  localStorage.setItem('gloryReignTheme', darkMode ? 'dark' : 'light');
   showToast(`<i class="fas fa-check-circle"></i> ${darkMode ? 'Dark' : 'Light'} mode enabled`, 'success');
 }
 
@@ -1457,16 +1441,10 @@ let APP_NOTIFICATIONS = [
   { id: 2, icon: '<i class="fas fa-check-circle"></i>', title: 'Grade Posted', msg: 'Your essay - Grade A', time: '1h ago', read: false, fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.', action: 'View Feedback', actionLink: 'grades' },
   { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Admission Update', msg: 'New student enrolled', time: '3h ago', read: true, fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.', action: 'View Details', actionLink: 'admissions' },
   { id: 4, icon: '<i class="fas fa-comments"></i>', title: 'New Message', msg: 'Message from Ms. Mensah', time: '5h ago', read: true, fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.', action: 'Reply', actionLink: 'messaging' },
-  { id: 5, icon: '<i class="fas fa-exclamation-triangle"></i>', title: 'Fee Reminder', msg: '5 students pending fees', time: '1d ago', read: true, fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GHâ‚µ4,800. Please follow up with parents or view the fees module for details.', action: 'View Fees', actionLink: 'fees' }
+  { id: 5, icon: '<i class="fas fa-exclamation-triangle"></i>', title: 'Fee Reminder', msg: '5 students pending fees', time: '1d ago', read: true, fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GH₵4,800. Please follow up with parents or view the fees module for details.', action: 'View Fees', actionLink: 'fees' }
 ];
 
-try {
-  const savedNotifications = JSON.parse(localStorage.getItem('gr_app_notifications') || 'null');
-  if (Array.isArray(savedNotifications)) APP_NOTIFICATIONS = savedNotifications;
-} catch (e) {}
-
 function saveAppNotifications() {
-  try { localStorage.setItem('gr_app_notifications', JSON.stringify(APP_NOTIFICATIONS)); } catch (e) {}
 }
 
 function getVisibleNotifications() {
@@ -1658,17 +1636,10 @@ function viewNotificationDetail(notifId) {
 const NAV_STATE_KEY = 'gr_last_navigation_state';
 
 function saveNavigationState() {
-  try {
-    localStorage.setItem(NAV_STATE_KEY, JSON.stringify({ role: currentRole, mod: currentMod }));
-  } catch (e) {}
 }
 
 function getSavedNavigationState() {
-  try {
-    return JSON.parse(localStorage.getItem(NAV_STATE_KEY) || 'null');
-  } catch (e) {
-    return null;
-  }
+  return null;
 }
 
 function toggleRS() { document.getElementById('role-switcher').classList.toggle('open') }
@@ -2103,7 +2074,7 @@ function hdr(title, sub, bc) {
   return `<div class="page-hdr">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
       <button class="back-btn" onclick="goBack()" title="Go back"><i class="fas fa-arrow-left"></i> Back</button>
-      <div class="breadcrumb"><i class="fas fa-home"></i> Home â€º <span>${bc || title}</span></div>
+      <div class="breadcrumb"><i class="fas fa-home"></i> Home › <span>${bc || title}</span></div>
     </div>
     <h1>${title}</h1>
     <p>${sub}</p>
@@ -2131,9 +2102,9 @@ function mini_cal() {
 
   let h = `<div class="cal-wrap">
     <div class="cal-hdr">
-      <div class="cal-nav" style="cursor:pointer" onclick="miniCalPrev()">â€¹</div>
+      <div class="cal-nav" style="cursor:pointer" onclick="miniCalPrev()">‹</div>
       <span class="cal-title" id="mini-cal-title" style="min-width:120px;text-align:center">${monthNames[month]} ${year}</span>
-      <div class="cal-nav" style="cursor:pointer" onclick="miniCalNext()">â€º</div>
+      <div class="cal-nav" style="cursor:pointer" onclick="miniCalNext()">›</div>
     </div>
     <div class="cal-grid">
       ${days.map(d => `<div class="cal-dname">${d}</div>`).join('')}

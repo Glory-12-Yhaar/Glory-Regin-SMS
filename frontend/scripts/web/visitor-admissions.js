@@ -1,4 +1,4 @@
-﻿
+
 // -----------------------------------
 // VISITOR HOME
 // -----------------------------------
@@ -6,7 +6,7 @@ const HERO_SLIDES_KEY = 'gr_hero_slides';
 
 function getHeroSlides() {
   try {
-    const saved = localStorage.getItem(HERO_SLIDES_KEY);
+    const saved = appMemoryStorage.getItem(HERO_SLIDES_KEY);
     if (saved) return JSON.parse(saved);
   } catch (e) {}
   return [
@@ -22,7 +22,7 @@ function getHeroSlides() {
 }
 
 function saveHeroSlides(slides) {
-  localStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(slides));
+  appMemoryStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(slides));
 }
 
 function getActiveHeroSlide() {
@@ -232,19 +232,27 @@ function visitorHome() {
 // -----------------------------------
 // ADMISSIONS MODULE
 // -----------------------------------
+function getAdmissionsCounts() {
+  const fallbackCounts = admissionsData.reduce((counts, admission) => {
+    const status = admission.status || 'Pending';
+    counts[status] = (counts[status] || 0) + 1;
+    counts.total += 1;
+    return counts;
+  }, { total: 0, Pending: 0, Approved: 0, Rejected: 0, Enrolled: 0 });
+  return { ...fallbackCounts, ...(window.ADMISSIONS_COUNTS || {}) };
+}
+
 function admissionsModule() {
-  const approved = admissionsData.filter(a => a.status === 'Approved').length;
-  const pending = admissionsData.filter(a => a.status === 'Pending').length;
-  const rejected = admissionsData.filter(a => a.status === 'Rejected').length;
+  const counts = getAdmissionsCounts();
   const statsCards = [
-    statCard('<i class="fas fa-clipboard-list"></i>', '12', 'Total Applications', 'This academic year', 'neu', 'si-blue'),
-    statCard('<i class="fas fa-check-circle"></i>', '' + approved, 'Approved', 'Ready for enrollment', 'up', 'si-green'),
-    statCard('<i class="fas fa-hourglass-half"></i>', '' + pending, 'Pending', 'Awaiting review', 'neu', 'si-gold'),
-    statCard('<i class="fas fa-times-circle"></i>', '' + rejected, 'Rejected', 'Did not meet criteria', 'dn', 'si-red')
+    statCard('<i class="fas fa-clipboard-list"></i>', String(counts.total || 0), 'Total Applications', 'This academic year', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-check-circle"></i>', String(counts.Approved || 0), 'Approved', 'Ready for enrollment', 'up', 'si-green'),
+    statCard('<i class="fas fa-hourglass-half"></i>', String(counts.Pending || 0), 'Pending', 'Awaiting review', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-times-circle"></i>', String(counts.Rejected || 0), 'Rejected', 'Did not meet criteria', 'dn', 'si-red')
   ].join('');
-  const pendingRows = admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('');
-  const approvedRows = admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('');
-  const rejectedRows = admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('');
+  const pendingRows = admissionsData.filter(a => a.status === 'Pending').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td style="font-size:11px">' + a.dob + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td style="font-size:11px">' + a.parent_name + '</td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td><td><span class="badge b-warning"><i class=\"fas fa-hourglass-half\"></i> Pending</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="approveAdmission(\'' + a.adm_id + '\', \'' + a.name + '\')"><i class=\"fas fa-check\"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="rejectAdmission(\'' + a.adm_id + '\')"><i class=\"fas fa-times\"></i> Reject</button></div></td></tr>').join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">No pending applications found</td></tr>';
+  const approvedRows = admissionsData.filter(a => a.status === 'Approved').map((a, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td style="font-weight:700;color:var(--success)">' + generateStudentID(a.class_applying, '' + admissionsData.indexOf(a)) + '</td><td>' + a.name + '</td><td><span class="badge b-info">' + a.class_applying + '</span></td><td><span class="badge b-success"><i class=\"fas fa-check-circle\"></i> Approved</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert(\'Printing admission slip for ' + a.name + '...\')"><i class=\"fas fa-print\"></i> Print Slip</button><button class="btn btn-primary btn-xs" onclick="enrollStudent(\'' + a.adm_id + '\')"><i class=\"fas fa-book\"></i> Enroll</button></div></td></tr>').join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray-400)">No approved applications found</td></tr>';
+  const rejectedRows = admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray-400)">No rejected applications found</td></tr>';
 
   return hdr('Admissions Module', 'Process new student admissions and generate student IDs', 'Admissions') +
     renderPageTemplate('pages/admin/admissions/index.html', { statsCards, pendingRows, approvedRows, rejectedRows });
@@ -290,115 +298,97 @@ function generateStudentID(classApplying, index) {
   return prefix + year + '-' + seq;
 }
 
-function submitAdmission() {
-  const name = document.getElementById('adm-name').value.trim();
-  const dob = document.getElementById('adm-dob').value;
-  const gender = document.getElementById('adm-gender').value;
-  const phone = document.getElementById('adm-phone').value;
-  const address = document.getElementById('adm-address').value.trim();
-  const parentName = document.getElementById('adm-parent-name').value.trim();
-  const parentPhone = document.getElementById('adm-parent-phone').value;
-  const parentEmail = document.getElementById('adm-parent-email').value.trim();
-  const parentGender = document.getElementById('adm-parent-gender').value;
-  const contactPerson = document.getElementById('adm-contact-person').value.trim();
-  const relationship = document.getElementById('adm-relationship').value;
-  const occupation = document.getElementById('adm-occupation').value;
-  const school = document.getElementById('adm-school').value.trim();
-  const lastClass = document.getElementById('adm-last-class').value;
-  const classApplying = document.getElementById('adm-class').value;
-  const house = document.getElementById('adm-house').value;
-  const academicYear = document.getElementById('adm-year').value;
-  const picture = window.admPictureData || null;
+async function submitAdmission() {
+  const name = document.getElementById('adm-name')?.value.trim();
+  const dob = document.getElementById('adm-dob')?.value;
+  const gender = document.getElementById('adm-gender')?.value;
+  const classApplying = document.getElementById('adm-class')?.value;
+  const previousSchool = document.getElementById('adm-prev-school')?.value.trim();
+  const parentName = document.getElementById('adm-parent-name')?.value.trim();
+  const parentPhone = document.getElementById('adm-parent-phone')?.value.trim();
+  const parentEmail = document.getElementById('adm-parent-email')?.value.trim();
+  const address = document.getElementById('adm-parent-address')?.value.trim();
+  const notes = document.getElementById('adm-medical')?.value.trim();
+  const photo = window.admPictureData || null;
 
-  if (!name || !dob || !gender || !address || !parentName || !parentPhone || !parentEmail || !parentGender || !contactPerson || !relationship || !school || !classApplying) {
-    alert('Please fill in all required fields (marked with *)');
+  if (!name || !dob || !gender || !classApplying || !parentName || !parentPhone) {
+    showToast('<i class="fas fa-exclamation-triangle"></i> Please fill in all required fields', 'warning');
     return;
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const admNo = 'ADM' + today.slice(0, 4) + '-' + String(admissionsData.length + 1).padStart(3, '0');
-
-  const newAdmission = {
-    adm_id: admNo,
-    name: name,
-    dob: dob,
-    gender: gender,
-    address: address,
-    phone: phone,
-    school: school,
-    class_applying: classApplying,
-    house: house !== '-- Select House --' ? house : null,
-    academic_year: academicYear,
-    status: 'Pending',
-    parent_name: parentName,
-    parent_phone: parentPhone,
-    parent_email: parentEmail,
-    parent_gender: parentGender,
-    parent_contact_person: contactPerson,
-    parent_relationship: relationship,
-    parent_occupation: occupation,
-    picture: picture,
-    created: today
-  };
-
-  admissionsData.push(newAdmission);
-  saveAdmissionRecords();
-  showToast('<i class="fas fa-check-circle"></i> Application submitted!<br/>Application #: ' + admNo + '<br/>Status: Pending Review', 'success', 4000);
-
-  // Clear form
-  document.getElementById('adm-form-wrap').style.display = 'none';
-  document.getElementById('adm-name').value = '';
-  document.getElementById('adm-dob').value = '';
-  document.getElementById('adm-gender').value = '';
-  document.getElementById('adm-phone').value = '';
-  document.getElementById('adm-address').value = '';
-  document.getElementById('adm-parent-name').value = '';
-  document.getElementById('adm-parent-phone').value = '';
-  document.getElementById('adm-parent-email').value = '';
-  document.getElementById('adm-parent-gender').value = '';
-  document.getElementById('adm-contact-person').value = '';
-  document.getElementById('adm-relationship').value = '';
-  document.getElementById('adm-occupation').value = '';
-  document.getElementById('adm-school').value = '';
-  document.getElementById('adm-last-class').value = '';
-  document.getElementById('adm-class').value = '-- Select Class --';
-  document.getElementById('adm-house').value = '-- Select House --';
-  document.getElementById('adm-picture').value = '';
-  document.getElementById('adm-pic-preview').innerHTML = '<i class="fas fa-camera" style="color:var(--gray-400)"></i>';
-  window.admPictureData = null;
-
-  // Refresh module
-  renderMain('admissions');
+  try {
+    const res = await API.admissions.apply({
+      applicant_name: name,
+      dob,
+      gender,
+      class_applying: classApplying,
+      previous_school: previousSchool,
+      parent_name: parentName,
+      parent_phone: parentPhone,
+      parent_email: parentEmail,
+      address,
+      photo,
+      notes
+    });
+    if (!res || !res.success) {
+      showToast('<i class="fas fa-times-circle"></i> ' + (res?.message || 'Unable to submit application'), 'error');
+      return;
+    }
+    showToast('<i class="fas fa-check-circle"></i> Application submitted and saved to database', 'success', 4000);
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    renderMain('admissions');
+  } catch (error) {
+    console.error('Admission submission failed:', error);
+    showToast('<i class="fas fa-times-circle"></i> Unable to submit application', 'error');
+  }
 }
 
-function approveAdmission(admId, studentName) {
+async function approveAdmission(admId, studentName) {
   const adm = admissionsData.find(a => a.adm_id === admId);
-  if (adm) {
-    adm.status = 'Approved';
-    saveAdmissionRecords();
+  if (!adm) return;
+  try {
+    if (typeof API !== 'undefined' && API.admissions && adm.id) {
+      const res = await API.admissions.updateStatus(adm.id, 'Approved', 'Approved by administrator');
+      if (!res || !res.success) {
+        showToast('<i class="fas fa-times-circle"></i> ' + (res?.message || 'Unable to approve admission'), 'error');
+        return;
+      }
+      if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    } else {
+      adm.status = 'Approved';
+    }
     const studentID = generateStudentID(adm.class_applying, admissionsData.indexOf(adm));
     showToast('<i class="fas fa-check-circle"></i> Admission Approved!<br/>Student: ' + studentName + '<br/>Student ID: ' + studentID, 'success', 4000);
     renderMain('admissions');
-  }
-  // Initialize alumni dashboard
-  if (m === 'dashboard' && r === 'Alumni') {
-    setTimeout(() => { try{ getAlumniList(); getAlumniDonations(); getAlumniEventRegistrations(); } catch(e){} }, 80);
+  } catch (error) {
+    console.error('Admission approval failed:', error);
+    showToast('<i class="fas fa-times-circle"></i> Unable to approve admission', 'error');
   }
 }
 
-function rejectAdmission(admId) {
+async function rejectAdmission(admId) {
   const adm = admissionsData.find(a => a.adm_id === admId);
-  if (adm) {
-    if (confirm('Are you sure you want to reject this application?')) {
+  if (!adm || !confirm('Are you sure you want to reject this application?')) return;
+  try {
+    if (typeof API !== 'undefined' && API.admissions && adm.id) {
+      const res = await API.admissions.updateStatus(adm.id, 'Rejected', 'Rejected by administrator');
+      if (!res || !res.success) {
+        showToast('<i class="fas fa-times-circle"></i> ' + (res?.message || 'Unable to reject admission'), 'error');
+        return;
+      }
+      if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    } else {
       adm.status = 'Rejected';
-      saveAdmissionRecords();
-      alert('<i class="fas fa-times-circle"></i> Application has been rejected.');
-      renderMain('admissions');
     }
+    showToast('<i class="fas fa-times-circle"></i> Application has been rejected.', 'success');
+    renderMain('admissions');
+  } catch (error) {
+    console.error('Admission rejection failed:', error);
+    showToast('<i class="fas fa-times-circle"></i> Unable to reject admission', 'error');
   }
 }
 
-function enrollStudent(admissionId) {
+async function enrollStudent(admissionId) {
   const admission = admissionsData.find(a => a.adm_id === admissionId);
   if (!admission) {
     alert('<i class="fas fa-times-circle"></i> Admission record not found');
@@ -427,15 +417,27 @@ function enrollStudent(admissionId) {
     enrolled_date: new Date().toISOString().split('T')[0]
   };
 
-  enrolledStudents.push(newStudent);
-  admission.status = 'Enrolled';
-  saveAdmissionRecords();
-  saveStudentRecords();
-  createOrUpdateParentFromAdmission(admission, newStudent);
-
-  showToast('<i class="fas fa-check-circle"></i> Student Enrolled Successfully!<br/>Name: ' + admission.name + '<br/>ID: ' + studentID + '<br/>Parent account updated', 'success', 4000);
-
-  renderMain('admissions');
+  try {
+    if (typeof API !== 'undefined' && API.admissions && admission.id) {
+      const res = API.admissions.enroll
+        ? await API.admissions.enroll(admission.id, 'Enrolled by administrator')
+        : await API.admissions.updateStatus(admission.id, 'Enrolled', 'Enrolled by administrator');
+      if (!res || !res.success) {
+        showToast('<i class="fas fa-times-circle"></i> ' + (res?.message || 'Unable to enroll student'), 'error');
+        return;
+      }
+      if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    } else {
+      enrolledStudents.push(newStudent);
+      admission.status = 'Enrolled';
+      createOrUpdateParentFromAdmission(admission, newStudent);
+    }
+    showToast('<i class="fas fa-check-circle"></i> Student marked as enrolled<br/>Name: ' + admission.name + '<br/>ID: ' + studentID, 'success', 4000);
+    renderMain('admissions');
+  } catch (error) {
+    console.error('Enrollment failed:', error);
+    showToast('<i class="fas fa-times-circle"></i> Unable to enroll student', 'error');
+  }
 }
 
 function showAdmissionStatistics() {
@@ -513,6 +515,10 @@ function showAdmissionStatistics() {
   html += '</tbody></table></div>';
 
   document.getElementById('main-content').innerHTML = html;
+}
+
+function previewAdmPic(event) {
+  previewAdmPicture(event?.target || event);
 }
 
 function previewAdmPicture(input) {

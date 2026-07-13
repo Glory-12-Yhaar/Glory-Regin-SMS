@@ -1,4 +1,4 @@
-﻿// ADMIN DASHBOARD
+// ADMIN DASHBOARD
 // -----------------------------------
 function getCurrentDateString() {
   const now = new Date();
@@ -9,6 +9,20 @@ function getCurrentDateString() {
   const month = months[now.getMonth()];
   const year = now.getFullYear();
   return `${day}, ${date} ${month} ${year}`;
+}
+
+function formatDashboardActivityTime(value) {
+  if (!value) return '';
+  const date = new Date(String(value).replace(' ', 'T'));
+  if (Number.isNaN(date.getTime())) return String(value);
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
 const ADMIN_DASHBOARD_STATE = {
@@ -26,13 +40,14 @@ const ADMIN_DASHBOARD_STATE = {
     partialCount: 0,
     pendingCount: 0,
     totalCount: 1
-  }
+  },
+  recentActivity: []
 };
 
 function adminDash() {
-  const totalStudents = ADMIN_DASHBOARD_STATE.dashboard.total_students ?? 'â€”';
-  const totalTeachers = ADMIN_DASHBOARD_STATE.dashboard.total_teachers ?? 'â€”';
-  const pendingFees = ADMIN_DASHBOARD_STATE.dashboard.fees_pending_count ?? 'â€”';
+  const totalStudents = ADMIN_DASHBOARD_STATE.dashboard.total_students ?? '—';
+  const totalTeachers = ADMIN_DASHBOARD_STATE.dashboard.total_teachers ?? '—';
+  const pendingFees = ADMIN_DASHBOARD_STATE.dashboard.fees_pending_count ?? '—';
   const finance = ADMIN_DASHBOARD_STATE.finance;
   const paidPct = finance.totalCount ? Math.round((finance.paidCount / finance.totalCount) * 100) : 0;
   const partialPct = finance.totalCount ? Math.round((finance.partialCount / finance.totalCount) * 100) : 0;
@@ -44,15 +59,24 @@ function adminDash() {
   const statsCards = [
     statCard('<i class="fas fa-graduation-cap"></i>', '' + totalStudents, 'Total Students', 'Open records', 'up', 'si-blue', true, 'navTo("students")'),
     statCard('<i class="fas fa-chalkboard-user"></i>', '' + totalTeachers, 'Total Teachers', 'Staff records', 'up', 'si-gold', true, 'navTo("teachers")'),
-    statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(finance.collected).toLocaleString(), 'Fees Collected', finance.payments.length + ' payments', 'up', 'si-green', true, 'navTo("fees")'),
+    statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(finance.collected).toLocaleString(), 'Fees Collected', finance.payments.length + ' payments', 'up', 'si-green', true, 'navTo("fees")'),
     statCard('<i class="fas fa-exclamation-triangle"></i>', '' + pendingFees, 'Pending Fees', 'Needs attention', 'dn', 'si-red', true, 'navTo("fees")')
   ].join('');
-  const enrollmentBars = [80, 65, 90, 75, 88, 72, 95, 85, 70, 92, 80, 60].map((h, i) => `
+  const monthlySeries = ADMIN_DASHBOARD_STATE.dashboard.monthly_enrollment_attendance || [];
+  const maxEnrollment = Math.max(1, ...monthlySeries.map(row => Number(row.enrollment || 0)));
+  const enrollmentBars = (monthlySeries.length ? monthlySeries : [{ month: 'No data', enrollment: 0, attendance: 0 }]).map((row) => {
+    const count = Number(row.enrollment || 0);
+    const attendance = Number(row.attendance || 0);
+    const enrollmentHeight = count ? Math.max(8, Math.round((count / maxEnrollment) * 130)) : 8;
+    const attendanceHeight = attendance ? Math.max(8, Math.round((attendance / 100) * 130)) : 8;
+    return `
         <div style="flex:1;display:flex;gap:2px;align-items:flex-end">
-          <div data-animate-height="${Math.round(h * 1.3)}px" style="flex:1;height:${Math.round(h * 1.3)}px;background:var(--blue-main);border-radius:3px 3px 0 0;opacity:.85;transition:height .65s ease"></div>
-          <div data-animate-height="${Math.round(h * .9)}px" style="flex:1;height:${Math.round(h * .9)}px;background:var(--gold);border-radius:3px 3px 0 0;opacity:.75;transition:height .65s ease"></div>
-        </div>`).join('');
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => `<span>${m}</span>`).join('');
+          <div title="${escapeAttr(row.month || '')} enrollment: ${count}" data-animate-height="${enrollmentHeight}px" style="flex:1;height:${enrollmentHeight}px;background:var(--blue-main);border-radius:3px 3px 0 0;opacity:.85;transition:height .65s ease"></div>
+          <div title="${escapeAttr(row.month || '')} attendance: ${attendance}%" data-animate-height="${attendanceHeight}px" style="flex:1;height:${attendanceHeight}px;background:var(--gold);border-radius:3px 3px 0 0;opacity:.75;transition:height .65s ease"></div>
+        </div>`;
+  }).join('');
+  const monthLabels = (monthlySeries.length ? monthlySeries.map(row => row.month) : ['No data'])
+    .map(m => `<span>${escapeHtml(m)}</span>`).join('');
   const recentStudentRows = recentStudents.map((student, index) => [student.name, student.student_class || student.class || 'Unassigned', student.status || 'Active', student.fees_status || student.feeStatus || 'Pending', ['blue', 'gold', 'purple', 'green', 'teal'][index % 5]]).map(([n, c, s, f, av]) => `
           <tr style="cursor:pointer" onclick="navTo('students')">
             <td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-${av}">${n[0]}</div><strong>${n}</strong></div></td>
@@ -60,14 +84,17 @@ function adminDash() {
             <td><span class="badge b-success">${s}</span></td>
             <td><span class="badge ${f === 'Paid' ? 'b-success' : f === 'Pending' ? 'b-danger' : 'b-warning'}">${f}</span></td>
           </tr>`).join('');
-  const activityRows = [['blue', 'New student enrolled - Ama Serwaa', '5 min ago'], ['gold', 'Assignment submitted by Basic 6', '12 min ago'], ['green', 'Fee payment received - GHâ‚µ800', '30 min ago'], ['red', '3 students absent in Creche', '1 hr ago'], ['blue', 'Notice published: Sports Day', '2 hrs ago'], ['green', 'Timetable updated for JHS 1', '3 hrs ago'], ['purple', 'New teacher profile created', '4 hrs ago']].map(([c, t, time]) => `
+  const activityRows = (ADMIN_DASHBOARD_STATE.recentActivity.length
+    ? ADMIN_DASHBOARD_STATE.recentActivity
+    : [{ color: 'blue', message: 'No recent database activity yet', activity_time: '' }]
+  ).map(({ color: c, message: t, activity_time: time }) => `
         <div class="act-item">
           <div class="act-dot" style="background:var(--${c === 'blue' ? 'blue-main' : c === 'green' ? 'success' : c === 'red' ? 'danger' : c === 'purple' ? 'purple' : 'gold'})"></div>
-          <div class="act-content"><div class="act-text">${t}</div><div class="act-time">${time}</div></div>
+          <div class="act-content"><div class="act-text">${escapeHtml(t || '')}</div><div class="act-time">${formatDashboardActivityTime(time)}</div></div>
         </div>`).join('');
   const ringCircumference = Math.PI * 100;
 
-  return hdr('Admin Dashboard', 'Welcome back, Administrator Â· ' + getCurrentDateString()) +
+  return hdr('Admin Dashboard', 'Welcome back, Administrator · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/admin/index.html', {
       statsCards,
       enrollmentBars,
@@ -139,10 +166,11 @@ async function fetchAdminDashboardData() {
         collected: dashboardRes.data?.total_fees_collected || 0,
         outstanding: dashboardRes.data?.total_fees_outstanding || 0,
         paidCount: dashboardRes.data?.fees_paid_count || 0,
-        partialCount: 0,
+        partialCount: dashboardRes.data?.fees_partial_count || 0,
         pendingCount: dashboardRes.data?.fees_pending_count || 0,
-        totalCount: Math.max(1, (dashboardRes.data?.fees_paid_count || 0) + (dashboardRes.data?.fees_pending_count || 0))
+        totalCount: Math.max(1, (dashboardRes.data?.fees_paid_count || 0) + (dashboardRes.data?.fees_partial_count || 0) + (dashboardRes.data?.fees_pending_count || 0))
       };
+      ADMIN_DASHBOARD_STATE.recentActivity = dashboardRes.data?.recent_activity || [];
     }
 
     if (analyticsRes?.success) {
@@ -217,16 +245,16 @@ function teacherDash() {
           <span style="font-size:13px;font-weight:600">${escapeHtml(a.title)}</span>
           <span class="badge b-info">${escapeHtml(a.dueDate || 'TBD')}</span>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} Â· ${submitted}/${total} submitted</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} · ${submitted}/${total} submitted</div>
         <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(submitted / total * 100)}%"></div></div>
       </div>`}).join('') : '<div style="padding:20px;color:var(--gray-400);text-align:center">No assignments for your assigned classes yet.</div>';
   const messageRows = getTeacherMessages().map(m => `
         <div class="chat-msg ${m.fromTeacher ? 'me' : ''}">
           <div class="av av-sm av-${m.fromTeacher ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
-          <div><div class="chat-bubble ${m.fromTeacher ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromTeacher ? 'me' : ''}">${m.fromTeacher ? 'You' : escapeHtml(m.from)} Â· ${m.time}</div></div>
+          <div><div class="chat-bubble ${m.fromTeacher ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromTeacher ? 'me' : ''}">${m.fromTeacher ? 'You' : escapeHtml(m.from)} · ${m.time}</div></div>
         </div>`).join('');
 
-  return hdr('Teacher Dashboard', 'Welcome, ' + teacher.name + ' Â· ' + teacher.department + ' Â· ' + (myClassNames.join(', ') || 'No assigned class') + ' Â· ' + getCurrentDateString()) +
+  return hdr('Teacher Dashboard', 'Welcome, ' + teacher.name + ' · ' + teacher.department + ' · ' + (myClassNames.join(', ') || 'No assigned class') + ' · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/teacher/index.html', {
       statsCards,
       scheduleRows: scheduleRowsHtml,
@@ -378,7 +406,7 @@ function studentDash() {
   const timetableRows = [['7:30', 'Mathematics', 'Rm 14', 'Mr. Amponsah'], ['8:20', 'English', 'Rm 02', 'Mrs. Asante'], ['10:00', 'Science', 'Lab 1', 'Mr. Oduro'], ['11:00', 'ICT', 'Lab 2', 'Ms. Frimpong'], ['13:30', 'History', 'Rm 08', 'Mr. Boateng']].map(([t, s, r, tc]) => `
       <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer" onclick="viewScheduleDetail('${t}', '${s}', '${studentClass}')">
         <div style="font-size:11px;color:var(--blue-main);font-weight:700;min-width:42px">${t}</div>
-        <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} Â· ${tc}</div></div>
+        <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} · ${tc}</div></div>
       </div>`).join('');
   const noticeRows = [['<i class="fas fa-file-alt"></i>', 'Exam Schedule Released', 'Check portal for timetable'], ['<i class="fas fa-running"></i>', 'Sports Day - Mar 24', 'All students attend'], ['<i class="fas fa-book"></i>', 'Library Closure', 'March 20 only']].map(([i, t, d]) => `
       <div class="notice-item" style="padding:10px 0">
@@ -386,7 +414,7 @@ function studentDash() {
         <div class="notice-content"><h4>${t}</h4><p>${d}</p></div>
       </div>`).join('');
 
-  return hdr('Student Dashboard', 'Welcome, ' + studentName + ' Â· ' + studentClass + ' Â· ID No: ' + studentId + ' Â· ' + getCurrentDateString()) +
+  return hdr('Student Dashboard', 'Welcome, ' + studentName + ' · ' + studentClass + ' · ID No: ' + studentId + ' · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/student/index.html', {
       avatarColor: student.avatar_color || 'blue',
       studentInitials,
@@ -412,19 +440,19 @@ const TEACHER_MESSAGES_KEY = 'gr_teacher_messages';
 const ATTENDANCE_BATCHES_KEY = 'gr_attendance_batches';
 
 function getAssignments() {
-  const raw = localStorage.getItem(ASSIGNMENTS_KEY);
+  const raw = appMemoryStorage.getItem(ASSIGNMENTS_KEY);
   return raw ? JSON.parse(raw) : ASSIGNMENTS_DATA;
 }
 function saveAssignments(obj) {
-  localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(obj));
+  appMemoryStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(obj));
 }
 
 function getTeacherMessages() {
-  const raw = localStorage.getItem(TEACHER_MESSAGES_KEY);
+  const raw = appMemoryStorage.getItem(TEACHER_MESSAGES_KEY);
   return raw ? JSON.parse(raw) : [];
 }
 function saveTeacherMessages(arr) {
-  localStorage.setItem(TEACHER_MESSAGES_KEY, JSON.stringify(arr));
+  appMemoryStorage.setItem(TEACHER_MESSAGES_KEY, JSON.stringify(arr));
 }
 
 function sendTeacherChatMessage() {
@@ -445,7 +473,7 @@ function openGradeEntryModal(studentName) {
   const subjects = SUBJECTS_BY_CLASS[(STUDENTS_DATA[studentName]||{}).class] || Object.keys(STUDENTS_DATA[studentName]?.scores||{});
   const subjOptions = (subjects || []).map(s => `<option value="${s}">${s}</option>`).join('');
   const html = `<div style="max-width:520px">
-    <h3>Quick Grade Entry â€” ${studentName}</h3>
+    <h3>Quick Grade Entry — ${studentName}</h3>
     <div style="margin-top:12px">
       <label>Subject</label>
       <select id="grade-subject" style="width:100%;padding:8px;margin:6px 0">${subjOptions}</select>
@@ -466,11 +494,11 @@ function saveGradeEntry(studentName) {
   const subj = document.getElementById('grade-subject').value;
   const cls = parseFloat(document.getElementById('grade-class').value) || 0;
   const exam = parseFloat(document.getElementById('grade-exam').value) || 0;
-  const gbRaw = localStorage.getItem(GRADEBOOK_KEY);
+  const gbRaw = appMemoryStorage.getItem(GRADEBOOK_KEY);
   const gb = gbRaw ? JSON.parse(gbRaw) : {};
   gb[studentName] = gb[studentName] || {};
   gb[studentName][subj] = { classScore: cls, examScore: exam, updated: new Date().toISOString() };
-  localStorage.setItem(GRADEBOOK_KEY, JSON.stringify(gb));
+  appMemoryStorage.setItem(GRADEBOOK_KEY, JSON.stringify(gb));
   closeModal();
   showToast('Grade saved', 'success');
   setTimeout(() => renderMain(), 120);
@@ -500,7 +528,7 @@ function parentDash() {
     <div class="av av-lg av-${s.color}">${(s.name||' ')[0]}</div>
     <div style="flex:1">
       <div style="font-size:15px;font-weight:700;color:var(--blue-dark)">${escapeHtml(s.name)}</div>
-      <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(s.class)} Â· ${s.studentId}</div>
+      <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(s.class)} · ${s.studentId}</div>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
         <span class="badge b-success">${s.attendance}% Attendance</span>
         <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">Fees ${s.feeStatus}</span>
@@ -512,7 +540,7 @@ function parentDash() {
   const messages = getParentMessages();
   const messageHtml = messages.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:20px"><i class="fas fa-inbox" style="font-size:32px;margin-bottom:8px;display:block"></i> No messages yet</div>' : messages.map(m=>`<div class="chat-msg ${m.fromParent ? 'me' : ''}">
     <div class="av av-sm av-${m.fromParent ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
-    <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} Â· ${m.time}</div></div>
+    <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} · ${m.time}</div></div>
   </div>`).join('');
   const assignments = getParentAssignments();
   const pendingParentAssignments = assignments.filter(a=>!a.completed);
@@ -526,16 +554,16 @@ function parentDash() {
   const feeSummary = getParentFeeSummary();
   const statsCards = [
     statCard('<i class="fas fa-child"></i>', students.length, 'My Children', 'All active', 'neu', 'si-blue'),
-    statCard('<i class="fas fa-check-circle"></i>', students.length > 0 ? students[0].attendance + '%' : 'â€”', 'Avg Attendance', 'Excellent', 'up', 'si-green'),
+    statCard('<i class="fas fa-check-circle"></i>', students.length > 0 ? students[0].attendance + '%' : '—', 'Avg Attendance', 'Excellent', 'up', 'si-green'),
     statCard('<i class="fas fa-file"></i>', 'A', 'Last Report Grade', 'Term 1, 2025', 'up', 'si-gold'),
     statCard('<i class="fas fa-money-bill"></i>', feeSummary.pending > 0 ? feeSummary.pending + ' Pending' : 'All Paid', 'Fees Status', feeSummary.pending > 0 ? 'Action needed' : 'All clear', feeSummary.pending > 0 ? 'dn' : 'up', feeSummary.pending > 0 ? 'si-red' : 'si-green')
   ].join('');
   const feeCards = students.map(s=>`<div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:12px;font-weight:600">${escapeHtml(s.name)} Â· ${escapeHtml(s.class)}</div>
+          <div style="font-size:12px;font-weight:600">${escapeHtml(s.name)} · ${escapeHtml(s.class)}</div>
           <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">${s.feeStatus}</span>
         </div>
-        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GHâ‚µ ${Number(s.feeAmount||0).toLocaleString()}</div>
+        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GH₵ ${Number(s.feeAmount||0).toLocaleString()}</div>
         <button class="btn btn-info btn-xs" style="margin-top:8px" onclick="viewPaymentHistory('${s.studentId}')"><i class="fas fa-history"></i> Payment History</button>
       </div>`).join('');
   const eventRows = [['Mar 20', 'PTA Meeting', '3:00 PM School Hall'], ['Mar 24', 'Sports Day', 'All day event'], ['Apr 01', 'Term Exams Begin', '8:00 AM daily']].map(([d, e, t]) => `
@@ -547,7 +575,7 @@ function parentDash() {
         <div><div style="font-size:12.5px;font-weight:600">${e}</div><div style="font-size:11px;color:var(--gray-400)">${t}</div></div>
       </div>`).join('');
 
-  return hdr('Parent Dashboard', 'Welcome, ' + (parentUser?.name || 'Parent') + ' Â· Parent of ' + students.length + ' student' + (students.length === 1 ? '' : 's') + ' Â· ' + getCurrentDateString()) +
+  return hdr('Parent Dashboard', 'Welcome, ' + (parentUser?.name || 'Parent') + ' · Parent of ' + students.length + ' student' + (students.length === 1 ? '' : 's') + ' · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/parent/index.html', {
       statsCards,
       childrenStats,
@@ -574,15 +602,15 @@ function accountDash() {
     ['Net Balance', finance.net, Math.max(0, Math.round(finance.net / target * 100))]
   ];
   const statsCards = [
-    statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(finance.collected).toLocaleString(), 'Total Collected', finance.payments.length + ' records', 'up', 'si-blue', true, 'navTo("payments")'),
-    statCard('<i class="fas fa-hourglass-half"></i>', 'GHâ‚µ' + Number(finance.outstanding).toLocaleString(), 'Outstanding Fees', finance.pendingCount + ' pending', 'dn', 'si-red', true, 'navTo("debtors")'),
-    statCard('<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>', 'GHâ‚µ' + Number(finance.expenses).toLocaleString(), 'Total Expenses', 'Auto budget view', 'neu', 'si-gold', true, 'navTo("expenses")'),
-    statCard('<i class="fas fa-chart-bar"></i>', 'GHâ‚µ' + Number(finance.net).toLocaleString(), 'Net Balance', finance.net >= 0 ? 'Surplus' : 'Deficit', finance.net >= 0 ? 'up' : 'dn', finance.net >= 0 ? 'si-green' : 'si-red', true, 'navTo("reports")')
+    statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(finance.collected).toLocaleString(), 'Total Collected', finance.payments.length + ' records', 'up', 'si-blue', true, 'navTo("payments")'),
+    statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵' + Number(finance.outstanding).toLocaleString(), 'Outstanding Fees', finance.pendingCount + ' pending', 'dn', 'si-red', true, 'navTo("debtors")'),
+    statCard('<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>', 'GH₵' + Number(finance.expenses).toLocaleString(), 'Total Expenses', 'Auto budget view', 'neu', 'si-gold', true, 'navTo("expenses")'),
+    statCard('<i class="fas fa-chart-bar"></i>', 'GH₵' + Number(finance.net).toLocaleString(), 'Net Balance', finance.net >= 0 ? 'Surplus' : 'Deficit', finance.net >= 0 ? 'up' : 'dn', finance.net >= 0 ? 'si-green' : 'si-red', true, 'navTo("reports")')
   ].join('');
   const revenueRows = revenueItems.map(([c, amount, p]) => `
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span>${c}</span><span style="font-weight:600">GHâ‚µ${Number(amount).toLocaleString()}</span>
+          <span>${c}</span><span style="font-weight:600">GH₵${Number(amount).toLocaleString()}</span>
         </div>
         <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${Math.min(100, p)}%"></div></div>
       </div>`).join('');
@@ -592,7 +620,7 @@ function accountDash() {
         <span class="badge b-warning">Due ${d}</span>
       </div>`).join('');
 
-  return hdr('Accountant Dashboard', `Financial Overview for ${accountantName} Â· Term 1, 2025 Â· ` + getCurrentDateString()) +
+  return hdr('Accountant Dashboard', `Financial Overview for ${accountantName} · Term 1, 2025 · ` + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/accountant/index.html', {
       statsCards,
       collectedAmount: Number(finance.collected).toLocaleString(),
@@ -620,7 +648,7 @@ function alumniDash() {
     statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Network growing', 'up', 'si-blue'),
     statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Upcoming Events', 'This quarter', 'neu', 'si-gold'),
     statCard('<i class="fas fa-briefcase"></i>', '28', 'Job Listings', 'Posted by alumni', 'up', 'si-green'),
-    statCard('<i class="fas fa-hand-holding-heart"></i>', 'GHâ‚µ' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
+    statCard('<i class="fas fa-hand-holding-heart"></i>', 'GH₵' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
   ].join('');
   const announcementRows = getAlumniAnnouncements().slice(0,2).map(a => `
       <div style="display:flex;gap:12px;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px;border-left:4px solid var(--${a.color||'blue'})">
@@ -637,8 +665,8 @@ function alumniDash() {
           <span class="badge b-green">${c.percentage}%</span>
         </div>
         <div style="font-size:11px;color:var(--gray-500);display:flex;justify-content:space-between;margin-bottom:6px">
-          <span>Raised: GHâ‚µ${Number(c.raised||0).toLocaleString()}</span>
-          <span>Goal: GHâ‚µ${Number(c.goal||0).toLocaleString()}</span>
+          <span>Raised: GH₵${Number(c.raised||0).toLocaleString()}</span>
+          <span>Goal: GH₵${Number(c.goal||0).toLocaleString()}</span>
         </div>
         <div style="height:6px;background:var(--gray-200);border-radius:4px;overflow:hidden">
           <div style="height:100%;width:${c.percentage}%;background:linear-gradient(90deg, #10b981, #34d399)"></div>
@@ -664,7 +692,7 @@ function alumniDash() {
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between">
             <span style="font-size:12px;font-weight:600;color:var(--gray-800)">${escapeHtml(d.name)}</span>
-            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">GHâ‚µ${Number(d.amount||0).toLocaleString()}</span>
+            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">GH₵${Number(d.amount||0).toLocaleString()}</span>
           </div>
           <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(d.campaign)}</div>
         </div>

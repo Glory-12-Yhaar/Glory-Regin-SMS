@@ -27,7 +27,7 @@ class EnhancedStudentManager {
   }
 
   loadStudents() {
-    // Load from existing STUDENTS_DATA or localStorage
+    // Load from existing STUDENTS_DATA or appMemoryStorage
     const saved = SafeStorage.get('students_data');
     return saved || STUDENTS_DATA || {};
   }

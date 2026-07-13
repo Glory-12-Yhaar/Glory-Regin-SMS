@@ -50,6 +50,28 @@ if (in_array($role, ['Admin', 'Teacher'])) {
     $data['avg_attendance'] = round(
         (float)$db->query("SELECT AVG(attendance) FROM students WHERE status = 'Active'")->fetchColumn(), 1
     );
+
+    $chartYear = (int)$db->query("SELECT COALESCE(MAX(YEAR(created_at)), YEAR(CURDATE())) FROM students")->fetchColumn();
+    $monthly = [];
+    $enrollStmt = $db->prepare(
+        "SELECT COUNT(*) FROM students
+         WHERE status = 'Active' AND created_at <= LAST_DAY(STR_TO_DATE(CONCAT(?, '-', ?, '-01'), '%Y-%m-%d'))"
+    );
+    $attendanceStmt = $db->prepare(
+        "SELECT AVG(attendance) FROM students
+         WHERE status = 'Active' AND created_at <= LAST_DAY(STR_TO_DATE(CONCAT(?, '-', ?, '-01'), '%Y-%m-%d'))"
+    );
+    for ($month = 1; $month <= 12; $month++) {
+        $monthNo = str_pad((string)$month, 2, '0', STR_PAD_LEFT);
+        $enrollStmt->execute([$chartYear, $monthNo]);
+        $attendanceStmt->execute([$chartYear, $monthNo]);
+        $monthly[] = [
+            'month' => date('M', mktime(0, 0, 0, $month, 1)),
+            'enrollment' => (int)$enrollStmt->fetchColumn(),
+            'attendance' => round((float)($attendanceStmt->fetchColumn() ?: 0), 1),
+        ];
+    }
+    $data['monthly_enrollment_attendance'] = $monthly;
 }
 
 if (in_array($role, ['Admin', 'Accountant'])) {
@@ -81,6 +103,49 @@ if (in_array($role, ['Admin', 'Accountant'])) {
     $ptStmt = $db->prepare("SELECT COUNT(*) FROM fees WHERE status = 'Pending' AND term = ? AND academic_year = ?");
     $ptStmt->execute([$term, $year]);
     $data['fees_pending_count'] = (int)$ptStmt->fetchColumn();
+
+    $ppStmt = $db->prepare("SELECT COUNT(*) FROM fees WHERE status = 'Partial' AND term = ? AND academic_year = ?");
+    $ppStmt->execute([$term, $year]);
+    $data['fees_partial_count'] = (int)$ppStmt->fetchColumn();
+}
+
+if ($role === 'Admin') {
+    $activity = [];
+
+    $stmt = $db->query(
+        "SELECT CONCAT('New student enrolled - ', name) AS message, created_at AS activity_time, 'blue' AS color
+         FROM students
+         ORDER BY created_at DESC
+         LIMIT 3"
+    );
+    $activity = array_merge($activity, $stmt->fetchAll());
+
+    $stmt = $db->query(
+        "SELECT CONCAT('Admission ', LOWER(status), ' - ', applicant_name) AS message, applied_date AS activity_time, 'gold' AS color
+         FROM admissions
+         ORDER BY applied_date DESC, id DESC
+         LIMIT 3"
+    );
+    $activity = array_merge($activity, $stmt->fetchAll());
+
+    $stmt = $db->query(
+        "SELECT CONCAT('Fee payment received - GHS ', FORMAT(amount, 2)) AS message, payment_date AS activity_time, 'green' AS color
+         FROM payments
+         ORDER BY payment_date DESC, id DESC
+         LIMIT 3"
+    );
+    $activity = array_merge($activity, $stmt->fetchAll());
+
+    $stmt = $db->query(
+        "SELECT CONCAT('Notice published: ', title) AS message, notice_date AS activity_time, 'purple' AS color
+         FROM notices
+         ORDER BY notice_date DESC, id DESC
+         LIMIT 3"
+    );
+    $activity = array_merge($activity, $stmt->fetchAll());
+
+    usort($activity, fn($a, $b) => strcmp((string)($b['activity_time'] ?? ''), (string)($a['activity_time'] ?? '')));
+    $data['recent_activity'] = array_slice($activity, 0, 7);
 }
 
 if ($role === 'Student') {

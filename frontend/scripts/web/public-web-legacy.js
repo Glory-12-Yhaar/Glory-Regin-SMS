@@ -1,4 +1,4 @@
-﻿
+
 // VISITOR PAGES
 function visitorAbout() {
   return `<div class="visitor-hero" style="margin-bottom:26px">
@@ -181,7 +181,7 @@ const MESSAGES_KEY = 'gr_all_messages';
 let allMessages = [];
 
 function saveAllMessages() {
-  try { localStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages)); } catch(e){}
+  try { appMemoryStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages)); } catch(e){}
 }
 
 function addMessage({ sender, senderRole, recipient, recipientRole, subject='', text='' }){
@@ -207,7 +207,7 @@ function addMessage({ sender, senderRole, recipient, recipientRole, subject='', 
 
 // Load messages from storage or fall back to sample data
 try{
-  const raw = localStorage.getItem(MESSAGES_KEY);
+  const raw = appMemoryStorage.getItem(MESSAGES_KEY);
   if(raw) allMessages = JSON.parse(raw);
 }catch(e){ allMessages = []; }
 if(!allMessages || allMessages.length === 0){
@@ -265,7 +265,7 @@ function newsModule() {
             <h4 style="font-size:13px;font-weight:700;color:var(--blue-dark)">${article.title}</h4>
             <span class="badge b-${article.status === 'Published' ? 'success' : 'warning'}">${article.status}</span>
           </div>
-          <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px">${article.date} Â· ${article.category}</div>
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px">${article.date} · ${article.category}</div>
           <p style="font-size:12px;color:var(--gray-600);line-height:1.6;margin-bottom:10px">${article.desc}</p>
           <div style="display:flex;gap:6px">
             <button class="btn btn-secondary btn-xs" onclick="editArticleModal(${article.id})"><i class="fas fa-edit"></i> Edit</button>
@@ -549,7 +549,7 @@ function visitorContact() {
       ${[['<i class="fas fa-map-pin"></i>', 'Address', 'P.O. Box 42, Jirapa\nUpper West Region, Ghana'],
     ['<i class="fas fa-phone"></i>', 'Phone', '0243611971 /\n0205096091'],
     ['<i class="fas fa-envelope"></i>', 'Email', SCHOOL_EMAIL],
-    ['<i class="fas fa-clock"></i>', 'Office Hours', 'Mondayâ€“Friday: 7:00 AM â€“ 5:00 PM']].map(([i, l, v]) => `
+    ['<i class="fas fa-clock"></i>', 'Office Hours', 'Monday–Friday: 7:00 AM – 5:00 PM']].map(([i, l, v]) => `
       <div class="card mb16" style="display:flex;gap:16px;align-items:flex-start">
         <div class="notice-icon" style="background:var(--blue-xpale)">${i}</div>
         <div>
@@ -686,7 +686,7 @@ function transportModule() {
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
             <div>
               <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${bus.student}</div>
-              <div style="font-size:12px;color:var(--gray-500)">Bus ${bus.bus} Â· Route: ${bus.route}</div>
+              <div style="font-size:12px;color:var(--gray-500)">Bus ${bus.bus} · Route: ${bus.route}</div>
             </div>
             <span class="badge b-success"><i class="fas fa-circle" style="color:#10b981;font-size:8px;margin-right:4px"></i>${bus.status}</span>
           </div>
@@ -1808,8 +1808,8 @@ function updateProfile() {
 // Update password
 function updatePassword() {
   const currentPass = document.querySelector('input[placeholder="Current password"]')?.value;
-  const newPass = document.querySelector('input[placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"]')?.value;
-  const confirmPass = document.querySelectorAll('input[placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"]')[1]?.value;
+  const newPass = document.querySelector('input[placeholder="••••••••"]')?.value;
+  const confirmPass = document.querySelectorAll('input[placeholder="••••••••"]')[1]?.value;
 
   if (!currentPass || !newPass || !confirmPass) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please fill all password fields', 'warning');
@@ -1865,7 +1865,7 @@ function editRecord(id, type) {
 }
 
 // Delete record with confirmation
-function deleteRecord(id, type) {
+async function deleteRecord(id, type) {
   if (currentRole !== 'Admin') {
     showToast('Only administrators can delete records', 'error', 3000);
     return;
@@ -1888,9 +1888,18 @@ function deleteRecord(id, type) {
       saveParentRecords();
       showToast('<i class="fas fa-check-circle"></i> Parent deleted!', 'success', 3000);
     } else if (type === 'Admission') {
-      const index = admissionsData.findIndex(a => a.adm_id === id);
-      if (index !== -1) admissionsData.splice(index, 1);
-      saveAdmissionRecords();
+      const adm = admissionsData.find(a => a.adm_id === id || a.id == id);
+      const dbId = adm?.id || (/^ADM\d+$/.test(String(id)) ? Number(String(id).replace('ADM', '')) : Number(id));
+      if (typeof API !== 'undefined' && API.admissions && dbId) {
+        const res = await API.admissions.updateStatus(dbId, 'Rejected', 'Deleted by administrator');
+        if (!res || !res.success) {
+          showToast(res?.message || 'Failed to delete admission record', 'error', 3000);
+          return;
+        }
+        if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+      } else if (adm) {
+        adm.status = 'Rejected';
+      }
       showToast('<i class="fas fa-check-circle"></i> Admission record deleted!', 'success', 3000);
     } else {
       showToast('<i class="fas fa-check-circle"></i> Record deleted!', 'success', 3000);
@@ -2038,7 +2047,7 @@ function processAction(action) {
 
 // Handle pagination
 function goToPage(page) {
-  if (page === 'â€¦') return;
+  if (page === '…') return;
   showToast('<i class="fas fa-file"></i> Loading page ' + page, 'info');
 }
 

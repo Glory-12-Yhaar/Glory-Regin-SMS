@@ -1,4 +1,4 @@
-﻿// LEARNING MATERIALS MODULE
+// LEARNING MATERIALS MODULE
 function learningMaterialsModule() {
   return hdr('Learning Materials', 'Upload and manage educational resources for students', 'Materials') + `
   <div class="g21">
@@ -193,9 +193,9 @@ function sbaModule() {
 // Learning Materials storage and handlers
 const MATERIALS_KEY = 'gr_materials';
 function getMaterials(){
-  try{ return JSON.parse(localStorage.getItem(MATERIALS_KEY) || '[]'); }catch(e){return []}
+  try{ return JSON.parse(appMemoryStorage.getItem(MATERIALS_KEY) || '[]'); }catch(e){return []}
 }
-function saveMaterials(list){ localStorage.setItem(MATERIALS_KEY, JSON.stringify(list)); }
+function saveMaterials(list){ appMemoryStorage.setItem(MATERIALS_KEY, JSON.stringify(list)); }
 
 function renderMaterialsTable(){
   const tbody = document.getElementById('materials-tbody');
@@ -320,7 +320,7 @@ window.initMaterialsUI = initMaterialsUI;
 // PAYMENTS (Accountant) helpers
 const PAYMENTS_KEY = 'gr_payments';
 function getPayments(){
-  try{ const raw = localStorage.getItem(PAYMENTS_KEY); if(raw) return JSON.parse(raw);
+  try{ const raw = appMemoryStorage.getItem(PAYMENTS_KEY); if(raw) return JSON.parse(raw);
     const sample = [
       {student:'Ama Serwaa', amount:2400, date:'2025-03-15', receipt:'#R-0482', method:'Cash', status:'Paid'},
       {student:'Kwame Asante', amount:1200, date:'2025-03-15', receipt:'#R-0481', method:'Cash', status:'Partial'},
@@ -328,11 +328,11 @@ function getPayments(){
       {student:'Kofi Boateng', amount:0, date:'', receipt:'', method:'', status:'Pending'},
       {student:'Akosua Darko', amount:2400, date:'2025-03-13', receipt:'#R-0479', method:'Cash', status:'Paid'}
     ];
-    localStorage.setItem(PAYMENTS_KEY, JSON.stringify(sample));
+    appMemoryStorage.setItem(PAYMENTS_KEY, JSON.stringify(sample));
     return sample;
   }catch(e){return []}
 }
-function savePayments(list){ localStorage.setItem(PAYMENTS_KEY, JSON.stringify(list)); }
+function savePayments(list){ appMemoryStorage.setItem(PAYMENTS_KEY, JSON.stringify(list)); }
 
 function performDeletePayment(idx){
   const list = getPayments();
@@ -391,15 +391,15 @@ function renderRecentPaymentsTable(){
   if(pageData.length===0){ tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-600);padding:18px">No payment records found.</td></tr>'; }
   else { tbody.innerHTML = pageData.map((p, i)=>`<tr>
     <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-gold">${(p.student||' ')[0]||''}</div>${escapeHtml(p.student||'')}</div></td>
-    <td style="font-weight:700;color:var(--blue-dark)">${p.amount?('GHâ‚µ' + Number(p.amount).toLocaleString()):'â€”'}</td>
-    <td>${p.date||'â€”'}</td>
-    <td style="color:var(--blue-main)">${p.receipt||'â€”'}</td>
-    <td>${p.method||'â€”'}</td>
-    <td><span class="badge ${p.status==='Paid' ? 'b-success' : p.status==='Pending' ? 'b-danger' : 'b-warning'}">${p.status||'â€”'}</span></td>
+    <td style="font-weight:700;color:var(--blue-dark)">${p.amount?('GH₵' + Number(p.amount).toLocaleString()):'—'}</td>
+    <td>${p.date||'—'}</td>
+    <td style="color:var(--blue-main)">${p.receipt||'—'}</td>
+    <td>${p.method||'—'}</td>
+    <td><span class="badge ${p.status==='Paid' ? 'b-success' : p.status==='Pending' ? 'b-danger' : 'b-warning'}">${p.status||'—'}</span></td>
     <td><div style="display:flex;gap:4px"><button class="btn btn-primary btn-xs" onclick="editPayment(${startIdx + i})"><i class="fas fa-edit"></i></button><button class="btn btn-info btn-xs" onclick="generatePaymentReceipt(${startIdx + i})"><i class="fas fa-receipt"></i></button><button class="btn btn-danger btn-xs" onclick="deletePayment(${startIdx + i})"><i class="fas fa-trash"></i></button></div></td>
   </tr>`).join(''); }
   const infoEl = document.getElementById('payments-info');
-  if(infoEl) infoEl.textContent = `Showing ${pageData.length > 0 ? startIdx + 1 : 0}â€“${Math.min(endIdx, filtered.length)} of ${filtered.length} payments`;
+  if(infoEl) infoEl.textContent = `Showing ${pageData.length > 0 ? startIdx + 1 : 0}–${Math.min(endIdx, filtered.length)} of ${filtered.length} payments`;
   const paginationEl = document.getElementById('payments-pagination');
   if(paginationEl){
     let html = '';
@@ -423,7 +423,7 @@ function editPayment(idx){
       <h3 style="margin-top:0">Edit Payment</h3>
       <div class="f-field"><label>Student</label><input id="edit-pay-student" value="${escapeHtml(p.student||'')}" required></div>
       <div class="f-row">
-        <div class="f-field"><label>Amount (GHâ‚µ)</label><input id="edit-pay-amount" type="number" value="${p.amount||0}" required></div>
+        <div class="f-field"><label>Amount (GH₵)</label><input id="edit-pay-amount" type="number" value="${p.amount||0}" required></div>
         <div class="f-field"><label>Date</label><input id="edit-pay-date" type="date" value="${p.date||''}" required></div>
       </div>
       <div class="f-row">
@@ -490,7 +490,7 @@ function generatePaymentReceipt(idx){
       <div style="background:var(--blue-xpale);border-radius:8px;padding:16px;margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:12px;color:var(--gray-600)">Amount Paid:</span>
-          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GHâ‚µ ${Number(p.amount||0).toLocaleString()}</span>
+          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH₵ ${Number(p.amount||0).toLocaleString()}</span>
         </div>
         <div style="display:flex;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:12px;color:var(--gray-600)">Payment Method:</span>
@@ -520,7 +520,7 @@ function generatePaymentReceipt(idx){
 function printPaymentReceipt(){
   const p = window.currentReceiptData;
   if(!p) return;
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004;}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Reign Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GHâ‚µ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004;}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Reign Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH₵ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
   const w = window.open('', '', 'width=800,height=600');
   w.document.write(html);
   w.document.close();
@@ -530,7 +530,7 @@ function printPaymentReceipt(){
 function downloadPaymentReceiptPDF(filename){
   const p = window.currentReceiptData;
   if(!p) return;
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Reign Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GHâ‚µ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Reign Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH₵ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
   const a = document.createElement('a');
   a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
   a.download = (filename || 'receipt') + '_' + new Date().toISOString().slice(0,10) + '.pdf.html';
@@ -593,36 +593,36 @@ function getParentChildrenFromProfile() {
 function getParentChildren(){
   try{
     const key = userScopedKey(PARENT_CHILDREN_KEY);
-    const raw = localStorage.getItem(key);
+    const raw = appMemoryStorage.getItem(key);
     if(raw) return JSON.parse(raw);
     const profileChildren = getParentChildrenFromProfile();
     const sample = profileChildren.length ? profileChildren : [
       {name:'Ama Serwaa', studentId:'2024-0042', class:'JHS 1', attendance:96, feeStatus:'Paid', feeAmount:2400, color:'blue'},
       {name:'Kweku Serwaa', studentId:'2024-0143', class:'Basic 3', attendance:91, feeStatus:'Paid', feeAmount:2200, color:'purple'}
     ];
-    localStorage.setItem(key, JSON.stringify(sample));
+    appMemoryStorage.setItem(key, JSON.stringify(sample));
     return sample;
   }catch(e){return []}
 }
 
-function saveParentChildren(list){ localStorage.setItem(userScopedKey(PARENT_CHILDREN_KEY), JSON.stringify(list)); }
+function saveParentChildren(list){ appMemoryStorage.setItem(userScopedKey(PARENT_CHILDREN_KEY), JSON.stringify(list)); }
 
 function getParentMessages(){
   try{
     const key = userScopedKey(PARENT_MESSAGES_KEY);
-    const raw = localStorage.getItem(key);
+    const raw = appMemoryStorage.getItem(key);
     if(raw) return JSON.parse(raw);
     const children = getParentChildren();
     const sample = [
       {from:'Mr. Amponsah', text:(children[0]?.name || 'Your child') + ' has shown great improvement in Mathematics this term. Excellent student!', time:'9:00 AM', fromParent:false},
       {from:'Parent', text:'Thank you for the update. We will keep encouraging her!', time:'9:15 AM', fromParent:true}
     ];
-    localStorage.setItem(key, JSON.stringify(sample));
+    appMemoryStorage.setItem(key, JSON.stringify(sample));
     return sample;
   }catch(e){return []}
 }
 
-function saveParentMessages(list){ localStorage.setItem(userScopedKey(PARENT_MESSAGES_KEY), JSON.stringify(list)); }
+function saveParentMessages(list){ appMemoryStorage.setItem(userScopedKey(PARENT_MESSAGES_KEY), JSON.stringify(list)); }
 
 function sendParentMessage(){
   const input = document.getElementById('parent-msg-input');
@@ -652,19 +652,19 @@ function sendTeacherChatButton() {
 function getParentAssignments(){
   try{
     const key = userScopedKey(PARENT_ASSIGNMENTS_KEY);
-    const raw = localStorage.getItem(key);
+    const raw = appMemoryStorage.getItem(key);
     if(raw) return JSON.parse(raw);
     const children = getParentChildren();
     const sample = children.flatMap(child => [
       {title:'Math HW', student:child.name, dueDate:'Today', completed:false},
       {title:'English Essay', student:child.name, dueDate:'Mar 20', completed:false}
     ]);
-    localStorage.setItem(key, JSON.stringify(sample));
+    appMemoryStorage.setItem(key, JSON.stringify(sample));
     return sample;
   }catch(e){return []}
 }
 
-function saveParentAssignments(list){ localStorage.setItem(userScopedKey(PARENT_ASSIGNMENTS_KEY), JSON.stringify(list)); }
+function saveParentAssignments(list){ appMemoryStorage.setItem(userScopedKey(PARENT_ASSIGNMENTS_KEY), JSON.stringify(list)); }
 
 function markAssignmentDone(idx, title){
   const list = getParentAssignments();
@@ -742,7 +742,7 @@ function viewPaymentHistory(studentId){
       <div style="background:var(--blue-xpale);padding:16px;border-radius:8px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:12px;color:var(--gray-600)">Total Due:</span>
-          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GHâ‚µ ${Number(student.feeAmount||0).toLocaleString()}</span>
+          <span style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH₵ ${Number(student.feeAmount||0).toLocaleString()}</span>
         </div>
         <div style="display:flex;justify-content:space-between">
           <span style="font-size:12px;color:var(--gray-600)">Status:</span>
@@ -752,8 +752,8 @@ function viewPaymentHistory(studentId){
       <table class="tbl" style="font-size:12px">
         <thead><tr><th>Date</th><th>Amount</th><th>Receipt</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td>Mar 15, 2025</td><td>GHâ‚µ 1,200</td><td>#R-2425-001</td><td><span class="badge b-success">Paid</span></td></tr>
-          <tr><td>Mar 22, 2025</td><td>GHâ‚µ 1,200</td><td>#R-2425-002</td><td><span class="badge b-success">Paid</span></td></tr>
+          <tr><td>Mar 15, 2025</td><td>GH₵ 1,200</td><td>#R-2425-001</td><td><span class="badge b-success">Paid</span></td></tr>
+          <tr><td>Mar 22, 2025</td><td>GH₵ 1,200</td><td>#R-2425-002</td><td><span class="badge b-success">Paid</span></td></tr>
         </tbody>
       </table>
       <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="navTo('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
@@ -817,14 +817,14 @@ const ALUMNI_REGISTRATIONS_KEY = 'gr_alumni_registrations';
 
 function getAlumniList(){
   try{
-    const raw = localStorage.getItem(ALUMNI_LIST_KEY);
+    const raw = appMemoryStorage.getItem(ALUMNI_LIST_KEY);
     if(raw) return JSON.parse(raw);
     const sample = [
       {id:'A001', name:'Samuel Amponsah', gradYear:2015, profession:'Software Engineer', location:'Accra', bio:'Working at tech startup', avatar:'blue'},
       {id:'A002', name:'Grace Mensah', gradYear:2018, profession:'Banker', location:'Kumasi', bio:'Senior Associate at GCB', avatar:'gold'},
       {id:'A003', name:'David Boateng', gradYear:2020, profession:'Doctor', location:'Takoradi', bio:'Medical resident at Korle-Bu', avatar:'green'}
     ];
-    localStorage.setItem(ALUMNI_LIST_KEY, JSON.stringify(sample));
+    appMemoryStorage.setItem(ALUMNI_LIST_KEY, JSON.stringify(sample));
     return sample;
   }catch(e){return []}
 }
@@ -876,28 +876,28 @@ function getAlumniEvents(){
 
 function getAlumniDonations(){
   try{
-    const raw = localStorage.getItem(ALUMNI_DONATIONS_KEY);
+    const raw = appMemoryStorage.getItem(ALUMNI_DONATIONS_KEY);
     if(raw) return JSON.parse(raw);
     const sample = [
       {id:'D001', name:'Samuel Amponsah', amount:500, campaign:'Science Lab', date:'Mar 15, 2025', status:'Completed', method:'Bank Transfer'},
       {id:'D002', name:'Grace Mensah', amount:1000, campaign:'Scholarship Fund', date:'Mar 10, 2025', status:'Completed', method:'Mobile Money'},
       {id:'D003', name:'David Boateng', amount:250, campaign:'WiFi Upgrade', date:'Mar 8, 2025', status:'Completed', method:'Card'}
     ];
-    localStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(sample));
+    appMemoryStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(sample));
     return sample;
   }catch(e){return []}
 }
 
-function saveAlumniDonations(list){ localStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(list)); }
+function saveAlumniDonations(list){ appMemoryStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(list)); }
 
 function getAlumniEventRegistrations(){
   try{
-    const raw = localStorage.getItem(ALUMNI_REGISTRATIONS_KEY);
+    const raw = appMemoryStorage.getItem(ALUMNI_REGISTRATIONS_KEY);
     return raw ? JSON.parse(raw) : [];
   }catch(e){return []}
 }
 
-function saveAlumniEventRegistrations(list){ localStorage.setItem(ALUMNI_REGISTRATIONS_KEY, JSON.stringify(list)); }
+function saveAlumniEventRegistrations(list){ appMemoryStorage.setItem(ALUMNI_REGISTRATIONS_KEY, JSON.stringify(list)); }
 
 function openAlumniDirectory(){
   const alumni = getAlumniList();
@@ -912,7 +912,7 @@ function openAlumniDirectory(){
           <div class="av av-lg av-${a.avatar}">${(a.name||' ')[0]}</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
-            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} Â· Class of ${a.gradYear}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} · Class of ${a.gradYear}</div>
             <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
             <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
           </div>
@@ -938,7 +938,7 @@ function filterAlumniDirectory(){
     <div class="av av-lg av-${a.avatar}">${(a.name||' ')[0]}</div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
-      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} Â· Class of ${a.gradYear}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} · Class of ${a.gradYear}</div>
       <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
       <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
     </div>
@@ -968,7 +968,7 @@ function openAlumniJobs(){
           <div style="display:flex;justify-content:space-between;align-items:start">
             <div>
               <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(j.title)}</div>
-              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(j.company)} Â· ${escapeHtml(j.location)}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(j.company)} · ${escapeHtml(j.location)}</div>
               <div style="display:flex;gap:8px;margin-top:8px">
                 <span class="badge b-info">${j.type}</span>
                 <span style="font-size:11px;color:var(--gray-400)">${j.posted}</span>
@@ -1036,8 +1036,8 @@ function openDonationHub(){
           </div>
           <div style="font-size:12px;color:var(--gray-600);margin-bottom:10px">${escapeHtml(c.description)}</div>
           <div style="font-size:11px;color:var(--gray-500);display:flex;justify-content:space-between;margin-bottom:8px">
-            <span>Raised: GHâ‚µ${Number(c.raised||0).toLocaleString()}</span>
-            <span>Goal: GHâ‚µ${Number(c.goal||0).toLocaleString()}</span>
+            <span>Raised: GH₵${Number(c.raised||0).toLocaleString()}</span>
+            <span>Goal: GH₵${Number(c.goal||0).toLocaleString()}</span>
           </div>
           <div style="height:6px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:12px">
             <div style="height:100%;width:${c.percentage}%;background:linear-gradient(90deg, #10b981, #34d399)"></div>
@@ -1061,11 +1061,11 @@ function makeDonation(campaignId){
     <div class="card" style="max-width:680px">
       <div style="background:var(--blue-xpale);padding:14px;border-radius:8px;margin-bottom:16px">
         <div style="font-size:12px;color:var(--gray-600);margin-bottom:4px">Campaign Goal</div>
-        <div style="font-size:18px;font-weight:700;color:var(--blue-dark)">GHâ‚µ ${Number(campaign.goal||0).toLocaleString()}</div>
-        <div style="font-size:11px;color:var(--gray-600);margin-top:6px">Already raised: GHâ‚µ ${Number(campaign.raised||0).toLocaleString()} (${campaign.percentage}%)</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue-dark)">GH₵ ${Number(campaign.goal||0).toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:6px">Already raised: GH₵ ${Number(campaign.raised||0).toLocaleString()} (${campaign.percentage}%)</div>
       </div>
       <div class="f-field"><label>Your Name</label><input id="donor-name" placeholder="Full name" value="Alumni User"></div>
-      <div class="f-field"><label>Donation Amount (GHâ‚µ)</label><input id="donor-amount" type="number" placeholder="Enter amount" value="250" min="10"></div>
+      <div class="f-field"><label>Donation Amount (GH₵)</label><input id="donor-amount" type="number" placeholder="Enter amount" value="250" min="10"></div>
       <div class="f-field"><label>Payment Method</label><select id="donor-method" style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%">
         <option value="Card">Credit/Debit Card</option>
         <option value="Mobile Money">Mobile Money</option>
@@ -1087,7 +1087,7 @@ function processDonation(campaignId){
   const donations = getAlumniDonations();
   donations.push({id:'D' + Date.now(), name:name, amount:amount, campaign:getAlumniCampaigns().find(c=>c.id===campaignId)?.title||'', date:new Date().toLocaleDateString(), status:'Completed', method:document.getElementById('donor-method').value});
   saveAlumniDonations(donations);
-  showToast(`<i class="fas fa-heart"></i> Thank you for your donation of GHâ‚µ${Number(amount).toLocaleString()}!`, 'success');
+  showToast(`<i class="fas fa-heart"></i> Thank you for your donation of GH₵${Number(amount).toLocaleString()}!`, 'success');
   openDonationHub();
 }
 
@@ -1138,10 +1138,10 @@ function viewDonationHistory(){
         ${donations.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:40px"><i class="fas fa-heart-broken" style="font-size:48px;margin-bottom:12px;display:block"></i> No donations yet</div>' : donations.map(d => `<div style="padding:12px;border:1px solid var(--gray-200);border-radius:8px">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px">
             <span style="font-size:12px;font-weight:700;color:var(--gray-800)">${escapeHtml(d.name)}</span>
-            <span style="font-size:12px;font-weight:700;color:var(--green-dark)">GHâ‚µ ${Number(d.amount||0).toLocaleString()}</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green-dark)">GH₵ ${Number(d.amount||0).toLocaleString()}</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--gray-500)">
-            <span>${escapeHtml(d.campaign)} â€¢ ${d.date}</span>
+            <span>${escapeHtml(d.campaign)} • ${d.date}</span>
             <span class="badge b-success">${d.status}</span>
           </div>
         </div>`).join('')}
@@ -1182,7 +1182,7 @@ function childrenModule() {
         <div class="av av-xl av-${av}">${n[0]}</div>
         <div>
           <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${n}</div>
-          <div style="font-size:12px;color:var(--gray-400)">${c} Â· Roll: ${r}</div>
+          <div style="font-size:12px;color:var(--gray-400)">${c} · Roll: ${r}</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
@@ -1244,7 +1244,7 @@ function salaryModule() {
   const pendingCount = payrollRows.filter(row => row.status !== 'Paid').length;
   const statsCards = [
     statCard('<i class="fas fa-briefcase"></i>', String(payrollRows.length), 'Total Staff', 'For payroll', 'neu', 'si-blue'),
-    statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(monthlyPayroll).toLocaleString(), 'Monthly Payroll', 'Total outgoing', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(monthlyPayroll).toLocaleString(), 'Monthly Payroll', 'Total outgoing', 'neu', 'si-gold'),
     statCard('<i class="fas fa-check-circle"></i>', String(pendingCount), 'Pending', pendingCount ? 'Needs processing' : 'All current', pendingCount ? 'dn' : 'up', pendingCount ? 'si-red' : 'si-green'),
     statCard('<i class="fas fa-calendar-alt"></i>', 'Mar 28', 'Next Pay Date', 'In 11 days', 'neu', 'si-purple')
   ].join('');
@@ -1252,10 +1252,10 @@ function salaryModule() {
         <tr>
           <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${n[0]}</div>${n}</div></td>
           <td>${r}</td><td><span class="badge b-gray">${g}</span></td>
-          <td>GHâ‚µ${Number(b).toLocaleString()}</td>
-          <td style="color:var(--success);font-weight:600">+GHâ‚µ${Number(al).toLocaleString()}</td>
-          <td style="color:var(--danger);font-weight:600">-GHâ‚µ${Number(d).toLocaleString()}</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${Number(net).toLocaleString()}</td>
+          <td>GH₵${Number(b).toLocaleString()}</td>
+          <td style="color:var(--success);font-weight:600">+GH₵${Number(al).toLocaleString()}</td>
+          <td style="color:var(--danger);font-weight:600">-GH₵${Number(d).toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${Number(net).toLocaleString()}</td>
           <td><span class="badge ${s === 'Paid' ? 'b-success' : 'b-warning'}">${s}</span></td>
           <td><button class="btn btn-secondary btn-xs" onclick="openPayslipPage('${escapeAttr(n).replace(/'/g, "\\'")}', '${escapeAttr(r).replace(/'/g, "\\'")}', '${escapeAttr(g).replace(/'/g, "\\'")}', '${Number(net).toLocaleString()}')">Slip</button></td>
         </tr>`).join('');
@@ -1278,7 +1278,7 @@ function openPayrollProcessPage() {
       <p style="font-size:13px;color:var(--gray-600);line-height:1.7;margin-bottom:16px">This page marks all pending payroll rows as processed and creates a payroll batch record for the accountant dashboard.</p>
       <div class="g3" style="margin-bottom:18px">
         ${statCard('<i class="fas fa-users"></i>', '94', 'Staff Included', 'All departments', 'neu', 'si-blue')}
-        ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ148K', 'Estimated Payroll', 'March 2025', 'neu', 'si-gold')}
+        ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵148K', 'Estimated Payroll', 'March 2025', 'neu', 'si-gold')}
         ${statCard('<i class="fas fa-calendar"></i>', 'Mar 28', 'Pay Date', 'Scheduled', 'up', 'si-green')}
       </div>
       <div style="background:var(--gold-xlight);border:1px solid var(--gold-light);border-radius:8px;padding:14px;margin-bottom:18px">
@@ -1297,9 +1297,9 @@ function openPayrollProcessPage() {
 function confirmPayrollBatch() {
   try {
     const key = 'gr_payroll_batches';
-    const batches = JSON.parse(localStorage.getItem(key) || '[]');
+    const batches = JSON.parse(appMemoryStorage.getItem(key) || '[]');
     batches.unshift({ id: Date.now(), month: 'March 2025', staff: 94, amount: 148000, processedAt: new Date().toISOString() });
-    localStorage.setItem(key, JSON.stringify(batches.slice(0, 24)));
+    appMemoryStorage.setItem(key, JSON.stringify(batches.slice(0, 24)));
   } catch(e) {}
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> Payroll batch processed successfully', 'success');
@@ -1318,13 +1318,13 @@ function openPayslipPage(name, role, grade, netPay) {
     <div class="card" style="max-width:680px">
       <div style="text-align:center;margin-bottom:18px">
         <h3 style="margin:0;color:var(--blue-dark)">Glory Reign Preparatory School</h3>
-        <div style="font-size:12px;color:var(--gray-500)">Staff Payslip Â· March 2025</div>
+        <div style="font-size:12px;color:var(--gray-500)">Staff Payslip · March 2025</div>
       </div>
       <div style="border:1.5px solid var(--gray-200);border-radius:8px;padding:16px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Staff</span><strong>${escapeHtml(name)}</strong></div>
         <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Role</span><strong>${escapeHtml(role)}</strong></div>
         <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Grade</span><strong>${escapeHtml(grade)}</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:18px;color:var(--blue-dark)"><span>Net Pay</span><strong>GHâ‚µ${escapeHtml(netPay)}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:18px;color:var(--blue-dark)"><span>Net Pay</span><strong>GH₵${escapeHtml(netPay)}</strong></div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="printDocument()"><i class="fas fa-print"></i> Print</button>
@@ -1356,7 +1356,7 @@ function feeStructModule() {
 
   let html = hdr('Fee Structure', 'Configure and manage school fee schedules', 'Fee Structure') + `
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Fee Schedule â€” Academic Year 2024/2025</span>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Fee Schedule — Academic Year 2024/2025</span>
       <div style="display:flex;gap:8px">
         ${addItemBtn}
         <button class="btn btn-secondary btn-sm" onclick="exportFeeStructure()"><i class="fas fa-download"></i> Export</button>
@@ -1364,19 +1364,19 @@ function feeStructModule() {
     </div>
     <div style="overflow-x:auto">
       <table class="tbl">
-        <thead><tr><th>Fee Item</th><th>Basic 4 (GHâ‚µ)</th><th>Basic 5 (GHâ‚µ)</th><th>Basic 6 (GHâ‚µ)</th><th>JHS 1 (GHâ‚µ)</th><th>JHS 2 (GHâ‚µ)</th><th>JHS 3 (GHâ‚µ)</th><th>Frequency</th><th>Mandatory</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Fee Item</th><th>Basic 4 (GH₵)</th><th>Basic 5 (GH₵)</th><th>Basic 6 (GH₵)</th><th>JHS 1 (GH₵)</th><th>JHS 2 (GH₵)</th><th>JHS 3 (GH₵)</th><th>Frequency</th><th>Mandatory</th><th>Actions</th></tr></thead>
         <tbody id="fee-items-table">`;
 
   FEE_STRUCTURE_DATA.items.forEach(item => {
     html += `
       <tr class="fee-item-row" data-id="${item.id}">
         <td style="font-weight:600">${item.name}</td>
-        <td>${item.basic4 > 0 ? item.basic4.toLocaleString() : 'â€”'}</td>
-        <td>${item.basic5 > 0 ? item.basic5.toLocaleString() : 'â€”'}</td>
-        <td>${item.basic6 > 0 ? item.basic6.toLocaleString() : 'â€”'}</td>
-        <td>${item.jhs1 > 0 ? item.jhs1.toLocaleString() : 'â€”'}</td>
-        <td>${item.jhs2 > 0 ? item.jhs2.toLocaleString() : 'â€”'}</td>
-        <td>${item.jhs3 > 0 ? item.jhs3.toLocaleString() : 'â€”'}</td>
+        <td>${item.basic4 > 0 ? item.basic4.toLocaleString() : '—'}</td>
+        <td>${item.basic5 > 0 ? item.basic5.toLocaleString() : '—'}</td>
+        <td>${item.basic6 > 0 ? item.basic6.toLocaleString() : '—'}</td>
+        <td>${item.jhs1 > 0 ? item.jhs1.toLocaleString() : '—'}</td>
+        <td>${item.jhs2 > 0 ? item.jhs2.toLocaleString() : '—'}</td>
+        <td>${item.jhs3 > 0 ? item.jhs3.toLocaleString() : '—'}</td>
         <td><span class="badge b-info">${item.frequency}</span></td>
         <td><span class="badge ${item.mandatory ? 'b-success' : 'b-gray'}">${item.mandatory ? 'Yes' : 'No'}</span></td>
         <td><div style="display:flex;gap:4px">
@@ -1398,12 +1398,12 @@ function feeStructModule() {
   html += `
         <tr style="background:var(--blue-xpale)">
           <td style="font-weight:800">Total (Per Term)</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${totalBasic4.toLocaleString()}</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${totalBasic5.toLocaleString()}</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${totalBasic6.toLocaleString()}</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${totalJHS1.toLocaleString()}</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${totalJHS2.toLocaleString()}</td>
-          <td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ${totalJHS3.toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${totalBasic4.toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${totalBasic5.toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${totalBasic6.toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${totalJHS1.toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${totalJHS2.toLocaleString()}</td>
+          <td style="font-weight:800;color:var(--blue-dark)">GH₵${totalJHS3.toLocaleString()}</td>
           <td colspan="3"></td>
         </tr>
       </tbody>
@@ -1422,14 +1422,14 @@ function feeStructModule() {
           <input type="text" id="fee-item-name" placeholder="e.g., Library Fee" required>
         </div>
         <div class="f-row">
-          <div class="f-field"><label>Basic 4 (GHâ‚µ)</label><input type="number" id="fee-basic4" value="0" min="0"></div>
-          <div class="f-field"><label>Basic 5 (GHâ‚µ)</label><input type="number" id="fee-basic5" value="0" min="0"></div>
-          <div class="f-field"><label>Basic 6 (GHâ‚µ)</label><input type="number" id="fee-basic6" value="0" min="0"></div>
+          <div class="f-field"><label>Basic 4 (GH₵)</label><input type="number" id="fee-basic4" value="0" min="0"></div>
+          <div class="f-field"><label>Basic 5 (GH₵)</label><input type="number" id="fee-basic5" value="0" min="0"></div>
+          <div class="f-field"><label>Basic 6 (GH₵)</label><input type="number" id="fee-basic6" value="0" min="0"></div>
         </div>
         <div class="f-row">
-          <div class="f-field"><label>JHS 1 (GHâ‚µ)</label><input type="number" id="fee-jhs1" value="0" min="0"></div>
-          <div class="f-field"><label>JHS 2 (GHâ‚µ)</label><input type="number" id="fee-jhs2" value="0" min="0"></div>
-          <div class="f-field"><label>JHS 3 (GHâ‚µ)</label><input type="number" id="fee-jhs3" value="0" min="0"></div>
+          <div class="f-field"><label>JHS 1 (GH₵)</label><input type="number" id="fee-jhs1" value="0" min="0"></div>
+          <div class="f-field"><label>JHS 2 (GH₵)</label><input type="number" id="fee-jhs2" value="0" min="0"></div>
+          <div class="f-field"><label>JHS 3 (GH₵)</label><input type="number" id="fee-jhs3" value="0" min="0"></div>
         </div>
         <div class="f-row">
           <div class="f-field">
@@ -1622,7 +1622,7 @@ function deleteFeeItem(itemId) {
 }
 
 function exportFeeStructure() {
-  let csv = 'Fee Item,Basic 4 (GHâ‚µ),Basic 5 (GHâ‚µ),Basic 6 (GHâ‚µ),JHS 1 (GHâ‚µ),JHS 2 (GHâ‚µ),JHS 3 (GHâ‚µ),Frequency,Mandatory\n';
+  let csv = 'Fee Item,Basic 4 (GH₵),Basic 5 (GH₵),Basic 6 (GH₵),JHS 1 (GH₵),JHS 2 (GH₵),JHS 3 (GH₵),Frequency,Mandatory\n';
 
   FEE_STRUCTURE_DATA.items.forEach(item => {
     csv += `"${item.name}",${item.basic4},${item.basic5},${item.basic6},${item.jhs1},${item.jhs2},${item.jhs3},"${item.frequency}","${item.mandatory ? 'Yes' : 'No'}"\n`;
@@ -1643,7 +1643,7 @@ function exportFeeStructure() {
 const EVENTS_DATA = [
   { id: 1, title: '<i class="fas fa-running"></i> Sports Day', date: '2026-03-24', time: '08:00', allDay: true, audience: 'All Students & Staff', description: 'Full-day sports competition. Students must wear house colors. Attendance compulsory. Parents welcome.' },
   { id: 2, title: '<i class="fas fa-users"></i> PTA Meeting', date: '2026-03-20', time: '15:00', allDay: false, audience: 'Parents & Teachers', description: 'End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.' },
-  { id: 3, title: '<i class="fas fa-file-alt"></i> Term 1 Exams Begin', date: '2026-04-01', time: '07:30', allDay: false, audience: 'Basic 4â€“6, JHS 1â€“3', description: 'Final examinations for Term 1. Detailed timetable available on the portal.' },
+  { id: 3, title: '<i class="fas fa-file-alt"></i> Term 1 Exams Begin', date: '2026-04-01', time: '07:30', allDay: false, audience: 'Basic 4–6, JHS 1–3', description: 'Final examinations for Term 1. Detailed timetable available on the portal.' },
   { id: 4, title: '<i class="fas fa-graduation-cap"></i> Prize Giving Ceremony', date: '2026-04-15', time: '10:00', allDay: false, audience: 'All', description: 'Annual prize-giving and graduation ceremony. Smart attire required for all.' },
   { id: 5, title: '<img src="assets/images/Logo.png" alt="Logo" style="width:16px;height:16px;object-fit:contain"> Open Day', date: '2026-04-20', time: '09:00', allDay: false, audience: 'Prospective Parents', description: 'School open day for prospective students and parents. Tours from 9AM.' },
   { id: 6, title: '<i class="fas fa-glass-cheers"></i> Class of 2015 10-Year Reunion', date: '2026-10-15', time: '18:00', allDay: false, audience: 'Alumni', description: 'Join us for a wonderful evening reconnecting with the Class of 2015. Dinner and drinks will be served. Please register in advance.' },
@@ -1678,7 +1678,7 @@ function eventsModule() {
           <div>
             <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:600">${event.title}</h3>
             <p style="margin:0 0 6px 0;font-size:14px;color:var(--gray-600)"><strong>${timeStr}</strong></p>
-            <p style="margin:0 0 8px 0;font-size:13px;color:var(--gray-600)"><i class="fas fa-map-pin"></i> ${formattedDate} Â· ${event.audience}</p>
+            <p style="margin:0 0 8px 0;font-size:13px;color:var(--gray-600)"><i class="fas fa-map-pin"></i> ${formattedDate} · ${event.audience}</p>
             <p style="margin:0;font-size:13px;color:var(--gray-700)">${event.description}</p>
           </div>
           ${isTeacherOrAdmin ? `<div style="display:flex;gap:4px;min-width:fit-content">
@@ -1695,9 +1695,9 @@ function eventsModule() {
   <div class="card" style="margin-top:20px">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Calendar</span>
       <div id="calendar-nav" style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-secondary btn-xs" onclick="prevMonth()" style="padding:6px 10px">â€¹</button>
+        <button class="btn btn-secondary btn-xs" onclick="prevMonth()" style="padding:6px 10px">‹</button>
         <span id="calendar-month" style="font-weight:600;min-width:150px;text-align:center"></span>
-        <button class="btn btn-secondary btn-xs" onclick="nextMonth()" style="padding:6px 10px">â€º</button>
+        <button class="btn btn-secondary btn-xs" onclick="nextMonth()" style="padding:6px 10px">›</button>
       </div>
     </div>
     <div style="padding:16px">
@@ -1871,7 +1871,7 @@ function viewEvent(eventId) {
       <div style="padding:20px">
         <div style="margin-bottom:16px">
           <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Date & Time</h4>
-          <p style="margin:0;font-size:15px">${formattedDate} Â· ${timeStr}</p>
+          <p style="margin:0;font-size:15px">${formattedDate} · ${timeStr}</p>
         </div>
         
         <div style="margin-bottom:16px">
@@ -2016,7 +2016,7 @@ function renderReceiptRows(rows) {
         <td style="color:var(--blue-main);font-weight:700">${escapeHtml(p.receipt || 'N/A')}</td>
         <td>${escapeHtml(p.student || '')}</td>
         <td>${escapeHtml(student?.student_class || student?.class || 'N/A')}</td>
-        <td style="font-weight:700;color:var(--success)">GHâ‚µ${Number(p.amount || 0).toLocaleString()}</td>
+        <td style="font-weight:700;color:var(--success)">GH₵${Number(p.amount || 0).toLocaleString()}</td>
         <td>Term 1</td><td>${escapeHtml(p.date || new Date().toISOString().slice(0, 10))}</td><td>${escapeHtml(getSessionUser()?.name || 'Accountant')}</td>
         <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="openReceiptByNumber('${escapeAttr(p.receipt || '')}')"><i class="fas fa-print"></i> Print</button><button class="btn btn-primary btn-xs" onclick="downloadReceiptByNumber('${escapeAttr(p.receipt || '')}')"><i class="fas fa-download"></i> PDF</button></div></td>
       </tr>`;
@@ -2034,7 +2034,7 @@ function openReceiptByNumber(receiptNo) {
         <h3 style="margin-top:0;color:var(--blue-dark)">Receipt ${escapeHtml(payment.receipt)}</h3>
         <div style="display:grid;gap:10px;font-size:13px">
           <div style="display:flex;justify-content:space-between"><span>Student</span><strong>${escapeHtml(payment.student)}</strong></div>
-          <div style="display:flex;justify-content:space-between"><span>Amount</span><strong>GHâ‚µ${Number(payment.amount || 0).toLocaleString()}</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Amount</span><strong>GH₵${Number(payment.amount || 0).toLocaleString()}</strong></div>
           <div style="display:flex;justify-content:space-between"><span>Date</span><strong>${escapeHtml(payment.date || '')}</strong></div>
           <div style="display:flex;justify-content:space-between"><span>Method</span><strong>${escapeHtml(payment.method || 'Cash')}</strong></div>
         </div>
@@ -2077,7 +2077,7 @@ function openReceiptIssuePage() {
         <datalist id="receipt-student-list">${students}</datalist>
       </div>
       <div class="f-row">
-        <div class="f-field"><label>Amount (GHâ‚µ)</label><input id="new-receipt-amount" type="number" value="2400" min="1"></div>
+        <div class="f-field"><label>Amount (GH₵)</label><input id="new-receipt-amount" type="number" value="2400" min="1"></div>
         <div class="f-field"><label>Method</label><select id="new-receipt-method"><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Card</option></select></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
@@ -2138,7 +2138,7 @@ const DEBTOR_REMINDERS_KEY = 'gr_debtor_reminders';
 
 function getDebtors() {
   try {
-    const saved = localStorage.getItem(DEBTORS_KEY);
+    const saved = appMemoryStorage.getItem(DEBTORS_KEY);
     if (saved) return JSON.parse(saved);
   } catch(e) {}
   const sample = [
@@ -2146,17 +2146,17 @@ function getDebtors() {
     { id: 'D002', student: 'Abena Osei', className: 'Basic 3', parent: 'Mrs. Mary Osei', contact: '020 333 4444', balance: 850, days: 20 },
     { id: 'D003', student: 'Kwasi Arthur', className: 'Primary 4', parent: 'Mr. John Arthur', contact: '027 555 6666', balance: 2100, days: 60 }
   ];
-  localStorage.setItem(DEBTORS_KEY, JSON.stringify(sample));
+  appMemoryStorage.setItem(DEBTORS_KEY, JSON.stringify(sample));
   return sample;
 }
 
 function saveDebtors(list) {
-  localStorage.setItem(DEBTORS_KEY, JSON.stringify(list));
+  appMemoryStorage.setItem(DEBTORS_KEY, JSON.stringify(list));
 }
 
 function getDebtorReminderLogs() {
   try {
-    return JSON.parse(localStorage.getItem(DEBTOR_REMINDERS_KEY) || '[]');
+    return JSON.parse(appMemoryStorage.getItem(DEBTOR_REMINDERS_KEY) || '[]');
   } catch(e) {
     return [];
   }
@@ -2179,7 +2179,7 @@ function debtorReminderNoticePanel(limit = 3, compact = false) {
           <div style="flex:1">
             <div style="font-size:13px;font-weight:800;color:var(--blue-dark)">${escapeHtml(r.channel || 'Reminder')} sent to ${escapeHtml(r.parent || 'Parent')}</div>
             ${compact ? '' : `<div style="font-size:12px;color:var(--gray-600);line-height:1.5;margin-top:3px">${escapeHtml(r.message || '')}</div>`}
-            <div style="font-size:11px;color:var(--gray-400);margin-top:6px">${escapeHtml(r.contact || '')} Â· GHâ‚µ ${Number(r.balance || 0).toLocaleString()} Â· ${formatReminderTime(r.sentAt)}</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:6px">${escapeHtml(r.contact || '')} · GH₵ ${Number(r.balance || 0).toLocaleString()} · ${formatReminderTime(r.sentAt)}</div>
           </div>
         </div>`).join('') : '<div style="padding:18px;color:var(--gray-400);font-size:13px">No reminder notifications yet.</div>'}
     </div>`;
@@ -2214,7 +2214,7 @@ function renderDebtorRows(rows) {
     <tr>
       <td style="font-weight:600;color:var(--blue-dark)">${escapeHtml(d.student)}</td><td>${escapeHtml(d.className)}</td>
       <td>${escapeHtml(d.parent)}</td><td><i class="fas fa-phone-alt" style="color:var(--gray-400);font-size:10px"></i> ${escapeHtml(d.contact)}</td>
-      <td style="font-weight:700;color:var(--danger)">GHâ‚µ ${Number(d.balance).toLocaleString()}</td>
+      <td style="font-weight:700;color:var(--danger)">GH₵ ${Number(d.balance).toLocaleString()}</td>
       <td><span class="badge ${d.days > 30 ? 'b-danger' : 'b-warning'}"><i class="fas fa-clock"></i> ${d.days} Days</span></td>
       <td>
         <div style="display:flex;gap:6px">
@@ -2244,11 +2244,11 @@ function saveDebtorReminderLog(debtor, message, channel = 'Reminder') {
       message
     };
     reminders.unshift(reminder);
-    localStorage.setItem(DEBTOR_REMINDERS_KEY, JSON.stringify(reminders.slice(0, 100)));
+    appMemoryStorage.setItem(DEBTOR_REMINDERS_KEY, JSON.stringify(reminders.slice(0, 100)));
     addAppNotification({
       icon: channel === 'SMS' ? '<i class="fas fa-sms"></i>' : '<i class="fas fa-bell"></i>',
       title: channel === 'SMS' ? 'SMS Reminder Sent' : 'Debtor Reminder Sent',
-      msg: `${channel} sent to ${debtor.parent} about GHâ‚µ ${Number(debtor.balance).toLocaleString()}`,
+      msg: `${channel} sent to ${debtor.parent} about GH₵ ${Number(debtor.balance).toLocaleString()}`,
       fullMsg: `${escapeHtml(channel)} sent to ${escapeHtml(debtor.parent)} (${escapeHtml(debtor.contact)}).<br><br>${escapeHtml(message)}`,
       action: 'View Debtors',
       actionLink: 'debtors'
@@ -2262,13 +2262,13 @@ function openDebtorReminderPage(debtorId) {
   currentMod = 'debtors';
   const el = document.getElementById('main-content');
   if (!el) return;
-  const message = `Dear ${debtor.parent}, our records show an outstanding fee balance of GHâ‚µ ${Number(debtor.balance).toLocaleString()} for ${debtor.student}. Please make payment at the school office.`;
+  const message = `Dear ${debtor.parent}, our records show an outstanding fee balance of GH₵ ${Number(debtor.balance).toLocaleString()} for ${debtor.student}. Please make payment at the school office.`;
   el.innerHTML = hdr('Send Fee Reminder', 'Prepare and send a payment reminder to a parent', 'Debtors') + `
     <div class="card" style="max-width:760px">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-bell"></i> ${escapeHtml(debtor.parent)}</span></div>
       <div class="g2" style="margin-bottom:16px">
-        <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">STUDENT</div><strong>${escapeHtml(debtor.student)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(debtor.className)} Â· ${debtor.days} days overdue</div></div>
-        <div style="background:var(--gold-xlight);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">CONTACT</div><strong>${escapeHtml(debtor.contact)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">Balance: GHâ‚µ ${Number(debtor.balance).toLocaleString()}</div></div>
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">STUDENT</div><strong>${escapeHtml(debtor.student)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(debtor.className)} · ${debtor.days} days overdue</div></div>
+        <div style="background:var(--gold-xlight);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">CONTACT</div><strong>${escapeHtml(debtor.contact)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">Balance: GH₵ ${Number(debtor.balance).toLocaleString()}</div></div>
       </div>
       <div class="f-field" style="margin-bottom:14px"><label>Reminder Message</label><textarea id="debtor-reminder-message" style="min-height:130px">${escapeHtml(message)}</textarea></div>
       <div style="display:flex;gap:8px">
@@ -2304,7 +2304,7 @@ function openBulkDebtorReminderPage() {
     <div class="card" style="max-width:860px">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-sms"></i> ${rows.length} Parent${rows.length === 1 ? '' : 's'} Selected</span></div>
       <div class="g2" style="margin-bottom:16px">
-        <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">TOTAL OUTSTANDING</div><strong style="color:var(--danger);font-size:20px">GHâ‚µ ${total.toLocaleString()}</strong></div>
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">TOTAL OUTSTANDING</div><strong style="color:var(--danger);font-size:20px">GH₵ ${total.toLocaleString()}</strong></div>
         <div style="background:var(--blue-xpale);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">RECIPIENTS</div><strong>${rows.map(d => escapeHtml(d.parent)).join(', ') || 'None'}</strong></div>
       </div>
       <div class="f-field" style="margin-bottom:14px"><label>Bulk Reminder Message</label><textarea id="bulk-debtor-reminder-message" style="min-height:130px">${escapeHtml(message)}</textarea></div>
@@ -2345,10 +2345,10 @@ function openDebtorPaymentPage(debtorId) {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> ${escapeHtml(debtor.student)}</span></div>
       <div class="g2" style="margin-bottom:16px">
         <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">PARENT</div><strong>${escapeHtml(debtor.parent)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(debtor.contact)}</div></div>
-        <div style="background:var(--danger-light);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">OUTSTANDING</div><strong style="color:var(--danger);font-size:20px">GHâ‚µ ${Number(debtor.balance).toLocaleString()}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${debtor.days} days overdue</div></div>
+        <div style="background:var(--danger-light);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">OUTSTANDING</div><strong style="color:var(--danger);font-size:20px">GH₵ ${Number(debtor.balance).toLocaleString()}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${debtor.days} days overdue</div></div>
       </div>
       <div class="f-row">
-        <div class="f-field"><label>Amount Received (GHâ‚µ)</label><input id="debtor-pay-amount" type="number" min="1" max="${debtor.balance}" value="${debtor.balance}"></div>
+        <div class="f-field"><label>Amount Received (GH₵)</label><input id="debtor-pay-amount" type="number" min="1" max="${debtor.balance}" value="${debtor.balance}"></div>
         <div class="f-field"><label>Method</label><select id="debtor-pay-method"><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Card</option></select></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
@@ -2383,12 +2383,12 @@ function receiveDebtorPayment(debtorId) {
 // EXPENSES MODULE
 function expensesModule() {
   const statsCards = [
-    statCard('<i class="fas fa-chart-line"></i>', 'GHâ‚µ89K', 'Total Expenses', 'This term', 'neu', 'si-red'),
-    statCard('<i class="fas fa-briefcase"></i>', 'GHâ‚µ59K', 'Staff Salaries', '63% of expenses', 'neu', 'si-blue'),
-    statCard('<i class="fas fa-wrench"></i>', 'GHâ‚µ18K', 'Operations', '20%', 'neu', 'si-gold'),
-    statCard('<i class="fas fa-chart-bar"></i>', 'GHâ‚µ12K', 'Other', '13%', 'neu', 'si-green')
+    statCard('<i class="fas fa-chart-line"></i>', 'GH₵89K', 'Total Expenses', 'This term', 'neu', 'si-red'),
+    statCard('<i class="fas fa-briefcase"></i>', 'GH₵59K', 'Staff Salaries', '63% of expenses', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-wrench"></i>', 'GH₵18K', 'Operations', '20%', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-chart-bar"></i>', 'GH₵12K', 'Other', '13%', 'neu', 'si-green')
   ].join('');
-  const expenseRows = [['Mar 17', 'Electricity Bill - March', 'Utilities', 'GHâ‚µ4,200', 'Principal', 'Paid'], ['Mar 15', 'Stationery Supplies', 'Admin', 'GHâ‚µ1,800', 'Accountant', 'Paid'], ['Mar 12', 'Sports Equipment', 'Athletics', 'GHâ‚µ3,500', 'HOD Sports', 'Paid'], ['Mar 10', 'Lab Chemicals Restock', 'Science', 'GHâ‚µ2,100', 'HOD Science', 'Pending'], ['Mar 8', 'Maintenance Repair', 'Facilities', 'GHâ‚µ850', 'Admin', 'Paid']].map(([d, desc, c, a, ap, s]) => `
+  const expenseRows = [['Mar 17', 'Electricity Bill - March', 'Utilities', 'GH₵4,200', 'Principal', 'Paid'], ['Mar 15', 'Stationery Supplies', 'Admin', 'GH₵1,800', 'Accountant', 'Paid'], ['Mar 12', 'Sports Equipment', 'Athletics', 'GH₵3,500', 'HOD Sports', 'Paid'], ['Mar 10', 'Lab Chemicals Restock', 'Science', 'GH₵2,100', 'HOD Science', 'Pending'], ['Mar 8', 'Maintenance Repair', 'Facilities', 'GH₵850', 'Admin', 'Paid']].map(([d, desc, c, a, ap, s]) => `
           <tr>
             <td>${d}</td><td>${desc}</td>
             <td><span class="badge b-info">${c}</span></td>
@@ -2406,24 +2406,24 @@ function balanceSheetModule() {
   return hdr('Balance Sheet', 'Financial position of the school', 'Balance Sheet') + `
   <div class="g2 mb20">
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Income â€” Term 1, 2025</span></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Income — Term 1, 2025</span></div>
       <table class="tbl">
-        <thead><tr><th>Source</th><th>Amount (GHâ‚µ)</th><th>%</th></tr></thead>
+        <thead><tr><th>Source</th><th>Amount (GH₵)</th><th>%</th></tr></thead>
         <tbody>
           ${[['School Fees', '248,000', '82%'], ['Examination Fees', '18,000', '6%'], ['Sports Levy', '9,600', '3%'], ['Lab Fees', '12,800', '4%'], ['Donations', '5,000', '2%'], ['Other Income', '3,600', '1%']].map(([s, a, p]) => `
-          <tr><td>${s}</td><td style="font-weight:700;color:var(--success)">GHâ‚µ${a}</td><td><span class="badge b-info">${p}</span></td></tr>`).join('')}
-          <tr style="background:var(--blue-xpale)"><td style="font-weight:800">TOTAL INCOME</td><td style="font-weight:800;color:var(--blue-dark)">GHâ‚µ297,000</td><td>100%</td></tr>
+          <tr><td>${s}</td><td style="font-weight:700;color:var(--success)">GH₵${a}</td><td><span class="badge b-info">${p}</span></td></tr>`).join('')}
+          <tr style="background:var(--blue-xpale)"><td style="font-weight:800">TOTAL INCOME</td><td style="font-weight:800;color:var(--blue-dark)">GH₵297,000</td><td>100%</td></tr>
         </tbody>
       </table>
     </div>
     <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Expenditure â€” Term 1, 2025</span></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Expenditure — Term 1, 2025</span></div>
       <table class="tbl">
-        <thead><tr><th>Category</th><th>Amount (GHâ‚µ)</th><th>%</th></tr></thead>
+        <thead><tr><th>Category</th><th>Amount (GH₵)</th><th>%</th></tr></thead>
         <tbody>
           ${[['Staff Salaries', '148,000', '66%'], ['Utilities', '12,000', '5%'], ['Maintenance', '8,500', '4%'], ['Stationery', '5,200', '2%'], ['Sports Equipment', '4,800', '2%'], ['Other Expenses', '9,500', '4%']].map(([c, a, p]) => `
-          <tr><td>${c}</td><td style="font-weight:700;color:var(--danger)">GHâ‚µ${a}</td><td><span class="badge b-gray">${p}</span></td></tr>`).join('')}
-          <tr style="background:#fff1f2"><td style="font-weight:800">TOTAL EXPENDITURE</td><td style="font-weight:800;color:var(--danger)">GHâ‚µ188,000</td><td>100%</td></tr>
+          <tr><td>${c}</td><td style="font-weight:700;color:var(--danger)">GH₵${a}</td><td><span class="badge b-gray">${p}</span></td></tr>`).join('')}
+          <tr style="background:#fff1f2"><td style="font-weight:800">TOTAL EXPENDITURE</td><td style="font-weight:800;color:var(--danger)">GH₵188,000</td><td>100%</td></tr>
         </tbody>
       </table>
     </div>
@@ -2431,17 +2431,17 @@ function balanceSheetModule() {
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
     <div class="fee-hero">
       <h3>Total Income</h3>
-      <div class="amount">GHâ‚µ 297,000</div>
+      <div class="amount">GH₵ 297,000</div>
       <div class="sub">Term 1, 2025</div>
     </div>
     <div class="fee-hero" style="background:linear-gradient(135deg,#991b1b,var(--danger))">
       <h3>Total Expenditure</h3>
-      <div class="amount">GHâ‚µ 188,000</div>
+      <div class="amount">GH₵ 188,000</div>
       <div class="sub">Term 1, 2025</div>
     </div>
     <div class="fee-hero" style="background:linear-gradient(135deg,#065f46,var(--success))">
       <h3>Net Surplus</h3>
-      <div class="amount">GHâ‚µ 109,000</div>
+      <div class="amount">GH₵ 109,000</div>
       <div class="sub">After all expenses</div>
     </div>
   </div>`;
@@ -2464,7 +2464,7 @@ function alumniDirectory() {
         <div class="form-field"><label>Full Name *</label><input type="text" id="alumni-name" placeholder="Full name"></div>
         <div class="form-field"><label>Class Year *</label><input type="number" id="alumni-year" placeholder="2020" min="1985" max="2024"></div>
         <div class="form-field"><label>Profession *</label><input type="text" id="alumni-profession" placeholder="e.g., Software Engineer"></div>
-        <div class="form-field"><label>Location *</label><input type="text" id="alumni-location" placeholder="City Â· Organization"></div>
+        <div class="form-field"><label>Location *</label><input type="text" id="alumni-location" placeholder="City · Organization"></div>
         <div class="form-field"><label>Email *</label><input type="email" id="alumni-email" placeholder="email@example.com"></div>
         <div class="form-field"><label>Phone *</label><input type="tel" id="alumni-phone" placeholder="+233 XXX XXX XXXX"></div>
         <div class="form-field"><label>Instagram Handle</label><input type="text" id="alumni-instagram" placeholder="@username"></div>
@@ -2502,9 +2502,9 @@ function alumniDirectory() {
 function donationsModule() {
   return hdr('Donations', 'Alumni and external donations to the school', 'Donations') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-handshake"></i>', 'GHâ‚µ42K', 'Total Donations', 'This year', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Total Donations', 'This year', 'up', 'si-blue')}
     ${statCard('<i class="fas fa-users"></i>', '48', 'Total Donors', 'Alumni donors', 'up', 'si-gold')}
-    ${statCard('<i class="fas fa-target"></i>', 'GHâ‚µ100K', 'Annual Target', '42% achieved', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-target"></i>', 'GH₵100K', 'Annual Target', '42% achieved', 'neu', 'si-green')}
     ${statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Active Campaigns', 'Current drives', 'neu', 'si-purple')}
   </div>
   <div class="card">
@@ -2512,7 +2512,7 @@ function donationsModule() {
     <table class="tbl">
       <thead><tr><th>Donor</th><th>Class</th><th>Amount</th><th>Campaign</th><th>Date</th><th>Status</th></tr></thead>
       <tbody>
-        ${[['Abena Owusu', 'Class 2018', 'GHâ‚µ5,000', 'Library Fund', 'Mar 10', 'Received'], ['Kwabena Asare', 'Class 2016', 'GHâ‚µ10,000', 'Scholarship Fund', 'Mar 5', 'Received'], ['Anonymous Alumni', 'â€”', 'GHâ‚µ2,000', 'General Fund', 'Feb 28', 'Received'], ['Kofi Antwi', 'Class 2014', 'GHâ‚µ3,500', 'ICT Lab', 'Feb 20', 'Received']].map(([n, c, a, camp, d, s]) => `
+        ${[['Abena Owusu', 'Class 2018', 'GH₵5,000', 'Library Fund', 'Mar 10', 'Received'], ['Kwabena Asare', 'Class 2016', 'GH₵10,000', 'Scholarship Fund', 'Mar 5', 'Received'], ['Anonymous Alumni', '—', 'GH₵2,000', 'General Fund', 'Feb 28', 'Received'], ['Kofi Antwi', 'Class 2014', 'GH₵3,500', 'ICT Lab', 'Feb 20', 'Received']].map(([n, c, a, camp, d, s]) => `
         <tr>
           <td><strong>${n}</strong></td>
           <td><span class="badge b-info">${c}</span></td>
@@ -2534,7 +2534,7 @@ function jobBoardModule() {
     <select class="select-sm"><option>All Industries</option><option>Tech</option><option>Health</option><option>Education</option></select>
   </div>
   <div style="display:flex;flex-direction:column;gap:14px">
-    ${[['Software Developer Intern', 'Accra Â· Remote possible', '0â€“2 years', 'Technology', 'GHâ‚µ1,500/mo', 'Today', 'Abena Owusu (Class 2018)'], ['Medical Resident', 'Korle Bu Teaching Hospital, Accra', 'Graduate', 'Healthcare', 'Competitive', '2 days ago', 'Kwabena Asare (Class 2016)'], ['Junior Secondary School Teacher', 'Kumasi Â· Full Time', 'PGDE required', 'Education', 'GHâ‚µ2,800/mo', '1 week ago', 'Esi Mensah (Class 2020)'], ['Civil Engineering Graduate Trainee', 'Takoradi Â· Full Time', '0â€“2 years', 'Engineering', 'GHâ‚µ4,000/mo', '2 weeks ago', 'Kofi Antwi (Class 2014)']].map(([t, l, exp, ind, sal, d, poster]) => `
+    ${[['Software Developer Intern', 'Accra · Remote possible', '0–2 years', 'Technology', 'GH₵1,500/mo', 'Today', 'Abena Owusu (Class 2018)'], ['Medical Resident', 'Korle Bu Teaching Hospital, Accra', 'Graduate', 'Healthcare', 'Competitive', '2 days ago', 'Kwabena Asare (Class 2016)'], ['Junior Secondary School Teacher', 'Kumasi · Full Time', 'PGDE required', 'Education', 'GH₵2,800/mo', '1 week ago', 'Esi Mensah (Class 2020)'], ['Civil Engineering Graduate Trainee', 'Takoradi · Full Time', '0–2 years', 'Engineering', 'GH₵4,000/mo', '2 weeks ago', 'Kofi Antwi (Class 2014)']].map(([t, l, exp, ind, sal, d, poster]) => `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
         <div style="flex:1">
@@ -2545,7 +2545,7 @@ function jobBoardModule() {
             <span class="badge b-success"><i class="fas fa-money-bill"></i> ${sal}</span>
             <span class="badge b-warning">${ind}</span>
           </div>
-          <div style="font-size:11px;color:var(--gray-400)">Posted by ${poster} Â· ${d}</div>
+          <div style="font-size:11px;color:var(--gray-400)">Posted by ${poster} · ${d}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           <button class="btn btn-secondary btn-sm">Details</button>
@@ -2572,7 +2572,7 @@ function certificatesModule() {
       <table class="tbl">
         <thead><tr><th>Certificate Type</th><th>Purpose</th><th>Date Requested</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>
-          ${[['WASSCE Result Slip', 'Job Application', 'Mar 10, 2025', 'Ready', 'download'], ['Transcript', 'University Admission', 'Mar 5, 2025', 'Processing', 'â€”'], ['Character Reference', 'Visa Application', 'Feb 28, 2025', 'Ready', 'download']].map(([t, p, d, s, a]) => `
+          ${[['WASSCE Result Slip', 'Job Application', 'Mar 10, 2025', 'Ready', 'download'], ['Transcript', 'University Admission', 'Mar 5, 2025', 'Processing', '—'], ['Character Reference', 'Visa Application', 'Feb 28, 2025', 'Ready', 'download']].map(([t, p, d, s, a]) => `
           <tr>
             <td style="font-weight:600">${t}</td><td>${p}</td><td>${d}</td>
             <td><span class="badge ${s === 'Ready' ? 'b-success' : 'b-warning'}">${s}</span></td>
