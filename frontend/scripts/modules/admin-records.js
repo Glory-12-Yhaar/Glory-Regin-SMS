@@ -1862,12 +1862,9 @@ function manageClass(classId) {
       <div class="form-field">
         <label>Class Level *</label>
         <select id="manage-class-level">
-          <option value="Creche" ${classData.level === 'Creche' ? 'selected' : ''}>Creche</option>
-          <option value="Nursery" ${classData.level === 'Nursery' ? 'selected' : ''}>Nursery</option>
-          <option value="KG 1" ${classData.level === 'KG 1' ? 'selected' : ''}>KG 1</option>
-          <option value="KG 2" ${classData.level === 'KG 2' ? 'selected' : ''}>KG 2</option>
-          <option value="Basic" ${classData.level === 'Basic' ? 'selected' : ''}>Basic</option>
-          <option value="JHS" ${classData.level === 'JHS' ? 'selected' : ''}>JHS</option>
+          <option value="Early Childhood" ${classData.level === 'Early Childhood' ? 'selected' : ''}>Early Childhood</option>
+          <option value="Primary" ${classData.level === 'Primary' ? 'selected' : ''}>Primary</option>
+          <option value="Junior High" ${classData.level === 'Junior High' ? 'selected' : ''}>Junior High</option>
         </select>
       </div>
       <div class="form-field">
@@ -1913,39 +1910,53 @@ function manageClass(classId) {
   renderSubjectCheckboxes('class-subjects-container', classData.subjects || []);
 }
 
-function saveClassChanges(classId) {
-  const classData = classesData.find(c => c.class_id === classId);
-  if (!classData) return;
+async function saveClassChanges(classId) {
+  if (window.API?.classes?.update) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can manage classes', 'error');
+      return;
+    }
 
-  const name = document.getElementById('manage-class-name')?.value.trim();
-  const level = document.getElementById('manage-class-level')?.value;
-  const stream = document.getElementById('manage-class-stream')?.value;
-  const teacherId = document.getElementById('manage-class-teacher')?.value;
-  const students = document.getElementById('manage-class-students')?.value;
-  const capacity = document.getElementById('manage-class-capacity')?.value;
-  const subjectsStr = document.getElementById('manage-class-subjects')?.value.trim();
+    const classData = classesData.find(c => c.class_id === classId);
+    if (!classData) {
+      showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+      return;
+    }
 
-  if (!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr) {
-    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    const name = document.getElementById('manage-class-name')?.value.trim();
+    const level = document.getElementById('manage-class-level')?.value;
+    const stream = document.getElementById('manage-class-stream')?.value;
+    const teacherId = document.getElementById('manage-class-teacher')?.value;
+    const capacity = document.getElementById('manage-class-capacity')?.value;
+    const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+    if (!name || !level || !stream || !capacity) {
+      showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.classes.update(classData.id, {
+      name,
+      level,
+      stream,
+      teacher_id: teacher ? teacher.id : null,
+      capacity: parseInt(capacity, 10),
+      subjects
+    });
+
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Class updated successfully!', 'success');
+      await syncAllDataFromBackend();
+      navTo('classes');
+    } else {
+      showToast(res?.message || 'Failed to update class', 'error');
+    }
     return;
   }
 
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-
-  classData.name = name;
-  classData.level = level;
-  classData.stream = stream;
-  classData.teacher_id = teacherId;
-  classData.teacher = teacher?.name || 'Not assigned';
-  classData.students = parseInt(students);
-  classData.capacity = parseInt(capacity);
-  classData.subjects = subjectsStr.split(',').map(s => s.trim());
-
-  showToast('<i class="fas fa-check-circle"></i> Class updated!<br/>Name: ' + name, 'success', 3000);
-
-  setTimeout(() => {
-    navTo('classes');
-  }, 2000);
+  showToast('Backend API is unavailable. Class changes were not saved.', 'error');
+  return;
 }
 
 function renderSubjectCheckboxes(containerId, selectedNames = []) {
@@ -2004,12 +2015,9 @@ function openCreateClass() {
       <div class="form-field">
         <label>Class Level *</label>
         <select id="new-class-level">
-          <option value="Creche">Creche</option>
-          <option value="Nursery">Nursery</option>
-          <option value="KG 1">KG 1</option>
-          <option value="KG 2">KG 2</option>
-          <option value="Basic">Basic</option>
-          <option value="JHS">JHS</option>
+          <option value="Early Childhood">Early Childhood</option>
+          <option value="Primary">Primary</option>
+          <option value="Junior High">Junior High</option>
         </select>
       </div>
       <div class="form-field">
@@ -2051,61 +2059,77 @@ function openCreateClass() {
   renderSubjectCheckboxes('class-subjects-container', []);
 }
 
-function createClass() {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can create classes', 'error');
+async function createClass() {
+  if (window.API?.classes?.create) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can create classes', 'error');
+      return;
+    }
+
+    const name = document.getElementById('new-class-name')?.value.trim();
+    const level = document.getElementById('new-class-level')?.value;
+    const stream = document.getElementById('new-class-stream')?.value;
+    const teacherId = document.getElementById('new-class-teacher')?.value;
+    const capacity = document.getElementById('new-class-capacity')?.value;
+    const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+    if (!name || !level || !stream || !capacity) {
+      showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.classes.create({
+      name,
+      level,
+      stream,
+      teacher_id: teacher ? teacher.id : null,
+      capacity: parseInt(capacity, 10),
+      subjects
+    });
+
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Class created successfully!', 'success');
+      await syncAllDataFromBackend();
+      navTo('classes');
+    } else {
+      showToast(res?.message || 'Failed to create class', 'error');
+    }
     return;
   }
 
-  const name = document.getElementById('new-class-name')?.value.trim();
-  const level = document.getElementById('new-class-level')?.value;
-  const stream = document.getElementById('new-class-stream')?.value;
-  const teacherId = document.getElementById('new-class-teacher')?.value;
-  const students = document.getElementById('new-class-students')?.value;
-  const capacity = document.getElementById('new-class-capacity')?.value;
-  const subjectsStr = document.getElementById('new-class-subjects')?.value.trim();
-
-  if (!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr) {
-    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
-    return;
-  }
-
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  const newClass = {
-    class_id: 'C' + String(classesData.length + 1).padStart(3, '0'),
-    name,
-    level,
-    stream,
-    teacher: teacher?.name || 'Not assigned',
-    teacher_id: teacherId,
-    students: parseInt(students, 10),
-    attendance: '0%',
-    capacity: parseInt(capacity, 10),
-    subjects: subjectsStr.split(',').map(s => s.trim())
-  };
-
-  classesData.push(newClass);
-  showToast('<i class="fas fa-check-circle"></i> Class created successfully!<br/>Name: ' + name, 'success', 3000);
-  setTimeout(() => navTo('classes'), 2000);
+  showToast('Backend API is unavailable. Class was not created.', 'error');
+  return;
 }
 
-function deleteClass(classId) {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can delete classes', 'error');
+async function deleteClass(classId) {
+  if (window.API?.classes?.delete) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can delete classes', 'error');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
+
+    const classData = classesData.find(c => c.class_id === classId);
+    if (!classData) {
+      showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+      return;
+    }
+
+    const res = await API.classes.delete(classData.id);
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
+      await syncAllDataFromBackend();
+      navTo('classes');
+    } else {
+      showToast(res?.message || 'Failed to delete class', 'error');
+    }
     return;
   }
 
-  if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
-
-  const index = classesData.findIndex(c => c.class_id === classId);
-  if (index === -1) {
-    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
-    return;
-  }
-
-  classesData.splice(index, 1);
-  showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
-  setTimeout(() => navTo('classes'), 1200);
+  showToast('Backend API is unavailable. Class was not deleted.', 'error');
+  return;
 }
 
 function filterClasses() {
@@ -2142,7 +2166,7 @@ function updateClassCards(classes) {
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
-        <span><i class="fas fa-users"></i> <strong>${getClassActiveStudentCount(c.name)}</strong> students</span>
+        <span><i class="fas fa-users"></i> <strong>${parseInt(c.students || 0, 10)}</strong> students</span>
         <span style="color:var(--success);font-weight:700">${c.attendance}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>
@@ -2160,7 +2184,7 @@ function updateClassCards(classes) {
 function classesModule() {
   const isAdmin = currentRole === 'Admin';
   const visibleClasses = getVisibleClassesForRole(classesData);
-  const totalStudents = visibleClasses.reduce((sum, c) => sum + getClassActiveStudentCount(c.name), 0);
+  const totalStudents = visibleClasses.reduce((sum, c) => sum + parseInt(c.students || 0, 10), 0);
   const avgClassSize = visibleClasses.length ? Math.round(totalStudents / visibleClasses.length) : 0;
   const statsCards = [
     statCard('<i class="fas fa-building"></i>', visibleClasses.length, isAdmin ? 'Total Classes' : 'My Classes', isAdmin ? 'All levels' : 'Assigned to you', 'neu', 'si-blue'),
@@ -2177,7 +2201,7 @@ function classesModule() {
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
-        <span><i class="fas fa-users"></i> <strong>${getClassActiveStudentCount(c.name)}</strong> students</span>
+        <span><i class="fas fa-users"></i> <strong>${parseInt(c.students || 0, 10)}</strong> students</span>
         <span style="color:var(--success);font-weight:700">${c.attendance}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>

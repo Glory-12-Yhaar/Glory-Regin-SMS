@@ -372,7 +372,7 @@ async function syncAllDataFromBackend() {
                 students: parseInt(c.student_count || 0, 10),
                 capacity: parseInt(c.capacity || 40, 10),
                 subjects: Array.isArray(c.subjects) ? c.subjects : (c.subjects ? c.subjects.split(',').map(s => s.trim()) : []),
-                attendance: '100%'
+                attendance: (parseFloat(c.attendance_avg || 0)) + '%'
             })));
         }
     } catch (e) { console.error("Error syncing classes:", e); }
@@ -418,7 +418,7 @@ async function syncAllDataFromBackend() {
                 student_class: s.class_name || 'Not Assigned',
                 gender: s.gender || 'Male',
                 dob: s.dob || '2015-01-01',
-                attendance: (s.attendance || 95) + '%',
+                attendance: (parseFloat(s.attendance || 0)) + '%',
                 fees_status: s.fees_status || 'Pending',
                 status: s.status || 'Active',
                 avatar_color: s.avatar_color || ['blue', 'gold', 'purple', 'green', 'teal'][s.id % 5],
@@ -1301,18 +1301,9 @@ apiOverrides.createClass = async function() {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   const dbTeacherId = teacher ? teacher.id : null;
 
-  let mappedLevel = 'Primary';
-  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
-    mappedLevel = 'Early Childhood';
-  } else if (levelVal === 'JHS') {
-    mappedLevel = 'Junior High';
-  } else if (levelVal === 'Basic') {
-    mappedLevel = 'Primary';
-  }
-
   const res = await API.classes.create({
     name,
-    level: mappedLevel,
+    level: levelVal,
     stream,
     teacher_id: dbTeacherId,
     capacity: parseInt(capacity, 10),
@@ -1355,18 +1346,9 @@ apiOverrides.saveClassChanges = async function(classId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   const dbTeacherId = teacher ? teacher.id : null;
 
-  let mappedLevel = 'Primary';
-  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
-    mappedLevel = 'Early Childhood';
-  } else if (levelVal === 'JHS') {
-    mappedLevel = 'Junior High';
-  } else if (levelVal === 'Basic') {
-    mappedLevel = 'Primary';
-  }
-
   const res = await API.classes.update(clsObj.id, {
     name,
-    level: mappedLevel,
+    level: levelVal,
     stream,
     teacher_id: dbTeacherId,
     capacity: parseInt(capacity, 10),

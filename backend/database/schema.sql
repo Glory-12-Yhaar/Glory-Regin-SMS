@@ -31,11 +31,15 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `classes` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(50) UNIQUE NOT NULL,
-  `level` ENUM('Early Childhood','Primary','Junior High') NOT NULL,
+  `name` VARCHAR(80) UNIQUE NOT NULL,
+  `level` VARCHAR(80) NOT NULL,
   `teacher_id` INT DEFAULT NULL,
-  `class_teacher` VARCHAR(100),
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+  `class_teacher` VARCHAR(150) DEFAULT NULL,
+  `capacity` INT NOT NULL DEFAULT 40,
+  `stream` VARCHAR(80) NOT NULL DEFAULT 'General',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_classes_level` (`level`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -43,16 +47,20 @@ CREATE TABLE IF NOT EXISTS `classes` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `class_id` INT NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `class_id` INT DEFAULT NULL,
   `icon` VARCHAR(100) DEFAULT NULL,
   `teacher_id` INT DEFAULT NULL,
   `type` ENUM('Core', 'Elective', 'Extracurricular') DEFAULT 'Core',
   `classes` VARCHAR(255) DEFAULT NULL,
-  `hours` VARCHAR(50) DEFAULT NULL,
+  `hours` VARCHAR(80) DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
+  INDEX `idx_subjects_class` (`class_id`),
+  INDEX `idx_subjects_teacher` (`teacher_id`),
+  INDEX `idx_subjects_name` (`name`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
