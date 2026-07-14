@@ -493,13 +493,13 @@ async function syncAllDataFromBackend() {
                 subject_id: 'SUB' + String(s.id).padStart(3, '0'),
                 id: s.id,
                 name: s.name,
-                icon: s.icon || '<i class="fas fa-book"></i>',
+                icon: s.icon || '',
                 type: s.type || 'Core',
-                teacher: s.teacher_name || 'Not assigned',
+                teacher: s.teacher_name || '',
                 teacher_id: s.teacher_id ? 'T' + String(s.teacher_id).padStart(3, '0') : null,
-                classes: s.class_name || s.classes || 'All Forms',
+                classes: s.class_name || s.classes || '',
                 class_id: s.class_id,
-                hours: s.hours || '4 hrs/wk',
+                hours: s.hours || '',
                 description: s.description || ''
             })));
         }
@@ -590,10 +590,11 @@ saveStudentRecords = () => {};
 saveTeacherRecords = () => {};
 saveParentRecords = () => {};
 saveAdmissionRecords = () => {};
+saveSubjectRecords = () => {};
 
 // ── SUBJECTS ACTIONS OVERRIDES ──────────────────────────
 apiOverrides.submitSubjectForm = async function() {
-    const icon = document.getElementById('add-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
+    const icon = document.getElementById('add-subject-icon')?.value?.trim() || '';
     const name = document.getElementById('add-subject-name')?.value?.trim();
     const type = document.getElementById('add-subject-type')?.value;
     const teacherId = document.getElementById('add-subject-teacher')?.value;
@@ -620,7 +621,7 @@ apiOverrides.submitSubjectForm = async function() {
 };
 
 apiOverrides.saveSubjectChanges = async function(subjectId) {
-    const icon = document.getElementById('edit-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
+    const icon = document.getElementById('edit-subject-icon')?.value?.trim() || '';
     const name = document.getElementById('edit-subject-name')?.value?.trim();
     const type = document.getElementById('edit-subject-type')?.value;
     const teacherId = document.getElementById('edit-subject-teacher')?.value;

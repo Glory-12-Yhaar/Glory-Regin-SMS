@@ -2562,38 +2562,50 @@ function showAddSubjectForm() {
   openModal(form);
 }
 
-function submitSubjectForm() {
-  const icon = document.getElementById('add-subject-icon').value.trim() || '<i class="fas fa-book"></i>';
-  const name = document.getElementById('add-subject-name').value.trim();
-  const type = document.getElementById('add-subject-type').value;
-  const teacherId = document.getElementById('add-subject-teacher').value;
-  const teacherName = document.querySelector('#add-subject-teacher option:checked').textContent;
-  const classes = document.getElementById('add-subject-classes').value.trim();
-  const hours = document.getElementById('add-subject-hours').value.trim();
-  const desc = document.getElementById('add-subject-desc').value.trim();
+async function submitSubjectForm() {
+  if (window.API?.subjects?.create) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can add subjects', 'error');
+      return;
+    }
 
-  if (!name || !classes || !hours) {
-    showToast('Please fill in all required fields', 'error');
+    const icon = document.getElementById('add-subject-icon')?.value.trim() || '';
+    const name = document.getElementById('add-subject-name')?.value.trim();
+    const type = document.getElementById('add-subject-type')?.value;
+    const teacherId = document.getElementById('add-subject-teacher')?.value;
+    const classId = document.getElementById('add-subject-class-id')?.value;
+    const hours = document.getElementById('add-subject-hours')?.value.trim();
+    const desc = document.getElementById('add-subject-desc')?.value.trim();
+
+    if (!name || !classId || !hours) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.subjects.create({
+      icon,
+      name,
+      type,
+      teacher_id: teacher ? teacher.id : null,
+      class_id: parseInt(classId, 10),
+      hours,
+      description: desc
+    });
+
+    if (res && res.success) {
+      closeModal();
+      showToast(`Subject "${name}" added successfully`, 'success');
+      await syncAllDataFromBackend();
+      renderMain();
+    } else {
+      showToast(res?.message || 'Failed to add subject', 'error');
+    }
     return;
   }
 
-  const newSubject = {
-    subject_id: 'SUB' + String(subjectsData.length + 1).padStart(3, '0'),
-    icon, name, type, teacher: teacherName, teacher_id: teacherId,
-    classes, hours, description: desc
-  };
-
-  subjectsData.push(newSubject);
-  closeModal();
-  showToast(`Subject "${name}" added successfully`, 'success');
-
-  const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
-  const filteredSubjects = getVisibleSubjectsForRole(subjectsData).filter(s => {
-    const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm) || s.teacher.toLowerCase().includes(searchTerm);
-    return matchesType && matchesSearch;
-  });
-  updateSubjectDisplay(filteredSubjects);
+  showToast('Backend API is unavailable. Subject was not created.', 'error');
+  return;
 }
 
 function viewSubject(subjectId) {
@@ -2701,73 +2713,80 @@ function editSubject(subjectId) {
   openModal(form);
 }
 
-function saveSubjectChanges(subjectId) {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can edit subjects', 'error');
+async function saveSubjectChanges(subjectId) {
+  if (window.API?.subjects?.update) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can edit subjects', 'error');
+      return;
+    }
+
+    const subject = subjectsData.find(s => s.subject_id === subjectId);
+    if (!subject) return;
+
+    const icon = document.getElementById('edit-subject-icon')?.value.trim() || '';
+    const name = document.getElementById('edit-subject-name')?.value.trim();
+    const type = document.getElementById('edit-subject-type')?.value;
+    const teacherId = document.getElementById('edit-subject-teacher')?.value;
+    const classId = document.getElementById('edit-subject-class-id')?.value;
+    const hours = document.getElementById('edit-subject-hours')?.value.trim();
+    const desc = document.getElementById('edit-subject-desc')?.value.trim();
+
+    if (!name || !classId || !hours) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.subjects.update(subject.id, {
+      icon,
+      name,
+      type,
+      teacher_id: teacher ? teacher.id : null,
+      class_id: parseInt(classId, 10),
+      hours,
+      description: desc
+    });
+
+    if (res && res.success) {
+      closeModal();
+      showToast('Subject updated successfully', 'success');
+      await syncAllDataFromBackend();
+      renderMain();
+    } else {
+      showToast(res?.message || 'Failed to update subject', 'error');
+    }
     return;
   }
 
-  const subject = subjectsData.find(s => s.subject_id === subjectId);
-  if (!subject) return;
-
-  const icon = document.getElementById('edit-subject-icon').value.trim() || '<i class="fas fa-book"></i>';
-  const name = document.getElementById('edit-subject-name').value.trim();
-  const type = document.getElementById('edit-subject-type').value;
-  const teacherId = document.getElementById('edit-subject-teacher').value;
-  const teacherName = document.querySelector('#edit-subject-teacher option:checked').textContent;
-  const classes = document.getElementById('edit-subject-classes').value.trim();
-  const hours = document.getElementById('edit-subject-hours').value.trim();
-  const desc = document.getElementById('edit-subject-desc').value.trim();
-
-  if (!name || !classes || !hours) {
-    showToast('Please fill in all required fields', 'error');
-    return;
-  }
-
-  subject.icon = icon;
-  subject.name = name;
-  subject.type = type;
-  subject.teacher = teacherName;
-  subject.teacher_id = teacherId;
-  subject.classes = classes;
-  subject.hours = hours;
-  subject.description = desc;
-
-  closeModal();
-  showToast('Subject updated successfully', 'success');
-
-  const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
-  const filteredSubjects = getVisibleSubjectsForRole(subjectsData).filter(s => {
-    const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm) || s.teacher.toLowerCase().includes(searchTerm);
-    return matchesType && matchesSearch;
-  });
-  updateSubjectDisplay(filteredSubjects);
+  showToast('Backend API is unavailable. Subject changes were not saved.', 'error');
+  return;
 }
 
-function deleteSubject(subjectId) {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can delete subjects', 'error');
+async function deleteSubject(subjectId) {
+  if (window.API?.subjects?.delete) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can delete subjects', 'error');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this subject?')) return;
+
+    const subject = subjectsData.find(s => s.subject_id === subjectId);
+    if (!subject) return;
+
+    const res = await API.subjects.delete(subject.id);
+    if (res && res.success) {
+      showToast(`Subject "${subject.name}" deleted`, 'success');
+      await syncAllDataFromBackend();
+      renderMain();
+    } else {
+      showToast(res?.message || 'Failed to delete subject', 'error');
+    }
     return;
   }
 
-  if (!confirm('Are you sure you want to delete this subject?')) return;
-
-  const subject = subjectsData.find(s => s.subject_id === subjectId);
-  if (!subject) return;
-
-  const index = subjectsData.indexOf(subject);
-  subjectsData.splice(index, 1);
-
-  showToast(`Subject "${subject.name}" deleted`, 'success');
-
-  const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
-  const filteredSubjects = getVisibleSubjectsForRole(subjectsData).filter(s => {
-    const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm) || s.teacher.toLowerCase().includes(searchTerm);
-    return matchesType && matchesSearch;
-  });
-  updateSubjectDisplay(filteredSubjects);
+  showToast('Backend API is unavailable. Subject was not deleted.', 'error');
+  return;
 }
 
 
@@ -3749,22 +3768,7 @@ function createOrUpdateParentFromAdmission(admission, student) {
 }
 
 // SUBJECTS DATA
-let subjectsData = [
-  { subject_id: 'SUB001', icon: '<i class="fas fa-ruler-combined"></i>', name: 'Mathematics', teacher: 'Mr. Amponsah', teacher_id: 'T001', type: 'Core', classes: 'All Forms', hours: '8 hrs/wk', description: 'Core mathematics for all forms.' },
-  { subject_id: 'SUB002', icon: '<i class="fas fa-flask-vial"></i>', name: 'Science', teacher: 'Mr. Oduro', teacher_id: 'T003', type: 'Core', classes: 'All Forms', hours: '6 hrs/wk', description: 'Core science concepts and practical investigation for all forms.' },
-  { subject_id: 'SUB003', icon: '<i class="fas fa-book-open"></i>', name: 'English', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Core', classes: 'All Forms', hours: '8 hrs/wk', description: 'Core English language, reading, grammar, comprehension, and writing.' },
-  { subject_id: 'SUB004', icon: '<i class="fas fa-landmark"></i>', name: 'Social Studies', teacher: 'Mr. Boateng', teacher_id: 'T005', type: 'Core', classes: 'All Forms', hours: '4 hrs/wk', description: 'Core citizenship, history, geography, and social studies.' },
-  { subject_id: 'SUB005', icon: '<i class="fas fa-calculator"></i>', name: 'Numeracy', teacher: 'Mr. Amponsah', teacher_id: 'T001', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '5 hrs/wk', description: 'Foundational number work and early mathematics skills.' },
-  { subject_id: 'SUB006', icon: '<i class="fas fa-spell-check"></i>', name: 'Literacy', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '5 hrs/wk', description: 'Foundational phonics, reading readiness, and communication skills.' },
-  { subject_id: 'SUB007', icon: '<i class="fas fa-palette"></i>', name: 'Creative Art', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2, Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Drawing, craft, design, appreciation, and creative expression.' },
-  { subject_id: 'SUB008', icon: '<i class="fas fa-pen-nib"></i>', name: 'Writing', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '3 hrs/wk', description: 'Handwriting, early composition, and written expression.' },
-  { subject_id: 'SUB009', icon: '<i class="fas fa-leaf"></i>', name: 'Environmental Studies', teacher: 'Mr. Oduro', teacher_id: 'T003', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '3 hrs/wk', description: 'Learner-friendly study of the home, school, community, and environment.' },
-  { subject_id: 'SUB010', icon: '<i class="fas fa-hands-praying"></i>', name: 'RME', teacher: 'Mrs. Aidoo', teacher_id: 'T006', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Religious and Moral Education focused on values, faith, and community life.' },
-  { subject_id: 'SUB011', icon: '<i class="fas fa-language"></i>', name: 'Dagaare', teacher: 'Mrs. Aidoo', teacher_id: 'T006', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Local language study covering speaking, reading, and writing in Dagaare.' },
-  { subject_id: 'SUB012', icon: '<i class="fas fa-laptop"></i>', name: 'Computing', teacher: 'Ms. Frimpong', teacher_id: 'T004', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '4 hrs/wk', description: 'Computer literacy, digital skills, and introductory ICT concepts.' },
-  { subject_id: 'SUB013', icon: '<i class="fas fa-scroll"></i>', name: 'History', teacher: 'Mr. Boateng', teacher_id: 'T005', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Historical knowledge, culture, heritage, and national development.' },
-  { subject_id: 'SUB014', icon: '<i class="fas fa-screwdriver-wrench"></i>', name: 'Career Technology', teacher: 'Ms. Frimpong', teacher_id: 'T004', type: 'Elective', classes: 'JHS 1, JHS 2, JHS 3', hours: '4 hrs/wk', description: 'Practical technology, design, entrepreneurship, and career readiness.' },
-];
+let subjectsData = [];
 
 
 // PARENTS DATA
