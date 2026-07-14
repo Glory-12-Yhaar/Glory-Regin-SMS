@@ -572,6 +572,32 @@ async function syncAllDataFromBackend() {
     } catch (e) { console.error("Error syncing exams:", e); }
 
     try {
+        const res = await API.assignments.list();
+        if (res && res.success && res.data && Array.isArray(window.assignmentsData)) {
+            assignmentsData.splice(0, assignmentsData.length, ...res.data.map(a => ({
+                id: parseInt(a.id, 10),
+                title: a.title || '',
+                subject: a.subject || '',
+                class_id: a.class_id ? parseInt(a.class_id, 10) : null,
+                teacher_id: a.teacher_id ? parseInt(a.teacher_id, 10) : null,
+                class: a.class_name || '',
+                className: a.class_name || '',
+                teacher: a.teacher_name || '',
+                dueDate: a.due_date || '',
+                createdDate: a.created_date || '',
+                maxScore: parseFloat(a.max_score || 0),
+                status: a.status || 'Active',
+                instructions: a.instructions || '',
+                attachment: a.attachment || '',
+                submittedCount: parseInt(a.submitted_count || 0, 10),
+                totalStudents: parseInt(a.total_students || 0, 10),
+                submittedStudentIds: String(a.submitted_student_ids || '').split(',').map(v => parseInt(v, 10)).filter(Boolean),
+                submissions: {}
+            })));
+        }
+    } catch (e) { console.error("Error syncing assignments:", e); }
+
+    try {
         const res = await API.grades.list();
         if (res && res.success && res.data && Array.isArray(window.gradesData)) {
             gradesData.splice(0, gradesData.length, ...res.data.map(g => ({

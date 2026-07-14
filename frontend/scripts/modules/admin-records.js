@@ -3881,8 +3881,10 @@ const teachersData = [];
 const classesData = [];
 const examsData = [];
 const gradesData = [];
+const assignmentsData = [];
 window.examsData = examsData;
 window.gradesData = gradesData;
+window.assignmentsData = assignmentsData;
 window.reportsAnalyticsData = null;
 
 const STUDENT_RECORDS_KEY = 'gr_student_records';

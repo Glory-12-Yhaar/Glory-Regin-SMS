@@ -217,107 +217,6 @@ const STUDENTS_DATA = {
   }
 };
 
-// ASSIGNMENTS DATA STRUCTURE
-const ASSIGNMENTS_DATA = {
-  '1': {
-    id: '1',
-    title: 'Chapter 5 Problems',
-    subject: 'Mathematics',
-    class: 'Basic 6',
-    teacher: 'Mr. Boateng Sr.',
-    dueDate: '2025-03-17',
-    createdDate: '2025-03-10',
-    maxScore: 50,
-    status: 'Active',
-    instructions: 'Solve all problems in Chapter 5 including word problems. Show all working.',
-    attachment: 'Chapter5-Problems.pdf',
-    submissions: {
-      'Ama Serwaa': { submitted: '2025-03-16', score: 45, feedback: 'Excellent work! All problems solved correctly.' },
-      'Kwame Asante': { submitted: '2025-03-16', score: 38, feedback: 'Good effort. Check problem 7 again.' },
-      'Abena Mensah': { submitted: '2025-03-15', score: 48, feedback: 'Perfect! Very accurate solutions.' },
-      'Akosua Darko': { submitted: '2025-03-14', score: 50, feedback: 'Outstanding! Perfect solution.' },
-      'Yaw Mensah': { submitted: '2025-03-16', score: 42, feedback: 'Good work overall.' }
-    }
-  },
-  '2': {
-    id: '2',
-    title: 'Essay on Climate Change',
-    subject: 'English',
-    class: 'JHS 1',
-    teacher: 'Ms. Mensah',
-    dueDate: '2025-03-20',
-    createdDate: '2025-03-08',
-    maxScore: 40,
-    status: 'Active',
-    instructions: 'Write a 500-word essay on the causes and effects of climate change. Include at least 3 sources.',
-    attachment: 'EssayGuidelines.docx',
-    submissions: {
-      'Ama Serwaa': { submitted: '2025-03-18', score: 36, feedback: 'Great research and clear arguments.' },
-      'Abena Mensah': { submitted: '2025-03-17', score: 38, feedback: 'Excellent essay with strong points.' },
-      'Akosua Darko': { submitted: '2025-03-16', score: 40, feedback: 'Outstanding essay! Perfect structure.' }
-    }
-  },
-  '3': {
-    id: '3',
-    title: 'Lab Report Chapter 3',
-    subject: 'Science',
-    class: 'Basic 4',
-    teacher: 'Mrs. Asante',
-    dueDate: '2025-03-22',
-    createdDate: '2025-03-15',
-    maxScore: 30,
-    status: 'Active',
-    instructions: 'Write a detailed lab report on the experiment conducted in class. Include hypothesis, procedure, results, and conclusion.',
-    attachment: 'LabReportTemplate.docx',
-    submissions: {
-      'Kwame Asante': { submitted: '2025-03-21', score: 25, feedback: 'Good attempt. Include more details in results.' },
-      'Yaw Mensah': { submitted: '2025-03-20', score: 28, feedback: 'Excellent report with clear structure.' }
-    }
-  },
-  '4': {
-    id: '4',
-    title: 'Database Design',
-    subject: 'ICT',
-    class: 'Basic 5',
-    teacher: 'Mr. Owusu',
-    dueDate: '2025-03-25',
-    createdDate: '2025-03-17',
-    maxScore: 60,
-    status: 'Active',
-    instructions: 'Design a database for a school management system with ERD and SQL queries.',
-    attachment: 'DatabaseTemplate.sql',
-    submissions: {}
-  },
-  '5': {
-    id: '5',
-    title: 'WWI Essay',
-    subject: 'History',
-    class: 'JHS 2',
-    teacher: 'Mr. Owusu',
-    dueDate: '2025-03-28',
-    createdDate: '2025-03-18',
-    maxScore: 40,
-    status: 'Upcoming',
-    instructions: 'Write an essay on the causes and consequences of World War I.',
-    attachment: 'WW1Guidelines.pdf',
-    submissions: {}
-  },
-  '6': {
-    id: '6',
-    title: 'French Vocab Test',
-    subject: 'French',
-    class: 'Basic 6',
-    teacher: 'Mr. Boateng Sr.',
-    dueDate: '2025-04-01',
-    createdDate: '2025-03-20',
-    maxScore: 25,
-    status: 'Upcoming',
-    instructions: 'Test on vocabulary from Units 5-7. 50 multiple choice and 10 fill-in-the-blank questions.',
-    attachment: 'VocabList.pdf',
-    submissions: {}
-  }
-};
-
 // ALUMNI DATA STRUCTURE
 const ALUMNI_DATA = {
   'ALM001': { id: 'ALM001', name: 'Abena Owusu', classYear: 2018, profession: 'Software Engineer', location: 'Accra · Google Ghana', avatar: 'AO', avatarColor: 'purple', bio: 'Working as Senior Developer at Google Ghana', email: 'abena.owusu@gmail.com', phone: '+233 24 111 0001', instagram: '@abenaotech', linkedin: 'linkedin.com/in/abenaowusu', twitter: '@abenaotech', facebook: 'facebook.com/abena.owusu' },
@@ -1437,7 +1336,7 @@ function downloadIDCard(studentName, studentID) {
 }
 
 let APP_NOTIFICATIONS = [
-  { id: 1, icon: '<i class="fas fa-clipboard-list"></i>', title: 'New Assignment', msg: 'Math HW Ch.5 posted', time: '2m ago', read: false, fullMsg: 'Mr. Amponsah has posted a new assignment: Mathematics Chapter 5 Problems. Due date: March 22, 2026. Please complete and submit before the deadline.', action: 'View Assignment', actionLink: 'assignments' },
+  { id: 1, icon: '<i class="fas fa-clipboard-list"></i>', title: 'Assignment Update', msg: 'New assignment posted', time: '2m ago', read: false, fullMsg: 'A new assignment has been posted. Open the assignments module to view the current database records and due dates.', action: 'View Assignment', actionLink: 'assignments' },
   { id: 2, icon: '<i class="fas fa-check-circle"></i>', title: 'Grade Posted', msg: 'Your essay - Grade A', time: '1h ago', read: false, fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.', action: 'View Feedback', actionLink: 'grades' },
   { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Admission Update', msg: 'New student enrolled', time: '3h ago', read: true, fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.', action: 'View Details', actionLink: 'admissions' },
   { id: 4, icon: '<i class="fas fa-comments"></i>', title: 'New Message', msg: 'Message from Ms. Mensah', time: '5h ago', read: true, fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.', action: 'Reply', actionLink: 'messaging' },

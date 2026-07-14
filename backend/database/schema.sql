@@ -185,8 +185,10 @@ CREATE TABLE IF NOT EXISTS `assignments` (
   `instructions` TEXT,
   `attachment` VARCHAR(255),
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE SET NULL,
-  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL,
+  INDEX `idx_assignments_class_status` (`class_id`, `status`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `exams` (
@@ -216,8 +218,10 @@ CREATE TABLE IF NOT EXISTS `assignment_submissions` (
   `score` DECIMAL(5,2),
   `feedback` TEXT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`assignment_id`) REFERENCES `assignments`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `uq_submission` (`assignment_id`, `student_id`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────

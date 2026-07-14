@@ -840,14 +840,13 @@ function openMessagingFromTeacherShortcut(teacherId) {
 }
 
 function viewAssignmentDetails(assignmentId) {
-  const title = String(assignmentId || 'Assignment');
-  const assignment = Object.values(ASSIGNMENTS_DATA || {}).find(a => a.title === title) || {
-    title,
-    subject: 'Class Assignment',
-    class: getCurrentStudentRecord()?.student_class || 'Current Class',
-    dueDate: 'This week',
-    instructions: 'Review the assignment instructions, prepare your work, and submit before the due date.'
-  };
+  const title = String(assignmentId || '');
+  const assignment = (window.assignmentsData || []).find(a => String(a.id) === title || a.title === title);
+  if (!assignment) {
+    showToast('<i class="fas fa-info-circle"></i> Open assignments to view current records', 'info');
+    navTo('assignments');
+    return;
+  }
   const el = document.getElementById('main-content');
   if (!el) return;
   currentMod = 'dashboard';
@@ -855,7 +854,7 @@ function viewAssignmentDetails(assignmentId) {
     <div class="card" style="max-width:760px">
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0">
         <div style="background:var(--blue-xpale);padding:12px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">SUBJECT</div><div style="font-size:13px;font-weight:700">${escapeHtml(assignment.subject || 'General')}</div></div>
-        <div style="background:var(--gray-50);padding:12px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">CLASS</div><div style="font-size:13px;font-weight:700">${escapeHtml(assignment.class || 'All')}</div></div>
+        <div style="background:var(--gray-50);padding:12px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">CLASS</div><div style="font-size:13px;font-weight:700">${escapeHtml(assignment.className || assignment.class || 'All')}</div></div>
         <div style="background:var(--gold-xlight);padding:12px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">DUE</div><div style="font-size:13px;font-weight:700">${escapeHtml(assignment.dueDate || assignment.due_date || 'TBD')}</div></div>
       </div>
       <p style="font-size:13px;color:var(--gray-600);line-height:1.7">${escapeHtml(assignment.instructions || 'Complete the work and submit through the assignments module.')}</p>
@@ -992,21 +991,36 @@ function viewStatDetail(statType) {
   openModal(`<div style="padding:20px;text-align:center">${content}</div>`);
 }
 
-function viewAssignmentSubmissions(assignmentName) {
+async function viewAssignmentSubmissions(assignmentName) {
+  const assignment = (window.assignmentsData || []).find(a => a.title === assignmentName || String(a.id) === String(assignmentName));
+  if (!assignment) {
+    showToast('<i class="fas fa-times-circle"></i> Assignment not found', 'error');
+    return;
+  }
+  const res = await API.assignments.submissions(assignment.id);
+  if (!res || !res.success) {
+    showToast(res?.message || 'Unable to load submissions', 'error');
+    return;
+  }
+  const rows = res.data || [];
   const modal = `
     <div style="padding:20px;max-width:700px;max-height:80vh;overflow-y:auto">
-      <h2 style="color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-file-upload"></i> ${assignmentName} - Submissions</h2>
+      <h2 style="color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-file-upload"></i> ${escapeHtml(assignment.title)} - Submissions</h2>
       <table class="tbl" style="font-size:12px">
         <thead><tr><th>Student</th><th>Status</th><th>Submitted</th><th>Grade</th><th>Action</th></tr></thead>
         <tbody>
-          ${[['Ama Serwaa', 'Submitted', 'Mar 15', 'A', 'Review'], ['Kwame Asante', 'Submitted', 'Mar 15', 'B+', 'Review'], ['Abena Mensah', 'Pending', '-', '-', 'N/A'], ['Kofi Boateng', 'Submitted', 'Mar 14', 'A-', 'Review']].map(([s, st, d, g, a]) => `
+          ${rows.map(row => {
+            const submitted = !!row.submitted_at || row.score !== null;
+            const st = submitted ? 'Submitted' : 'Pending';
+            return `
           <tr>
-            <td style="font-weight:600">${s}</td>
+            <td style="font-weight:600">${escapeHtml(row.student_name)}</td>
             <td><span class="badge ${st === 'Submitted' ? 'b-success' : 'b-warning'}">${st}</span></td>
-            <td>${d}</td>
-            <td>${g}</td>
-            <td><button class="btn btn-secondary btn-xs" onclick="gradeAssignmentSubmission('${s}', '${assignmentName}')">${a}</button></td>
-          </tr>`).join('')}
+            <td>${row.submitted_at ? escapeHtml(row.submitted_at) : '-'}</td>
+            <td>${row.score !== null && row.score !== undefined ? escapeHtml(String(row.score)) : '-'}</td>
+            <td><button class="btn btn-secondary btn-xs" onclick="openGradeSubmissionForm('${assignment.id}', '${row.student_id}')">${submitted ? 'Review' : 'Grade'}</button></td>
+          </tr>`;
+          }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:16px">No students found for this assignment class.</td></tr>'}
         </tbody>
       </table>
       <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
