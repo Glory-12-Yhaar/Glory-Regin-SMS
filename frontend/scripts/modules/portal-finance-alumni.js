@@ -1191,15 +1191,18 @@ function getTeacherPayrollGrade(teacher) {
 
 function getTeacherPayrollBasic(teacher) {
   if (Number(teacher.basicSalary) > 0) return Number(teacher.basicSalary);
+  if (Number(teacher.salary_grade) > 0) return Number(teacher.salary_grade);
   const grade = getTeacherPayrollGrade(teacher);
   const basicByGrade = { 'Grade 8': 3200, 'Grade 7': 3000, 'Grade 6': 2800, 'Grade 5': 2500 };
   return basicByGrade[grade] || 2500;
 }
 
 function buildPayrollRows() {
+  const teacherIds = new Set();
   const teacherRows = teachersData
     .filter(t => (t.status || 'Active') !== 'Inactive')
     .map((teacher, index) => {
+      teacherIds.add(String(teacher.staff_id || teacher.id || teacher.teacher_id || teacher.email || teacher.name));
       const basic = getTeacherPayrollBasic(teacher);
       const allowance = Number(teacher.allowances ?? Math.round(basic * 0.25));
       const deduction = Number(teacher.deductions ?? Math.round(basic * 0.10));
@@ -1214,22 +1217,38 @@ function buildPayrollRows() {
         status: index < 2 ? 'Paid' : 'Pending'
       };
     });
-  const supportRows = [
-    { name: 'Mr. Kojo', role: 'Accountant', grade: 'Admin A', basic: 4500, allowance: 1000, deduction: 450, net: 5050, status: 'Paid' },
-    { name: 'Mrs. Ofori', role: 'Secretary', grade: 'Admin B', basic: 2200, allowance: 500, deduction: 220, net: 2480, status: 'Paid' }
-  ];
+  const supportRows = (window.staffData || [])
+    .filter(staff => (staff.status || 'Active') !== 'Inactive')
+    .filter(staff => !teacherIds.has(String(staff.staff_id || staff.id || staff.teacher_id || staff.email || staff.name)))
+    .map(staff => {
+      const basic = Number(staff.basicSalary || staff.base_salary || staff.salary_grade || 0);
+      const allowance = Number(staff.allowances || 0);
+      const deduction = Number(staff.deductions || 0);
+      return {
+        name: staff.name,
+        role: staff.position || staff.role || staff.category || 'Staff',
+        grade: staff.salary_grade || staff.grade || 'Staff',
+        basic,
+        allowance,
+        deduction,
+        net: Number(staff.net_salary || (basic + allowance - deduction)),
+        status: staff.salary_status || staff.payroll_status || 'Pending'
+      };
+    });
   return [...teacherRows, ...supportRows];
 }
 
 function salaryModule() {
   const payrollRows = buildPayrollRows();
+  const finance = getFinanceSummary();
+  const financePeriod = [finance.term, finance.academicYear].filter(Boolean).join(' ') || 'Current Period';
   const monthlyPayroll = payrollRows.reduce((sum, row) => sum + Number(row.net || 0), 0);
   const pendingCount = payrollRows.filter(row => row.status !== 'Paid').length;
   const statsCards = [
     statCard('<i class="fas fa-briefcase"></i>', String(payrollRows.length), 'Total Staff', 'For payroll', 'neu', 'si-blue'),
     statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(monthlyPayroll).toLocaleString(), 'Monthly Payroll', 'Total outgoing', 'neu', 'si-gold'),
     statCard('<i class="fas fa-check-circle"></i>', String(pendingCount), 'Pending', pendingCount ? 'Needs processing' : 'All current', pendingCount ? 'dn' : 'up', pendingCount ? 'si-red' : 'si-green'),
-    statCard('<i class="fas fa-calendar-alt"></i>', 'Mar 28', 'Next Pay Date', 'In 11 days', 'neu', 'si-purple')
+    statCard('<i class="fas fa-calendar-alt"></i>', financePeriod, 'Payroll Period', 'From backend settings', 'neu', 'si-purple')
   ].join('');
   const payrollRowsHtml = payrollRows.map(({name: n, role: r, grade: g, basic: b, allowance: al, deduction: d, net, status: s}) => `
         <tr>
@@ -1255,19 +1274,26 @@ function openPayrollProcessPage() {
   currentMod = 'salary';
   const el = document.getElementById('main-content');
   if (!el) return;
+  const payrollRows = buildPayrollRows();
+  const finance = getFinanceSummary();
+  const financePeriod = [finance.term, finance.academicYear].filter(Boolean).join(' ') || 'Current Period';
+  const payrollTotal = payrollRows.reduce((sum, row) => sum + Number(row.net || 0), 0);
+  const teachingCount = payrollRows.filter(row => String(row.role || '').toLowerCase().includes('teacher')).length;
+  const adminCount = payrollRows.filter(row => String(row.role || '').toLowerCase().includes('admin') || String(row.role || '').toLowerCase().includes('account')).length;
+  const supportCount = Math.max(0, payrollRows.length - teachingCount - adminCount);
   el.innerHTML = hdr('Process Payroll', 'Review and process the current month payroll batch', 'Payroll') + `
     <div class="card" style="max-width:780px">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> March 2025 Payroll Batch</span></div>
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> ${escapeHtml(financePeriod)} Payroll Batch</span></div>
       <p style="font-size:13px;color:var(--gray-600);line-height:1.7;margin-bottom:16px">This page marks all pending payroll rows as processed and creates a payroll batch record for the accountant dashboard.</p>
       <div class="g3" style="margin-bottom:18px">
-        ${statCard('<i class="fas fa-users"></i>', '94', 'Staff Included', 'All departments', 'neu', 'si-blue')}
-        ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ148K', 'Estimated Payroll', 'March 2025', 'neu', 'si-gold')}
-        ${statCard('<i class="fas fa-calendar"></i>', 'Mar 28', 'Pay Date', 'Scheduled', 'up', 'si-green')}
+        ${statCard('<i class="fas fa-users"></i>', String(payrollRows.length), 'Staff Included', 'All departments', 'neu', 'si-blue')}
+        ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(payrollTotal).toLocaleString(), 'Estimated Payroll', financePeriod, 'neu', 'si-gold')}
+        ${statCard('<i class="fas fa-calendar"></i>', financePeriod, 'Payroll Period', 'Scheduled', 'up', 'si-green')}
       </div>
       <div style="background:var(--gold-xlight);border:1px solid var(--gold-light);border-radius:8px;padding:14px;margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Teaching staff</span><strong>64</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Admin staff</span><strong>12</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Support staff</span><strong>18</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Teaching staff</span><strong>${teachingCount}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Admin staff</span><strong>${adminCount}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Support staff</span><strong>${supportCount}</strong></div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="confirmPayrollBatch()"><i class="fas fa-check"></i> Confirm Process</button>
@@ -1281,7 +1307,11 @@ function confirmPayrollBatch() {
   try {
     const key = 'gr_payroll_batches';
     const batches = JSON.parse(appMemoryStorage.getItem(key) || '[]');
-    batches.unshift({ id: Date.now(), month: 'March 2025', staff: 94, amount: 148000, processedAt: new Date().toISOString() });
+    const payrollRows = buildPayrollRows();
+    const finance = getFinanceSummary();
+    const financePeriod = [finance.term, finance.academicYear].filter(Boolean).join(' ') || 'Current Period';
+    const payrollTotal = payrollRows.reduce((sum, row) => sum + Number(row.net || 0), 0);
+    batches.unshift({ id: Date.now(), month: financePeriod, staff: payrollRows.length, amount: payrollTotal, processedAt: new Date().toISOString() });
     appMemoryStorage.setItem(key, JSON.stringify(batches.slice(0, 24)));
   } catch(e) {}
   closeModal();
@@ -1297,11 +1327,13 @@ function openPayslipPage(name, role, grade, netPay) {
   currentMod = 'salary';
   const el = document.getElementById('main-content');
   if (!el) return;
-  el.innerHTML = hdr('Staff Payslip', 'Generated payroll slip for March 2025', 'Payroll') + `
+  const finance = getFinanceSummary();
+  const financePeriod = [finance.term, finance.academicYear].filter(Boolean).join(' ') || 'Current Period';
+  el.innerHTML = hdr('Staff Payslip', 'Generated payroll slip for ' + financePeriod, 'Payroll') + `
     <div class="card" style="max-width:680px">
       <div style="text-align:center;margin-bottom:18px">
         <h3 style="margin:0;color:var(--blue-dark)">Glory Reign Preparatory School</h3>
-        <div style="font-size:12px;color:var(--gray-500)">Staff Payslip Â· March 2025</div>
+        <div style="font-size:12px;color:var(--gray-500)">Staff Payslip Â· ${escapeHtml(financePeriod)}</div>
       </div>
       <div style="border:1.5px solid var(--gray-200);border-radius:8px;padding:16px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Staff</span><strong>${escapeHtml(name)}</strong></div>
@@ -2492,36 +2524,6 @@ function balanceSheetModule() {
     </div>
   </div>`;
 }
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Expenditure â€” Term 1, 2025</span></div>
-      <table class="tbl">
-        <thead><tr><th>Category</th><th>Amount (GHâ‚µ)</th><th>%</th></tr></thead>
-        <tbody>
-          ${[['Staff Salaries', '148,000', '66%'], ['Utilities', '12,000', '5%'], ['Maintenance', '8,500', '4%'], ['Stationery', '5,200', '2%'], ['Sports Equipment', '4,800', '2%'], ['Other Expenses', '9,500', '4%']].map(([c, a, p]) => `
-          <tr><td>${c}</td><td style="font-weight:700;color:var(--danger)">GHâ‚µ${a}</td><td><span class="badge b-gray">${p}</span></td></tr>`).join('')}
-          <tr style="background:#fff1f2"><td style="font-weight:800">TOTAL EXPENDITURE</td><td style="font-weight:800;color:var(--danger)">GHâ‚µ188,000</td><td>100%</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-    <div class="fee-hero">
-      <h3>Total Income</h3>
-      <div class="amount">GHâ‚µ 297,000</div>
-      <div class="sub">Term 1, 2025</div>
-    </div>
-    <div class="fee-hero" style="background:linear-gradient(135deg,#991b1b,var(--danger))">
-      <h3>Total Expenditure</h3>
-      <div class="amount">GHâ‚µ 188,000</div>
-      <div class="sub">Term 1, 2025</div>
-    </div>
-    <div class="fee-hero" style="background:linear-gradient(135deg,#065f46,var(--success))">
-      <h3>Net Surplus</h3>
-      <div class="amount">GHâ‚µ 109,000</div>
-      <div class="sub">After all expenses</div>
-    </div>
-  </div>`;
-}
 
 // ALUMNI DIRECTORY
 function alumniDirectory() {
@@ -2679,6 +2681,7 @@ function alumniPubModule() {
     </div>
   </div>`+ alumniDirectory();
 }
+
 
 
 
