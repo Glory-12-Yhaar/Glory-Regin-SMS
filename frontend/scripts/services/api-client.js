@@ -153,6 +153,7 @@ const API = {
     // ── Dashboard / Reports ──────────────────────────────────
     dashboard: () => apiRequest('/reports/dashboard.php'),
     analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
+    financeReport: (params = {}) => apiRequest('/reports/finance.php?' + new URLSearchParams(params)),
 
     exams: {
         list:   (params = {}) => apiRequest('/exams/index.php?' + new URLSearchParams(params)),
@@ -472,6 +473,60 @@ async function syncAllDataFromBackend() {
             })));
         }
     } catch (e) { console.error("Error syncing parents:", e); }
+
+    // 4b. Fees and payments
+    try {
+        const res = await API.fees.list({ limit: 500 });
+        if (res && res.success && res.data && Array.isArray(window.feesData)) {
+            feesData.splice(0, feesData.length, ...res.data.map(f => ({
+                id: parseInt(f.id, 10),
+                student_id: parseInt(f.student_id || 0, 10),
+                studentCode: f.student_code || '',
+                student: f.student_name || '',
+                studentName: f.student_name || '',
+                className: f.class_name || '',
+                term: f.term || '',
+                academic_year: f.academic_year || '',
+                amountDue: parseFloat(f.amount_due || 0),
+                amountPaid: parseFloat(f.amount_paid || 0),
+                balance: parseFloat(f.balance || 0),
+                receipt: f.receipt_no || '',
+                paymentDate: f.payment_date || '',
+                status: f.status || 'Pending'
+            })));
+        }
+    } catch (e) { console.error("Error syncing fees:", e); }
+
+    try {
+        const res = await API.fees.payments({ limit: 500 });
+        if (res && res.success && res.data && Array.isArray(window.paymentsData)) {
+            paymentsData.splice(0, paymentsData.length, ...res.data.map(p => ({
+                id: parseInt(p.id, 10),
+                student_id: parseInt(p.student_id || 0, 10),
+                studentCode: p.student_code || '',
+                student: p.student_name || '',
+                studentName: p.student_name || '',
+                className: p.class_name || '',
+                amount: parseFloat(p.amount || 0),
+                term: p.term || '',
+                academic_year: p.academic_year || '',
+                date: p.payment_date || '',
+                paymentDate: p.payment_date || '',
+                method: p.method || '',
+                receipt: p.receipt_no || '',
+                receivedBy: p.received_by || '',
+                remarks: p.remarks || '',
+                status: p.fee_status || 'Paid'
+            })));
+        }
+    } catch (e) { console.error("Error syncing payments:", e); }
+
+    try {
+        const res = await API.financeReport();
+        if (res && res.success && res.data) {
+            window.financeReportData = res.data;
+        }
+    } catch (e) { console.error("Error syncing finance report:", e); }
 
     // 5. Admissions
     try {

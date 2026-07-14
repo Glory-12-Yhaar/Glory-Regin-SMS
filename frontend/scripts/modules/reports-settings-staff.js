@@ -1,4 +1,4 @@
-
+﻿
 // Report-card-specific grading thresholds.
 function calculateReportGrade(score) {
   if (score >= 90) return 'A';
@@ -263,8 +263,8 @@ function generateReportCard(studentId) {
         <div style="text-align:center"><img src="assets/images/Logo.png" alt="Logo" style="width:58px;height:58px;object-fit:contain"><div style="font-size:9px">School Logo</div></div>
         <div>
           <div class="rc-school">Glory Reign Preparatory School</div>
-          <div class="rc-subline">Terminal Report Card · ${student.term} Term · ${student.year}</div>
-          <div class="rc-subline">P.O. Box AN 1234, Accra North · Tel: +233-123-456-789</div>
+          <div class="rc-subline">Terminal Report Card Â· ${student.term} Term Â· ${student.year}</div>
+          <div class="rc-subline">P.O. Box AN 1234, Accra North Â· Tel: +233-123-456-789</div>
         </div>
         <div class="rc-photo">${photoHTML}<span>Student Photo</span></div>
       </div>
@@ -301,7 +301,7 @@ function generateReportCard(studentId) {
             <td></td>
             <td></td>
             <td class="rc-total">${student.totalMarks}</td>
-            <td colspan="3">Average: ${student.average}% · Overall Grade: ${student.grade} · Max: ${maxMarks}</td>
+            <td colspan="3">Average: ${student.average}% Â· Overall Grade: ${student.grade} Â· Max: ${maxMarks}</td>
           </tr>
         </tbody>
       </table>
@@ -331,11 +331,11 @@ function generateReportCard(studentId) {
         </div>
         <div class="rc-box">
           <h4>School Fees / Next Term</h4>
-          <div class="rc-line"><span>Arrears from Last Term</span><strong>GH₵ ${arrears.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Fees Paid</span><strong>GH₵ ${paidFees.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Balance Fee</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Books / PTA / Other</span><strong>GH₵ 0</strong></div>
-          <div class="rc-line"><span>Total</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Arrears from Last Term</span><strong>GHâ‚µ ${arrears.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Fees Paid</span><strong>GHâ‚µ ${paidFees.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Balance Fee</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Books / PTA / Other</span><strong>GHâ‚µ 0</strong></div>
+          <div class="rc-line"><span>Total</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
         </div>
       </div>
 
@@ -658,7 +658,7 @@ function viewAssignment(assignmentId) {
     <div style="background:var(--blue-main);color:white;padding:40px 20px;margin-bottom:30px;border-radius:8px">
       <div style="max-width:1200px;margin:0 auto">
         <h1 style="margin:0 0 12px 0;font-size:32px">${assignment.title}</h1>
-        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} • ${assignment.class}</p>
+        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} â€¢ ${assignment.class}</p>
       </div>
     </div>
     
@@ -954,6 +954,60 @@ async function submitGrade(event, assignmentId, studentId) {
 }
 
 // FEES MODULE (Enhanced for Parents)
+function getFeeRecords() {
+  return Array.isArray(window.feesData) ? window.feesData : [];
+}
+
+function getPaymentRecords() {
+  return Array.isArray(window.paymentsData) ? window.paymentsData : [];
+}
+
+function formatMoney(amount) {
+  return 'GHÃ¢â€šÂµ' + Number(amount || 0).toLocaleString();
+}
+
+function feeStatusClass(status) {
+  return status === 'Paid' ? 'b-success' : status === 'Partial' ? 'b-warning' : 'b-danger';
+}
+
+function getFeeRowsForStudent(studentId) {
+  const id = parseInt(studentId, 10);
+  return getFeeRecords().filter(f => parseInt(f.student_id, 10) === id);
+}
+
+function getPaymentsForStudent(studentId) {
+  const id = parseInt(studentId, 10);
+  return getPaymentRecords().filter(p => parseInt(p.student_id, 10) === id);
+}
+
+function latestPaymentForStudent(studentId) {
+  return getPaymentsForStudent(studentId)[0] || null;
+}
+
+function renderPaymentRowsForStudent(studentId) {
+  const rows = getPaymentsForStudent(studentId);
+  return rows.length ? rows.map(p => `<tr><td>${escapeHtml(p.date || '')}</td><td>${escapeHtml(p.term || 'Fee Payment')}</td><td style="color:var(--success);font-weight:700">${formatMoney(p.amount)}</td><td><button class="btn btn-secondary btn-xs" onclick="generateReceiptById(${p.id})"><i class="fas fa-download"></i> Receipt</button></td></tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:14px">No payment records found.</td></tr>';
+}
+
+function generateReceiptById(paymentId) {
+  const payment = getPaymentRecords().find(p => parseInt(p.id, 10) === parseInt(paymentId, 10));
+  if (!payment) return showToast('Receipt not found', 'error');
+  const index = getFilteredPayments ? getFilteredPayments().findIndex(p => parseInt(p.id, 10) === parseInt(paymentId, 10)) : -1;
+  if (index >= 0 && typeof generatePaymentReceipt === 'function') return generatePaymentReceipt(index);
+  openModal(`<div style="padding:30px;width:560px">
+    <h2 style="margin:0;color:var(--blue-dark)">Glory Reign Preparatory School</h2>
+    <div style="font-size:12px;color:var(--gray-600);margin-bottom:18px">Official Payment Receipt</div>
+    <div style="border:1px solid var(--gray-200);border-radius:8px;padding:18px">
+      <div><strong>Receipt:</strong> ${escapeHtml(payment.receipt || 'N/A')}</div>
+      <div><strong>Student:</strong> ${escapeHtml(payment.student || '')}</div>
+      <div><strong>Amount:</strong> ${formatMoney(payment.amount)}</div>
+      <div><strong>Date:</strong> ${escapeHtml(payment.date || '')}</div>
+      <div><strong>Method:</strong> ${escapeHtml(payment.method || '')}</div>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:16px" onclick="closeModal()">Close</button>
+  </div>`);
+}
+
 function feesModule() {
   const isParent = currentRole === 'Parent';
   const isAdmin = currentRole === 'Admin';
@@ -962,30 +1016,33 @@ function feesModule() {
 
   if (isStudent) {
     const student = getCurrentStudentRecord();
-    const statusClass = student.fees_status === 'Paid' ? 'b-success' : student.fees_status === 'Partial' ? 'b-warning' : 'b-danger';
+    const feeRows = getFeeRowsForStudent(student.id);
+    const activeFee = feeRows[0] || { amountDue: student.feeAmount || 0, amountPaid: 0, balance: student.feeAmount || 0, status: student.fees_status || 'Pending', term: 'Current Term', academic_year: '' };
+    const latestPayment = latestPaymentForStudent(student.id);
+    const statusClass = feeStatusClass(activeFee.status);
     return hdr('My Fees Status', 'View your own fee balance and receipts', 'Fees') + `
     <div class="stats-row" style="margin-bottom:20px">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(student.feeAmount || 0).toLocaleString(), 'Term Fee', 'Term 1, 2025', 'neu', 'si-blue')}
-      ${statCard('<i class="fas fa-check-circle"></i>', student.fees_status, 'Payment Status', 'Your account only', student.fees_status === 'Paid' ? 'up' : 'dn', student.fees_status === 'Paid' ? 'si-green' : 'si-red')}
-      ${statCard('<i class="fas fa-receipt"></i>', '#R-0482', 'Latest Receipt', 'Available', 'neu', 'si-gold')}
-      ${statCard('<i class="fas fa-calendar-alt"></i>', 'Next Term', 'Next Payment', 'June 2025', 'neu', 'si-purple')}
+      ${statCard('<i class="fas fa-money-bill"></i>', formatMoney(activeFee.amountDue), 'Term Fee', `${activeFee.term || 'Current Term'} ${activeFee.academic_year || ''}`, 'neu', 'si-blue')}
+      ${statCard('<i class="fas fa-check-circle"></i>', activeFee.status, 'Payment Status', 'Your account only', activeFee.status === 'Paid' ? 'up' : 'dn', activeFee.status === 'Paid' ? 'si-green' : 'si-red')}
+      ${statCard('<i class="fas fa-receipt"></i>', latestPayment?.receipt || 'None', 'Latest Receipt', latestPayment ? 'Available' : 'No payment yet', 'neu', 'si-gold')}
+      ${statCard('<i class="fas fa-hourglass-half"></i>', formatMoney(activeFee.balance), 'Outstanding', activeFee.balance > 0 ? 'Balance due' : 'All clear', activeFee.balance > 0 ? 'dn' : 'up', activeFee.balance > 0 ? 'si-red' : 'si-green')}
     </div>
     <div class="g2">
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-user-graduate"></i> Fee Summary</span></div>
-        <div style="padding:16px;background:${student.fees_status === 'Paid' ? 'var(--success-light)' : 'var(--warning-light)'};border-radius:10px;border-left:4px solid ${student.fees_status === 'Paid' ? 'var(--success)' : 'var(--warning)'};margin-bottom:14px">
+        <div style="padding:16px;background:${activeFee.status === 'Paid' ? 'var(--success-light)' : 'var(--warning-light)'};border-radius:10px;border-left:4px solid ${activeFee.status === 'Paid' ? 'var(--success)' : 'var(--warning)'};margin-bottom:14px">
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
             <div>
-              <div style="font-size:12px;color:var(--gray-600)">TERM FEE (2025 - Term 1)</div>
-              <div style="font-size:24px;font-weight:800;color:var(--blue-dark)">GH₵ ${Number(student.feeAmount || 0).toLocaleString()}</div>
+              <div style="font-size:12px;color:var(--gray-600)">${escapeHtml(activeFee.term || 'Current Term')} ${escapeHtml(activeFee.academic_year || '')}</div>
+              <div style="font-size:24px;font-weight:800;color:var(--blue-dark)">${formatMoney(activeFee.amountDue)}</div>
             </div>
-            <span class="badge ${statusClass}">${student.fees_status}</span>
+            <span class="badge ${statusClass}">${escapeHtml(activeFee.status)}</span>
           </div>
         </div>
         <table class="tbl" style="font-size:12px">
           <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
           <tbody>
-            <tr><td>Mar 15, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GH₵${Number(student.feeAmount || 0).toLocaleString()}</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
+            ${renderPaymentRowsForStudent(student.id)}
           </tbody>
         </table>
       </div>
@@ -997,68 +1054,52 @@ function feesModule() {
   }
 
   if (isParent) {
-    // Parent view: Show fees for their children only
+    const children = getParentChildren();
+    const childIds = new Set(children.map(c => parseInt(c.id, 10)).filter(Boolean));
+    const childFees = getFeeRecords().filter(f => childIds.has(parseInt(f.student_id, 10)));
+    const childPayments = getPaymentRecords().filter(p => childIds.has(parseInt(p.student_id, 10)));
+    const totalDue = childFees.reduce((sum, f) => sum + Number(f.amountDue || 0), 0);
+    const totalPaid = childFees.reduce((sum, f) => sum + Number(f.amountPaid || 0), 0);
+    const totalBalance = childFees.reduce((sum, f) => sum + Number(f.balance || 0), 0);
+    const feeCards = children.map(child => {
+      const fee = childFees.find(f => parseInt(f.student_id, 10) === parseInt(child.id, 10)) || { amountDue: 0, amountPaid: 0, balance: 0, status: 'Pending', term: 'Current Term', academic_year: '' };
+      const statusClass = feeStatusClass(fee.status);
+      return `<div class="card">
+        <div class="card-hdr">
+          <span class="card-title"><i class="fas fa-child"></i> ${escapeHtml(child.name)} - Fees Summary</span>
+          <span class="card-act"><span class="badge ${statusClass}">${escapeHtml(fee.status)}</span></span>
+        </div>
+        <div style="padding:16px;background:${fee.status === 'Paid' ? 'var(--success-light)' : 'var(--warning-light)'};border-radius:10px;border-left:4px solid ${fee.status === 'Paid' ? 'var(--success)' : 'var(--warning)'};margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+            <div>
+              <div style="font-size:12px;color:var(--gray-600)">${escapeHtml(fee.term || 'Current Term')} ${escapeHtml(fee.academic_year || '')}</div>
+              <div style="font-size:24px;font-weight:800;color:var(--blue-dark)">${formatMoney(fee.amountDue)}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:12px;color:var(--success);font-weight:700">Paid ${formatMoney(fee.amountPaid)}</div>
+              <div style="font-size:11px;color:var(--gray-600)">Balance ${formatMoney(fee.balance)}</div>
+            </div>
+          </div>
+        </div>
+        <table class="tbl" style="font-size:12px">
+          <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
+          <tbody>${renderPaymentRowsForStudent(child.id)}</tbody>
+        </table>
+      </div>`;
+    }).join('') || '<div class="card"><div style="padding:20px;color:var(--gray-400);text-align:center">No child fee records found.</div></div>';
+    const historyRows = childPayments.slice(0, 5).map(p => `<div style="padding:10px;background:var(--gray-50);border-radius:8px;font-size:12px;border-left:3px solid var(--success)">
+      <div style="font-weight:600;color:var(--success)">${formatMoney(p.amount)} - ${escapeHtml(p.student || '')} ${escapeHtml(p.term || '')}</div>
+      <div style="color:var(--gray-500);font-size:11px">${escapeHtml(p.date || '')} | Receipt: ${escapeHtml(p.receipt || 'N/A')}</div>
+    </div>`).join('') || '<div style="padding:12px;color:var(--gray-400);font-size:12px">No payment history found.</div>';
     return hdr('Fees & Payments', 'Manage your children\'s school fees and payment history', 'Fees') + `
     <div class="stats-row" style="margin-bottom:20px">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵4,600', 'Total Fees Due', 'Both children', 'neu', 'si-blue')}
-      ${statCard('<i class="fas fa-check-circle"></i>', 'GH₵4,600', 'Total Paid', '100%', 'up', 'si-green')}
-      ${statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵0', 'Outstanding Balance', 'All Clear', 'up', 'si-gold')}
-      ${statCard('<i class="fas fa-calendar-alt"></i>', 'Next Term', 'Payment Due', 'June 2025', 'neu', 'si-purple')}
+      ${statCard('<i class="fas fa-money-bill"></i>', formatMoney(totalDue), 'Total Fees Due', children.length + ' child records', 'neu', 'si-blue')}
+      ${statCard('<i class="fas fa-check-circle"></i>', formatMoney(totalPaid), 'Total Paid', totalDue ? Math.round(totalPaid / totalDue * 100) + '%' : '0%', 'up', 'si-green')}
+      ${statCard('<i class="fas fa-hourglass-half"></i>', formatMoney(totalBalance), 'Outstanding Balance', totalBalance > 0 ? 'Action needed' : 'All Clear', totalBalance > 0 ? 'dn' : 'up', totalBalance > 0 ? 'si-red' : 'si-gold')}
+      ${statCard('<i class="fas fa-receipt"></i>', childPayments.length, 'Receipts', 'Database records', 'neu', 'si-purple')}
     </div>
 
-    <div class="g2" style="margin-bottom:20px">
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title"><i class="fas fa-child"></i> Ama Serwaa - Fees Summary</span>
-          <span class="card-act" style="color:var(--success)"><i class="fas fa-check-circle"></i> Fully Paid</span>
-        </div>
-        <div style="padding:16px;background:var(--success-light);border-radius:10px;border-left:4px solid var(--success);margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
-            <div>
-              <div style="font-size:12px;color:var(--gray-600)">TERM FEE (2025 - Term 1)</div>
-              <div style="font-size:24px;font-weight:800;color:var(--success)">GH₵ 2,400</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:12px;color:var(--success);font-weight:700">? PAID</div>
-              <div style="font-size:11px;color:var(--gray-600)">March 15, 2025</div>
-            </div>
-          </div>
-        </div>
-        <table class="tbl" style="font-size:12px">
-          <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
-          <tbody>
-            <tr><td>Mar 15, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GH₵2,400</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
-            <tr><td>Dec 10, 2024</td><td>Exam Registration Fee</td><td style="color:var(--success);font-weight:700">GH₵150</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title"><i class="fas fa-child"></i> Kweku Serwaa - Fees Summary</span>
-          <span class="card-act" style="color:var(--success)"><i class="fas fa-check-circle"></i> Fully Paid</span>
-        </div>
-        <div style="padding:16px;background:var(--success-light);border-radius:10px;border-left:4px solid var(--success);margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
-            <div>
-              <div style="font-size:12px;color:var(--gray-600)">TERM FEE (2025 - Term 1)</div>
-              <div style="font-size:24px;font-weight:800;color:var(--success)">GH₵ 2,200</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:12px;color:var(--success);font-weight:700">? PAID</div>
-              <div style="font-size:11px;color:var(--gray-600)">March 10, 2025</div>
-            </div>
-          </div>
-        </div>
-        <table class="tbl" style="font-size:12px">
-          <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Receipt</th></tr></thead>
-          <tbody>
-            <tr><td>Mar 10, 2025</td><td>Term 1 Fees Payment</td><td style="color:var(--success);font-weight:700">GH₵2,200</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
-            <tr><td>Dec 08, 2024</td><td>Exam Registration Fee</td><td style="color:var(--success);font-weight:700">GH₵150</td><td><button class="btn btn-secondary btn-xs" onclick="downloadPaymentReceipt()"><i class="fas fa-download"></i> Receipt</button></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <div class="g2" style="margin-bottom:20px">${feeCards}</div>
 
     <div class="g2">
       <div class="card">
@@ -1070,23 +1111,14 @@ function feesModule() {
           <button class="btn btn-primary" style="padding:14px;cursor:pointer" onclick="makePayment()"><i class="fas fa-credit-card"></i> Card Payment</button>
         </div>
         <div style="margin-top:12px;padding:12px;background:var(--blue-xpale);border-radius:8px;font-size:12px;color:var(--blue-dark)">
-          <strong><i class="fas fa-info-circle"></i> Note:</strong> All payments will be recorded in your account immediately after processing.
+          <strong><i class="fas fa-info-circle"></i> Note:</strong> All payments are shown from database records.
         </div>
       </div>
 
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-history"></i> Payment History</span></div>
         <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:12px;cursor:pointer" onclick="viewGeneralPaymentHistory()"><i class="fas fa-eye"></i> View Full History</button>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="padding:10px;background:var(--gray-50);border-radius:8px;font-size:12px;border-left:3px solid var(--success)">
-            <div style="font-weight:600;color:var(--success)">✓ GH₵2,400 - Ama's Term 1 Fees</div>
-            <div style="color:var(--gray-500);font-size:11px">March 15, 2025 | Receipt: #R-0482</div>
-          </div>
-          <div style="padding:10px;background:var(--gray-50);border-radius:8px;font-size:12px;border-left:3px solid var(--success)">
-            <div style="font-weight:600;color:var(--success)">✓ GH₵2,200 - Kweku's Term 1 Fees</div>
-            <div style="color:var(--gray-500);font-size:11px">March 10, 2025 | Receipt: #R-0481</div>
-          </div>
-        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">${historyRows}</div>
       </div>
     </div>
 
@@ -1098,8 +1130,7 @@ function feesModule() {
         <li>Contact the school accountant if you encounter payment issues</li>
         <li>Scholarship requests can be made through the school office</li>
       </ul>
-    </div>
-    `;
+    </div>`;
   }
 
   if (!isAdmin && !isAccountant) {
@@ -1108,13 +1139,41 @@ function feesModule() {
 
   // Admin/Accountant view: Show all students fees
   const recordPaymentBtn = isAccountant ? `<button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button>` : '';
+  const feeRecords = getFeeRecords();
+  const totalDue = feeRecords.reduce((sum, f) => sum + Number(f.amountDue || 0), 0);
+  const totalPaid = feeRecords.reduce((sum, f) => sum + Number(f.amountPaid || 0), 0);
+  const totalOutstanding = feeRecords.reduce((sum, f) => sum + Number(f.balance || 0), 0);
+  const paidCount = feeRecords.filter(f => f.status === 'Paid').length;
+  const defaulters = feeRecords.filter(f => f.status !== 'Paid').length;
+  const classOptions = [...new Set(feeRecords.map(f => f.className).filter(Boolean))].map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  const feeRows = feeRecords.map(record => {
+    const statusColor = feeStatusClass(record.status);
+    return `
+      <tr class="fee-row" data-student="${escapeAttr((record.student || '').toLowerCase())}" data-class="${escapeAttr(record.className || '')}" data-status="${escapeAttr(record.status || '')}">
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${escapeHtml((record.student || 'S')[0])}</div>${escapeHtml(record.student || '')}</div></td>
+        <td>${escapeHtml(record.className || '')}</td>
+        <td>${formatMoney(record.amountDue)}</td>
+        <td style="color:var(--success);font-weight:700">${formatMoney(record.amountPaid)}</td>
+        <td style="color:${Number(record.balance || 0) <= 0 ? 'var(--success)' : 'var(--danger)'};font-weight:700">${formatMoney(record.balance)}</td>
+        <td>${escapeHtml(record.paymentDate || '')}</td>
+        <td style="color:var(--blue-main)">${escapeHtml(record.receipt || '')}</td>
+        <td><span class="badge ${statusColor}">${escapeHtml(record.status || 'Pending')}</span></td>
+      </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:18px">No fee records found.</td></tr>';
+  const structureRows = classesData.map(c => {
+    const fee = feeRecords.find(f => f.className === c.name);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+      <span style="font-size:13px;font-weight:600">${escapeHtml(c.name)}</span>
+      <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">${fee ? formatMoney(fee.amountDue) : 'Not set'}</span>
+    </div>`;
+  }).join('') || '<div style="padding:12px;color:var(--gray-400)">No class fee structure found.</div>';
 
   let html = hdr('Fees & Payments', 'Student fee management and payment records', 'Fees') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵248K', 'Total Collected', '88.6% of target', 'up', 'si-blue')}
-    ${statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵32K', 'Outstanding', '37 students', 'dn', 'si-red')}
-    ${statCard('<i class="fas fa-check-circle"></i>', '805', 'Paid Students', '95.6%', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-exclamation-triangle"></i>', '37', 'Defaulters', 'Action needed', 'dn', 'si-gold')}
+    ${statCard('<i class="fas fa-money-bill"></i>', formatMoney(totalPaid), 'Total Collected', totalDue ? Math.round(totalPaid / totalDue * 100) + '% of due' : 'No fees due', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-hourglass-half"></i>', formatMoney(totalOutstanding), 'Outstanding', defaulters + ' students', totalOutstanding > 0 ? 'dn' : 'up', 'si-red')}
+    ${statCard('<i class="fas fa-check-circle"></i>', paidCount, 'Paid Students', feeRecords.length ? Math.round(paidCount / feeRecords.length * 100) + '%' : '0%', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-exclamation-triangle"></i>', defaulters, 'Defaulters', defaulters ? 'Action needed' : 'All clear', defaulters ? 'dn' : 'up', 'si-gold')}
   </div>
   <div class="g21">
     <div class="card">
@@ -1128,12 +1187,7 @@ function feesModule() {
         <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="fee-search" placeholder="Search student..." onkeyup="filterFeeRecords()"></div>
         <select id="fee-class-filter" class="select-sm" onchange="filterFeeRecords()">
           <option value="">All Classes</option>
-          <option value="Basic 4">Basic 4</option>
-          <option value="Basic 5">Basic 5</option>
-          <option value="Basic 6">Basic 6</option>
-          <option value="JHS 1">JHS 1</option>
-          <option value="JHS 2">JHS 2</option>
-          <option value="JHS 3">JHS 3</option>
+          ${classOptions}
         </select>
         <select id="fee-status-filter" class="select-sm" onchange="filterFeeRecords()">
           <option value="">All Status</option>
@@ -1144,86 +1198,25 @@ function feesModule() {
       </div>
       <table class="tbl">
         <thead><tr><th>Student</th><th>Class</th><th>Term Fee</th><th>Paid</th><th>Balance</th><th>Date</th><th>Receipt</th><th>Status</th></tr></thead>
-        <tbody id="fee-records-table">`;
-
-  // Fee records data
-  const feeRecords = [
-    { name: 'Ama Serwaa', class: 'JHS 1', termFee: 'GH₵2,500', paid: 'GH₵2,500', balance: 'GH₵0', date: 'Mar 15', receipt: '#R-0482', status: 'Paid' },
-    { name: 'Kwame Asante', class: 'Basic 6', termFee: 'GH₵2,400', paid: 'GH₵1,200', balance: 'GH₵1,200', date: 'Mar 15', receipt: '#R-0481', status: 'Partial' },
-    { name: 'Abena Mensah', class: 'Basic 6', termFee: 'GH₵2,400', paid: 'GH₵2,400', balance: 'GH₵0', date: 'Mar 14', receipt: '#R-0480', status: 'Paid' },
-    { name: 'Kofi Boateng', class: 'JHS 2', termFee: 'GH₵2,600', paid: 'GH₵0', balance: 'GH₵2,600', date: '—', receipt: '—', status: 'Pending' },
-    { name: 'Akosua Darko', class: 'JHS 1', termFee: 'GH₵2,500', paid: 'GH₵2,500', balance: 'GH₵0', date: 'Mar 13', receipt: '#R-0479', status: 'Paid' },
-    { name: 'Yaw Mensah', class: 'Basic 5', termFee: 'GH₵2,350', paid: 'GH₵2,350', balance: 'GH₵0', date: 'Mar 12', receipt: '#R-0478', status: 'Paid' },
-    { name: 'Adwoa Frimpong', class: 'Basic 5', termFee: 'GH₵2,350', paid: 'GH₵1,175', balance: 'GH₵1,175', date: 'Mar 11', receipt: '#R-0477', status: 'Partial' },
-    { name: 'Kweku Ofori', class: 'JHS 3', termFee: 'GH₵2,700', paid: 'GH₵0', balance: 'GH₵2,700', date: '—', receipt: '—', status: 'Pending' },
-    { name: 'Theresa Mensah', class: 'Basic 4', termFee: 'GH₵2,300', paid: 'GH₵2,300', balance: 'GH₵0', date: 'Mar 10', receipt: '#R-0476', status: 'Paid' },
-    { name: 'Samuel Boateng', class: 'JHS 2', termFee: 'GH₵2,600', paid: 'GH₵1,300', balance: 'GH₵1,300', date: 'Mar 9', receipt: '#R-0475', status: 'Partial' }
-  ];
-
-  feeRecords.forEach((record, idx) => {
-    const statusColor = record.status === 'Paid' ? 'b-success' : record.status === 'Pending' ? 'b-danger' : 'b-warning';
-    html += `
-      <tr class="fee-row" data-student="${record.name.toLowerCase()}" data-class="${record.class}" data-status="${record.status}">
-        <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${record.name[0]}</div>${record.name}</div></td>
-        <td>${record.class}</td>
-        <td>${record.termFee}</td>
-        <td style="color:var(--success);font-weight:700">${record.paid}</td>
-        <td style="color:${record.balance === 'GH₵0' ? 'var(--success)' : 'var(--danger)'};font-weight:700">${record.balance}</td>
-        <td>${record.date}</td>
-        <td style="color:var(--blue-main)">${record.receipt}</td>
-        <td><span class="badge ${statusColor}">${record.status}</span></td>
-      </tr>`;
-  });
-
-  html += `</tbody>
+        <tbody id="fee-records-table">${feeRows}</tbody>
       </table>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--gray-200)">
-        <span style="font-size:12px;color:var(--gray-500)">Showing 1–10 of ${feeRecords.length} results</span>
-        <div class="pagination">
-          <button class="pg-btn active" onclick="goToPage(1)">1</button>
-          <button class="pg-btn" onclick="goToPage(2)">2</button>
-          <button class="pg-btn" onclick="goToPage(3)">3</button>
-          <button class="pg-btn" onclick="goToPage('...')">…</button>
-          <button class="pg-btn" onclick="goToPage(22)">22</button>
-        </div>
+        <span style="font-size:12px;color:var(--gray-500)">Showing ${feeRecords.length} database fee records</span>
       </div>
     </div>
     <div>
       <div class="fee-hero mb16">
         <h3>Collected This Term</h3>
-        <div class="amount">GH₵ 248,000</div>
-        <div class="sub">Target: GH₵280,000</div>
+        <div class="amount">${formatMoney(totalPaid)}</div>
+        <div class="sub">Due: ${formatMoney(totalDue)}</div>
         <div style="margin-top:12px;background:rgba(255,255,255,.15);border-radius:4px;height:8px">
-          <div style="width:88.6%;background:var(--gold);height:8px;border-radius:4px"></div>
+          <div style="width:${totalDue ? Math.min(100, Math.round(totalPaid / totalDue * 100)) : 0}%;background:var(--gold);height:8px;border-radius:4px"></div>
         </div>
-        <div style="font-size:11px;opacity:.65;margin-top:6px">88.6% of annual target achieved</div>
+        <div style="font-size:11px;opacity:.65;margin-top:6px">${totalDue ? Math.round(totalPaid / totalDue * 100) : 0}% of due fees collected</div>
       </div>
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-building"></i> Fee Structure</span><span class="card-act" onclick="navTo('feestructure')">Edit</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-          <span style="font-size:13px;font-weight:600">Basic 4</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,300</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-          <span style="font-size:13px;font-weight:600">Basic 5</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,350</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-          <span style="font-size:13px;font-weight:600">Basic 6</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,400</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-          <span style="font-size:13px;font-weight:600">JHS 1</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,500</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
-          <span style="font-size:13px;font-weight:600">JHS 2</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,600</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
-          <span style="font-size:13px;font-weight:600">JHS 3</span>
-          <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">GH₵2,700</span>
-        </div>
+        ${structureRows}
         <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="navTo('feestructure')">View Full Structure</button>
       </div>
     </div>
@@ -1288,37 +1281,42 @@ function exportPaymentData() {
 function paymentsModule() {
   if (!['Admin', 'Accountant'].includes(currentRole)) return accessDeniedModule('payments');
 
+  const today = new Date().toISOString().slice(0, 10);
+  const studentOptions = getActiveStudents(enrolledStudents).map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.student_id || '')}) - ${escapeHtml(s.student_class || '')}</option>`).join('');
+  const todayPayments = getPaymentRecords().filter(p => p.date === today);
+  const todayTotal = todayPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const todayRows = todayPayments.slice(0, 8).map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+        <div style="font-size:11px;color:var(--gray-400);min-width:55px">${escapeHtml(p.date || '')}</div>
+        <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${escapeHtml(p.student || '')}</div><div style="font-size:10px;color:var(--gray-400)">${escapeHtml(p.receipt || '')}</div></div>
+        <div style="font-size:13px;font-weight:700;color:var(--success)">${formatMoney(p.amount)}</div>
+      </div>`).join('') || '<div style="padding:12px;color:var(--gray-400);font-size:12px">No payments recorded today.</div>';
+
   return hdr('Cash Payments', 'Record and manage cash fee payments', 'Payments') + `
   <div class="g21">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-dollar-sign"></i> Record Cash Payment</span></div>
       <form onsubmit="recordPayment(event)">
         <div class="f-row">
-          <div class="f-field"><label>Student Name / ID No.</label><input id="pay-student" placeholder="Search student..." required></div>
-          <div class="f-field">
-            <label>Class</label>
-            <select id="pay-class" required>
-              <option>Basic 4</option>
-              <option>Basic 5</option>
-              <option>Basic 6</option>
-              <option>JHS 1</option>
-              <option>JHS 2</option>
-              <option>JHS 3</option>
-            </select>
-          </div>
+          <div class="f-field"><label>Student</label><select id="pay-student" required>${studentOptions}</select></div>
+          <div class="f-field"><label>Method</label><select id="pay-method" required><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Cheque</option></select></div>
         </div>
         <div class="f-row">
-          <div class="f-field"><label>Amount Paying (GH₵)</label><input type="number" id="pay-amount" placeholder="0.00" required></div>
-          <div class="f-field"><label>Term</label><select id="pay-term" required><option>Term 1, 2025</option><option>Term 2, 2025</option><option>Term 3, 2025</option></select></div>
+          <div class="f-field"><label>Amount Paying</label><input type="number" id="pay-amount" placeholder="0.00" min="1" step="0.01" required></div>
+          <div class="f-field"><label>Term</label><select id="pay-term" required><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div>
         </div>
         <div class="f-row">
-          <div class="f-field"><label>Payment Date</label><input type="date" id="pay-date" value="2025-03-17" required></div>
-          <div class="f-field"><label>Received By</label><input value="Accountant" readonly></div>
+          <div class="f-field"><label>Academic Year</label><input id="pay-year" value="2024/2025" required></div>
+          <div class="f-field"><label>Payment Date</label><input type="date" id="pay-date" value="${today}" required></div>
+        </div>
+        <div class="f-row">
+          <div class="f-field"><label>Received By</label><input id="pay-received-by" value="${escapeHtml(getSessionUser()?.name || 'Accountant')}"></div>
+          <div class="f-field"><label>Receipt No. Optional</label><input id="pay-receipt" placeholder="Auto-generated if empty"></div>
         </div>
         <div class="f-field" style="margin-bottom:14px"><label>Remarks / Notes</label><textarea id="pay-remarks" placeholder="Optional notes..."></textarea></div>
         <div style="padding:14px;background:var(--gold-xlight);border-radius:var(--radius);border:1px solid var(--gold-light);margin-bottom:14px">
-          <div style="font-size:12px;color:var(--gray-600);margin-bottom:6px"><i class="fas fa-exclamation-triangle"></i> Cash payments only. All receipts must be issued immediately.</div>
-          <div style="font-size:12px;color:var(--gray-600)">Receipts are auto-generated and logged in the system.</div>
+          <div style="font-size:12px;color:var(--gray-600);margin-bottom:6px"><i class="fas fa-exclamation-triangle"></i> Payments are written directly to the database.</div>
+          <div style="font-size:12px;color:var(--gray-600)">Receipts are generated by the backend and linked to the student fee record.</div>
         </div>
         <div style="display:flex;gap:8px">
           <button type="submit" class="btn btn-gold"><i class="fas fa-dollar-sign"></i> Record & Issue Receipt</button>
@@ -1329,50 +1327,57 @@ function paymentsModule() {
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Today's Collections</span></div>
       <div class="fee-hero" style="margin-bottom:16px">
-        <h3>Today — March 17, 2025</h3>
-        <div class="amount">GH₵ 12,800</div>
-        <div class="sub">14 payments processed today</div>
+        <h3>Today - ${today}</h3>
+        <div class="amount">${formatMoney(todayTotal)}</div>
+        <div class="sub">${todayPayments.length} payments processed today</div>
       </div>
-      ${[['8:30 AM', 'Ama Serwaa', 'GH₵2,400', '#R-0482'], ['9:15 AM', 'Kwame Asante', 'GH₵1,200', '#R-0481'], ['10:00 AM', 'Theresa Mensah', 'GH₵2,400', '#R-0480'], ['11:30 AM', 'Abena Mensah', 'GH₵2,200', '#R-0479']].map(([t, n, a, r]) => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100)">
-        <div style="font-size:11px;color:var(--gray-400);min-width:55px">${t}</div>
-        <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${n}</div><div style="font-size:10px;color:var(--gray-400)">${r}</div></div>
-        <div style="font-size:13px;font-weight:700;color:var(--success)">${a}</div>
-      </div>`).join('')}
+      ${todayRows}
     </div>
   </div>`;
 }
 
-function recordPayment(event) {
+async function recordPayment(event) {
   event.preventDefault();
   if (!['Admin', 'Accountant'].includes(currentRole)) {
     showToast('<i class="fas fa-lock"></i> Only finance staff can record payments', 'error');
     return;
   }
 
-  const student = document.getElementById('pay-student').value;
-  const classVal = document.getElementById('pay-class').value;
-  const amount = document.getElementById('pay-amount').value;
+  const studentId = parseInt(document.getElementById('pay-student').value, 10);
+  const amount = parseFloat(document.getElementById('pay-amount').value);
   const term = document.getElementById('pay-term').value;
+  const academicYear = document.getElementById('pay-year').value;
   const date = document.getElementById('pay-date').value;
+  const method = document.getElementById('pay-method').value;
   const remarks = document.getElementById('pay-remarks').value;
+  const receiptNo = document.getElementById('pay-receipt').value.trim();
+  const receivedBy = document.getElementById('pay-received-by').value.trim();
 
-  if (!student || !amount || amount <= 0) {
+  if (!studentId || !amount || amount <= 0 || !term || !academicYear || !date) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields correctly', 'error');
     return;
   }
 
-  const receiptNum = '#R-' + String(Math.floor(Math.random() * 9999)).padStart(4, '0');
+  const res = await API.fees.recordPayment({
+    student_id: studentId,
+    amount,
+    term,
+    academic_year: academicYear,
+    payment_date: date,
+    method,
+    receipt_no: receiptNo || undefined,
+    received_by: receivedBy || undefined,
+    remarks
+  });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Payment could not be recorded', 'error');
+    return;
+  }
 
-  showToast(`<i class="fas fa-check-circle"></i> Payment processed! Receipt ${receiptNum} issued`, 'success');
-
-  // Clear form
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast(`<i class="fas fa-check-circle"></i> Payment processed. Receipt ${res.receipt_no} issued`, 'success');
   event.target.reset();
-  document.getElementById('pay-date').value = '2025-03-17';
-
-  setTimeout(() => {
-    navTo('fees');
-  }, 1500);
+  setTimeout(() => navTo('fees'), 800);
 }
 
 
@@ -1742,7 +1747,7 @@ function renderRoleChatModule(title, subtitle) {
         <div class="av av-sm av-${avatar}">${getInitials(msg.sender, 'U').slice(0, 1)}</div>
         <div>
           <div class="chat-bubble${isSender ? ' me-bubble' : ' them'}">${escapeHtml(msg.text)}</div>
-          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} · ${escapeHtml(msg.time || '')}</div>
+          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} Â· ${escapeHtml(msg.time || '')}</div>
         </div>
       </div>`;
   }).join('');
@@ -1761,7 +1766,7 @@ function renderRoleChatModule(title, subtitle) {
             <div class="av av-sm av-${currentContact.avatar || 'blue'}">${getInitials(currentChat, 'C').slice(0, 1)}</div>
             <div>
               <div style="font-size:13px;font-weight:700">${escapeHtml(currentContact.name || currentChat)}</div>
-              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} · ${escapeHtml(currentContact.status || 'Available')}</div>
+              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} Â· ${escapeHtml(currentContact.status || 'Available')}</div>
             </div>
             <div style="margin-left:auto;display:flex;gap:8px">
               ${currentRole === 'Parent' && currentContact.role === 'Teacher' ? `<button class="btn btn-secondary btn-xs" onclick="viewTeacherProfileByName('${escapeAttr(currentChat)}')"><i class="fas fa-user"></i> Profile</button>` : ''}
@@ -1781,7 +1786,7 @@ function renderRoleChatModule(title, subtitle) {
 }
 
 function studentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your teachers and school office'); }
-function parentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your children’s teachers and school office'); }
+function parentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your childrenâ€™s teachers and school office'); }
 function teacherMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your assigned students, parents, and administration'); }
 function adminMessagingModule() { return renderRoleChatModule('Messages', 'Manage school communications'); }
 
@@ -1807,7 +1812,7 @@ function sendChatMessage(sender, recipient, message) {
     return;
   }
   if (currentRole === 'Parent' && !isParentAllowedTeacherName(recipient)) {
-    showToast('<i class="fas fa-lock"></i> Parents can only message their children’s teachers', 'error');
+    showToast('<i class="fas fa-lock"></i> Parents can only message their childrenâ€™s teachers', 'error');
     return;
   }
 
@@ -1946,7 +1951,7 @@ function contactMessagesModule() {
             <h4 style="font-size:13px;font-weight:700;color:var(--gray-800)">${msg.name}</h4>
             ${msg.read ? '' : '<span class="badge b-success" style="font-size:10px">New</span>'}
           </div>
-          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> · ${msg.date} at ${msg.time}</div>
+          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> Â· ${msg.date} at ${msg.time}</div>
         </div>
         <button class="btn btn-icon danger" onclick="deleteContactMessage(${msg.id})"><i class="fas fa-trash"></i></button>
       </div>
@@ -1961,13 +1966,13 @@ function contactMessagesModule() {
     </div>
   `).join('');
 
-  return hdr('Contact Messages', `${contactMessages.length} total • ${unreadCount} unread`, 'Contact Messages') + `
+  return hdr('Contact Messages', `${contactMessages.length} total â€¢ ${unreadCount} unread`, 'Contact Messages') + `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-secondary btn-sm" onclick="markAllAsRead()">Mark All Read</button>
       <button class="btn btn-secondary btn-sm" onclick="deleteAllMessages()" style="color:var(--danger)">Delete All</button>
     </div>
-    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages · ${unreadCount} unread</div>
+    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages Â· ${unreadCount} unread</div>
   </div>
   ${messagesHTML}`;
 }
@@ -2114,7 +2119,7 @@ function reportsModule() {
     const pending = payments.filter(p => p.status === 'Pending').length;
     return hdr('Financial Reports', 'Revenue, collections, outstanding fees, and payroll summaries', 'Reports') + `
     <div class="stats-row">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
+      ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
       ${statCard('<i class="fas fa-hourglass-half"></i>', pending, 'Pending Accounts', 'Need follow-up', pending ? 'dn' : 'up', pending ? 'si-red' : 'si-green')}
       ${statCard('<i class="fas fa-receipt"></i>', payments.length, 'Receipts', 'Generated records', 'neu', 'si-gold')}
       ${statCard('<i class="fas fa-briefcase"></i>', 'Payroll', 'Next Run', 'Month end', 'neu', 'si-purple')}
@@ -2232,52 +2237,20 @@ function reportsModule() {
         <select id="financial-filter" class="select-sm" onchange="filterReportTab('financial')"><option value="">All Months</option><option value="January">January</option><option value="February">February</option><option value="March">March</option><option value="April">April</option></select>
         <button class="btn btn-primary" onclick="generateReportPDF('Financial')"><i class="fas fa-download"></i> Export PDF</button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;max-width:100%">
-        <div style="background:linear-gradient(135deg,var(--blue-main),#2563eb);border-radius:8px;min-width:0">
-          <div style="color:#fff;padding:15px">
-            <div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL INCOME</div>
-            <div style="font-size:24px;font-weight:700">GHS 245,800</div>
-            <div style="font-size:10px;opacity:.7;margin-top:8px"><i class="fas fa-arrow-up"></i> 12% from last month</div>
-          </div>
-        </div>
-        <div style="background:linear-gradient(135deg,var(--danger),#dc2626);border-radius:8px;min-width:0">
-          <div style="color:#fff;padding:15px">
-            <div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL EXPENDITURE</div>
-            <div style="font-size:24px;font-weight:700">GHS 156,400</div>
-            <div style="font-size:10px;opacity:.7;margin-top:8px"><i class="fas fa-arrow-down"></i> 8% from last month</div>
-          </div>
-        </div>
-        <div style="background:linear-gradient(135deg,var(--success),#10b981);border-radius:8px;min-width:0">
-          <div style="color:#fff;padding:15px">
-            <div style="font-size:11px;opacity:.8;margin-bottom:5px">NET SURPLUS</div>
-            <div style="font-size:24px;font-weight:700">GHS 89,400</div>
-            <div style="font-size:10px;opacity:.7;margin-top:8px"><i class="fas fa-arrow-up"></i> 16% improvement</div>
-          </div>
-        </div>
+      ${(() => {
+        const finance = typeof getFinanceSummary === 'function' ? getFinanceSummary() : { totalIncome: 0, totalExpenditure: 0, netSurplus: 0, incomeBreakdown: [], expenseBreakdown: [] };
+        const incomeRows = finance.incomeBreakdown.map(row => `<tr><td>${escapeHtml(row.source || 'Income')}</td><td>${money(row.amount || 0)}</td><td>${financePct(row.amount, finance.totalIncome)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">No income records</td></tr>';
+        const expenseRows = finance.expenseBreakdown.map(row => `<tr><td>${escapeHtml(row.category || 'Expense')}</td><td>${money(row.amount || 0)}</td><td>${financePct(row.amount, finance.totalExpenditure)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">No expenditure records</td></tr>';
+        return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;max-width:100%">
+        <div style="background:linear-gradient(135deg,var(--blue-main),#2563eb);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL INCOME</div><div style="font-size:24px;font-weight:700">${money(finance.totalIncome)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">Database finance records</div></div></div>
+        <div style="background:linear-gradient(135deg,var(--danger),#dc2626);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL EXPENDITURE</div><div style="font-size:24px;font-weight:700">${money(finance.totalExpenditure)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">Expenses and payroll</div></div></div>
+        <div style="background:linear-gradient(135deg,var(--success),#10b981);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">NET SURPLUS</div><div style="font-size:24px;font-weight:700">${money(finance.netSurplus)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">After all expenses</div></div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px">
-        <div>
-          <div style="font-weight:600;margin-bottom:10px;font-size:13px">Income Breakdown</div>
-          <table class="tbl" style="font-size:12px">
-            <thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead>
-            <tbody>
-              <tr><td>Tuition Fees</td><td>GHS 188,500</td><td>76.8%</td></tr>
-              <tr><td>Donations</td><td>GHS 57,300</td><td>23.2%</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div>
-          <div style="font-weight:600;margin-bottom:10px;font-size:13px">Expenditure Breakdown</div>
-          <table class="tbl" style="font-size:12px">
-            <thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead>
-            <tbody>
-              <tr><td>Staff Salaries</td><td>GHS 98,500</td><td>63.0%</td></tr>
-              <tr><td>Supplies & Materials</td><td>GHS 57,900</td><td>37.0%</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+        <div><div style="font-weight:600;margin-bottom:10px;font-size:13px">Income Breakdown</div><table class="tbl" style="font-size:12px"><thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead><tbody>${incomeRows}</tbody></table></div>
+        <div><div style="font-weight:600;margin-bottom:10px;font-size:13px">Expenditure Breakdown</div><table class="tbl" style="font-size:12px"><thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead><tbody>${expenseRows}</tbody></table></div>
+      </div>`;
+      })()}
   </div>
 
   <!-- ENROLLMENT TAB -->
@@ -2393,17 +2366,21 @@ function generateReportPDF(reportType) {
     html += '</table></div>';
   }
   else if (reportType === 'Financial') {
+    const finance = typeof getFinanceSummary === 'function'
+      ? getFinanceSummary()
+      : { totalIncome: 0, totalExpenditure: 0, netSurplus: 0, incomeBreakdown: [] };
     html += '<div class="section"><div class="section-title"><i class="fas fa-money-bill"></i> Financial Summary Report</div>';
-    html += '<div class="stat"><div class="stat-value">GHS 245,800</div><div class="stat-label">Total Income</div></div>';
-    html += '<div class="stat"><div class="stat-value">GHS 156,400</div><div class="stat-label">Expenditure</div></div>';
-    html += '<div class="stat"><div class="stat-value">GHS 89,400</div><div class="stat-label">Surplus</div></div></div>';
+    html += '<div class="stat"><div class="stat-value">' + money(finance.totalIncome) + '</div><div class="stat-label">Total Income</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + money(finance.totalExpenditure) + '</div><div class="stat-label">Expenditure</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + money(finance.netSurplus) + '</div><div class="stat-label">Surplus</div></div></div>';
     html += '<div class="section"><div class="section-title">Income Sources</div><table>';
     html += '<tr><th>Source</th><th>Amount</th><th>Percentage</th></tr>';
-    html += '<tr><td>Tuition Fees</td><td>GHS 188,500</td><td>76.8%</td></tr>';
-    html += '<tr><td>Donations</td><td>GHS 57,300</td><td>23.2%</td></tr>';
+    (finance.incomeBreakdown || []).forEach(row => {
+      html += '<tr><td>' + escapeHtml(row.source || 'Income') + '</td><td>' + money(row.amount || 0) + '</td><td>' + financePct(row.amount, finance.totalIncome) + '</td></tr>';
+    });
+    if (!(finance.incomeBreakdown || []).length) html += '<tr><td colspan="3">No income records found</td></tr>';
     html += '</table></div>';
-  }
-  else if (reportType === 'Enrollment') {
+  }  else if (reportType === 'Enrollment') {
     html += '<div class="section"><div class="section-title"><i class="fas fa-users"></i> Enrollment Statistics Report</div>';
     html += '<div class="stat"><div class="stat-value">400</div><div class="stat-label">Total Students</div></div>';
     html += '<div class="stat"><div class="stat-value">193</div><div class="stat-label">Male</div></div>';
@@ -2420,23 +2397,22 @@ function generateReportPDF(reportType) {
   }
 
   html += '</div><div class="footer"><p>This report was automatically generated by Glory Reign School Management System</p>';
-  html += '<p>© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
+  html += '<p>Â© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = reportType.replace(/ /g, '_') + '_Report_' + new Date().toISOString().split('T')[0] + '.html';
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = reportType.toLowerCase() + '_report_' + new Date().toISOString().slice(0, 10) + '.html';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  showToast('Report downloaded! Open the file in your browser to view or print as PDF.', 'success');
+  URL.revokeObjectURL(url);
+  showToast('<i class="fas fa-check"></i> ' + reportType + ' report generated', 'success');
 }
 
-// SETTINGS MODULE
-// SETTINGS DATA
 const SETTINGS_DATA = {
-  schoolInfo: {
-    schoolName: 'Glory Reign Preparatory School',
+  schoolInfo: {    schoolName: 'Glory Reign Preparatory School',
     schoolCode: 'SCH-0024',
     schoolMotto: 'Excellence, Integrity & Service',
     schoolLogo: 'Logo.png',
@@ -2550,7 +2526,7 @@ function settingsModule() {
         <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="${SETTINGS_DATA.academic.termStartDate}"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="${SETTINGS_DATA.academic.termEndDate}"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
-          ${[['A', '80–100', 'Excellent'], ['B', '70–79', 'Very Good'], ['C', '60–69', 'Good'], ['D', '50–59', 'Average'], ['F', '0–49', 'Fail']].map(([g, r, l]) => `
+          ${[['A', '80â€“100', 'Excellent'], ['B', '70â€“79', 'Very Good'], ['C', '60â€“69', 'Good'], ['D', '50â€“59', 'Average'], ['F', '0â€“49', 'Fail']].map(([g, r, l]) => `
           <div style="display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
             <div class="grade-pill g${g}">${g}</div>
             <span style="font-size:12px;flex:1">${r}</span>
@@ -3089,7 +3065,7 @@ async function editUser(userId) {
   const u = res.data;
 
   const form = document.getElementById('user-form-wrap');
-  if (!form) { showToast('User form not found — navigate to User Accounts first', 'warning'); return; }
+  if (!form) { showToast('User form not found â€” navigate to User Accounts first', 'warning'); return; }
 
   document.getElementById('user-name').value     = u.name;
   document.getElementById('user-username').value  = u.username;
@@ -3817,9 +3793,9 @@ function exportStaffToExcel() {
 function alumniModule() {
   return hdr('Alumni Module', 'Manage alumni records and engagement', 'Alumni') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985–2024', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985â€“2024', 'neu', 'si-blue')}
     ${statCard('<i class="fas fa-globe"></i>', '48', 'Countries', 'Alumni worldwide', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Donations', 'This year', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GHâ‚µ42K', 'Donations', 'This year', 'up', 'si-green')}
     ${statCard('<i class="fas fa-file-alt"></i>', '14', 'Pending Requests', 'Certificates etc', 'dn', 'si-red')}
   </div>
   ${alumniDirectory()}`;
@@ -4250,7 +4226,7 @@ async function updateProfilePassword() {
 
   const sessionUser = getSessionUser();
   const userId = sessionUser?.id;
-  if (!userId) { showToast('Session error — please log in again', 'error'); return; }
+  if (!userId) { showToast('Session error â€” please log in again', 'error'); return; }
   const localOnlySession = String(userId).startsWith('local-') || Object.prototype.hasOwnProperty.call(USERS_DATA, userId);
   if (localOnlySession || typeof API === 'undefined') {
     const result = updateStoredUserPassword(sessionUser, cur, nw);
@@ -4325,7 +4301,7 @@ function renderSessionProfile(container, sessionUser) {
         <div class="av av-xl av-${color}" style="font-size:26px">${getInitials(name, role)}</div>
         <div style="flex:1">
           <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${escapeHtml(name)}</div>
-          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' · @' + escapeHtml(username) : ''}</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' Â· @' + escapeHtml(username) : ''}</div>
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-success">${escapeHtml(displayUser.status || 'Active')}</span><span class="badge b-info">${escapeHtml(role)}</span></div>
         </div>
       </div>
@@ -4355,7 +4331,7 @@ function renderSessionProfile(container, sessionUser) {
 
 function saveLocalProfileChanges() {
   const sessionUser = getSessionUser();
-  if (!sessionUser) { showToast('Session error — please log in again', 'error'); return; }
+  if (!sessionUser) { showToast('Session error â€” please log in again', 'error'); return; }
   const updated = {
     ...sessionUser,
     name: document.getElementById('prof-name')?.value.trim() || sessionUser.name,
@@ -4418,7 +4394,7 @@ async function loadProfileFromAPI() {
               <div class="av av-sm av-blue">${c.student_name.slice(0,2).toUpperCase()}</div>
               <strong>${c.student_name}</strong>
             </div></td>
-            <td>${c.class_name || '—'}</td>
+            <td>${c.class_name || 'â€”'}</td>
             <td style="color:var(--gray-500);font-size:12px">${c.student_code}</td>
           </tr>`).join('')}
         </tbody>
@@ -4459,7 +4435,7 @@ async function loadProfileFromAPI() {
           <div class="av av-xl av-${color}" style="font-size:26px">${initials}</div>
           <div style="flex:1">
             <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${u.name}</div>
-            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} · @${u.username}</div>
+            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} Â· @${u.username}</div>
             <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
               <span class="badge b-${u.status === 'Active' ? 'success' : 'danger'}">${u.status}</span>
               <span class="badge b-info">${u.role}</span>
@@ -4520,5 +4496,7 @@ async function saveProfileChanges(userId) {
 
   showToast('<i class="fas fa-check-circle"></i> Profile updated successfully!', 'success');
 }
+
+
 
 

@@ -230,39 +230,48 @@ CREATE TABLE IF NOT EXISTS `assignment_submissions` (
 CREATE TABLE IF NOT EXISTS `fee_structure` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `class_id` INT NOT NULL,
-  `term` ENUM('1st Term','2nd Term','3rd Term') NOT NULL,
-  `academic_year` VARCHAR(20) NOT NULL,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
+  `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
   `amount` DECIMAL(10,2) NOT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_fee_structure` (`class_id`, `term`, `academic_year`),
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `fees` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `student_id` INT NOT NULL,
-  `term` ENUM('1st Term','2nd Term','3rd Term') NOT NULL,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
   `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
   `amount_due` DECIMAL(10,2) NOT NULL DEFAULT 0,
   `amount_paid` DECIMAL(10,2) NOT NULL DEFAULT 0,
-  `receipt_no` VARCHAR(50),
+  `receipt_no` VARCHAR(80),
   `payment_date` DATE,
   `status` ENUM('Paid','Partial','Pending') DEFAULT 'Pending',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `uq_fees_student_term_year` (`student_id`, `term`, `academic_year`),
+  INDEX `idx_fees_term_year_status` (`term`, `academic_year`, `status`),
+  INDEX `idx_fees_student` (`student_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `payments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `student_id` INT NOT NULL,
   `amount` DECIMAL(10,2) NOT NULL,
-  `term` ENUM('1st Term','2nd Term','3rd Term') NOT NULL,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
   `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
   `payment_date` DATE NOT NULL,
   `method` ENUM('Cash','Mobile Money','Bank Transfer','Cheque') DEFAULT 'Cash',
-  `receipt_no` VARCHAR(50),
-  `received_by` VARCHAR(100),
+  `receipt_no` VARCHAR(80),
+  `received_by` VARCHAR(150),
   `remarks` TEXT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `uq_payments_receipt` (`receipt_no`),
+  INDEX `idx_payments_date` (`payment_date`),
+  INDEX `idx_payments_student` (`student_id`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
