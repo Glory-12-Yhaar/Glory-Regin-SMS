@@ -260,10 +260,18 @@ function printEnrollmentAttendanceReport() {
   setTimeout(() => { printWindow.print(); }, 250);
 }
 
+function getMonthlyEnrollmentAttendanceData() {
+  const dashboard = window.dashboardReportData || {};
+  const monthly = Array.isArray(dashboard.monthly_enrollment_attendance) ? dashboard.monthly_enrollment_attendance : [];
+  const months = monthly.map(m => m.month);
+  const enrollmentData = monthly.map(m => parseInt(m.enrollment || 0, 10));
+  const attendanceData = monthly.map(m => parseFloat(m.attendance || 0));
+  const classRows = Array.isArray(dashboard.students_per_class) ? dashboard.students_per_class : [];
+  return { months, enrollmentData, attendanceData, classRows, totalStudents: dashboard.total_students || 0, avgAttendance: dashboard.avg_attendance || 0 };
+}
+
 function exportEnrollmentAttendanceToExcel() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
-  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+  const { months, enrollmentData, attendanceData, classRows } = getMonthlyEnrollmentAttendanceData();
 
   let csv = 'Monthly Enrollment & Attendance Report\n';
   csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
@@ -275,19 +283,15 @@ function exportEnrollmentAttendanceToExcel() {
   }
 
   csv += '\n\nClass-wise Summary\n';
-  csv += 'Class,Peak Enrollment,Average Attendance\n';
-  csv += 'Form 1,35,92%\n';
-  csv += 'Form 2,47,97%\n';
-  csv += 'Form 3,20,98%\n';
+  csv += 'Class,Current Enrollment\n';
+  classRows.forEach(row => { csv += row.class_name + ',' + row.student_count + '\n'; });
 
   csv += '\n\nKey Metrics\n';
   csv += 'Metric,Value\n';
-  csv += 'Total Enrollment Growth,42 to 102 (+142.9%)\n';
-  csv += 'Attendance Improvement,88% to 96% (+9.1%)\n';
-  csv += 'Monthly Average Enrollment,67.3 students\n';
-  csv += 'Monthly Average Attendance,92.5%\n';
-  csv += 'Highest Enrollment Month,December (102 students)\n';
-  csv += 'Peak Attendance Month,October & November (97-98%)\n';
+  const avgEnrollment = enrollmentData.length ? Math.round((enrollmentData.reduce((a, b) => a + b, 0) / enrollmentData.length) * 10) / 10 : 0;
+  const avgAttendance = attendanceData.length ? Math.round((attendanceData.reduce((a, b) => a + b, 0) / attendanceData.length) * 10) / 10 : 0;
+  csv += 'Monthly Average Enrollment,' + avgEnrollment + ' students\n';
+  csv += 'Monthly Average Attendance,' + avgAttendance + '%\n';
 
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
@@ -300,9 +304,7 @@ function exportEnrollmentAttendanceToExcel() {
 }
 
 function downloadEnrollmentAttendancePDF() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
-  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+  const { months, enrollmentData, attendanceData, classRows, totalStudents, avgAttendance } = getMonthlyEnrollmentAttendanceData();
 
   let html = '<html><head><meta charset="UTF-8"><style>';
   html += 'body{font-family:Arial,sans-serif;margin:20px;color:#333}';
@@ -317,10 +319,9 @@ function downloadEnrollmentAttendancePDF() {
   html += '<p style="color:#666;font-size:12px">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</p>';
 
   html += '<h2>Summary Metrics</h2>';
-  html += '<div class="stat"><div class="stat-val">102</div><div class="stat-lbl">Current Enrollment</div></div>';
-  html += '<div class="stat"><div class="stat-val">96%</div><div class="stat-lbl">Avg Attendance</div></div>';
-  html += '<div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Active Classes</div></div>';
-  html += '<div class="stat"><div class="stat-val">842</div><div class="stat-lbl">Total Students</div></div>';
+  html += '<div class="stat"><div class="stat-val">' + totalStudents + '</div><div class="stat-lbl">Current Enrollment</div></div>';
+  html += '<div class="stat"><div class="stat-val">' + avgAttendance + '%</div><div class="stat-lbl">Avg Attendance</div></div>';
+  html += '<div class="stat"><div class="stat-val">' + classRows.length + '</div><div class="stat-lbl">Active Classes</div></div>';
 
   html += '<h2>Monthly Breakdown</h2>';
   html += '<table><tr><th>Month</th><th>Enrollment</th><th>Attendance %</th><th>Performance</th></tr>';
@@ -332,19 +333,15 @@ function downloadEnrollmentAttendancePDF() {
 
   html += '<div class="page-break"></div>';
   html += '<h2>Class-wise Analysis</h2>';
-  html += '<table><tr><th>Class</th><th>Peak Enrollment</th><th>Average Attendance</th></tr>';
-  html += '<tr><td>Form 1</td><td>35 students</td><td>92%</td></tr>';
-  html += '<tr><td>Form 2</td><td>47 students</td><td>97%</td></tr>';
-  html += '<tr><td>Form 3</td><td>20 students</td><td>98%</td></tr>';
+  html += '<table><tr><th>Class</th><th>Current Enrollment</th></tr>';
+  classRows.forEach(row => { html += '<tr><td>' + row.class_name + '</td><td>' + row.student_count + ' students</td></tr>'; });
   html += '</table>';
 
   html += '<h2>Key Statistics</h2>';
   html += '<table>';
   html += '<tr><th>Metric</th><th>Value</th></tr>';
-  html += '<tr><td>Enrollment Growth (Jan-Dec)</td><td>42 to 102 (+142.9%)</td></tr>';
-  html += '<tr><td>Attendance Improvement</td><td>88% to 96% (+9.1%)</td></tr>';
-  html += '<tr><td>Monthly Average Enrollment</td><td>67.3 students</td></tr>';
-  html += '<tr><td>Monthly Average Attendance</td><td>92.5%</td></tr>';
+  html += '<tr><td>Monthly Average Enrollment</td><td>' + (enrollmentData.length ? Math.round((enrollmentData.reduce((a, b) => a + b, 0) / enrollmentData.length) * 10) / 10 : 0) + ' students</td></tr>';
+  html += '<tr><td>Monthly Average Attendance</td><td>' + (attendanceData.length ? Math.round((attendanceData.reduce((a, b) => a + b, 0) / attendanceData.length) * 10) / 10 : 0) + '%</td></tr>';
   html += '</table>';
 
   html += '</body></html>';
@@ -363,34 +360,33 @@ function downloadEnrollmentAttendancePDF() {
 // MONTHLY ENROLLMENT & ATTENDANCE REPORT
 // -----------------------------------
 function showMonthlyEnrollmentAttendanceReport() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
-  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
-  const classData = {
-    'Basic 1-3': { enr: [12, 14, 13, 16, 18, 20, 22, 25, 28, 30, 32, 35], att: [85, 86, 84, 87, 89, 90, 91, 93, 92, 94, 95, 93] },
-    'Basic 4-6': { enr: [18, 20, 19, 22, 25, 28, 30, 33, 36, 40, 43, 47], att: [88, 89, 87, 91, 93, 94, 95, 97, 96, 98, 99, 97] },
-    'JHS 1-3': { enr: [12, 14, 13, 14, 15, 14, 16, 17, 18, 18, 19, 20], att: [92, 93, 91, 92, 93, 94, 95, 96, 95, 97, 98, 98] }
-  };
+  const { months, enrollmentData, attendanceData, classRows, totalStudents, avgAttendance } = getMonthlyEnrollmentAttendanceData();
+  const avgEnrollment = enrollmentData.length ? Math.round((enrollmentData.reduce((a, b) => a + b, 0) / enrollmentData.length) * 10) / 10 : 0;
+  const monthlyAvgAttendance = attendanceData.length ? Math.round((attendanceData.reduce((a, b) => a + b, 0) / attendanceData.length) * 10) / 10 : 0;
+  const peakEnrollment = enrollmentData.length ? Math.max(...enrollmentData) : 0;
+  const peakEnrollmentMonth = peakEnrollment ? months[enrollmentData.indexOf(peakEnrollment)] : '';
+  const peakAttendance = attendanceData.length ? Math.max(...attendanceData) : 0;
+  const peakAttendanceMonth = peakAttendance ? months[attendanceData.indexOf(peakAttendance)] : '';
 
   let html = hdr('<i class="fas fa-chart-bar"></i> Monthly Enrollment & Attendance Report', 'Comprehensive analysis of student enrollment and attendance trends', 'Report') + `
   <div class="stats-row">
     <div class="stat-card si-blue">
-      <div class="stat-val">102</div>
+      <div class="stat-val">${totalStudents}</div>
       <div class="stat-lbl">Current Enrollment</div>
       <div class="stat-sub">+8 this month</div>
     </div>
     <div class="stat-card si-green">
-      <div class="stat-val">96%</div>
+      <div class="stat-val">${avgAttendance}%</div>
       <div class="stat-lbl">Avg Attendance</div>
       <div class="stat-sub">+2% improvement</div>
     </div>
     <div class="stat-card si-gold">
-      <div class="stat-val">3</div>
+      <div class="stat-val">${classRows.length}</div>
       <div class="stat-lbl">Active Classes</div>
       <div class="stat-sub">Basic & JHS</div>
     </div>
     <div class="stat-card si-purple">
-      <div class="stat-val">842</div>
+      <div class="stat-val">${totalStudents}</div>
       <div class="stat-lbl">Total Students</div>
       <div class="stat-sub">All enrolled</div>
     </div>
@@ -425,20 +421,15 @@ function showMonthlyEnrollmentAttendanceReport() {
   <div class="card mb20">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Class-wise Enrollment & Attendance Breakdown</span></div>
     <div class="g3">
-      ${Object.entries(classData).map(([cls, data]) => `
+      ${classRows.map(row => `
       <div style="padding:12px;border:1px solid var(--gray-200);border-radius:8px">
-        <div style="font-weight:700;color:var(--blue-main);margin-bottom:10px">${cls}</div>
+        <div style="font-weight:700;color:var(--blue-main);margin-bottom:10px">${escapeHtml(row.class_name)}</div>
         <div style="margin-bottom:12px">
-          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Enrollment: ${data.enr[11]} students (+${data.enr[11] - data.enr[10]} this month)</div>
-          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(data.enr[11] / 35) * 100}%"></div></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Attendance: ${data.att[11]}%</div>
-          <div class="prog-bar"><div class="prog-fill pf-green" style="width:${data.att[11]}%"></div></div>
+          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Enrollment: ${row.student_count} students</div>
+          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${totalStudents ? (row.student_count / totalStudents) * 100 : 0}%"></div></div>
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-100);font-size:10px;color:var(--gray-500)">
-          <div>Peak: ${Math.max(...data.enr)} students</div>
-          <div>Avg Att: ${Math.round(data.att.reduce((a, b) => a + b, 0) / data.att.length)}%</div>
+          <div>Database class total</div>
         </div>
       </div>`).join('')}
     </div>
@@ -449,12 +440,12 @@ function showMonthlyEnrollmentAttendanceReport() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Key Metrics</span></div>
       <div style="padding:12px 0">
         ${[
-      ['Enrollment Growth', 'Jan-Dec', '42 to 102 students', '+142.9%', 'success'],
-      ['Attendance Improvement', 'Jan-Dec', '88% to 96%', '+9.1%', 'success'],
-      ['Monthly Avg Enrollment', '2024/2025', '67.3 students', 'Stable', 'info'],
-      ['Monthly Avg Attendance', '2024/2025', '92.5%', 'Excellent', 'success'],
-      ['Highest Enrollment Month', 'December', '102 students', 'Peak term', 'gold'],
-      ['Highest Attendance Month', 'October/Nov', '97-98%', 'Peak performance', 'success']
+      ['Current Enrollment', 'Database', totalStudents + ' students', 'Live', 'info'],
+      ['Current Avg Attendance', 'Database', avgAttendance + '%', 'Live', 'success'],
+      ['Monthly Avg Enrollment', 'Database', avgEnrollment + ' students', 'Calculated', 'info'],
+      ['Monthly Avg Attendance', 'Database', monthlyAvgAttendance + '%', 'Calculated', 'success'],
+      ['Highest Enrollment Month', peakEnrollmentMonth || 'N/A', peakEnrollment + ' students', 'Peak', 'gold'],
+      ['Highest Attendance Month', peakAttendanceMonth || 'N/A', peakAttendance + '%', 'Peak', 'success']
     ].map(([label, period, value, change, color]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <div>
@@ -477,23 +468,23 @@ function showMonthlyEnrollmentAttendanceReport() {
           <table class="tbl" style="font-size:11px">
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Q1 (Jan-Mar)</td>
-              <td style="text-align:right;font-weight:600">135 students</td>
-              <td style="text-align:right;color:var(--gray-500)">44.4%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(0, 3).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q1</td>
             </tr>
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Q2 (Apr-Jun)</td>
-              <td style="text-align:right;font-weight:600">172 students</td>
-              <td style="text-align:right;color:var(--gray-500)">56.6%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(3, 6).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q2</td>
             </tr>
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Q3 (Jul-Sep)</td>
-              <td style="text-align:right;font-weight:600">225 students</td>
-              <td style="text-align:right;color:var(--gray-500)">74.0%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(6, 9).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q3</td>
             </tr>
             <tr>
               <td style="padding:6px 0">Q4 (Oct-Dec)</td>
-              <td style="text-align:right;font-weight:600">274 students</td>
-              <td style="text-align:right;color:var(--gray-500)">90.1%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(9, 12).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q4</td>
             </tr>
           </table>
         </div>
@@ -502,15 +493,15 @@ function showMonthlyEnrollmentAttendanceReport() {
           <table class="tbl" style="font-size:11px">
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Excellent (=95%)</td>
-              <td style="text-align:right;font-weight:600">7 months</td>
+              <td style="text-align:right;font-weight:600">${attendanceData.filter(v => v >= 95).length} months</td>
             </tr>
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Very Good (90-94%)</td>
-              <td style="text-align:right;font-weight:600">4 months</td>
+              <td style="text-align:right;font-weight:600">${attendanceData.filter(v => v >= 90 && v < 95).length} months</td>
             </tr>
             <tr>
               <td style="padding:6px 0">Good (85-89%)</td>
-              <td style="text-align:right;font-weight:600">1 month</td>
+              <td style="text-align:right;font-weight:600">${attendanceData.filter(v => v < 90).length} months</td>
             </tr>
           </table>
         </div>
@@ -533,7 +524,7 @@ function showMonthlyEnrollmentAttendanceReport() {
       </thead>
       <tbody>
         ${enrollmentData.map((enr, i) => {
-      const prevEnr = i > 0 ? enrollmentData[i - 1] : 42;
+      const prevEnr = i > 0 ? enrollmentData[i - 1] : enr;
       const change = enr - prevEnr;
       const att = attendanceData[i];
       const trend = change > 0 ? '<i class="fas fa-chart-line"></i>' : change < 0 ? '<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>' : '<i class="fas fa-arrow-right"></i>';
@@ -1190,6 +1181,10 @@ function showAddTeacherForm() {
 function editTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
+  const isArchived = teacher.status === 'Archived';
+  const archiveAction = isArchived
+    ? `<button class="btn btn-primary" style="flex:1" onclick="restoreTeacher('${teacherId}')"><i class="fas fa-rotate-left"></i> Restore</button>`
+    : `<button class="btn btn-danger" style="flex:1" onclick="archiveTeacher('${teacherId}')"><i class="fas fa-box-archive"></i> Archive</button>`;
 
   let html = hdr('Edit Teacher Profile', `Update details for ${teacher.name}`, 'Teachers') + `
   <div class="card">
@@ -1240,11 +1235,11 @@ function editTeacher(teacherId) {
       </div>
       <div class="form-field">
         <label>Status</label>
-        <select id="teacher-status"><option ${teacher.status === 'Active' ? 'selected' : ''}>Active</option><option ${teacher.status === 'On Leave' ? 'selected' : ''}>On Leave</option><option ${teacher.status === 'Inactive' ? 'selected' : ''}>Inactive</option></select>
+        <select id="teacher-status"><option ${teacher.status === 'Active' ? 'selected' : ''}>Active</option><option ${teacher.status === 'On Leave' ? 'selected' : ''}>On Leave</option><option ${(teacher.status === 'Inactive' || teacher.status === 'Archived') ? 'selected' : ''}>Inactive</option></select>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="submitEditTeacher('${teacherId}')"><i class="fas fa-save"></i> Save Changes</button>
-        <button class="btn btn-danger" style="flex:1" onclick="archiveTeacher('${teacherId}')"><i class="fas fa-box-archive"></i> Archive</button>
+        ${archiveAction}
         <button class="btn btn-secondary" style="flex:1" onclick="navTo('teachers')">Cancel</button>
       </div>
     </div>
@@ -1259,6 +1254,11 @@ function viewTeacherProfile(teacherId) {
     showToast('<i class="fas fa-lock"></i> You can only view your children’s teachers', 'error');
     return;
   }
+
+  const isArchived = teacher.status === 'Archived';
+  const adminAction = isArchived
+    ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="restoreTeacher('${teacher.teacher_id}')"><i class="fas fa-rotate-left"></i> Restore Teacher</button>`
+    : `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="editTeacher('${teacher.teacher_id}')"><i class="fas fa-edit"></i> Edit Profile</button><button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="archiveTeacher('${teacher.teacher_id}')"><i class="fas fa-box-archive"></i> Archive Teacher</button>`;
 
   let html = hdr('Teacher Profile', teacher.name, 'Teachers') + `
   <div class="g2">
@@ -1311,68 +1311,92 @@ function viewTeacherProfile(teacherId) {
           <span class="label"><i class="fas fa-calendar-check"></i> Hired</span>
           <span>${teacher.hiring_date || 'Not provided'}</span>
         </div>
+        ${isArchived ? `<div class="info-row"><span class="label"><i class="fas fa-box-archive"></i> Archived</span><span>${teacher.archived_date || 'Not provided'}</span></div>` : ''}
       </div>
-      ${currentRole === 'Admin' ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="editTeacher('${teacher.teacher_id}')"><i class="fas fa-edit"></i> Edit Profile</button><button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="archiveTeacher('${teacher.teacher_id}')"><i class="fas fa-box-archive"></i> Archive Teacher</button>` : ''}
+      ${currentRole === 'Admin' ? adminAction : ''}
       ${currentRole === 'Parent' ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="currentChat='${escapeAttr(teacher.name)}';navTo('messaging')"><i class="fas fa-envelope"></i> Message Teacher</button>` : ''}
     </div>
   </div>`;
   document.getElementById('main-content').innerHTML = html;
 }
 
-function submitTeacherForm() {
-  const name = document.getElementById('teacher-name').value;
-  const subject = document.getElementById('teacher-subject').value;
+async function submitTeacherForm() {
+  const name = document.getElementById('teacher-name').value.trim();
+  const subject = document.getElementById('teacher-subject').value.trim();
   const department = document.getElementById('teacher-department').value;
   const experience = document.getElementById('teacher-experience').value;
-  const email = document.getElementById('teacher-email').value;
-  const phone = document.getElementById('teacher-phone').value;
+  const email = document.getElementById('teacher-email').value.trim();
+  const phone = document.getElementById('teacher-phone').value.trim();
   const classAssigned = document.getElementById('teacher-class').value;
-  const schedule = document.getElementById('teacher-schedule').value;
+  const schedule = document.getElementById('teacher-schedule').value.trim();
   const defaultBasic = getTeacherPayrollBasic({ experience });
   const basicSalary = Number(document.getElementById('teacher-basic')?.value || defaultBasic);
-  const allowances = Number(document.getElementById('teacher-allowance')?.value || Math.round(basicSalary * 0.25));
-  const deductions = Number(document.getElementById('teacher-deduction')?.value || Math.round(basicSalary * 0.10));
 
   if (!name || !subject || department === '-- Select --' || !experience || !email || !phone) {
     return showToast('Please fill all required fields', 'error');
   }
 
-  const newTeacher = {
-    teacher_id: 'T' + (teachersData.length + 1).toString().padStart(3, '0'),
-    name, subject, department, experience: experience.toString(),
-    email, phone, class_assigned: classAssigned || 'Not Assigned',
-    basicSalary, allowances, deductions,
-    schedule: schedule || 'Not specified', gender: 'Male', avatar_color: 'blue',
-    dob: document.getElementById('teacher-dob').value,
-    hiring_date: new Date().toISOString().split('T')[0],
-    status: 'Active'
-  };
+  if (typeof API === 'undefined' || !API.staff) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
 
-  teachersData.push(newTeacher);
-  saveTeacherRecords();
+  const res = await API.staff.create({
+    name,
+    email,
+    phone,
+    category: 'Teaching',
+    department,
+    position: subject,
+    qualifications: 'Degree',
+    salary_grade: String(basicSalary),
+    join_date: new Date().toISOString().split('T')[0],
+    gender: 'Male',
+    dob: document.getElementById('teacher-dob').value,
+    address: 'Glory Reign Campus',
+    subject,
+    class_assigned: classAssigned || 'Not Assigned',
+    experience: parseInt(experience, 10),
+    schedule: schedule || 'Mon-Fri',
+    avatar_color: 'blue',
+    status: 'Active'
+  });
+
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to add teacher', 'error');
+  }
   showToast('<i class="fas fa-check-circle"></i> ' + name + ' added successfully!', 'success');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   const returnToPayroll = window.returnToPayrollAfterTeacherAdd;
   window.returnToPayrollAfterTeacherAdd = false;
   navTo(returnToPayroll ? 'salary' : 'teachers');
 }
 
-function submitEditTeacher(teacherId) {
+async function submitEditTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
+  if (typeof API === 'undefined' || !API.staff || !teacher.id) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
 
-  teacher.name = document.getElementById('teacher-name').value;
-  teacher.subject = document.getElementById('teacher-subject').value;
-  teacher.department = document.getElementById('teacher-department').value;
-  teacher.experience = document.getElementById('teacher-experience').value;
-  teacher.email = document.getElementById('teacher-email').value;
-  teacher.phone = document.getElementById('teacher-phone').value;
-  teacher.class_assigned = document.getElementById('teacher-class').value;
-  teacher.schedule = document.getElementById('teacher-schedule').value;
-  teacher.basicSalary = Number(document.getElementById('teacher-basic')?.value || getTeacherPayrollBasic(teacher));
-  teacher.allowances = Number(document.getElementById('teacher-allowance')?.value || Math.round(teacher.basicSalary * 0.25));
-  teacher.deductions = Number(document.getElementById('teacher-deduction')?.value || Math.round(teacher.basicSalary * 0.10));
-  teacher.status = document.getElementById('teacher-status').value;
-  saveTeacherRecords();
+  const status = document.getElementById('teacher-status').value;
+  const basicSalary = Number(document.getElementById('teacher-basic')?.value || getTeacherPayrollBasic(teacher));
+  const res = await API.staff.update(teacher.id, {
+    name: document.getElementById('teacher-name').value.trim(),
+    email: document.getElementById('teacher-email').value.trim(),
+    phone: document.getElementById('teacher-phone').value.trim(),
+    department: document.getElementById('teacher-department').value,
+    position: document.getElementById('teacher-subject').value.trim(),
+    subject: document.getElementById('teacher-subject').value.trim(),
+    class_assigned: document.getElementById('teacher-class').value || 'Not Assigned',
+    experience: parseInt(document.getElementById('teacher-experience').value || '0', 10),
+    schedule: document.getElementById('teacher-schedule').value.trim() || 'Mon-Fri',
+    salary_grade: String(basicSalary),
+    status: status === 'Archived' ? 'Inactive' : status
+  });
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to update teacher', 'error');
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
 
   showToast('<i class="fas fa-check-circle"></i> Teacher profile updated successfully!', 'success');
   navTo('teachers');
@@ -1382,24 +1406,32 @@ function deleteTeacher(teacherId) {
   archiveTeacher(teacherId);
 }
 
-function archiveTeacher(teacherId) {
+async function archiveTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
-  teacher.status = 'Archived';
-  teacher.archived_date = new Date().toISOString().split('T')[0];
-  teacher.archived_by = currentRole || 'Admin';
-  saveTeacherRecords();
+  if (typeof API === 'undefined' || !API.staff || !teacher.id) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
+  const res = await API.staff.update(teacher.id, { status: 'Inactive' });
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to archive teacher', 'error');
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Teacher moved to archived records', 'success');
   navTo('teachers');
 }
 
-function restoreTeacher(teacherId) {
+async function restoreTeacher(teacherId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return showToast('Teacher not found', 'error');
-  teacher.status = 'Active';
-  delete teacher.archived_date;
-  delete teacher.archived_by;
-  saveTeacherRecords();
+  if (typeof API === 'undefined' || !API.staff || !teacher.id) {
+    return showToast('Backend teacher API is unavailable', 'error');
+  }
+  const res = await API.staff.update(teacher.id, { status: 'Active' });
+  if (!res || !res.success) {
+    return showToast(res?.message || 'Failed to restore teacher', 'error');
+  }
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Teacher restored to active records', 'success');
   viewArchivedTeachers();
 }
@@ -1821,12 +1853,9 @@ function manageClass(classId) {
       <div class="form-field">
         <label>Class Level *</label>
         <select id="manage-class-level">
-          <option value="Creche" ${classData.level === 'Creche' ? 'selected' : ''}>Creche</option>
-          <option value="Nursery" ${classData.level === 'Nursery' ? 'selected' : ''}>Nursery</option>
-          <option value="KG 1" ${classData.level === 'KG 1' ? 'selected' : ''}>KG 1</option>
-          <option value="KG 2" ${classData.level === 'KG 2' ? 'selected' : ''}>KG 2</option>
-          <option value="Basic" ${classData.level === 'Basic' ? 'selected' : ''}>Basic</option>
-          <option value="JHS" ${classData.level === 'JHS' ? 'selected' : ''}>JHS</option>
+          <option value="Early Childhood" ${classData.level === 'Early Childhood' ? 'selected' : ''}>Early Childhood</option>
+          <option value="Primary" ${classData.level === 'Primary' ? 'selected' : ''}>Primary</option>
+          <option value="Junior High" ${classData.level === 'Junior High' ? 'selected' : ''}>Junior High</option>
         </select>
       </div>
       <div class="form-field">
@@ -1872,39 +1901,53 @@ function manageClass(classId) {
   renderSubjectCheckboxes('class-subjects-container', classData.subjects || []);
 }
 
-function saveClassChanges(classId) {
-  const classData = classesData.find(c => c.class_id === classId);
-  if (!classData) return;
+async function saveClassChanges(classId) {
+  if (window.API?.classes?.update) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can manage classes', 'error');
+      return;
+    }
 
-  const name = document.getElementById('manage-class-name')?.value.trim();
-  const level = document.getElementById('manage-class-level')?.value;
-  const stream = document.getElementById('manage-class-stream')?.value;
-  const teacherId = document.getElementById('manage-class-teacher')?.value;
-  const students = document.getElementById('manage-class-students')?.value;
-  const capacity = document.getElementById('manage-class-capacity')?.value;
-  const subjectsStr = document.getElementById('manage-class-subjects')?.value.trim();
+    const classData = classesData.find(c => c.class_id === classId);
+    if (!classData) {
+      showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+      return;
+    }
 
-  if (!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr) {
-    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+    const name = document.getElementById('manage-class-name')?.value.trim();
+    const level = document.getElementById('manage-class-level')?.value;
+    const stream = document.getElementById('manage-class-stream')?.value;
+    const teacherId = document.getElementById('manage-class-teacher')?.value;
+    const capacity = document.getElementById('manage-class-capacity')?.value;
+    const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+    if (!name || !level || !stream || !capacity) {
+      showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.classes.update(classData.id, {
+      name,
+      level,
+      stream,
+      teacher_id: teacher ? teacher.id : null,
+      capacity: parseInt(capacity, 10),
+      subjects
+    });
+
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Class updated successfully!', 'success');
+      await syncAllDataFromBackend();
+      navTo('classes');
+    } else {
+      showToast(res?.message || 'Failed to update class', 'error');
+    }
     return;
   }
 
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-
-  classData.name = name;
-  classData.level = level;
-  classData.stream = stream;
-  classData.teacher_id = teacherId;
-  classData.teacher = teacher?.name || 'Not assigned';
-  classData.students = parseInt(students);
-  classData.capacity = parseInt(capacity);
-  classData.subjects = subjectsStr.split(',').map(s => s.trim());
-
-  showToast('<i class="fas fa-check-circle"></i> Class updated!<br/>Name: ' + name, 'success', 3000);
-
-  setTimeout(() => {
-    navTo('classes');
-  }, 2000);
+  showToast('Backend API is unavailable. Class changes were not saved.', 'error');
+  return;
 }
 
 function renderSubjectCheckboxes(containerId, selectedNames = []) {
@@ -1963,12 +2006,9 @@ function openCreateClass() {
       <div class="form-field">
         <label>Class Level *</label>
         <select id="new-class-level">
-          <option value="Creche">Creche</option>
-          <option value="Nursery">Nursery</option>
-          <option value="KG 1">KG 1</option>
-          <option value="KG 2">KG 2</option>
-          <option value="Basic">Basic</option>
-          <option value="JHS">JHS</option>
+          <option value="Early Childhood">Early Childhood</option>
+          <option value="Primary">Primary</option>
+          <option value="Junior High">Junior High</option>
         </select>
       </div>
       <div class="form-field">
@@ -2010,61 +2050,77 @@ function openCreateClass() {
   renderSubjectCheckboxes('class-subjects-container', []);
 }
 
-function createClass() {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can create classes', 'error');
+async function createClass() {
+  if (window.API?.classes?.create) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can create classes', 'error');
+      return;
+    }
+
+    const name = document.getElementById('new-class-name')?.value.trim();
+    const level = document.getElementById('new-class-level')?.value;
+    const stream = document.getElementById('new-class-stream')?.value;
+    const teacherId = document.getElementById('new-class-teacher')?.value;
+    const capacity = document.getElementById('new-class-capacity')?.value;
+    const subjects = Array.from(document.querySelectorAll('input[name="class-subjects"]:checked')).map(el => el.value);
+
+    if (!name || !level || !stream || !capacity) {
+      showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.classes.create({
+      name,
+      level,
+      stream,
+      teacher_id: teacher ? teacher.id : null,
+      capacity: parseInt(capacity, 10),
+      subjects
+    });
+
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Class created successfully!', 'success');
+      await syncAllDataFromBackend();
+      navTo('classes');
+    } else {
+      showToast(res?.message || 'Failed to create class', 'error');
+    }
     return;
   }
 
-  const name = document.getElementById('new-class-name')?.value.trim();
-  const level = document.getElementById('new-class-level')?.value;
-  const stream = document.getElementById('new-class-stream')?.value;
-  const teacherId = document.getElementById('new-class-teacher')?.value;
-  const students = document.getElementById('new-class-students')?.value;
-  const capacity = document.getElementById('new-class-capacity')?.value;
-  const subjectsStr = document.getElementById('new-class-subjects')?.value.trim();
-
-  if (!name || !level || !stream || !teacherId || !students || !capacity || !subjectsStr) {
-    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
-    return;
-  }
-
-  const teacher = teachersData.find(t => t.teacher_id === teacherId);
-  const newClass = {
-    class_id: 'C' + String(classesData.length + 1).padStart(3, '0'),
-    name,
-    level,
-    stream,
-    teacher: teacher?.name || 'Not assigned',
-    teacher_id: teacherId,
-    students: parseInt(students, 10),
-    attendance: '0%',
-    capacity: parseInt(capacity, 10),
-    subjects: subjectsStr.split(',').map(s => s.trim())
-  };
-
-  classesData.push(newClass);
-  showToast('<i class="fas fa-check-circle"></i> Class created successfully!<br/>Name: ' + name, 'success', 3000);
-  setTimeout(() => navTo('classes'), 2000);
+  showToast('Backend API is unavailable. Class was not created.', 'error');
+  return;
 }
 
-function deleteClass(classId) {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can delete classes', 'error');
+async function deleteClass(classId) {
+  if (window.API?.classes?.delete) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can delete classes', 'error');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
+
+    const classData = classesData.find(c => c.class_id === classId);
+    if (!classData) {
+      showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
+      return;
+    }
+
+    const res = await API.classes.delete(classData.id);
+    if (res && res.success) {
+      showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
+      await syncAllDataFromBackend();
+      navTo('classes');
+    } else {
+      showToast(res?.message || 'Failed to delete class', 'error');
+    }
     return;
   }
 
-  if (!confirm('Are you sure you want to delete this class? This cannot be undone.')) return;
-
-  const index = classesData.findIndex(c => c.class_id === classId);
-  if (index === -1) {
-    showToast('<i class="fas fa-times-circle"></i> Class not found', 'error');
-    return;
-  }
-
-  classesData.splice(index, 1);
-  showToast('<i class="fas fa-check-circle"></i> Class deleted successfully', 'success');
-  setTimeout(() => navTo('classes'), 1200);
+  showToast('Backend API is unavailable. Class was not deleted.', 'error');
+  return;
 }
 
 function filterClasses() {
@@ -2101,7 +2157,7 @@ function updateClassCards(classes) {
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
-        <span><i class="fas fa-users"></i> <strong>${getClassActiveStudentCount(c.name)}</strong> students</span>
+        <span><i class="fas fa-users"></i> <strong>${parseInt(c.students || 0, 10)}</strong> students</span>
         <span style="color:var(--success);font-weight:700">${c.attendance}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>
@@ -2119,7 +2175,7 @@ function updateClassCards(classes) {
 function classesModule() {
   const isAdmin = currentRole === 'Admin';
   const visibleClasses = getVisibleClassesForRole(classesData);
-  const totalStudents = visibleClasses.reduce((sum, c) => sum + getClassActiveStudentCount(c.name), 0);
+  const totalStudents = visibleClasses.reduce((sum, c) => sum + parseInt(c.students || 0, 10), 0);
   const avgClassSize = visibleClasses.length ? Math.round(totalStudents / visibleClasses.length) : 0;
   const statsCards = [
     statCard('<i class="fas fa-building"></i>', visibleClasses.length, isAdmin ? 'Total Classes' : 'My Classes', isAdmin ? 'All levels' : 'Assigned to you', 'neu', 'si-blue'),
@@ -2136,7 +2192,7 @@ function classesModule() {
       </div>
       <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
-        <span><i class="fas fa-users"></i> <strong>${getClassActiveStudentCount(c.name)}</strong> students</span>
+        <span><i class="fas fa-users"></i> <strong>${parseInt(c.students || 0, 10)}</strong> students</span>
         <span style="color:var(--success);font-weight:700">${c.attendance}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>
@@ -2497,38 +2553,50 @@ function showAddSubjectForm() {
   openModal(form);
 }
 
-function submitSubjectForm() {
-  const icon = document.getElementById('add-subject-icon').value.trim() || '<i class="fas fa-book"></i>';
-  const name = document.getElementById('add-subject-name').value.trim();
-  const type = document.getElementById('add-subject-type').value;
-  const teacherId = document.getElementById('add-subject-teacher').value;
-  const teacherName = document.querySelector('#add-subject-teacher option:checked').textContent;
-  const classes = document.getElementById('add-subject-classes').value.trim();
-  const hours = document.getElementById('add-subject-hours').value.trim();
-  const desc = document.getElementById('add-subject-desc').value.trim();
+async function submitSubjectForm() {
+  if (window.API?.subjects?.create) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can add subjects', 'error');
+      return;
+    }
 
-  if (!name || !classes || !hours) {
-    showToast('Please fill in all required fields', 'error');
+    const icon = document.getElementById('add-subject-icon')?.value.trim() || '';
+    const name = document.getElementById('add-subject-name')?.value.trim();
+    const type = document.getElementById('add-subject-type')?.value;
+    const teacherId = document.getElementById('add-subject-teacher')?.value;
+    const classId = document.getElementById('add-subject-class-id')?.value;
+    const hours = document.getElementById('add-subject-hours')?.value.trim();
+    const desc = document.getElementById('add-subject-desc')?.value.trim();
+
+    if (!name || !classId || !hours) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.subjects.create({
+      icon,
+      name,
+      type,
+      teacher_id: teacher ? teacher.id : null,
+      class_id: parseInt(classId, 10),
+      hours,
+      description: desc
+    });
+
+    if (res && res.success) {
+      closeModal();
+      showToast(`Subject "${name}" added successfully`, 'success');
+      await syncAllDataFromBackend();
+      renderMain();
+    } else {
+      showToast(res?.message || 'Failed to add subject', 'error');
+    }
     return;
   }
 
-  const newSubject = {
-    subject_id: 'SUB' + String(subjectsData.length + 1).padStart(3, '0'),
-    icon, name, type, teacher: teacherName, teacher_id: teacherId,
-    classes, hours, description: desc
-  };
-
-  subjectsData.push(newSubject);
-  closeModal();
-  showToast(`Subject "${name}" added successfully`, 'success');
-
-  const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
-  const filteredSubjects = getVisibleSubjectsForRole(subjectsData).filter(s => {
-    const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm) || s.teacher.toLowerCase().includes(searchTerm);
-    return matchesType && matchesSearch;
-  });
-  updateSubjectDisplay(filteredSubjects);
+  showToast('Backend API is unavailable. Subject was not created.', 'error');
+  return;
 }
 
 function viewSubject(subjectId) {
@@ -2636,73 +2704,80 @@ function editSubject(subjectId) {
   openModal(form);
 }
 
-function saveSubjectChanges(subjectId) {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can edit subjects', 'error');
+async function saveSubjectChanges(subjectId) {
+  if (window.API?.subjects?.update) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can edit subjects', 'error');
+      return;
+    }
+
+    const subject = subjectsData.find(s => s.subject_id === subjectId);
+    if (!subject) return;
+
+    const icon = document.getElementById('edit-subject-icon')?.value.trim() || '';
+    const name = document.getElementById('edit-subject-name')?.value.trim();
+    const type = document.getElementById('edit-subject-type')?.value;
+    const teacherId = document.getElementById('edit-subject-teacher')?.value;
+    const classId = document.getElementById('edit-subject-class-id')?.value;
+    const hours = document.getElementById('edit-subject-hours')?.value.trim();
+    const desc = document.getElementById('edit-subject-desc')?.value.trim();
+
+    if (!name || !classId || !hours) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const teacher = teachersData.find(t => t.teacher_id === teacherId);
+    const res = await API.subjects.update(subject.id, {
+      icon,
+      name,
+      type,
+      teacher_id: teacher ? teacher.id : null,
+      class_id: parseInt(classId, 10),
+      hours,
+      description: desc
+    });
+
+    if (res && res.success) {
+      closeModal();
+      showToast('Subject updated successfully', 'success');
+      await syncAllDataFromBackend();
+      renderMain();
+    } else {
+      showToast(res?.message || 'Failed to update subject', 'error');
+    }
     return;
   }
 
-  const subject = subjectsData.find(s => s.subject_id === subjectId);
-  if (!subject) return;
-
-  const icon = document.getElementById('edit-subject-icon').value.trim() || '<i class="fas fa-book"></i>';
-  const name = document.getElementById('edit-subject-name').value.trim();
-  const type = document.getElementById('edit-subject-type').value;
-  const teacherId = document.getElementById('edit-subject-teacher').value;
-  const teacherName = document.querySelector('#edit-subject-teacher option:checked').textContent;
-  const classes = document.getElementById('edit-subject-classes').value.trim();
-  const hours = document.getElementById('edit-subject-hours').value.trim();
-  const desc = document.getElementById('edit-subject-desc').value.trim();
-
-  if (!name || !classes || !hours) {
-    showToast('Please fill in all required fields', 'error');
-    return;
-  }
-
-  subject.icon = icon;
-  subject.name = name;
-  subject.type = type;
-  subject.teacher = teacherName;
-  subject.teacher_id = teacherId;
-  subject.classes = classes;
-  subject.hours = hours;
-  subject.description = desc;
-
-  closeModal();
-  showToast('Subject updated successfully', 'success');
-
-  const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
-  const filteredSubjects = getVisibleSubjectsForRole(subjectsData).filter(s => {
-    const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm) || s.teacher.toLowerCase().includes(searchTerm);
-    return matchesType && matchesSearch;
-  });
-  updateSubjectDisplay(filteredSubjects);
+  showToast('Backend API is unavailable. Subject changes were not saved.', 'error');
+  return;
 }
 
-function deleteSubject(subjectId) {
-  if (currentRole !== 'Admin') {
-    showToast('Only administrators can delete subjects', 'error');
+async function deleteSubject(subjectId) {
+  if (window.API?.subjects?.delete) {
+    if (currentRole !== 'Admin') {
+      showToast('Only administrators can delete subjects', 'error');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this subject?')) return;
+
+    const subject = subjectsData.find(s => s.subject_id === subjectId);
+    if (!subject) return;
+
+    const res = await API.subjects.delete(subject.id);
+    if (res && res.success) {
+      showToast(`Subject "${subject.name}" deleted`, 'success');
+      await syncAllDataFromBackend();
+      renderMain();
+    } else {
+      showToast(res?.message || 'Failed to delete subject', 'error');
+    }
     return;
   }
 
-  if (!confirm('Are you sure you want to delete this subject?')) return;
-
-  const subject = subjectsData.find(s => s.subject_id === subjectId);
-  if (!subject) return;
-
-  const index = subjectsData.indexOf(subject);
-  subjectsData.splice(index, 1);
-
-  showToast(`Subject "${subject.name}" deleted`, 'success');
-
-  const searchTerm = document.getElementById('subject-search')?.value.toLowerCase() || '';
-  const filteredSubjects = getVisibleSubjectsForRole(subjectsData).filter(s => {
-    const matchesType = currentSubjectType === 'All' || s.type === currentSubjectType;
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm) || s.teacher.toLowerCase().includes(searchTerm);
-    return matchesType && matchesSearch;
-  });
-  updateSubjectDisplay(filteredSubjects);
+  showToast('Backend API is unavailable. Subject was not deleted.', 'error');
+  return;
 }
 
 
@@ -2767,7 +2842,6 @@ function timetableModule() {
     selectedClass = getReadableClassForRole('Basic 2');
   }
   const selectedTerm = window.selectedTimetableTerm || 'Term 1, 2025';
-  ensureTimetablesForAllClasses(selectedTerm);
 
   // Build class tabs for admin
   let classTabsHtml = '';
@@ -2822,7 +2896,6 @@ function timetableModule() {
 
 // -- backend-backed timetable state --
 function loadTimetablesFromStorage() {
-  ensureTimetablesForAllClasses(window.selectedTimetableTerm || 'Term 1, 2025');
 }
 function saveTimetablesToStorage() {
 }
@@ -2843,7 +2916,6 @@ function refreshTimetableView() {
   const cls = currentRole === 'Admin'
     ? (window.selectedTimetableClass || classesData[0].name)
     : getReadableClassForRole('Basic 2');
-  ensureTimetablesForAllClasses(term);
   const area = document.getElementById('tt-display-area');
   if (area) area.innerHTML = getTimetableDisplay(cls, term);
 }
@@ -3001,36 +3073,43 @@ function updateCreateFormPeriods() {
   if (grid) grid.innerHTML = buildCreateGrid(cls.value);
 }
 
-function saveNewTimetable() {
-  const clsEl = document.getElementById('create-tt-class');
-  const termEl = document.getElementById('create-tt-term');
-  if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
-  const cls = clsEl.value, term = termEl.value;
-  if (timetablesData[cls] && timetablesData[cls][term]) {
-    if (!confirm('Timetable exists for ' + cls + ' · ' + term + '. Overwrite?')) return;
-  }
-  const periods = getPeriodsForClass(cls);
-  const schedule = [];
-  let hasContent = false;
-  periods.forEach((p, idx) => {
-    const subjects = [];
-    for (let d = 0; d < 5; d++) {
-      const input = document.getElementById('create-p-' + idx + '-' + d);
-      const val = input ? input.value.trim() : '';
-      subjects.push(val || '—');
-      if (val && val !== '—' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
+async function saveNewTimetable() {
+  if (window.API?.timetable?.save) {
+    const clsEl = document.getElementById('create-tt-class');
+    const termEl = document.getElementById('create-tt-term');
+    if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
+    const cls = clsEl.value, term = termEl.value;
+    const periods = getPeriodsForClass(cls);
+    const schedule = [];
+    let hasContent = false;
+    periods.forEach((p, idx) => {
+      const subjects = [];
+      for (let d = 0; d < 5; d++) {
+        const input = document.getElementById('create-p-' + idx + '-' + d);
+        const val = input ? input.value.trim() : '';
+        subjects.push(val || '-');
+        if (val && val !== '-' && val !== 'â€”' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
+      }
+      schedule.push([p.label, subjects]);
+    });
+    if (!hasContent) { showToast('Fill in at least one subject', 'error'); return; }
+
+    const res = await API.timetable.save({ class_name: cls, term, timetable: schedule });
+    if (res && res.success) {
+      closeModal();
+      window.selectedTimetableClass = cls;
+      window.selectedTimetableTerm = term;
+      await syncAllDataFromBackend();
+      renderMain();
+      showToast('<i class="fas fa-check-circle"></i> Timetable created successfully', 'success');
+    } else {
+      showToast(res?.message || 'Failed to create timetable', 'error');
     }
-    schedule.push([p.label, subjects]);
-  });
-  if (!hasContent) { showToast('Fill in at least one subject', 'error'); return; }
-  if (!timetablesData[cls]) timetablesData[cls] = {};
-  timetablesData[cls][term] = schedule;
-  saveTimetablesToStorage();
-  closeModal();
-  window.selectedTimetableClass = cls;
-  window.selectedTimetableTerm = term;
-  renderMain();
-  showToast('<i class="fas fa-check-circle"></i> Timetable created for ' + cls + ' · ' + term, 'success');
+    return;
+  }
+
+  showToast('Backend API is unavailable. Timetable was not saved.', 'error');
+  return;
 }
 
 // -- Edit Timetable (Admin) --
@@ -3081,37 +3160,59 @@ function openEditTimetableForm() {
   openModal(form, true);
 }
 
-function saveEditedTimetable(cls, term) {
-  const schedule = timetablesData[cls] && timetablesData[cls][term];
-  if (!schedule) return;
-  schedule.forEach(([period], idx) => {
-    const pLow = period.toLowerCase();
-    const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
-    if (isFixed) return;
-    for (let d = 0; d < 5; d++) {
-      const input = document.getElementById('edit-p-' + idx + '-' + d);
-      if (input) schedule[idx][1][d] = input.value.trim() || '—';
+async function saveEditedTimetable(cls, term) {
+  if (window.API?.timetable?.save) {
+    const schedule = timetablesData[cls] && timetablesData[cls][term];
+    if (!schedule) return;
+    schedule.forEach(([period], idx) => {
+      const pLow = period.toLowerCase();
+      const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
+      if (isFixed) return;
+      for (let d = 0; d < 5; d++) {
+        const input = document.getElementById('edit-p-' + idx + '-' + d);
+        if (input) schedule[idx][1][d] = input.value.trim() || '-';
+      }
+    });
+
+    const res = await API.timetable.save({ class_name: cls, term, timetable: schedule });
+    if (res && res.success) {
+      closeModal();
+      await syncAllDataFromBackend();
+      refreshTimetableView();
+      showToast('<i class="fas fa-check-circle"></i> Timetable updated successfully', 'success');
+    } else {
+      showToast(res?.message || 'Failed to save timetable changes', 'error');
     }
-  });
-  saveTimetablesToStorage();
-  closeModal();
-  refreshTimetableView();
-  showToast('<i class="fas fa-check-circle"></i> Timetable updated for ' + cls, 'success');
+    return;
+  }
+
+  showToast('Backend API is unavailable. Timetable changes were not saved.', 'error');
+  return;
 }
 
 // -- Delete --
-function deleteTimetable() {
-  if (currentRole !== 'Admin') return;
-  const cls = window.selectedTimetableClass || classesData[0].name;
-  const termEl = document.getElementById('tt-term-select');
-  const term = termEl ? termEl.value : 'Term 1, 2025';
-  if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
-  if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
-  delete timetablesData[cls][term];
-  if (Object.keys(timetablesData[cls]).length === 0) delete timetablesData[cls];
-  saveTimetablesToStorage();
-  refreshTimetableView();
-  showToast('<i class="fas fa-trash"></i> Timetable deleted', 'success');
+async function deleteTimetable() {
+  if (window.API?.timetable?.delete) {
+    if (currentRole !== 'Admin') return;
+    const cls = window.selectedTimetableClass || classesData[0].name;
+    const termEl = document.getElementById('tt-term-select');
+    const term = termEl ? termEl.value : 'Term 1, 2025';
+    if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
+    if (!confirm('Delete timetable for ' + cls + ' Â· ' + term + '?')) return;
+
+    const res = await API.timetable.delete(cls, term);
+    if (res && res.success) {
+      await syncAllDataFromBackend();
+      refreshTimetableView();
+      showToast('<i class="fas fa-trash"></i> Timetable deleted', 'success');
+    } else {
+      showToast(res?.message || 'Failed to delete timetable', 'error');
+    }
+    return;
+  }
+
+  showToast('Backend API is unavailable. Timetable was not deleted.', 'error');
+  return;
 }
 
 // -- Print --
@@ -3285,20 +3386,223 @@ function attendanceModule() {
 }
 
 // EXAMS MODULE
+function formatShortDate(dateString) {
+  if (!dateString) return '';
+  const d = new Date(dateString + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return dateString;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function formatDuration(minutes) {
+  const mins = parseInt(minutes || 0, 10);
+  if (!mins) return '';
+  if (mins % 60 === 0) return (mins / 60) + ' hrs';
+  return Math.floor(mins / 60) + ' hr ' + (mins % 60) + ' mins';
+}
+
+function gradeFromAverage(avg) {
+  if (avg >= 90) return 'A';
+  if (avg >= 80) return 'B';
+  if (avg >= 70) return 'C';
+  if (avg >= 60) return 'D';
+  return 'E';
+}
+
+function buildReportRowsFromGrades() {
+  const grouped = new Map();
+  gradesData.forEach(g => {
+    const key = g.studentCode || String(g.student_id);
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        studentCode: key,
+        studentName: g.studentName,
+        className: g.className,
+        total: 0,
+        count: 0
+      });
+    }
+    const row = grouped.get(key);
+    row.total += g.totalScore;
+    row.count += 1;
+  });
+  const rows = Array.from(grouped.values()).map(row => ({
+    ...row,
+    total: Math.round(row.total),
+    average: row.count ? Math.round((row.total / row.count) * 10) / 10 : 0
+  }));
+  rows.sort((a, b) => b.average - a.average);
+  rows.forEach((row, i) => {
+    row.grade = gradeFromAverage(row.average);
+    row.position = String(i + 1);
+  });
+  return rows;
+}
+
+function calculatePassRate(rows) {
+  if (!rows.length) return 0;
+  return Math.round((rows.filter(r => r.average >= 50).length / rows.length) * 100);
+}
+
+function calculateBelowAverageRate(rows) {
+  if (!rows.length) return 0;
+  return Math.round((rows.filter(r => r.average < 50).length / rows.length) * 100);
+}
+
+function buildPerformanceInsights(analytics, rows) {
+  const subjectEntries = Object.entries(analytics.subjectPerformance || {});
+  const best = subjectEntries
+    .map(([name, data]) => ({ name, avg: data.totalStudents ? Math.round((data.totalScore / data.totalStudents) * 10) / 10 : 0 }))
+    .sort((a, b) => b.avg - a.avg)[0];
+  const atRisk = Array.isArray(analytics.studentAtRisk) ? analytics.studentAtRisk.length : rows.filter(r => r.average < 50).length;
+  const items = [];
+  if (best) items.push(`<li><i class="fas fa-check-circle"></i> Strongest subject: ${escapeHtml(best.name)} at ${best.avg}% average</li>`);
+  items.push(`<li><i class="fas fa-chart-line"></i> Overall average performance is ${escapeHtml(String(analytics.avgPerformance || 0))}%</li>`);
+  items.push(`<li><i class="fas fa-exclamation-triangle"></i> ${atRisk} student${atRisk === 1 ? '' : 's'} require academic support</li>`);
+  return items.join('');
+}
+
+async function openScheduleExamForm(examId = null) {
+  if (currentRole !== 'Admin') return showToast('Only administrators can schedule exams', 'error');
+  const exam = examId ? examsData.find(e => e.id === examId) : null;
+  const form = `
+  <div style="background:white;border-radius:8px;padding:20px;max-width:560px">
+    <h3 style="margin:0 0 20px;color:var(--blue-dark)">${exam ? 'Edit Exam' : 'Schedule Exam'}</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Subject</label><input id="exam-subject" value="${escapeAttr(exam?.subject || '')}"></div>
+      <div class="form-field"><label>Class</label><select id="exam-class">${classesData.map(c => `<option value="${c.id}" ${c.id === exam?.class_id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input id="exam-date" type="date" value="${escapeAttr(exam?.date || '')}"></div>
+      <div class="form-field"><label>Duration (minutes)</label><input id="exam-duration" type="number" min="1" value="${escapeAttr(String(exam?.duration || 120))}"></div>
+      <div class="form-field"><label>Venue</label><input id="exam-venue" value="${escapeAttr(exam?.venue || '')}"></div>
+      <div class="form-field"><label>Invigilator</label><select id="exam-invigilator"><option value="">-- Select Staff --</option>${teachersData.map(t => `<option value="${t.id}" ${t.id === exam?.invigilator_id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Term</label><input id="exam-term" value="${escapeAttr(exam?.term || '1st Term')}"></div>
+      <div class="form-field"><label>Academic Year</label><input id="exam-year" value="${escapeAttr(exam?.academic_year || '2024/2025')}"></div>
+      <div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveExamSchedule(${examId || 'null'})">${exam ? 'Save Changes' : 'Schedule Exam'}</button>
+      </div>
+    </div>
+  </div>`;
+  openModal(form);
+}
+
+async function saveExamSchedule(examId = null) {
+  const payload = {
+    subject: document.getElementById('exam-subject')?.value.trim(),
+    class_id: parseInt(document.getElementById('exam-class')?.value || 0, 10),
+    exam_date: document.getElementById('exam-date')?.value,
+    duration_minutes: parseInt(document.getElementById('exam-duration')?.value || 120, 10),
+    venue: document.getElementById('exam-venue')?.value.trim(),
+    invigilator_id: document.getElementById('exam-invigilator')?.value || null,
+    term: document.getElementById('exam-term')?.value.trim(),
+    academic_year: document.getElementById('exam-year')?.value.trim()
+  };
+  if (!payload.subject || !payload.class_id || !payload.exam_date) return showToast('Subject, class, and date are required', 'error');
+  const res = examId ? await API.exams.update(examId, payload) : await API.exams.create(payload);
+  if (res && res.success) {
+    closeModal();
+    await syncAllDataFromBackend();
+    renderMain();
+    showToast(examId ? 'Exam updated successfully' : 'Exam scheduled successfully', 'success');
+  } else {
+    showToast(res?.message || 'Failed to save exam', 'error');
+  }
+}
+
+async function deleteExam(examId) {
+  if (currentRole !== 'Admin') return showToast('Only administrators can delete exams', 'error');
+  if (!confirm('Delete this exam schedule?')) return;
+  const res = await API.exams.delete(examId);
+  if (res && res.success) {
+    await syncAllDataFromBackend();
+    renderMain();
+    showToast('Exam deleted', 'success');
+  } else {
+    showToast(res?.message || 'Failed to delete exam', 'error');
+  }
+}
+
+function switchExamTab(index) {
+  document.querySelectorAll('.exam-tab-content').forEach((tab, i) => {
+    tab.style.display = i === index ? 'block' : 'none';
+  });
+  document.querySelectorAll('.mod-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === index);
+  });
+}
+
+function filterExamTable() {
+  const query = (document.getElementById('exam-search')?.value || '').toLowerCase();
+  document.querySelectorAll('#exam-table-body .exam-row').forEach(row => {
+    const subject = row.getAttribute('data-subject') || '';
+    const className = row.getAttribute('data-class') || '';
+    row.style.display = !query || subject.includes(query) || className.includes(query) ? '' : 'none';
+  });
+}
+
+function onStudentSelected() {
+  const code = document.getElementById('report-student-selector')?.value;
+  const preview = document.getElementById('selected-report-preview');
+  if (!preview) return;
+  if (!code) {
+    preview.innerHTML = '<i class="fas fa-thumbtack"></i> Select a student above to view their report data.';
+    return;
+  }
+  const rows = buildReportRowsFromGrades();
+  const row = rows.find(r => r.studentCode === code);
+  if (!row) {
+    preview.innerHTML = 'No report data available for the selected student.';
+    return;
+  }
+  preview.innerHTML = `<strong>${escapeHtml(row.studentName)}</strong> · ${escapeHtml(row.className)} · Average: <strong>${row.average}%</strong> · Grade: <strong>${row.grade}</strong>`;
+}
+
+function filterReportCards() {
+  const search = (document.getElementById('report-student-search')?.value || '').toLowerCase();
+  const classFilter = document.getElementById('report-class-filter')?.value || '';
+  document.querySelectorAll('#report-cards-body .report-row').forEach(row => {
+    const student = row.getAttribute('data-student') || '';
+    const className = row.getAttribute('data-class') || '';
+    row.style.display = (!search || student.includes(search)) && (!classFilter || className === classFilter) ? '' : 'none';
+  });
+}
+
+function viewReportCard(studentCode) {
+  const rows = buildReportRowsFromGrades();
+  const row = rows.find(r => r.studentCode === studentCode);
+  if (!row) return showToast('Report data not found', 'error');
+  const scores = gradesData.filter(g => g.studentCode === studentCode);
+  const html = `
+  <div style="background:white;border-radius:8px;padding:20px;max-width:720px">
+    <h3 style="margin:0 0 8px;color:var(--blue-dark)">${escapeHtml(row.studentName)}</h3>
+    <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">${escapeHtml(row.className)} · Average ${row.average}% · Grade ${row.grade}</div>
+    <table class="tbl">
+      <thead><tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Term</th></tr></thead>
+      <tbody>${scores.map(s => `<tr><td>${escapeHtml(s.subject)}</td><td>${s.classScore}</td><td>${s.examScore}</td><td>${s.totalScore}</td><td>${escapeHtml(s.term)} ${escapeHtml(s.academic_year)}</td></tr>`).join('')}</tbody>
+    </table>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`;
+  openModal(html, true);
+}
+
+function updateAnalysis() {
+  const subject = document.getElementById('analysis-subject')?.value || 'All Subjects';
+  const className = document.getElementById('analysis-class')?.value || '';
+  const filtered = gradesData.filter(g => (subject === 'All Subjects' || g.subject === subject) && (!className || g.className === className));
+  if (!filtered.length) return showToast('No analysis data for the selected filters', 'info');
+  const avg = Math.round((filtered.reduce((sum, g) => sum + g.totalScore, 0) / filtered.length) * 10) / 10;
+  showToast('Filtered average: ' + avg + '% from ' + filtered.length + ' score records', 'info');
+}
+
 function examsModule() {
   const isAdmin = currentRole === 'Admin';
   const isTeacher = currentRole === 'Teacher';
   const isStudent = currentRole === 'Student';
   const readableClasses = isTeacher ? getAssignedClassNamesForTeacher() : isStudent ? [getCurrentStudentRecord().student_class] : classesData.map(c => c.name);
-  const allExamRows = classesData.flatMap(c => (SUBJECTS_BY_CLASS[c.name] || c.subjects || ['Mathematics', 'English']).slice(0, 3).map((subject, i) => [
-    subject,
-    c.name,
-    ['Apr 1', 'Apr 2', 'Apr 3'][i] || 'Apr 4',
-    i === 2 ? '1.5 hrs' : '2 hrs',
-    c.level === 'JHS' ? 'Hall A' : 'Classroom',
-    c.teacher
-  ]));
-  const examRows = allExamRows.filter(([_, className]) => !isTeacher && !isStudent || readableClasses.includes(className));
+  const examRows = examsData.filter(e => (!isTeacher && !isStudent) || readableClasses.includes(e.className));
+  const reportRows = buildReportRowsFromGrades();
+  const analytics = window.reportsAnalyticsData || {};
+  const subjectOptions = Object.keys(analytics.subjectPerformance || {});
+  const classOptions = classesData.map(c => c.name);
 
   if (isTeacher) {
     return hdr('Exam Schedule', 'View exam schedule information for your permitted classes', 'Exams') + `
@@ -3310,14 +3614,14 @@ function examsModule() {
       <table class="tbl">
         <thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th></tr></thead>
         <tbody id="exam-table-body">
-          ${examRows.length ? examRows.map(([s, c, d, du, v, inv]) => `
-          <tr class="exam-row" data-subject="${s.toLowerCase()}" data-class="${c.toLowerCase()}">
-            <td style="font-weight:600">${escapeHtml(s)}</td>
-            <td>${escapeHtml(c)}</td>
-            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(d)}</td>
-            <td>${escapeHtml(du)}</td>
-            <td>${escapeHtml(v)}</td>
-            <td style="font-size:11px">${escapeHtml(inv)}</td>
+          ${examRows.length ? examRows.map(e => `
+          <tr class="exam-row" data-subject="${escapeAttr((e.subject || '').toLowerCase())}" data-class="${escapeAttr((e.className || '').toLowerCase())}">
+            <td style="font-weight:600">${escapeHtml(e.subject)}</td>
+            <td>${escapeHtml(e.className)}</td>
+            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(formatShortDate(e.date))}</td>
+            <td>${escapeHtml(formatDuration(e.duration))}</td>
+            <td>${escapeHtml(e.venue)}</td>
+            <td style="font-size:11px">${escapeHtml(e.invigilator)}</td>
           </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">No exams scheduled for your assigned classes.</td></tr>'}
         </tbody>
       </table>
@@ -3342,16 +3646,16 @@ function examsModule() {
       <table class="tbl">
         <thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th><th>Actions</th></tr></thead>
         <tbody id="exam-table-body">
-          ${examRows.map(([s, c, d, du, v, inv]) => `
-          <tr class="exam-row" data-subject="${s.toLowerCase()}" data-class="${c.toLowerCase()}">
-            <td style="font-weight:600">${s}</td>
-            <td>${c}</td>
-            <td style="color:var(--blue-main);font-weight:600">${d}</td>
-            <td>${du}</td>
-            <td>${v}</td>
-            <td style="font-size:11px">${inv}</td>
-            <td style="font-size:11px">${isAdmin ? `<button class="btn btn-sm" style="padding:4px 8px;background:var(--info);color:white;border:none;border-radius:4px;cursor:pointer" onclick="editExam('${s}','${c}')">Edit</button> <button class="btn btn-sm" style="padding:4px 8px;background:var(--danger);color:white;border:none;border-radius:4px;cursor:pointer" onclick="deleteExam('${s}')">Delete</button>` : '<span class="badge b-info">Read Only</span>'}</td>
-          </tr>`).join('')}
+          ${examRows.length ? examRows.map(e => `
+          <tr class="exam-row" data-subject="${escapeAttr((e.subject || '').toLowerCase())}" data-class="${escapeAttr((e.className || '').toLowerCase())}">
+            <td style="font-weight:600">${escapeHtml(e.subject)}</td>
+            <td>${escapeHtml(e.className)}</td>
+            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(formatShortDate(e.date))}</td>
+            <td>${escapeHtml(formatDuration(e.duration))}</td>
+            <td>${escapeHtml(e.venue)}</td>
+            <td style="font-size:11px">${escapeHtml(e.invigilator)}</td>
+            <td style="font-size:11px">${isAdmin ? `<button class="btn btn-sm" style="padding:4px 8px;background:var(--info);color:white;border:none;border-radius:4px;cursor:pointer" onclick="openScheduleExamForm(${e.id})">Edit</button> <button class="btn btn-sm" style="padding:4px 8px;background:var(--danger);color:white;border:none;border-radius:4px;cursor:pointer" onclick="deleteExam(${e.id})">Delete</button>` : '<span class="badge b-info">Read Only</span>'}</td>
+          </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">No exams scheduled.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -3368,14 +3672,7 @@ function examsModule() {
           <label style="display:block;margin-bottom:8px;font-weight:600;font-size:13px">Select Student</label>
           <select id="report-student-selector" onchange="onStudentSelected()" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;cursor:pointer">
             <option value="">-- Choose a student --</option>
-            <option value="Ama Serwaa">Ama Serwaa (JHS 1)</option>
-            <option value="Kwame Asante">Kwame Asante (Basic 6)</option>
-            <option value="Abena Mensah">Abena Mensah (Basic 6)</option>
-            <option value="Kofi Boateng">Kofi Boateng (Basic 6)</option>
-            <option value="Akosua Darko">Akosua Darko (JHS 1)</option>
-            <option value="Yaw Mensah">Yaw Mensah (Basic 5)</option>
-            <option value="Adwoa Frimpong">Adwoa Frimpong (Basic 5)</option>
-            <option value="Kweku Ofori">Kweku Ofori (JHS 2)</option>
+            ${reportRows.map(r => `<option value="${escapeAttr(r.studentCode)}">${escapeHtml(r.studentName)} (${escapeHtml(r.className)})</option>`).join('')}
           </select>
         </div>
         <div>
@@ -3405,7 +3702,7 @@ function examsModule() {
       <table class="tbl">
         <thead><tr><th style="width:25%">Student Name</th><th style="width:15%">Class</th><th style="width:15%">Total Marks</th><th style="width:15%">Average</th><th style="width:12%">Grade</th><th style="width:12%">Position</th><th style="width:15%">Action</th></tr></thead>
         <tbody id="report-cards-body">
-          ${[['Ama Serwaa', 'JHS 1', '590', '84%', 'B', '8th'], ['Kwame Asante', 'Basic 6', '455', '76%', 'C', '8th'], ['Abena Mensah', 'Basic 6', '546', '91%', 'A', '2nd'], ['Kofi Boateng', 'Basic 6', '384', '64%', 'C', '18th'], ['Akosua Darko', 'JHS 1', '570', '95%', 'A', '1st'], ['Yaw Mensah', 'Basic 5', '492', '82%', 'B', '5th'], ['Adwoa Frimpong', 'Basic 5', '522', '87%', 'A', '3rd'], ['Kweku Ofori', 'JHS 2', '378', '63%', 'C', '22nd']].map(([name, cls, total, avg, grade, pos]) => '<tr class="report-row" data-student="' + name.toLowerCase() + '" data-class="' + cls + '"><td style="font-weight:600">' + name + '</td><td>' + cls + '</td><td style="color:var(--blue-main);font-weight:600">' + total + '</td><td>' + avg + '</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : grade === 'C' ? 'var(--warning)' : 'var(--danger)') + '">' + grade + '</span></td><td>' + pos + '</td><td><button class="btn btn-sm" style="padding:4px 8px;background:var(--blue-main);color:white;border:none;border-radius:4px;cursor:pointer" onclick="viewReportCard(\'' + name + '\')"><i class="fas fa-file"></i> View Report</button></td></tr>').join('')}
+          ${reportRows.length ? reportRows.map(r => '<tr class="report-row" data-student="' + escapeAttr(r.studentName.toLowerCase()) + '" data-class="' + escapeAttr(r.className) + '"><td style="font-weight:600">' + escapeHtml(r.studentName) + '</td><td>' + escapeHtml(r.className) + '</td><td style="color:var(--blue-main);font-weight:600">' + r.total + '</td><td>' + r.average + '%</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (r.grade === 'A' ? 'var(--success)' : r.grade === 'B' ? 'var(--info)' : r.grade === 'C' ? 'var(--warning)' : 'var(--danger)') + '">' + r.grade + '</span></td><td>' + r.position + '</td><td><button class="btn btn-sm" style="padding:4px 8px;background:var(--blue-main);color:white;border:none;border-radius:4px;cursor:pointer" onclick="viewReportCard(\'' + escapeAttr(r.studentCode) + '\')"><i class="fas fa-file"></i> View Report</button></td></tr>').join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">No report data available.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -3418,42 +3715,39 @@ function examsModule() {
         <span class="card-title"><i class="fas fa-chart-bar"></i> Results Analysis & Statistics</span>
         <div style="display:flex;gap:8px">
           <select id="analysis-subject" style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;cursor:pointer" onchange="updateAnalysis()">
-            <option>All Subjects</option><option>Mathematics</option><option>English Language</option><option>Integrated Science</option><option>ICT & Computing</option><option>Social Studies</option>
+            <option>All Subjects</option>${subjectOptions.map(s => `<option>${escapeHtml(s)}</option>`).join('')}
           </select>
           <select id="analysis-class" style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;cursor:pointer" onchange="updateAnalysis()">
-            <option value="">All Classes</option><option>Creche</option><option>Nursery</option><option>KG 1</option><option>KG 2</option><option>Basic 1</option><option>Basic 2</option><option>Basic 3</option><option>Basic 4</option><option>Basic 5</option><option>Basic 6</option><option>JHS 1</option><option>JHS 2</option><option>JHS 3</option>
+            <option value="">All Classes</option>${classOptions.map(c => `<option>${escapeHtml(c)}</option>`).join('')}
           </select>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px">
         <div style="padding:15px;background:var(--blue-xpale);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--blue-dark)">92.5%</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--blue-dark)">${escapeHtml(String(analytics.avgPerformance || 0))}%</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">Class Average</div>
         </div>
         <div style="padding:15px;background:var(--success-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--success)">78%</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--success)">${escapeHtml(String(calculatePassRate(reportRows)))}%</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">Pass Rate</div>
         </div>
         <div style="padding:15px;background:var(--warning-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--warning)">45</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--warning)">${reportRows.filter(r => r.grade === 'A').length}</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">A Grade Count</div>
         </div>
         <div style="padding:15px;background:var(--info-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--info)">62</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--info)">${reportRows.filter(r => r.grade === 'B').length}</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">B Grade Count</div>
         </div>
         <div style="padding:15px;background:var(--danger-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--danger)">22%</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--danger)">${escapeHtml(String(calculateBelowAverageRate(reportRows)))}%</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">Below Average</div>
         </div>
       </div>
       <div style="padding:15px;background:var(--gray-50);border-radius:8px;border-left:4px solid var(--blue-main)">
         <div style="font-weight:600;color:var(--blue-dark);margin-bottom:10px"><i class="fas fa-chart-line"></i> Performance Insight</div>
         <ul style="margin:0;padding:0;list-style:none;font-size:12px;color:var(--gray-600);line-height:1.8">
-          <li><i class="fas fa-check-circle"></i> Strong performance in Mathematics with 94% average</li>
-          <li><i class="fas fa-check-circle"></i> English Language shows consistent improvement</li>
-          <li><i class="fas fa-exclamation-triangle"></i> 15 students require remedial support in Science</li>
-          <li><i class="fas fa-lightbulb"></i> Recommend extra tuition for bottom 20% in ICT</li>
+          ${buildPerformanceInsights(analytics, reportRows)}
         </ul>
       </div>
     </div>
@@ -3463,10 +3757,15 @@ function examsModule() {
 
 // GRADES ENTRY MODULE
 function gradesModule() {
-  const classOptions = (currentRole === 'Teacher' ? getAssignedClassNamesForTeacher() : classesData.map(c => c.name))
-    .map(c => `<option>${escapeHtml(c)}</option>`).join('');
+  const classNames = currentRole === 'Teacher' ? getAssignedClassNamesForTeacher() : classesData.map(c => c.name);
+  const selectedClass = window.selectedGradesClass || classNames[0] || '';
+  const selectedSubject = window.selectedGradesSubject || (getVisibleSubjectsForRole(subjectsData)[0]?.name || subjectsData[0]?.name || '');
+  const selectedTerm = window.selectedGradesTerm || '1st Term';
+  const selectedYear = window.selectedGradesYear || '2024/2025';
+  const classOptions = classNames.map(c => `<option ${c === selectedClass ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
   const subjectOptions = (currentRole === 'Teacher' ? getVisibleSubjectsForRole(subjectsData) : subjectsData)
-    .map(s => `<option>${escapeHtml(s.name)}</option>`).join('');
+    .map(s => `<option ${s.name === selectedSubject ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+  const students = enrolledStudents.filter(s => !selectedClass || s.student_class === selectedClass);
 
   return hdr('Enter Student Grades', currentRole === 'Teacher' ? 'Record scores for your assigned classes only' : 'Record class and exam scores for all students', 'Grade Entry') + `
   <div class="card mb20">
@@ -3474,31 +3773,25 @@ function gradesModule() {
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px">
       <div class="f-field">
         <label>Class</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+        <select id="grade-class" onchange="window.selectedGradesClass=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
           ${classOptions}
         </select>
       </div>
       <div class="f-field">
         <label>Subject</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+        <select id="grade-subject" onchange="window.selectedGradesSubject=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
           ${subjectOptions}
         </select>
       </div>
       <div class="f-field">
         <label>Term</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
-          <option>1st Term 2024/2025</option>
-          <option>2nd Term 2024/2025</option>
-          <option>3rd Term 2024/2025</option>
+        <select id="grade-term" onchange="window.selectedGradesTerm=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+          ${['1st Term','2nd Term','3rd Term'].map(t => `<option ${t === selectedTerm ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
       </div>
       <div class="f-field">
-        <label>Type</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
-          <option>Class Score</option>
-          <option>Exam Score</option>
-          <option>Both</option>
-        </select>
+        <label>Academic Year</label>
+        <input id="grade-year" value="${escapeAttr(selectedYear)}" onchange="window.selectedGradesYear=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
       </div>
     </div>
   </div>
@@ -3517,16 +3810,51 @@ function gradesModule() {
         </tr>
       </thead>
       <tbody>
-        ${[['1', 'Ama Serwaa', '45', '43', '88', 'A', 'Complete'], ['2', 'Kwame Asante', '38', '34', '72', 'B', 'Complete'], ['3', 'Abena Mensah', '48', '43', '91', 'A', 'Complete'], ['4', 'Kofi Boateng', '32', '32', '64', 'C', 'Pending'], ['5', 'Akosua Darko', '48', '47', '95', 'A', 'Complete'], ['6', 'Yaw Mensah', '42', '40', '82', 'B', 'Complete'], ['7', 'Adwoa Frimpong', '45', '42', '87', 'A', 'Complete'], ['8', 'Kweku Ofori', '35', '28', '63', 'C', 'Pending']].map(([idx, name, cls, exam, total, grade, status]) => '<tr><td style="text-align:center;color:var(--gray-400)">' + idx + '</td><td style="font-weight:600">' + name + '</td><td><input type="number" value="' + cls + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td><input type="number" value="' + exam + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td style="font-weight:700;color:var(--blue-dark)">' + total + '</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : 'var(--warning)') + '">' + grade + '</span></td><td><span class="badge ' + (status === 'Complete' ? 'b-success' : 'b-warning') + '">' + status + '</span></td></tr>').join('')}
+        ${students.length ? students.map((student, i) => {
+          const existing = gradesData.find(g => g.student_id === student.id && g.subject === selectedSubject && g.term === selectedTerm && g.academic_year === selectedYear);
+          const classScore = existing ? existing.classScore : '';
+          const examScore = existing ? existing.examScore : '';
+          const total = existing ? existing.totalScore : 0;
+          const grade = existing ? gradeFromAverage(total) : '';
+          return '<tr data-student-id="' + student.id + '"><td style="text-align:center;color:var(--gray-400)">' + (i + 1) + '</td><td style="font-weight:600">' + escapeHtml(student.name) + '</td><td><input class="grade-class-score" type="number" value="' + classScore + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td><input class="grade-exam-score" type="number" value="' + examScore + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td style="font-weight:700;color:var(--blue-dark)">' + total + '</td><td>' + (grade ? '<span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : 'var(--warning)') + '">' + grade + '</span>' : '') + '</td><td><span class="badge ' + (existing ? 'b-success' : 'b-warning') + '">' + (existing ? 'Complete' : 'Pending') + '</span></td></tr>';
+        }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">No students found for the selected class.</td></tr>'}
       </tbody>
     </table>
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-primary" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Grades saved! You can now generate report cards.', 'success')" style="flex:1"><i class="fas fa-check-circle"></i> Save All Grades</button>
-      <button class="btn btn-secondary" onclick="alert('Draft saved')" style="flex:1"><i class="fas fa-clipboard-list"></i> Save as Draft</button>
+      <button class="btn btn-primary" onclick="saveGradeEntries()" style="flex:1"><i class="fas fa-check-circle"></i> Save All Grades</button>
       <button class="btn btn-secondary" onclick="navTo('reportcards')" style="flex:1"><i class="fas fa-file"></i> View Report Cards</button>
     </div>
   </div>
   `;
+}
+
+async function saveGradeEntries() {
+  if (!window.API?.grades?.save) return showToast('Backend API is unavailable. Grades were not saved.', 'error');
+  const subject = document.getElementById('grade-subject')?.value;
+  const term = document.getElementById('grade-term')?.value || '1st Term';
+  const academicYear = document.getElementById('grade-year')?.value || '2024/2025';
+  if (!subject) return showToast('Select a subject before saving grades', 'error');
+
+  const rows = Array.from(document.querySelectorAll('tr[data-student-id]'));
+  let saved = 0;
+  for (const row of rows) {
+    const studentId = parseInt(row.getAttribute('data-student-id'), 10);
+    const classScore = parseFloat(row.querySelector('.grade-class-score')?.value || 0);
+    const examScore = parseFloat(row.querySelector('.grade-exam-score')?.value || 0);
+    const res = await API.grades.save({
+      student_id: studentId,
+      subject,
+      class_score: classScore,
+      exam_score: examScore,
+      term,
+      academic_year: academicYear
+    });
+    if (res && res.success) saved += 1;
+  }
+
+  await syncAllDataFromBackend();
+  renderMain();
+  showToast(saved + ' grade record' + (saved === 1 ? '' : 's') + ' saved', 'success');
 }
 
 function viewClassTimetable(className) {
@@ -3541,44 +3869,6 @@ function viewClassTimetable(className) {
   navTo('timetable');
 }
 
-// TIMETABLES DATA
-const timetablesData = {
-  'Basic 2': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20', ['English Language', 'Mathematics', 'Integrated Science', 'English', 'Assembly']],
-      ['P2 · 8:20–9:10', ['Mathematics', 'English', 'Physical Education', 'Science', 'Mathematics']],
-      ['Break · 9:10–9:30', ['—', '—', '—', '—', '—']],
-      ['P3 · 9:30–10:20', ['Science', 'Social Studies', 'Mathematics', 'English', 'Science']],
-      ['P4 · 10:20–11:10', ['Social Studies', 'English', 'English', 'Science', 'English']],
-      ['Lunch · 11:10–12:00', ['—', '—', '—', '—', '—']],
-      ['P5 · 12:00–12:50', ['ICT', 'Science', 'Social Studies', 'Mathematics', 'Social Studies']],
-      ['P6 · 12:50–13:40', ['Physical Education', 'Social Studies', 'ICT', 'Physical Education', 'ICT']]
-    ]
-  }
-};
-
-function buildDefaultTimetableForClass(className) {
-  const subjects = SUBJECTS_BY_CLASS[className] || ['English', 'Mathematics', 'Science', 'Computing', 'RME'];
-  const periods = getPeriodsForClass(className);
-  let subjectIndex = 0;
-  return periods.map(period => {
-    if (period.type === 'break' || period.type === 'close') return [period.label, ['—', '—', '—', '—', '—']];
-    if (period.type === 'assembly') return [period.label, ['Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly']];
-    if (period.type === 'special' && period.dayLabels) return [period.label, period.dayLabels];
-    return [period.label, Array.from({ length: 5 }, () => {
-      const subject = subjects[subjectIndex % subjects.length];
-      subjectIndex += 1;
-      return subject;
-    })];
-  });
-}
-
-function ensureTimetablesForAllClasses(term = 'Term 1, 2025') {
-  classesData.forEach(c => {
-    if (!timetablesData[c.name]) timetablesData[c.name] = {};
-    if (!timetablesData[c.name][term]) timetablesData[c.name][term] = buildDefaultTimetableForClass(c.name);
-  });
-}
 
 // REPORT CARDS MODULE
 // -----------------------------------
@@ -3589,6 +3879,13 @@ const admissionsData = [];
 const enrolledStudents = [];
 const teachersData = [];
 const classesData = [];
+const examsData = [];
+const gradesData = [];
+const assignmentsData = [];
+window.examsData = examsData;
+window.gradesData = gradesData;
+window.assignmentsData = assignmentsData;
+window.reportsAnalyticsData = null;
 
 const STUDENT_RECORDS_KEY = 'gr_student_records';
 const TEACHER_RECORDS_KEY = 'gr_teacher_records';
@@ -3637,6 +3934,14 @@ function getClassActiveStudentCount(className) {
   return getActiveStudents(enrolledStudents).filter(s => s.student_class === className).length;
 }
 
+const timetablesData = {};
+
+function buildDefaultTimetableForClass(className) {
+  return [];
+}
+
+function ensureTimetablesForAllClasses(term = 'Term 1, 2025') {
+}
 function createOrUpdateParentFromAdmission(admission, student) {
   const childText = `${student.name} (${student.student_class})`;
   const parentKey = (admission.parent_email || admission.parent_phone || admission.parent_name || '').toLowerCase();
@@ -3684,64 +3989,10 @@ function createOrUpdateParentFromAdmission(admission, student) {
 }
 
 // SUBJECTS DATA
-let subjectsData = [
-  { subject_id: 'SUB001', icon: '<i class="fas fa-ruler-combined"></i>', name: 'Mathematics', teacher: 'Mr. Amponsah', teacher_id: 'T001', type: 'Core', classes: 'All Forms', hours: '8 hrs/wk', description: 'Core mathematics for all forms.' },
-  { subject_id: 'SUB002', icon: '<i class="fas fa-flask-vial"></i>', name: 'Science', teacher: 'Mr. Oduro', teacher_id: 'T003', type: 'Core', classes: 'All Forms', hours: '6 hrs/wk', description: 'Core science concepts and practical investigation for all forms.' },
-  { subject_id: 'SUB003', icon: '<i class="fas fa-book-open"></i>', name: 'English', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Core', classes: 'All Forms', hours: '8 hrs/wk', description: 'Core English language, reading, grammar, comprehension, and writing.' },
-  { subject_id: 'SUB004', icon: '<i class="fas fa-landmark"></i>', name: 'Social Studies', teacher: 'Mr. Boateng', teacher_id: 'T005', type: 'Core', classes: 'All Forms', hours: '4 hrs/wk', description: 'Core citizenship, history, geography, and social studies.' },
-  { subject_id: 'SUB005', icon: '<i class="fas fa-calculator"></i>', name: 'Numeracy', teacher: 'Mr. Amponsah', teacher_id: 'T001', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '5 hrs/wk', description: 'Foundational number work and early mathematics skills.' },
-  { subject_id: 'SUB006', icon: '<i class="fas fa-spell-check"></i>', name: 'Literacy', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '5 hrs/wk', description: 'Foundational phonics, reading readiness, and communication skills.' },
-  { subject_id: 'SUB007', icon: '<i class="fas fa-palette"></i>', name: 'Creative Art', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2, Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Drawing, craft, design, appreciation, and creative expression.' },
-  { subject_id: 'SUB008', icon: '<i class="fas fa-pen-nib"></i>', name: 'Writing', teacher: 'Mrs. Asante', teacher_id: 'T002', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '3 hrs/wk', description: 'Handwriting, early composition, and written expression.' },
-  { subject_id: 'SUB009', icon: '<i class="fas fa-leaf"></i>', name: 'Environmental Studies', teacher: 'Mr. Oduro', teacher_id: 'T003', type: 'Elective', classes: 'Creche, Nursery, KG 1, KG 2', hours: '3 hrs/wk', description: 'Learner-friendly study of the home, school, community, and environment.' },
-  { subject_id: 'SUB010', icon: '<i class="fas fa-hands-praying"></i>', name: 'RME', teacher: 'Mrs. Aidoo', teacher_id: 'T006', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Religious and Moral Education focused on values, faith, and community life.' },
-  { subject_id: 'SUB011', icon: '<i class="fas fa-language"></i>', name: 'Dagaare', teacher: 'Mrs. Aidoo', teacher_id: 'T006', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Local language study covering speaking, reading, and writing in Dagaare.' },
-  { subject_id: 'SUB012', icon: '<i class="fas fa-laptop"></i>', name: 'Computing', teacher: 'Ms. Frimpong', teacher_id: 'T004', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '4 hrs/wk', description: 'Computer literacy, digital skills, and introductory ICT concepts.' },
-  { subject_id: 'SUB013', icon: '<i class="fas fa-scroll"></i>', name: 'History', teacher: 'Mr. Boateng', teacher_id: 'T005', type: 'Elective', classes: 'Basic 1, Basic 2, Basic 3, Basic 4, Basic 5, Basic 6, JHS 1, JHS 2, JHS 3', hours: '3 hrs/wk', description: 'Historical knowledge, culture, heritage, and national development.' },
-  { subject_id: 'SUB014', icon: '<i class="fas fa-screwdriver-wrench"></i>', name: 'Career Technology', teacher: 'Ms. Frimpong', teacher_id: 'T004', type: 'Elective', classes: 'JHS 1, JHS 2, JHS 3', hours: '4 hrs/wk', description: 'Practical technology, design, entrepreneurship, and career readiness.' },
-];
+let subjectsData = [];
 
 
 // PARENTS DATA
 const parentsData = [];
 
-// Student scores data
-const studentScores = {
-  '2024-0042': {
-    name: 'Ama Serwaa',
-    class: 'JHS 1',
-    classTeacher: 'Mr. Kweku Amponsah',
-    stream: 'Mixed',
-    picture: 'A',
-    attendance: 96,
-    term: '1st',
-    year: '2024/2025',
-    scores: [
-      { subject: 'Mathematics', classScore: 45, examScore: 43, totalMarks: 100 },
-      { subject: 'English Language', classScore: 48, examScore: 44, totalMarks: 100 },
-      { subject: 'Integrated Science', classScore: 42, examScore: 43, totalMarks: 100 },
-      { subject: 'ICT & Computing', classScore: 48, examScore: 47, totalMarks: 100 },
-      { subject: 'Social Studies', classScore: 40, examScore: 38, totalMarks: 100 },
-      { subject: 'French Language', classScore: 38, examScore: 34, totalMarks: 100 },
-      { subject: 'Religious Studies', classScore: 42, examScore: 38, totalMarks: 100 }
-    ]
-  },
-  '2024-0043': {
-    name: 'Kwame Asante',
-    class: 'Basic 6',
-    classTeacher: 'Mr. Boateng Sr.',
-    stream: 'General',
-    picture: 'K',
-    attendance: 88,
-    term: '1st',
-    year: '2024/2025',
-    scores: [
-      { subject: 'Mathematics', classScore: 35, examScore: 32, totalMarks: 100 },
-      { subject: 'English Language', classScore: 42, examScore: 40, totalMarks: 100 },
-      { subject: 'History', classScore: 44, examScore: 42, totalMarks: 100 },
-      { subject: 'Geography', classScore: 40, examScore: 38, totalMarks: 100 },
-      { subject: 'ICT', classScore: 38, examScore: 36, totalMarks: 100 },
-      { subject: 'French Language', classScore: 35, examScore: 33, totalMarks: 100 }
-    ]
-  }
-};
+// Student scores are loaded from backend student_scores via gradesData.

@@ -45,6 +45,12 @@ if ($method === 'POST') {
         jsonResponse(['success' => false, 'message' => 'student_id and scores are required'], 422);
     }
 
+    $studentCheck = $db->prepare("SELECT COUNT(*) FROM students WHERE id = ?");
+    $studentCheck->execute([$studentId]);
+    if ((int)$studentCheck->fetchColumn() === 0) {
+        jsonResponse(['success' => false, 'message' => 'Selected student does not exist'], 422);
+    }
+
     $upsert = $db->prepare(
         "INSERT INTO student_scores (student_id, subject, class_score, exam_score, term, academic_year)
          VALUES (?, ?, ?, ?, ?, ?)

@@ -15,17 +15,46 @@ requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
+$db->exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS teacher_id INT DEFAULT NULL");
+$db->exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS capacity INT NOT NULL DEFAULT 40");
+$db->exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS stream VARCHAR(80) NOT NULL DEFAULT 'General'");
+$db->exec("ALTER TABLE classes ADD COLUMN IF NOT EXISTS updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+
+function getTeachingStaffName(PDO $db, ?int $teacherId): ?string {
+    if (!$teacherId) return null;
+
+    $stmt = $db->prepare("SELECT name FROM staff WHERE id = ? AND category = 'Teaching' AND status = 'Active' LIMIT 1");
+    $stmt->execute([$teacherId]);
+    $name = $stmt->fetchColumn();
+    if (!$name) {
+        jsonResponse(['success' => false, 'message' => 'Selected class teacher must be an active teaching staff member'], 422);
+    }
+    return $name;
+}
+
+function normalizeSubjects(array $subjects): array {
+    $clean = [];
+    foreach ($subjects as $subject) {
+        $name = htmlspecialchars(trim((string)$subject), ENT_QUOTES);
+        if ($name !== '' && !in_array($name, $clean, true)) {
+            $clean[] = $name;
+        }
+    }
+    return $clean;
+}
+
 if ($method === 'GET') {
     $stmt = $db->query(
         "SELECT c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name AS teacher_name,
                 COUNT(DISTINCT s.id)  AS student_count,
+                COALESCE(ROUND(AVG(s.attendance), 1), 0) AS attendance_avg,
                 COUNT(DISTINCT sb.id) AS subject_count,
                 GROUP_CONCAT(DISTINCT sb.name ORDER BY sb.name ASC) AS subjects
          FROM classes c
          LEFT JOIN staff st    ON st.id = c.teacher_id
          LEFT JOIN students s  ON s.class_id  = c.id AND s.status = 'Active'
          LEFT JOIN subjects sb ON sb.class_id = c.id
-         GROUP BY c.id
+         GROUP BY c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name
          ORDER BY c.id ASC"
     );
     jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
@@ -39,38 +68,38 @@ if ($method === 'POST') {
     }
 
     $teacherId = !empty($body['teacher_id']) ? (int)$body['teacher_id'] : null;
-    $teacherName = null;
-    if ($teacherId) {
-        $stQuery = $db->prepare("SELECT name FROM staff WHERE id = ?");
-        $stQuery->execute([$teacherId]);
-        $teacherName = $stQuery->fetchColumn() ?: null;
-    }
+    $teacherName = getTeachingStaffName($db, $teacherId);
 
-    $capacity = isset($body['capacity']) ? (int)$body['capacity'] : 40;
+    $capacity = max(1, isset($body['capacity']) ? (int)$body['capacity'] : 40);
     $stream = !empty($body['stream']) ? htmlspecialchars(trim($body['stream']), ENT_QUOTES) : 'General';
 
-    $stmt = $db->prepare("INSERT INTO classes (name, level, teacher_id, class_teacher, capacity, stream) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([
-        htmlspecialchars(trim($body['name']), ENT_QUOTES),
-        $body['level'],
-        $teacherId,
-        $teacherName,
-        $capacity,
-        $stream
-    ]);
-    $classId = $db->lastInsertId();
+    $db->beginTransaction();
+    try {
+        $stmt = $db->prepare("INSERT INTO classes (name, level, teacher_id, class_teacher, capacity, stream) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            htmlspecialchars(trim($body['name']), ENT_QUOTES),
+            htmlspecialchars(trim($body['level']), ENT_QUOTES),
+            $teacherId,
+            $teacherName,
+            $capacity,
+            $stream
+        ]);
+        $classId = (int)$db->lastInsertId();
 
-    // Insert subjects if provided
-    if (!empty($body['subjects']) && is_array($body['subjects'])) {
-        $insSub = $db->prepare("INSERT INTO subjects (name, class_id, type) VALUES (?, ?, 'Core')");
-        foreach ($body['subjects'] as $subName) {
-            if (trim($subName) !== '') {
-                $insSub->execute([htmlspecialchars(trim($subName), ENT_QUOTES), $classId]);
+        if (!empty($body['subjects']) && is_array($body['subjects'])) {
+            $insSub = $db->prepare("INSERT INTO subjects (name, class_id, type) VALUES (?, ?, 'Core')");
+            foreach (normalizeSubjects($body['subjects']) as $subName) {
+                $insSub->execute([$subName, $classId]);
             }
         }
-    }
 
-    jsonResponse(['success' => true, 'message' => 'Class created', 'id' => $classId], 201);
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'Class created', 'id' => $classId], 201);
+    } catch (PDOException $e) {
+        $db->rollBack();
+        $message = $e->getCode() === '23000' ? 'Class name already exists or related data is invalid' : 'Failed to create class';
+        jsonResponse(['success' => false, 'message' => $message], 422);
+    }
 }
 
 if ($method === 'PUT') {
@@ -84,61 +113,46 @@ if ($method === 'PUT') {
         jsonResponse(['success' => false, 'message' => 'name and level are required'], 422);
     }
 
-    $teacherId = !empty($body['teacher_id']) ? (int)$body['teacher_id'] : null;
-    $teacherName = null;
-    if ($teacherId) {
-        $stQuery = $db->prepare("SELECT name FROM staff WHERE id = ?");
-        $stQuery->execute([$teacherId]);
-        $teacherName = $stQuery->fetchColumn() ?: null;
+    $exists = $db->prepare("SELECT COUNT(*) FROM classes WHERE id = ?");
+    $exists->execute([$id]);
+    if ((int)$exists->fetchColumn() === 0) {
+        jsonResponse(['success' => false, 'message' => 'Class not found'], 404);
     }
 
-    $capacity = isset($body['capacity']) ? (int)$body['capacity'] : 40;
+    $teacherId = !empty($body['teacher_id']) ? (int)$body['teacher_id'] : null;
+    $teacherName = getTeachingStaffName($db, $teacherId);
+
+    $capacity = max(1, isset($body['capacity']) ? (int)$body['capacity'] : 40);
     $stream = !empty($body['stream']) ? htmlspecialchars(trim($body['stream']), ENT_QUOTES) : 'General';
 
-    $stmt = $db->prepare("UPDATE classes SET name = ?, level = ?, teacher_id = ?, class_teacher = ?, capacity = ?, stream = ? WHERE id = ?");
-    $stmt->execute([
-        htmlspecialchars(trim($body['name']), ENT_QUOTES),
-        $body['level'],
-        $teacherId,
-        $teacherName,
-        $capacity,
-        $stream,
-        $id
-    ]);
+    $db->beginTransaction();
+    try {
+        $stmt = $db->prepare("UPDATE classes SET name = ?, level = ?, teacher_id = ?, class_teacher = ?, capacity = ?, stream = ? WHERE id = ?");
+        $stmt->execute([
+            htmlspecialchars(trim($body['name']), ENT_QUOTES),
+            htmlspecialchars(trim($body['level']), ENT_QUOTES),
+            $teacherId,
+            $teacherName,
+            $capacity,
+            $stream,
+            $id
+        ]);
 
-    // Update subjects if provided
-    if (isset($body['subjects']) && is_array($body['subjects'])) {
-        // Get existing subjects
-        $stmt = $db->prepare("SELECT name FROM subjects WHERE class_id = ?");
-        $stmt->execute([$id]);
-        $currentSubjects = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        $newSubjects = array_map(function($val) {
-            return htmlspecialchars(trim($val), ENT_QUOTES);
-        }, $body['subjects']);
-        $newSubjects = array_filter($newSubjects, function($val) {
-            return $val !== '';
-        });
-
-        // Delete removed subjects
-        $toDelete = array_diff($currentSubjects, $newSubjects);
-        if (!empty($toDelete)) {
-            $inQuery = implode(',', array_fill(0, count($toDelete), '?'));
-            $delStmt = $db->prepare("DELETE FROM subjects WHERE class_id = ? AND name IN ($inQuery)");
-            $delStmt->execute(array_merge([$id], array_values($toDelete)));
-        }
-
-        // Insert added subjects
-        $toInsert = array_diff($newSubjects, $currentSubjects);
-        if (!empty($toInsert)) {
+        if (isset($body['subjects']) && is_array($body['subjects'])) {
+            $db->prepare("DELETE FROM subjects WHERE class_id = ?")->execute([$id]);
             $insStmt = $db->prepare("INSERT INTO subjects (name, class_id, type) VALUES (?, ?, 'Core')");
-            foreach ($toInsert as $subName) {
+            foreach (normalizeSubjects($body['subjects']) as $subName) {
                 $insStmt->execute([$subName, $id]);
             }
         }
-    }
 
-    jsonResponse(['success' => true, 'message' => 'Class updated']);
+        $db->commit();
+        jsonResponse(['success' => true, 'message' => 'Class updated']);
+    } catch (PDOException $e) {
+        $db->rollBack();
+        $message = $e->getCode() === '23000' ? 'Class name already exists or related data is invalid' : 'Failed to update class';
+        jsonResponse(['success' => false, 'message' => $message], 422);
+    }
 }
 
 if ($method === 'DELETE') {
@@ -150,6 +164,9 @@ if ($method === 'DELETE') {
 
     $stmt = $db->prepare("DELETE FROM classes WHERE id = ?");
     $stmt->execute([$id]);
+    if ($stmt->rowCount() === 0) {
+        jsonResponse(['success' => false, 'message' => 'Class not found'], 404);
+    }
     jsonResponse(['success' => true, 'message' => 'Class deleted']);
 }
 

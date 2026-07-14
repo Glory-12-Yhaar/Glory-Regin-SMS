@@ -16,6 +16,47 @@ $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
+$db->exec("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS icon VARCHAR(100) DEFAULT NULL");
+$db->exec("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS teacher_id INT DEFAULT NULL");
+$db->exec("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS classes VARCHAR(255) DEFAULT NULL");
+$db->exec("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS hours VARCHAR(80) DEFAULT NULL");
+$db->exec("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS description TEXT DEFAULT NULL");
+$db->exec("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+
+function sanitizeSubjectType(?string $type): string {
+    $type = $type ?: 'Core';
+    $allowed = ['Core', 'Elective', 'Extracurricular'];
+    if (!in_array($type, $allowed, true)) {
+        jsonResponse(['success' => false, 'message' => 'Invalid subject type'], 422);
+    }
+    return $type;
+}
+
+function getClassNameOrFail(PDO $db, $classId): string {
+    $classId = (int)$classId;
+    if (!$classId) {
+        jsonResponse(['success' => false, 'message' => 'Class assignment is required'], 422);
+    }
+    $stmt = $db->prepare("SELECT name FROM classes WHERE id = ? LIMIT 1");
+    $stmt->execute([$classId]);
+    $className = $stmt->fetchColumn();
+    if (!$className) {
+        jsonResponse(['success' => false, 'message' => 'Selected class does not exist'], 422);
+    }
+    return $className;
+}
+
+function validateTeacherId(PDO $db, $teacherId): ?int {
+    if (empty($teacherId)) return null;
+    $teacherId = (int)$teacherId;
+    $stmt = $db->prepare("SELECT COUNT(*) FROM staff WHERE id = ? AND category = 'Teaching' AND status = 'Active'");
+    $stmt->execute([$teacherId]);
+    if ((int)$stmt->fetchColumn() === 0) {
+        jsonResponse(['success' => false, 'message' => 'Selected subject teacher must be an active teaching staff member'], 422);
+    }
+    return $teacherId;
+}
+
 function fetchSubject(PDO $db, int $id): array|false {
     $stmt = $db->prepare(
         "SELECT sub.*, s.name AS teacher_name, c.name AS class_name 
@@ -48,7 +89,7 @@ if ($method === 'GET') {
 if ($method === 'POST') {
     requireRole(['Admin']);
     $body = getRequestBody();
-    if (empty($body['name'])) {
+    if (empty(trim((string)($body['name'] ?? '')))) {
         jsonResponse(['success' => false, 'message' => 'Subject name is required'], 422);
     }
     if (empty($body['class_id'])) {
@@ -56,9 +97,9 @@ if ($method === 'POST') {
     }
 
     $classId = (int)$body['class_id'];
-    $clQuery = $db->prepare("SELECT name FROM classes WHERE id = ?");
-    $clQuery->execute([$classId]);
-    $className = $clQuery->fetchColumn() ?: 'Unknown Class';
+    $className = getClassNameOrFail($db, $classId);
+    $teacherId = validateTeacherId($db, $body['teacher_id'] ?? null);
+    $type = sanitizeSubjectType($body['type'] ?? 'Core');
 
     $stmt = $db->prepare(
         "INSERT INTO subjects (name, icon, teacher_id, type, classes, class_id, hours, description) 
@@ -66,13 +107,13 @@ if ($method === 'POST') {
     );
     $stmt->execute([
         htmlspecialchars(trim($body['name']), ENT_QUOTES),
-        $body['icon']        ?? null,
-        !empty($body['teacher_id']) ? (int)$body['teacher_id'] : null,
-        $body['type']        ?? 'Core',
+        !empty($body['icon']) ? trim($body['icon']) : null,
+        $teacherId,
+        $type,
         $className,
         $classId,
-        $body['hours']       ?? null,
-        $body['description'] ?? null
+        !empty($body['hours']) ? htmlspecialchars(trim($body['hours']), ENT_QUOTES) : null,
+        !empty($body['description']) ? htmlspecialchars(trim($body['description']), ENT_QUOTES) : null
     ]);
 
     jsonResponse(['success' => true, 'message' => 'Subject created', 'id' => $db->lastInsertId()], 201);
@@ -86,26 +127,40 @@ if ($method === 'PUT') {
     if (!$subject) jsonResponse(['success' => false, 'message' => 'Subject not found'], 404);
 
     $body    = getRequestBody();
+    if (array_key_exists('name', $body) && trim((string)$body['name']) === '') {
+        jsonResponse(['success' => false, 'message' => 'Subject name is required'], 422);
+    }
     $fields  = [];
     $params  = [];
     $allowed = ['name', 'icon', 'teacher_id', 'type', 'class_id', 'classes', 'hours', 'description'];
 
-    if (!empty($body['class_id'])) {
+    if (array_key_exists('class_id', $body)) {
         $classId = (int)$body['class_id'];
-        $clQuery = $db->prepare("SELECT name FROM classes WHERE id = ?");
-        $clQuery->execute([$classId]);
-        $body['classes'] = $clQuery->fetchColumn() ?: 'Unknown Class';
+        $body['classes'] = getClassNameOrFail($db, $classId);
+    }
+
+    if (array_key_exists('teacher_id', $body)) {
+        $body['teacher_id'] = validateTeacherId($db, $body['teacher_id']);
+    }
+
+    if (array_key_exists('type', $body)) {
+        $body['type'] = sanitizeSubjectType($body['type']);
     }
 
     foreach ($allowed as $f) {
         if (array_key_exists($f, $body)) {
             $fields[] = "$f = ?";
             if ($f === 'name') {
-                $params[] = htmlspecialchars(trim($body[$f]), ENT_QUOTES);
+                $params[] = htmlspecialchars(trim((string)$body[$f]), ENT_QUOTES);
+            } else if ($f === 'hours' || $f === 'description') {
+                $value = trim((string)($body[$f] ?? ''));
+                $params[] = $value !== '' ? htmlspecialchars($value, ENT_QUOTES) : null;
             } else if ($f === 'teacher_id') {
-                $params[] = !empty($body[$f]) ? (int)$body[$f] : null;
+                $params[] = $body[$f];
             } else if ($f === 'class_id') {
                 $params[] = (int)$body[$f];
+            } else if ($f === 'icon') {
+                $params[] = !empty($body[$f]) ? trim($body[$f]) : null;
             } else {
                 $params[] = $body[$f];
             }

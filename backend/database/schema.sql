@@ -31,10 +31,15 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `classes` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(50) UNIQUE NOT NULL,
-  `level` ENUM('Early Childhood','Primary','Junior High') NOT NULL,
-  `class_teacher` VARCHAR(100),
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+  `name` VARCHAR(80) UNIQUE NOT NULL,
+  `level` VARCHAR(80) NOT NULL,
+  `teacher_id` INT DEFAULT NULL,
+  `class_teacher` VARCHAR(150) DEFAULT NULL,
+  `capacity` INT NOT NULL DEFAULT 40,
+  `stream` VARCHAR(80) NOT NULL DEFAULT 'General',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_classes_level` (`level`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -42,16 +47,20 @@ CREATE TABLE IF NOT EXISTS `classes` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `class_id` INT NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `class_id` INT DEFAULT NULL,
   `icon` VARCHAR(100) DEFAULT NULL,
   `teacher_id` INT DEFAULT NULL,
   `type` ENUM('Core', 'Elective', 'Extracurricular') DEFAULT 'Core',
   `classes` VARCHAR(255) DEFAULT NULL,
-  `hours` VARCHAR(50) DEFAULT NULL,
+  `hours` VARCHAR(80) DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
+  INDEX `idx_subjects_class` (`class_id`),
+  INDEX `idx_subjects_teacher` (`teacher_id`),
+  INDEX `idx_subjects_name` (`name`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -112,9 +121,10 @@ CREATE TABLE IF NOT EXISTS `staff` (
   `emergency_contact` VARCHAR(100),
   `emergency_phone` VARCHAR(30),
   `performance` VARCHAR(20),
-  `status` ENUM('Active','Inactive','On Leave') DEFAULT 'Active',
+  `status` ENUM('Active','Inactive','On Leave','Archived') DEFAULT 'Active',
   `avatar` VARCHAR(10),
   `user_id` INT,
+  `archived_at` DATETIME DEFAULT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
@@ -124,7 +134,7 @@ CREATE TABLE IF NOT EXISTS `staff` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `teachers` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `staff_id` INT NOT NULL,
+  `staff_id` INT NOT NULL UNIQUE,
   `subject` VARCHAR(100),
   `class_assigned` VARCHAR(50),
   `experience` INT DEFAULT 0,
@@ -175,8 +185,29 @@ CREATE TABLE IF NOT EXISTS `assignments` (
   `instructions` TEXT,
   `attachment` VARCHAR(255),
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE SET NULL,
-  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL,
+  INDEX `idx_assignments_class_status` (`class_id`, `status`)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `exams` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `subject` VARCHAR(150) NOT NULL,
+  `class_id` INT NOT NULL,
+  `exam_date` DATE NOT NULL,
+  `duration_minutes` INT NOT NULL DEFAULT 120,
+  `venue` VARCHAR(120) DEFAULT NULL,
+  `invigilator_id` INT DEFAULT NULL,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
+  `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
+  `status` ENUM('Scheduled','Completed','Cancelled') NOT NULL DEFAULT 'Scheduled',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`invigilator_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL,
+  INDEX `idx_exams_class_date` (`class_id`, `exam_date`),
+  INDEX `idx_exams_term_year` (`term`, `academic_year`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS `assignment_submissions` (
@@ -187,8 +218,10 @@ CREATE TABLE IF NOT EXISTS `assignment_submissions` (
   `score` DECIMAL(5,2),
   `feedback` TEXT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`assignment_id`) REFERENCES `assignments`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `uq_submission` (`assignment_id`, `student_id`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -393,17 +426,18 @@ CREATE TABLE IF NOT EXISTS `admissions` (
 CREATE TABLE IF NOT EXISTS `timetable` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `class_id` INT NOT NULL,
-  `subject` VARCHAR(100) NOT NULL,
-  `teacher_id` INT,
+  `subject` VARCHAR(150) NOT NULL,
+  `teacher_id` INT DEFAULT NULL,
   `day_of_week` ENUM('Monday','Tuesday','Wednesday','Thursday','Friday') NOT NULL,
   `start_time` TIME NOT NULL,
   `end_time` TIME NOT NULL,
-  `room` VARCHAR(50),
+  `room` VARCHAR(80) DEFAULT NULL,
   `period_label` VARCHAR(100) DEFAULT NULL,
-  `term` VARCHAR(50) DEFAULT 'Term 1, 2025',
+  `term` VARCHAR(80) NOT NULL DEFAULT 'Term 1, 2025',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL,
+  INDEX `idx_timetable_class_term` (`class_id`, `term`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -451,5 +485,6 @@ CREATE TABLE IF NOT EXISTS `yearbooks` (
 -- ADDITIONAL RELATIONSHIPS
 -- ───────────────────────────────────────────
 ALTER TABLE `subjects` ADD CONSTRAINT `fk_subjects_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
+ALTER TABLE `classes` ADD CONSTRAINT `fk_classes_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
 
 -- End of DDL. Seed data is inserted by setup.php.

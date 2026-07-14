@@ -13,6 +13,9 @@ $user   = requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
+$db->exec("ALTER TABLE staff ADD COLUMN IF NOT EXISTS archived_at DATETIME DEFAULT NULL");
+$db->exec("UPDATE staff SET archived_at = NOW() WHERE category = 'Teaching' AND status IN ('Inactive','Archived') AND archived_at IS NULL");
+
 if ($method === 'GET') {
     $where  = ['1=1'];
     $params = [];
@@ -38,7 +41,7 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare(
         "SELECT s.id, s.staff_code, s.name, s.email, s.phone, s.category, s.department, s.position,
-                s.salary_grade, s.join_date, s.gender, s.status, s.performance, s.avatar,
+                s.salary_grade, s.join_date, s.gender, s.dob, s.address, s.status, s.performance, s.avatar, s.archived_at,
                 t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color
          FROM staff s
          LEFT JOIN teachers t ON t.staff_id = s.id

@@ -154,6 +154,18 @@ const API = {
     dashboard: () => apiRequest('/reports/dashboard.php'),
     analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
 
+    exams: {
+        list:   (params = {}) => apiRequest('/exams/index.php?' + new URLSearchParams(params)),
+        create: (data)        => apiRequest('/exams/index.php', 'POST', data),
+        update: (id, data)    => apiRequest('/exams/index.php?id=' + id, 'PUT', data),
+        delete: (id)          => apiRequest('/exams/index.php?id=' + id, 'DELETE'),
+    },
+
+    grades: {
+        list: (params = {}) => apiRequest('/grades/index.php?' + new URLSearchParams(params)),
+        save: (data)       => apiRequest('/grades/index.php', 'POST', data),
+    },
+
     // ── Parents ──────────────────────────────────────────────
     parents: {
         list:        (params = {}) => apiRequest('/parents/index.php?' + new URLSearchParams(params)),
@@ -357,6 +369,13 @@ function getAdmissionDbId(admId) {
 async function syncAllDataFromBackend() {
     console.log("Syncing all data with MySQL backend...");
 
+    try {
+        const res = await API.dashboard();
+        if (res && res.success && res.data) {
+            window.dashboardReportData = res.data;
+        }
+    } catch (e) { console.error("Error syncing dashboard reports:", e); }
+
     // 1. Classes
     try {
         const res = await API.classes.list();
@@ -372,7 +391,7 @@ async function syncAllDataFromBackend() {
                 students: parseInt(c.student_count || 0, 10),
                 capacity: parseInt(c.capacity || 40, 10),
                 subjects: Array.isArray(c.subjects) ? c.subjects : (c.subjects ? c.subjects.split(',').map(s => s.trim()) : []),
-                attendance: '100%'
+                attendance: (parseFloat(c.attendance_avg || 0)) + '%'
             })));
         }
     } catch (e) { console.error("Error syncing classes:", e); }
@@ -398,8 +417,10 @@ async function syncAllDataFromBackend() {
                 gender: t.gender || 'Male',
                 avatar_color: t.avatar_color || 'blue',
                 dob: t.dob || '1990-01-01',
+                address: t.address || '',
                 hiring_date: t.join_date || '2020-01-01',
-                status: t.status === 'Inactive' ? 'Archived' : (t.status || 'Active')
+                archived_date: t.archived_at ? t.archived_at.split(' ')[0] : '',
+                status: (t.status === 'Inactive' || t.status === 'Archived') ? 'Archived' : (t.status || 'Active')
             })));
         }
     } catch (e) { console.error("Error syncing staff:", e); }
@@ -416,7 +437,7 @@ async function syncAllDataFromBackend() {
                 student_class: s.class_name || 'Not Assigned',
                 gender: s.gender || 'Male',
                 dob: s.dob || '2015-01-01',
-                attendance: (s.attendance || 95) + '%',
+                attendance: (parseFloat(s.attendance || 0)) + '%',
                 fees_status: s.fees_status || 'Pending',
                 status: s.status || 'Active',
                 avatar_color: s.avatar_color || ['blue', 'gold', 'purple', 'green', 'teal'][s.id % 5],
@@ -491,13 +512,13 @@ async function syncAllDataFromBackend() {
                 subject_id: 'SUB' + String(s.id).padStart(3, '0'),
                 id: s.id,
                 name: s.name,
-                icon: s.icon || '<i class="fas fa-book"></i>',
+                icon: s.icon || '',
                 type: s.type || 'Core',
-                teacher: s.teacher_name || 'Not assigned',
+                teacher: s.teacher_name || '',
                 teacher_id: s.teacher_id ? 'T' + String(s.teacher_id).padStart(3, '0') : null,
-                classes: s.class_name || s.classes || 'All Forms',
+                classes: s.class_name || s.classes || '',
                 class_id: s.class_id,
-                hours: s.hours || '4 hrs/wk',
+                hours: s.hours || '',
                 description: s.description || ''
             })));
         }
@@ -524,20 +545,85 @@ async function syncAllDataFromBackend() {
     try {
         const res = await API.timetable.get();
         if (res && res.success && res.data) {
-            const formatted = {};
-            res.data.forEach(row => {
-                const cls = row.class_name;
-                const term = row.term;
-                const schedule = typeof row.schedule === 'string' ? JSON.parse(row.schedule) : row.schedule;
-                if (!formatted[cls]) formatted[cls] = {};
-                formatted[cls][term] = schedule;
-            });
             for (let k in timetablesData) delete timetablesData[k];
-            Object.assign(timetablesData, formatted);
+            Object.assign(timetablesData, res.data);
         }
     } catch (e) { console.error("Error syncing timetables:", e); }
 
-    // 9. Yearbook
+    // 9. Exams, grades, and reports
+    try {
+        const res = await API.exams.list();
+        if (res && res.success && res.data && Array.isArray(window.examsData)) {
+            examsData.splice(0, examsData.length, ...res.data.map(e => ({
+                id: parseInt(e.id, 10),
+                subject: e.subject || '',
+                class_id: e.class_id ? parseInt(e.class_id, 10) : null,
+                className: e.class_name || '',
+                date: e.exam_date || '',
+                duration: parseInt(e.duration_minutes || 0, 10),
+                venue: e.venue || '',
+                invigilator_id: e.invigilator_id ? parseInt(e.invigilator_id, 10) : null,
+                invigilator: e.invigilator_name || '',
+                term: e.term || '',
+                academic_year: e.academic_year || '',
+                status: e.status || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing exams:", e); }
+
+    try {
+        const res = await API.assignments.list();
+        if (res && res.success && res.data && Array.isArray(window.assignmentsData)) {
+            assignmentsData.splice(0, assignmentsData.length, ...res.data.map(a => ({
+                id: parseInt(a.id, 10),
+                title: a.title || '',
+                subject: a.subject || '',
+                class_id: a.class_id ? parseInt(a.class_id, 10) : null,
+                teacher_id: a.teacher_id ? parseInt(a.teacher_id, 10) : null,
+                class: a.class_name || '',
+                className: a.class_name || '',
+                teacher: a.teacher_name || '',
+                dueDate: a.due_date || '',
+                createdDate: a.created_date || '',
+                maxScore: parseFloat(a.max_score || 0),
+                status: a.status || 'Active',
+                instructions: a.instructions || '',
+                attachment: a.attachment || '',
+                submittedCount: parseInt(a.submitted_count || 0, 10),
+                totalStudents: parseInt(a.total_students || 0, 10),
+                submittedStudentIds: String(a.submitted_student_ids || '').split(',').map(v => parseInt(v, 10)).filter(Boolean),
+                submissions: {}
+            })));
+        }
+    } catch (e) { console.error("Error syncing assignments:", e); }
+
+    try {
+        const res = await API.grades.list();
+        if (res && res.success && res.data && Array.isArray(window.gradesData)) {
+            gradesData.splice(0, gradesData.length, ...res.data.map(g => ({
+                id: parseInt(g.id, 10),
+                student_id: parseInt(g.student_id, 10),
+                studentCode: g.student_code || '',
+                studentName: g.student_name || '',
+                className: g.class_name || '',
+                subject: g.subject || '',
+                classScore: parseFloat(g.class_score || 0),
+                examScore: parseFloat(g.exam_score || 0),
+                totalScore: parseFloat(g.total_score || 0),
+                term: g.term || '',
+                academic_year: g.academic_year || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing grades:", e); }
+
+    try {
+        const res = await API.analytics();
+        if (res && res.success && res.data) {
+            window.reportsAnalyticsData = res.data;
+        }
+    } catch (e) { console.error("Error syncing report analytics:", e); }
+
+    // 10. Yearbook
     try {
         const res = await API.yearbook.list();
         if (res && res.success && res.data) {
@@ -583,15 +669,16 @@ window.applyApiClientOverrides = function() {
     }
 };
 
-// No-op local saving functions to prevent overwriting server state with stale local mock data
+// Server-backed pages save through API overrides only.
 saveStudentRecords = () => {};
 saveTeacherRecords = () => {};
 saveParentRecords = () => {};
 saveAdmissionRecords = () => {};
+saveSubjectRecords = () => {};
 
 // ── SUBJECTS ACTIONS OVERRIDES ──────────────────────────
 apiOverrides.submitSubjectForm = async function() {
-    const icon = document.getElementById('add-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
+    const icon = document.getElementById('add-subject-icon')?.value?.trim() || '';
     const name = document.getElementById('add-subject-name')?.value?.trim();
     const type = document.getElementById('add-subject-type')?.value;
     const teacherId = document.getElementById('add-subject-teacher')?.value;
@@ -618,7 +705,7 @@ apiOverrides.submitSubjectForm = async function() {
 };
 
 apiOverrides.saveSubjectChanges = async function(subjectId) {
-    const icon = document.getElementById('edit-subject-icon')?.value?.trim() || '<i class="fas fa-book"></i>';
+    const icon = document.getElementById('edit-subject-icon')?.value?.trim() || '';
     const name = document.getElementById('edit-subject-name')?.value?.trim();
     const type = document.getElementById('edit-subject-type')?.value;
     const teacherId = document.getElementById('edit-subject-teacher')?.value;
@@ -683,7 +770,7 @@ apiOverrides.saveNewTimetable = async function() {
     const res = await API.timetable.save({
         class_name: cls,
         term: term,
-        schedule: schedule
+        timetable: schedule
     });
     if (res && res.success) {
         closeModal();
@@ -714,7 +801,7 @@ apiOverrides.saveEditedTimetable = async function(cls, term) {
     const res = await API.timetable.save({
         class_name: cls,
         term: term,
-        schedule: schedule
+        timetable: schedule
     });
     if (res && res.success) {
         closeModal();
@@ -1211,13 +1298,6 @@ apiOverrides.archiveTeacher = async function(teacherId) {
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
     // Optimistic in-memory update — mark teacher as Archived immediately
-    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
-    if (t) {
-      t.status = 'Archived';
-      t.archived_date = new Date().toISOString().split('T')[0];
-    } else {
-      console.warn('[API] archiveTeacher: teacher not found in teachersData for id', id);
-    }
     navTo('teachers');
     // Background re-sync to keep data fresh
     syncAllDataFromBackend();
@@ -1235,11 +1315,6 @@ apiOverrides.restoreTeacher = async function(teacherId) {
   if (res && res.success) {
     showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
     // Optimistic in-memory update — mark teacher as Active immediately
-    const t = teachersData.find(x => x.teacher_id === teacherId || x.id == id);
-    if (t) {
-      t.status = 'Active';
-      delete t.archived_date;
-    }
     navTo('teachers');
     // Background re-sync to keep data fresh
     syncAllDataFromBackend();
@@ -1263,7 +1338,7 @@ apiOverrides.viewArchivedTeachers = async function() {
     return;
   }
 
-  const archived = res.data.filter(t => t.category === 'Teaching' && t.status === 'Inactive');
+  const archived = res.data.filter(t => t.category === 'Teaching' && (t.status === 'Inactive' || t.status === 'Archived'));
   if (!archived.length) {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No archived teachers</td></tr>';
     return;
@@ -1280,7 +1355,7 @@ apiOverrides.viewArchivedTeachers = async function() {
       <td>${t.class_assigned || '-'}</td>
       <td>${t.phone || '-'}</td>
       <td>${t.email || '-'}</td>
-      <td>-</td>
+      <td>${t.archived_at ? String(t.archived_at).split(' ')[0] : 'Not recorded'}</td>
       <td>
         <button class="btn btn-secondary btn-xs" onclick="viewTeacherProfile('${tid}')">View</button>
         <button class="btn btn-primary btn-xs" style="margin-left:6px" onclick="restoreTeacher('${tid}')">Restore</button>
@@ -1311,18 +1386,9 @@ apiOverrides.createClass = async function() {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   const dbTeacherId = teacher ? teacher.id : null;
 
-  let mappedLevel = 'Primary';
-  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
-    mappedLevel = 'Early Childhood';
-  } else if (levelVal === 'JHS') {
-    mappedLevel = 'Junior High';
-  } else if (levelVal === 'Basic') {
-    mappedLevel = 'Primary';
-  }
-
   const res = await API.classes.create({
     name,
-    level: mappedLevel,
+    level: levelVal,
     stream,
     teacher_id: dbTeacherId,
     capacity: parseInt(capacity, 10),
@@ -1365,18 +1431,9 @@ apiOverrides.saveClassChanges = async function(classId) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   const dbTeacherId = teacher ? teacher.id : null;
 
-  let mappedLevel = 'Primary';
-  if (levelVal === 'Creche' || levelVal === 'Nursery' || levelVal === 'KG 1' || levelVal === 'KG 2') {
-    mappedLevel = 'Early Childhood';
-  } else if (levelVal === 'JHS') {
-    mappedLevel = 'Junior High';
-  } else if (levelVal === 'Basic') {
-    mappedLevel = 'Primary';
-  }
-
   const res = await API.classes.update(clsObj.id, {
     name,
-    level: mappedLevel,
+    level: levelVal,
     stream,
     teacher_id: dbTeacherId,
     capacity: parseInt(capacity, 10),
@@ -1524,6 +1581,95 @@ apiOverrides.deleteRecord = async function(id, type) {
       showToast('<i class="fas fa-check-circle"></i> Record deleted!', 'success');
     }
   }
+};
+
+apiOverrides.archiveTeacher = async function(teacherId) {
+  const id = getTeacherDbId(teacherId);
+  if (!id) return showToast('Teacher not found', 'error');
+  const res = await API.staff.update(id, { status: 'Inactive' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher archived successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to archive teacher', 'error');
+  }
+};
+
+apiOverrides.restoreTeacher = async function(teacherId) {
+  const id = getTeacherDbId(teacherId);
+  if (!id) return showToast('Teacher not found', 'error');
+  const res = await API.staff.update(id, { status: 'Active' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Teacher restored successfully!', 'success');
+    await syncAllDataFromBackend();
+    navTo('teachers');
+  } else {
+    showToast(res?.message || 'Failed to restore teacher', 'error');
+  }
+};
+
+apiOverrides.viewArchivedTeachers = async function() {
+  document.getElementById('main-content').innerHTML = hdr('Archived Teachers', 'Teachers who have been archived', 'Teachers') +
+    '<div class="toolbar"><button class="btn btn-secondary" onclick="navTo(\'teachers\')"><i class="fas fa-arrow-left"></i> Back to Teachers</button></div>' +
+    '<div class="card records-table-card"><div class="table-wrapper"><table class="tbl"><thead><tr><th>#</th><th>Teacher</th><th>ID</th><th>Subject</th><th>Department</th><th>Class</th><th>Phone</th><th>Email</th><th>Archived Date</th><th>Actions</th></tr></thead><tbody id="archived-teachers-body"><tr><td colspan="10" style="text-align:center;padding:30px"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr></tbody></table></div></div>';
+
+  const res = await API.staff.list({ limit: 200 });
+  const tbody = document.getElementById('archived-teachers-body');
+  if (!tbody) return;
+  if (!res || !res.success) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:red">Failed to load archived teachers</td></tr>';
+    return;
+  }
+
+  teachersData.splice(0, teachersData.length, ...res.data.filter(t => t.category === 'Teaching').map(t => ({
+    teacher_id: 'T' + String(t.id).padStart(3, '0'),
+    id: t.id,
+    name: t.name,
+    subject: t.subject || 'General',
+    department: t.department || 'Academic',
+    experience: String(t.experience || 0),
+    email: t.email || '',
+    phone: t.phone || '',
+    class_assigned: t.class_assigned || 'Not Assigned',
+    basicSalary: parseFloat(t.salary_grade) || 3000,
+    allowances: Math.round((parseFloat(t.salary_grade) || 3000) * 0.25),
+    deductions: Math.round((parseFloat(t.salary_grade) || 3000) * 0.10),
+    schedule: t.schedule || 'Mon-Fri',
+    gender: t.gender || 'Male',
+    avatar_color: t.avatar_color || 'blue',
+    dob: t.dob || '1990-01-01',
+    address: t.address || '',
+    hiring_date: t.join_date || '2020-01-01',
+    archived_date: t.archived_at ? t.archived_at.split(' ')[0] : '',
+    status: (t.status === 'Inactive' || t.status === 'Archived') ? 'Archived' : (t.status || 'Active')
+  })));
+
+  const archived = res.data.filter(t => t.category === 'Teaching' && (t.status === 'Inactive' || t.status === 'Archived'));
+  if (!archived.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No archived teachers</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = archived.map((t, i) => {
+    const tid = 'T' + String(t.id).padStart(3, '0');
+    const archivedDate = t.archived_at ? String(t.archived_at).split(' ')[0] : 'Not recorded';
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${escapeHtml(t.name || '')}</td>
+      <td>${tid}</td>
+      <td>${escapeHtml(t.subject || '-')}</td>
+      <td>${escapeHtml(t.department || '-')}</td>
+      <td>${escapeHtml(t.class_assigned || '-')}</td>
+      <td>${escapeHtml(t.phone || '-')}</td>
+      <td>${escapeHtml(t.email || '-')}</td>
+      <td>${escapeHtml(archivedDate)}</td>
+      <td>
+        <button class="btn btn-secondary btn-xs" onclick="viewTeacherProfile('${tid}')">View</button>
+        <button class="btn btn-primary btn-xs" style="margin-left:6px" onclick="restoreTeacher('${tid}')">Restore</button>
+      </td>
+    </tr>`;
+  }).join('');
 };
 
     Object.assign(window, apiOverrides);

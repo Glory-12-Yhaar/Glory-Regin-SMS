@@ -25,6 +25,29 @@ function formatDashboardActivityTime(value) {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
+function getDashboardAssignments() {
+  return Array.isArray(window.assignmentsData) ? window.assignmentsData : [];
+}
+
+function formatDashboardDueDate(value) {
+  if (!value) return 'TBD';
+  const due = new Date(value);
+  if (Number.isNaN(due.getTime())) return value;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  const diff = Math.round((due - today) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff < 0) return 'Overdue';
+  return due.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+
+function studentHasSubmittedAssignment(assignment, studentId) {
+  const id = parseInt(studentId, 10);
+  return Array.isArray(assignment.submittedStudentIds) && assignment.submittedStudentIds.includes(id);
+}
+
 const ADMIN_DASHBOARD_STATE = {
   loaded: false,
   dashboard: {},
@@ -214,7 +237,7 @@ function teacherDash() {
   const attendanceAverage = myClasses.length
     ? Math.round(myClasses.reduce((sum, c) => sum + parseFloat(c.attendance), 0) / myClasses.length)
     : 0;
-  const teacherAssignments = Object.values(ASSIGNMENTS_DATA).filter(a => myClassNames.includes(a.class));
+  const teacherAssignments = getDashboardAssignments().filter(a => myClassNames.includes(a.className || a.class));
   const scheduleRows = mySubjects.slice(0, 5).map((s, i) => [
     ['7:30-8:20', '8:20-9:10', '10:00-10:50', '11:00-11:50', '13:30-14:20'][i] || '14:20-15:10',
     s.name,
@@ -237,13 +260,13 @@ function teacherDash() {
             <td><span class="badge ${st === 'Done' ? 'b-success' : st === 'Up Next' ? 'b-warning' : 'b-info'}">${st}</span></td>
           </tr>`).join('');
   const assignmentCards = teacherAssignments.length ? teacherAssignments.slice(0, 4).map(a => {
-        const submitted = Object.keys(a.submissions || {}).length;
-        const total = myStudents.filter(s => s.student_class === a.class).length || 1;
+        const submitted = parseInt(a.submittedCount || 0, 10);
+        const total = parseInt(a.totalStudents || 0, 10) || myStudents.filter(s => s.student_class === (a.className || a.class)).length || 1;
         return `
       <div style="margin-bottom:16px;cursor:pointer;padding:8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='transparent'" onclick="viewAssignmentSubmissions('${escapeHtml(a.title)}')">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:13px;font-weight:600">${escapeHtml(a.title)}</span>
-          <span class="badge b-info">${escapeHtml(a.dueDate || 'TBD')}</span>
+          <span class="badge b-info">${escapeHtml(formatDashboardDueDate(a.dueDate))}</span>
         </div>
         <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} · ${submitted}/${total} submitted</div>
         <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(submitted / total * 100)}%"></div></div>
@@ -360,14 +383,11 @@ function getAttendanceTrend(percentage) {
 
 // Get pending tasks count (assignments with Pending or Not Started status)
 function getPendingTasksCount() {
-  const assignments = [
-    ['Mathematics', 'Chapter 5 Problems', 'Today', 'Pending'],
-    ['English', 'Essay on Climate', 'Mar 20', 'Submitted'],
-    ['Science', 'Lab Report', 'Mar 22', 'Pending'],
-    ['ICT', 'Database Project', 'Mar 25', 'In Progress'],
-    ['History', 'WWII Essay', 'Mar 28', 'Not Started']
-  ];
-  return assignments.filter(([_, _2, _3, status]) => status === 'Pending' || status === 'Not Started').length;
+  const student = getCurrentStudentRecord();
+  return getDashboardAssignments()
+    .filter(a => (a.className || a.class) === student.student_class)
+    .filter(a => !studentHasSubmittedAssignment(a, student.id))
+    .length;
 }
 
 function studentDash() {
@@ -390,12 +410,17 @@ function studentDash() {
     statCard('<i class="fas fa-clipboard-list"></i>', pendingTasks, 'Pending Tasks', 'Due this week', 'dn', 'si-red', true, 'navTo("assignments")'),
     statCard('<i class="fas fa-star"></i>', classStanding.standing, 'Class Standing', classStanding.rank, classStanding.trend, 'si-gold', true, 'navTo("reportcards")')
   ].join('');
-  const assignmentRows = [['Mathematics', 'Chapter 5 Problems', 'Today', 'Pending'], ['English', 'Essay on Climate', 'Mar 20', 'Submitted'], ['Science', 'Lab Report', 'Mar 22', 'Pending'], ['ICT', 'Database Project', 'Mar 25', 'In Progress'], ['History', 'WWII Essay', 'Mar 28', 'Not Started']].map(([s, t, d, st]) => `
-          <tr style="cursor:pointer" onclick="viewAssignmentDetails('${t.replace(/'/g, "\\'")}')">
-            <td style="font-weight:600">${s}</td><td>${t}</td>
+  const studentAssignments = getDashboardAssignments().filter(a => (a.className || a.class) === studentClass);
+  const assignmentRows = studentAssignments.length ? studentAssignments.slice(0, 5).map(a => {
+    const st = studentHasSubmittedAssignment(a, student.id) ? 'Submitted' : 'Pending';
+    const d = formatDashboardDueDate(a.dueDate);
+    return `
+          <tr style="cursor:pointer" onclick="viewAssignment('${a.id}')">
+            <td style="font-weight:600">${escapeHtml(a.subject || '')}</td><td>${escapeHtml(a.title)}</td>
             <td style="${d === 'Today' ? 'color:var(--danger);font-weight:700' : 'color:var(--gray-600)'}">${d}</td>
             <td><span class="badge ${st === 'Submitted' ? 'b-success' : st === 'Pending' ? 'b-warning' : st === 'In Progress' ? 'b-info' : 'b-gray'}">${st}</span></td>
-          </tr>`).join('');
+          </tr>`;
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:14px">No assignments for your class.</td></tr>';
   const performanceRows = [['Mathematics', 88], ['English', 92], ['Science', 85], ['ICT', 95], ['History', 78], ['French', 72]].map(([s, v]) => `
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
@@ -435,16 +460,14 @@ function studentDash() {
 const TEACHERS_KEY = 'gr_teachers';
 const STUDENTS_KEY = 'gr_students';
 const GRADEBOOK_KEY = 'gr_gradebook';
-const ASSIGNMENTS_KEY = 'gr_assignments';
 const TEACHER_MESSAGES_KEY = 'gr_teacher_messages';
 const ATTENDANCE_BATCHES_KEY = 'gr_attendance_batches';
 
 function getAssignments() {
-  const raw = appMemoryStorage.getItem(ASSIGNMENTS_KEY);
-  return raw ? JSON.parse(raw) : ASSIGNMENTS_DATA;
+  return getDashboardAssignments();
 }
 function saveAssignments(obj) {
-  appMemoryStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(obj));
+  window.assignmentsData = Array.isArray(obj) ? obj : Object.values(obj || {});
 }
 
 function getTeacherMessages() {
@@ -504,16 +527,28 @@ function saveGradeEntry(studentName) {
   setTimeout(() => renderMain(), 120);
 }
 
-function addAssignment() {
+async function addAssignment() {
   const title = document.getElementById('assign-title').value.trim();
   const subject = document.getElementById('assign-subject').value.trim();
   const cls = document.getElementById('assign-class').value.trim();
   const due = document.getElementById('assign-due').value;
   if (!title) return showToast('Provide a title', 'error');
-  const assigns = getAssignments();
-  const id = String(Date.now());
-  assigns[id] = { id, title, subject, class: cls, dueDate: due || 'TBD', createdDate: new Date().toISOString().slice(0,10), maxScore: 100, status: 'Active', instructions: '', submissions: {} };
-  saveAssignments(assigns);
+  const classRecord = classesData.find(c => c.name === cls || String(c.id) === String(cls));
+  if (!classRecord) return showToast('Select a valid class', 'error');
+  const teacher = getCurrentTeacherProfile ? getCurrentTeacherProfile() : null;
+  const res = await API.assignments.create({
+    title,
+    subject,
+    class_id: classRecord.id,
+    teacher_id: teacher ? teacher.id : null,
+    due_date: due || new Date().toISOString().slice(0, 10),
+    created_date: new Date().toISOString().slice(0, 10),
+    max_score: 100,
+    status: 'Active',
+    instructions: ''
+  });
+  if (!res || !res.success) return showToast(res?.message || 'Failed to create assignment', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('Assignment created', 'success');
   navTo('dashboard');
 }
@@ -542,13 +577,20 @@ function parentDash() {
     <div class="av av-sm av-${m.fromParent ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
     <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} · ${m.time}</div></div>
   </div>`).join('');
-  const assignments = getParentAssignments();
+  const assignments = getDashboardAssignments().flatMap(a => students
+    .filter(child => child.class === (a.className || a.class))
+    .map(child => ({
+      title: a.title,
+      student: child.name,
+      dueDate: formatDashboardDueDate(a.dueDate),
+      completed: studentHasSubmittedAssignment(a, child.id)
+    })));
   const pendingParentAssignments = assignments.filter(a=>!a.completed);
   const assignmentHtml = pendingParentAssignments.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:12px">No pending assignments</div>' : pendingParentAssignments.map((a)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
     <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${escapeHtml(a.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(a.student)}</div></div>
     <div style="display:flex;gap:6px;align-items:center">
-      <span class="badge ${a.dueDate === 'Today' ? 'b-danger' : a.dueDate.includes('Mar 2') ? 'b-warning' : 'b-info'}">${a.dueDate}</span>
-      <button class="btn btn-success btn-xs" onclick="markAssignmentDone('${String(a.student).replace(/'/g, "\\'")}','${String(a.title).replace(/'/g, "\\'")}')"><i class="fas fa-check"></i></button>
+      <span class="badge ${a.dueDate === 'Today' || a.dueDate === 'Overdue' ? 'b-danger' : 'b-info'}">${a.dueDate}</span>
+      <span class="badge b-warning">Pending</span>
     </div>
   </div>`).join('');
   const feeSummary = getParentFeeSummary();

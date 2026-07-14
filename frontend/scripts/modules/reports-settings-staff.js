@@ -471,6 +471,28 @@ function reportCardsModule() {
 }
 
 // ASSIGNMENTS MODULE
+function getAssignmentRecords() {
+  return Array.isArray(window.assignmentsData) ? window.assignmentsData : [];
+}
+
+function findAssignmentRecord(assignmentId) {
+  const id = parseInt(assignmentId, 10);
+  return getAssignmentRecords().find(a => parseInt(a.id, 10) === id) || null;
+}
+
+function formatAssignmentDate(value) {
+  if (!value) return 'TBD';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getAssignmentStatusBadge(status) {
+  if (status === 'Closed') return 'b-gray';
+  if (status === 'Upcoming') return 'b-info';
+  return 'b-success';
+}
+
 function assignmentsModule() {
   const isTeacher = currentRole === 'Teacher';
   const isAdmin = currentRole === 'Admin';
@@ -481,33 +503,40 @@ function assignmentsModule() {
 
   if (isParent) {
     const children = getParentChildren();
-    const childNames = new Set(children.map(c => c.name));
-    const parentAssignments = getParentAssignments().filter(a => childNames.has(a.student));
+    const childClasses = new Set(children.map(c => c.class));
+    const parentAssignments = getAssignmentRecords()
+      .filter(a => childClasses.has(a.className || a.class))
+      .flatMap(a => children
+        .filter(child => child.class === (a.className || a.class))
+        .map(child => ({
+          ...a,
+          student: child.name,
+          completed: Array.isArray(a.submittedStudentIds) && a.submittedStudentIds.includes(parseInt(child.id, 10))
+        })));
     return hdr('Assignment Tracking', 'Assignments for your child or children', 'Assignments') + `
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> My Children Assignments</span></div>
       <table class="tbl">
         <thead><tr><th>Child</th><th>Assignment</th><th>Due Date</th><th>Status</th></tr></thead>
         <tbody>
-          ${parentAssignments.map(a => `<tr><td>${escapeHtml(a.student)}</td><td style="font-weight:600">${escapeHtml(a.title)}</td><td>${escapeHtml(a.dueDate)}</td><td><span class="badge ${a.completed ? 'b-success' : 'b-warning'}">${a.completed ? 'Completed' : 'Pending'}</span></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray-400)">No assignments found for your children.</td></tr>'}
+          ${parentAssignments.map(a => `<tr><td>${escapeHtml(a.student)}</td><td style="font-weight:600">${escapeHtml(a.title)}</td><td>${escapeHtml(formatAssignmentDate(a.dueDate))}</td><td><span class="badge ${a.completed ? 'b-success' : 'b-warning'}">${a.completed ? 'Submitted' : 'Pending'}</span></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray-400)">No assignments found for your children.</td></tr>'}
         </tbody>
       </table>
     </div>`;
   }
 
-  let assignmentsList = Object.values(ASSIGNMENTS_DATA);
+  let assignmentsList = getAssignmentRecords();
 
   // Filter assignments for students - only show assignments for their class
   if (isStudent) {
-    assignmentsList = assignmentsList.filter(assignment => assignment.class === studentClass);
+    assignmentsList = assignmentsList.filter(assignment => (assignment.className || assignment.class) === studentClass);
   } else if (isTeacher) {
-    assignmentsList = assignmentsList.filter(assignment => teacherClassNames.includes(assignment.class));
+    assignmentsList = assignmentsList.filter(assignment => teacherClassNames.includes(assignment.className || assignment.class));
   }
 
-  const submitCount = (assignment) => Object.keys(assignment.submissions).length;
-  const totalStudents = 38; // Average class size
+  const submitCount = (assignment) => parseInt(assignment.submittedCount || 0, 10);
 
-  const createButtonHTML = isTeacher ? `<button class="btn btn-primary btn-sm" onclick="openCreateAssignmentForm()">+ New Assignment</button>` : '';
+  const createButtonHTML = (isTeacher || isAdmin) ? `<button class="btn btn-primary btn-sm" onclick="openCreateAssignmentForm()">+ New Assignment</button>` : '';
 
   let html = hdr('Assignments Module', isTeacher ? 'Assignments for your assigned classes' : isStudent ? 'Your class assignments' : 'Create and manage class assignments', 'Assignments') + `
   <div class="g21">
@@ -522,20 +551,21 @@ function assignmentsModule() {
   } else {
     assignmentsList.forEach(assignment => {
       const submittedCount = submitCount(assignment);
-      const dueDate = new Date(assignment.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-      const statusBadge = assignment.status === 'Active' ? 'b-success' : 'b-info';
+      const totalStudents = parseInt(assignment.totalStudents || 0, 10);
+      const dueDate = formatAssignmentDate(assignment.dueDate);
+      const statusBadge = getAssignmentStatusBadge(assignment.status);
 
       html += `
       <tr>
-        <td style="font-weight:600">${assignment.title}</td>
-        <td>${assignment.subject}</td>
-        ${!isStudent ? `<td>${assignment.class}</td>` : ''}
+        <td style="font-weight:600">${escapeHtml(assignment.title)}</td>
+        <td>${escapeHtml(assignment.subject || '')}</td>
+        ${!isStudent ? `<td>${escapeHtml(assignment.className || assignment.class || '')}</td>` : ''}
         <td style="color:var(--blue-main);font-weight:600">${dueDate}</td>
         <td>${submittedCount}/${totalStudents}</td>
-        <td><span class="badge ${statusBadge}">${assignment.status}</span></td>
+        <td><span class="badge ${statusBadge}">${escapeHtml(assignment.status || 'Active')}</span></td>
         <td><div style="display:flex;gap:4px">
           <button class="btn btn-secondary btn-xs" onclick="viewAssignment('${assignment.id}')">View</button>
-          ${isTeacher ? `<button class="btn btn-primary btn-xs" onclick="gradeAssignment('${assignment.id}')">Grade</button>` : ''}
+          ${(isTeacher || isAdmin) ? `<button class="btn btn-primary btn-xs" onclick="gradeAssignment('${assignment.id}')">Grade</button>` : ''}
         </div></td>
       </tr>`;
     });
@@ -543,27 +573,29 @@ function assignmentsModule() {
 
   html += `</tbody></table></div>`;
 
-  // Create Assignment Form (only for Teachers)
-  if (isTeacher) {
+  // Create Assignment Form
+  if (isTeacher || isAdmin) {
+    const classChoices = isTeacher ? classesData.filter(c => teacherClassNames.includes(c.name)) : classesData;
+    const subjectChoices = isTeacher ? getVisibleSubjectsForRole(subjectsData) : subjectsData;
     html += `
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Create New Assignment</span></div>
       <form id="create-assignment-form" onsubmit="createAssignment(event)">
         <div class="f-field" style="margin-bottom:12px">
           <label>Assignment Title</label>
-          <input type="text" id="asg-title" placeholder="e.g. Chapter 5 Problems" required>
+          <input type="text" id="asg-title" placeholder="Assignment title" required>
         </div>
         <div class="f-row">
           <div class="f-field">
             <label>Subject</label>
             <select id="asg-subject" required>
-              ${getVisibleSubjectsForRole(subjectsData).map(s => `<option>${escapeHtml(s.name)}</option>`).join('')}
+              ${subjectChoices.map(s => `<option>${escapeHtml(s.name)}</option>`).join('')}
             </select>
           </div>
           <div class="f-field">
             <label>Class</label>
             <select id="asg-class" required>
-              ${teacherClassNames.map(c => `<option>${escapeHtml(c)}</option>`).join('')}
+              ${classChoices.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -608,16 +640,16 @@ function openCreateAssignmentForm() {
 }
 
 function viewAssignment(assignmentId) {
-  const assignment = ASSIGNMENTS_DATA[assignmentId];
+  const assignment = findAssignmentRecord(assignmentId);
   if (!assignment) {
     showToast('<i class="fas fa-times-circle"></i> Assignment not found', 'error');
     return;
   }
-  if (currentRole === 'Teacher' && !getAssignedClassNamesForTeacher().includes(assignment.class)) {
+  if (currentRole === 'Teacher' && !getAssignedClassNamesForTeacher().includes(assignment.className || assignment.class)) {
     showToast('<i class="fas fa-lock"></i> You can only view assignments for your assigned classes', 'error');
     return;
   }
-  if (currentRole === 'Student' && assignment.class !== getCurrentStudentRecord().student_class) {
+  if (currentRole === 'Student' && (assignment.className || assignment.class) !== getCurrentStudentRecord().student_class) {
     showToast('<i class="fas fa-lock"></i> You can only view assignments for your class', 'error');
     return;
   }
@@ -636,32 +668,32 @@ function viewAssignment(assignmentId) {
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;font-size:14px">
           <div>
             <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Due Date</span>
-            <div style="margin-top:6px;font-weight:600;font-size:16px">${new Date(assignment.dueDate).toLocaleDateString()}</div>
+            <div style="margin-top:6px;font-weight:600;font-size:16px">${escapeHtml(formatAssignmentDate(assignment.dueDate))}</div>
           </div>
           <div>
             <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Max Score</span>
-            <div style="margin-top:6px;font-weight:600;font-size:16px">${assignment.maxScore}</div>
+            <div style="margin-top:6px;font-weight:600;font-size:16px">${escapeHtml(String(assignment.maxScore || 0))}</div>
           </div>
           <div>
             <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Created</span>
-            <div style="margin-top:6px;font-weight:600;font-size:16px">${new Date(assignment.createdDate).toLocaleDateString()}</div>
+            <div style="margin-top:6px;font-weight:600;font-size:16px">${escapeHtml(formatAssignmentDate(assignment.createdDate))}</div>
           </div>
           <div>
             <span style="color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase">Status</span>
-            <div style="margin-top:6px"><span style="padding:6px 12px;background:${assignment.status === 'Active' ? 'var(--success)' : 'var(--info)'};color:white;border-radius:4px;font-weight:700;font-size:12px">${assignment.status}</span></div>
+            <div style="margin-top:6px"><span style="padding:6px 12px;background:${assignment.status === 'Active' ? 'var(--success)' : 'var(--info)'};color:white;border-radius:4px;font-weight:700;font-size:12px">${escapeHtml(assignment.status || 'Active')}</span></div>
           </div>
         </div>
       </div>
       
       <div style="margin-bottom:30px;padding:24px;background:white;border-radius:8px;border:1px solid var(--gray-200)">
         <h3 style="margin:0 0 16px 0;color:var(--gray-800);font-size:16px;font-weight:700"><i class="fas fa-file-alt"></i> Instructions</h3>
-        <p style="margin:0 0 16px 0;font-size:14px;line-height:1.8;color:var(--gray-700)">${assignment.instructions}</p>
-        ${assignment.attachment ? `<div style="padding:12px;background:var(--gray-50);border-radius:6px;border-left:4px solid var(--blue-main);font-size:13px"><strong><i class="fas fa-paperclip"></i> Attachment:</strong> ${assignment.attachment}</div>` : ''}
+        <p style="margin:0 0 16px 0;font-size:14px;line-height:1.8;color:var(--gray-700)">${escapeHtml(assignment.instructions || 'No instructions provided.')}</p>
+        ${assignment.attachment ? `<div style="padding:12px;background:var(--gray-50);border-radius:6px;border-left:4px solid var(--blue-main);font-size:13px"><strong><i class="fas fa-paperclip"></i> Attachment:</strong> ${escapeHtml(assignment.attachment)}</div>` : ''}
       </div>
       
       <div style="display:flex;gap:12px;margin-bottom:30px">
         <button class="btn btn-secondary" onclick="currentMod='assignments';renderMain()"><i class="fas fa-arrow-left"></i> Back to Assignments</button>
-        ${currentRole === 'Teacher' ? `<button class="btn btn-primary" onclick="gradeAssignment('${assignmentId}')"><i class="fas fa-pen-fancy"></i> Grade Submissions</button>` : ''}
+        ${(currentRole === 'Teacher' || currentRole === 'Admin') ? `<button class="btn btn-primary" onclick="gradeAssignment('${assignmentId}')"><i class="fas fa-pen-fancy"></i> Grade Submissions</button>` : ''}
       </div>
     </div>
   `;
@@ -670,64 +702,68 @@ function viewAssignment(assignmentId) {
   document.getElementById('main-content').scrollTop = 0;
 }
 
-function gradeAssignment(assignmentId) {
-  const assignment = ASSIGNMENTS_DATA[assignmentId];
+async function gradeAssignment(assignmentId) {
+  const assignment = findAssignmentRecord(assignmentId);
   if (!assignment) {
     showToast('<i class="fas fa-times-circle"></i> Assignment not found', 'error');
     return;
   }
 
   // Check if user is teacher
-  if (currentRole !== 'Teacher') {
-    showToast('<i class="fas fa-times-circle"></i> Only teachers can grade assignments', 'error');
+  if (currentRole !== 'Teacher' && currentRole !== 'Admin') {
+    showToast('<i class="fas fa-times-circle"></i> Only teachers and admins can grade assignments', 'error');
     return;
   }
-  if (!getAssignedClassNamesForTeacher().includes(assignment.class)) {
+  if (currentRole === 'Teacher' && !getAssignedClassNamesForTeacher().includes(assignment.className || assignment.class)) {
     showToast('<i class="fas fa-lock"></i> You can only grade assignments for your assigned classes', 'error');
     return;
   }
 
-  const ungraded = [
-    { student: 'Kofi Boateng', submitted: '2025-03-16' },
-    { student: 'Theresa Mensah', submitted: '2025-03-15' }
-  ];
+  const res = await API.assignments.submissions(assignment.id);
+  if (!res || !res.success) {
+    showToast(res?.message || 'Unable to load submissions', 'error');
+    return;
+  }
+  const submissions = res.data || [];
+  const graded = submissions.filter(sub => sub.score !== null && sub.score !== undefined && sub.score !== '');
+  const pending = submissions.filter(sub => sub.score === null || sub.score === undefined || sub.score === '');
 
   let gradingHTML = `
     <div style="max-width:900px;background:white;border-radius:12px">
       <div style="padding:20px;background:var(--blue-main);color:white">
-        <h2 style="margin:0">${assignment.title} - Grading Interface</h2>
-        <p style="margin:4px 0;font-size:13px;opacity:0.9">${assignment.class}</p>
+        <h2 style="margin:0">${escapeHtml(assignment.title)} - Grading Interface</h2>
+        <p style="margin:4px 0;font-size:13px;opacity:0.9">${escapeHtml(assignment.className || assignment.class || '')}</p>
       </div>
       
       <div style="padding:20px">
         <div style="margin-bottom:20px;padding:12px;background:var(--gold-light);border-radius:6px">
-          <span style="font-size:12px;color:var(--gray-700)"><strong><i class="fas fa-book"></i> Max Score:</strong> ${assignment.maxScore} | <strong>Submitted:</strong> ${Object.keys(assignment.submissions).length} | <strong>Pending:</strong> ${ungraded.length}</span>
+          <span style="font-size:12px;color:var(--gray-700)"><strong><i class="fas fa-book"></i> Max Score:</strong> ${assignment.maxScore} | <strong>Graded:</strong> ${graded.length} | <strong>Pending:</strong> ${pending.length}</span>
         </div>
         
         <h3 style="margin:20px 0 12px 0;color:var(--gray-800);font-size:13px;font-weight:700"><i class="fas fa-check-circle"></i> Already Graded</h3>
         <div style="margin-bottom:20px">
-          ${Object.entries(assignment.submissions).map(([student, data]) => `
+          ${graded.map(data => `
             <div style="padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
               <div>
-                <strong>${student}</strong>
+                <strong>${escapeHtml(data.student_name)}</strong>
                 <div style="font-size:11px;color:var(--gray-500);margin-top:2px">Scored: ${data.score}/${assignment.maxScore}</div>
               </div>
-              <button class="btn btn-secondary btn-xs" onclick="editGrade('${assignmentId}', '${student}')">Edit</button>
+              <button class="btn btn-secondary btn-xs" onclick="openGradeSubmissionForm('${assignmentId}', '${data.student_id}')">Edit</button>
             </div>
-          `).join('')}
+          `).join('') || '<div style="padding:12px;color:var(--gray-400)">No graded submissions yet.</div>'}
         </div>
         
-        ${ungraded.length > 0 ? `
-        <h3 style="margin:20px 0 12px 0;color:var(--gray-800);font-size:13px;font-weight:700"><i class="fas fa-file-alt"></i> Pending Grading (${ungraded.length})</h3>
+        ${pending.length > 0 ? `
+        <h3 style="margin:20px 0 12px 0;color:var(--gray-800);font-size:13px;font-weight:700"><i class="fas fa-file-alt"></i> Pending Grading (${pending.length})</h3>
         <div style="margin-bottom:20px">
-          ${ungraded.map((sub, idx) => `
+          ${pending.map((sub) => `
             <div style="padding:12px;background:var(--warning-light);border-radius:6px;margin-bottom:8px;border-left:4px solid var(--warning)">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <div>
-                  <strong>${sub.student}</strong>
-                  <div style="font-size:11px;color:var(--gray-600);margin-top:2px">Submitted: ${new Date(sub.submitted).toLocaleDateString()}</div>
+                  <strong>${escapeHtml(sub.student_name)}</strong>
+                  <div style="font-size:11px;color:var(--gray-600);margin-top:2px">${sub.submitted_at ? 'Submitted: ' + escapeHtml(formatAssignmentDate(sub.submitted_at)) : 'No submission date recorded'}</div>
                 </div>
-                <button class="btn btn-primary btn-xs" onclick="openGradeSubmissionForm('${assignmentId}', '${sub.student}', ${idx})">Grade Now</button>
+                <button class="btn btn-primary btn-xs" onclick="openGradeSubmissionForm('${assignmentId}', '${sub.student_id}')">Grade Now</button>
               </div>
             </div>
           `).join('')}
@@ -743,51 +779,56 @@ function gradeAssignment(assignmentId) {
   openModal(gradingHTML);
 }
 
-function createAssignment(event) {
+async function createAssignment(event) {
   event.preventDefault();
 
-  if (currentRole !== 'Teacher') {
-    showToast('<i class="fas fa-times-circle"></i> Only teachers can create assignments', 'error');
+  if (currentRole !== 'Teacher' && currentRole !== 'Admin') {
+    showToast('<i class="fas fa-times-circle"></i> Only teachers and admins can create assignments', 'error');
     return;
   }
 
   const title = document.getElementById('asg-title').value;
   const subject = document.getElementById('asg-subject').value;
-  const classVal = document.getElementById('asg-class').value;
+  const classId = parseInt(document.getElementById('asg-class').value, 10);
   const dueDate = document.getElementById('asg-duedate').value;
   const maxScore = document.getElementById('asg-maxscore').value;
   const instructions = document.getElementById('asg-instructions').value;
+  const classRecord = classesData.find(c => parseInt(c.id, 10) === classId);
   const allowedClasses = getAssignedClassNamesForTeacher();
   const allowedSubjects = getVisibleSubjectsForRole(subjectsData).map(s => s.name);
 
-  if (!title || !subject || !classVal || !dueDate || !maxScore || !instructions) {
+  if (!title || !subject || !classId || !dueDate || !maxScore || !instructions) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields', 'error');
     return;
   }
 
-  if (!allowedClasses.includes(classVal) || !allowedSubjects.includes(subject)) {
+  if (currentRole === 'Teacher' && (!allowedClasses.includes(classRecord?.name) || !allowedSubjects.includes(subject))) {
     showToast('<i class="fas fa-lock"></i> You can only create assignments for your assigned classes and subjects', 'error');
     return;
   }
 
-  const newId = String(Math.max(...Object.keys(ASSIGNMENTS_DATA).map(Number)) + 1);
-  ASSIGNMENTS_DATA[newId] = {
-    id: newId,
+  const teacher = currentRole === 'Teacher' ? getCurrentTeacherProfile() : null;
+  const attachment = document.getElementById('asg-attachment').files.length > 0 ? document.getElementById('asg-attachment').files[0].name : null;
+  const res = await API.assignments.create({
     title,
     subject,
-    class: classVal,
-    teacher: 'Current Teacher', // In real system, get from session
-    dueDate,
-    createdDate: new Date().toISOString().split('T')[0],
-    maxScore: parseInt(maxScore),
+    class_id: classId,
+    teacher_id: teacher ? teacher.id : null,
+    due_date: dueDate,
+    created_date: new Date().toISOString().split('T')[0],
+    max_score: parseInt(maxScore, 10),
     status: 'Active',
     instructions,
-    attachment: document.getElementById('asg-attachment').files.length > 0 ? document.getElementById('asg-attachment').files[0].name : null,
-    submissions: {}
-  };
+    attachment
+  });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to create assignment', 'error');
+    return;
+  }
 
   // Clear form
   document.getElementById('create-assignment-form').reset();
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
 
   showToast('<i class="fas fa-check-circle"></i> Assignment created and published successfully!', 'success');
 
@@ -797,38 +838,70 @@ function createAssignment(event) {
   }, 1500);
 }
 
-function saveDraftAssignment() {
-  showToast('<i class="fas fa-save"></i> Assignment saved as draft. You can continue editing later.', 'info');
+async function saveDraftAssignment() {
+  const title = document.getElementById('asg-title').value;
+  const subject = document.getElementById('asg-subject').value;
+  const classId = parseInt(document.getElementById('asg-class').value, 10);
+  const dueDate = document.getElementById('asg-duedate').value;
+  if (!title || !subject || !classId || !dueDate) {
+    showToast('<i class="fas fa-times-circle"></i> Title, subject, class, and due date are required for a draft', 'error');
+    return;
+  }
+  const teacher = currentRole === 'Teacher' ? getCurrentTeacherProfile() : null;
+  const res = await API.assignments.create({
+    title,
+    subject,
+    class_id: classId,
+    teacher_id: teacher ? teacher.id : null,
+    due_date: dueDate,
+    created_date: new Date().toISOString().split('T')[0],
+    max_score: parseInt(document.getElementById('asg-maxscore').value || '50', 10),
+    status: 'Upcoming',
+    instructions: document.getElementById('asg-instructions').value || ''
+  });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to save draft assignment', 'error');
+    return;
+  }
+  document.getElementById('create-assignment-form').reset();
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast('<i class="fas fa-save"></i> Assignment saved as draft', 'info');
+  renderMain();
 }
 
-function editGrade(assignmentId, student) {
-  showToast('<i class="fas fa-file-alt"></i> Edit grade feature coming soon', 'info');
-}
-
-function openGradeSubmissionForm(assignmentId, student, index) {
-  const assignment = ASSIGNMENTS_DATA[assignmentId];
-  const sub = (assignment && assignment.submissions) ? (assignment.submissions[student] || {}) : {};
+async function openGradeSubmissionForm(assignmentId, studentId) {
+  const assignment = findAssignmentRecord(assignmentId);
+  const res = await API.assignments.submissions(assignmentId);
+  if (!assignment || !res || !res.success) {
+    showToast(res?.message || 'Unable to load student submission', 'error');
+    return;
+  }
+  const sub = (res.data || []).find(row => parseInt(row.student_id, 10) === parseInt(studentId, 10));
+  if (!sub) {
+    showToast('<i class="fas fa-times-circle"></i> Student is not in this assignment class', 'error');
+    return;
+  }
 
   const formHTML = `
     <div style="max-width:600px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
         <h2 style="margin:0">Grade Submission</h2>
-        <p style="margin:8px 0 0 0;font-size:13px;opacity:0.9">${student}</p>
+        <p style="margin:8px 0 0 0;font-size:13px;opacity:0.9">${escapeHtml(sub.student_name)}</p>
       </div>
       
-      <form onsubmit="submitGrade(event, '${assignmentId}', '${student}')">
+      <form onsubmit="submitGrade(event, '${assignmentId}', '${sub.student_id}')">
         <div style="padding:20px">
           <div class="f-field" style="margin-bottom:16px">
             <label>Raw Score</label>
             <div style="position:relative">
-              <input type="number" id="grade-score" min="0" max="${assignment.maxScore}" placeholder="0" value="${sub.score !== undefined ? sub.score : ''}" required style="font-size:24px;padding:12px;text-align:center;font-weight:700">
+              <input type="number" id="grade-score" min="0" max="${assignment.maxScore}" placeholder="0" value="${sub.score !== null && sub.score !== undefined ? sub.score : ''}" required style="font-size:24px;padding:12px;text-align:center;font-weight:700">
               <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--gray-500)">/ ${assignment.maxScore}</div>
             </div>
           </div>
           
           <div class="f-field" style="margin-bottom:16px">
             <label>Feedback for Student</label>
-            <textarea id="grade-feedback" placeholder="Provide constructive feedback..." style="min-height:100px">${sub.feedback || ''}</textarea>
+            <textarea id="grade-feedback" placeholder="Provide constructive feedback..." style="min-height:100px">${escapeHtml(sub.feedback || '')}</textarea>
           </div>
           
           <div style="padding:12px;background:var(--blue-xpale);border-radius:6px;border-left:4px solid var(--blue-main);margin-bottom:16px;font-size:12px;color:var(--blue-dark)">
@@ -847,26 +920,32 @@ function openGradeSubmissionForm(assignmentId, student, index) {
   openModal(formHTML);
 }
 
-function submitGrade(event, assignmentId, student) {
+async function submitGrade(event, assignmentId, studentId) {
   event.preventDefault();
 
-  const score = parseInt(document.getElementById('grade-score').value);
+  const score = parseFloat(document.getElementById('grade-score').value);
   const feedback = document.getElementById('grade-feedback').value;
-  const assignment = ASSIGNMENTS_DATA[assignmentId];
+  const assignment = findAssignmentRecord(assignmentId);
 
   if (score < 0 || score > assignment.maxScore) {
     showToast('<i class="fas fa-times-circle"></i> Score must be between 0 and ' + assignment.maxScore, 'error');
     return;
   }
 
-  // Update submission
-  assignment.submissions[student] = {
-    submitted: new Date().toISOString().split('T')[0],
+  const res = await API.assignments.grade({
+    assignment_id: parseInt(assignmentId, 10),
+    student_id: parseInt(studentId, 10),
+    submitted_at: new Date().toISOString().split('T')[0],
     score,
     feedback
-  };
+  });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to save grade', 'error');
+    return;
+  }
 
   closeModal();
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Grade submitted and feedback sent to student!', 'success');
 
   setTimeout(() => {
