@@ -528,6 +528,29 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing finance report:", e); }
 
+    try {
+        const res = await API.events.list({ limit: 500 });
+        if (res && res.success && res.data && Array.isArray(window.eventsData)) {
+            eventsData.splice(0, eventsData.length, ...res.data.map(ev => ({
+                id: parseInt(ev.id, 10),
+                title: ev.title || '',
+                date: ev.event_date || ev.date || '',
+                event_date: ev.event_date || ev.date || '',
+                time: (ev.event_time || ev.time || '').slice(0, 5),
+                event_time: ev.event_time || ev.time || '',
+                allDay: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1',
+                all_day: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1' ? 1 : 0,
+                location: ev.location || '',
+                audience: ev.audience || 'All',
+                description: ev.description || '',
+                status: ev.status || 'Published',
+                created_by: ev.created_by || null,
+                created_at: ev.created_at || '',
+                updated_at: ev.updated_at || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing events:", e); }
+
     // 5. Admissions
     try {
         const res = await API.admissions.list({ limit: 200 });

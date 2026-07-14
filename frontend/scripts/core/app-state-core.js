@@ -1676,6 +1676,7 @@ function renderPublicNavbar() {
         <a class="nav-link" onclick="publicNavToSection('about-section');closePublicMenu()"><i class="fas fa-info-circle"></i> About</a>
         <a class="nav-link" onclick="publicNavToSection('admission-section');closePublicMenu()"><i class="fas fa-file-alt"></i> Admissions</a>
         <a class="nav-link" onclick="publicNavToSection('gallery-section');closePublicMenu()"><i class="fas fa-image"></i> Gallery</a>
+        <a class="nav-link" onclick="publicNavToSection('events-section');closePublicMenu()"><i class="fas fa-calendar-alt"></i> Events</a>
         <a class="nav-link" onclick="publicNavToSection('news-section');closePublicMenu()"><i class="fas fa-newspaper"></i> News</a>
         <a class="nav-link" onclick="publicNavToSection('contact-section');closePublicMenu()"><i class="fas fa-phone"></i> Contact</a>
       </div>
@@ -2011,7 +2012,8 @@ function mini_cal() {
       ${Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
     const cellDate = new Date(year, month, d);
     const isToday = cellDate.toDateString() === today.toDateString();
-    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    const eventList = typeof getEventsData === 'function' ? getEventsData() : (window.eventsData || []);
+    const hasEvent = eventList.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
     const cls = isToday ? 'cal-today' : hasEvent ? 'cal-event' : '';
     return `<div class="cal-day ${cls}">${d}</div>`;
   }).join('')}
@@ -2055,7 +2057,8 @@ function updateMiniCal() {
   grid += Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
     const cellDate = new Date(year, month, d);
     const isToday = cellDate.toDateString() === today.toDateString();
-    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    const eventList = typeof getEventsData === 'function' ? getEventsData() : (window.eventsData || []);
+    const hasEvent = eventList.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
     const cls = isToday ? 'cal-today' : hasEvent ? 'cal-event' : '';
     return `<div class="cal-day ${cls}">${d}</div>`;
   }).join('');

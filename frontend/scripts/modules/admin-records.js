@@ -3884,11 +3884,13 @@ const gradesData = [];
 const assignmentsData = [];
 const feesData = [];
 const paymentsData = [];
+const eventsData = [];
 window.examsData = examsData;
 window.gradesData = gradesData;
 window.assignmentsData = assignmentsData;
 window.feesData = feesData;
 window.paymentsData = paymentsData;
+window.eventsData = eventsData;
 window.reportsAnalyticsData = null;
 window.financeReportData = null;
 

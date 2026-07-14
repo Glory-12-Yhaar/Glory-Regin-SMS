@@ -433,11 +433,16 @@ function studentDash() {
         <div style="font-size:11px;color:var(--blue-main);font-weight:700;min-width:42px">${t}</div>
         <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} Â· ${tc}</div></div>
       </div>`).join('');
-  const noticeRows = [['<i class="fas fa-file-alt"></i>', 'Exam Schedule Released', 'Check portal for timetable'], ['<i class="fas fa-running"></i>', 'Sports Day - Mar 24', 'All students attend'], ['<i class="fas fa-book"></i>', 'Library Closure', 'March 20 only']].map(([i, t, d]) => `
+  const studentEvents = (typeof getUpcomingEvents === 'function' ? getUpcomingEvents('Students') : []).slice(0, 3);
+  const noticeRows = studentEvents.length ? studentEvents.map(ev => {
+    const parts = typeof formatEventDateParts === 'function' ? formatEventDateParts(ev.date) : { long: ev.date };
+    const time = typeof formatEventTime === 'function' ? formatEventTime(ev) : (ev.time || 'Time not set');
+    return `
       <div class="notice-item" style="padding:10px 0">
-        <div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px">${i}</div>
-        <div class="notice-content"><h4>${t}</h4><p>${d}</p></div>
-      </div>`).join('');
+        <div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px"><i class="fas fa-calendar-alt"></i></div>
+        <div class="notice-content"><h4>${escapeHtml(ev.title)}</h4><p>${escapeHtml(parts.long || ev.date)} Â· ${escapeHtml(time)}</p></div>
+      </div>`;
+  }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No upcoming student events.</div>';
 
   return hdr('Student Dashboard', 'Welcome, ' + studentName + ' Â· ' + studentClass + ' Â· ID No: ' + studentId + ' Â· ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/student/index.html', {
@@ -608,14 +613,19 @@ function parentDash() {
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GHâ‚µ ${Number(s.feeAmount||0).toLocaleString()}</div>
         <button class="btn btn-info btn-xs" style="margin-top:8px" onclick="viewPaymentHistory('${s.studentId}')"><i class="fas fa-history"></i> Payment History</button>
       </div>`).join('');
-  const eventRows = [['Mar 20', 'PTA Meeting', '3:00 PM School Hall'], ['Mar 24', 'Sports Day', 'All day event'], ['Apr 01', 'Term Exams Begin', '8:00 AM daily']].map(([d, e, t]) => `
+  const parentEvents = (typeof getUpcomingEvents === 'function' ? getUpcomingEvents('Parents') : []).slice(0, 3);
+  const eventRows = parentEvents.length ? parentEvents.map(ev => {
+    const parts = typeof formatEventDateParts === 'function' ? formatEventDateParts(ev.date) : { month: '', day: '', long: ev.date };
+    const time = typeof formatEventTime === 'function' ? formatEventTime(ev) : (ev.time || 'Time not set');
+    return `
       <div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
         <div style="min-width:46px;height:46px;background:var(--blue-xpale);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-          <span style="font-size:9px;color:var(--blue-main);font-weight:700">${d.split(' ')[0]}</span>
-          <span style="font-size:18px;font-weight:800;color:var(--blue-dark)">${d.split(' ')[1]}</span>
+          <span style="font-size:9px;color:var(--blue-main);font-weight:700">${escapeHtml(parts.month)}</span>
+          <span style="font-size:18px;font-weight:800;color:var(--blue-dark)">${escapeHtml(parts.day)}</span>
         </div>
-        <div><div style="font-size:12.5px;font-weight:600">${e}</div><div style="font-size:11px;color:var(--gray-400)">${t}</div></div>
-      </div>`).join('');
+        <div><div style="font-size:12.5px;font-weight:600">${escapeHtml(ev.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(time)} Â· ${escapeHtml(ev.audience || 'All')}</div></div>
+      </div>`;
+  }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:16px">No upcoming school events.</div>';
 
   return hdr('Parent Dashboard', 'Welcome, ' + (parentUser?.name || 'Parent') + ' Â· Parent of ' + students.length + ' student' + (students.length === 1 ? '' : 's') + ' Â· ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/parent/index.html', {
@@ -692,12 +702,13 @@ function alumniDash() {
   const currentAlumni = getCurrentAlumniProfile();
   const donations = getAlumniDonations();
   const registrations = getAlumniEventRegistrations();
+  const alumniEvents = getAlumniEvents();
   const totalDonated = donations.filter(d=>d.status==='Completed').reduce((sum,d)=>sum + (d.amount||0), 0);
   const recentDonations = donations.slice(-3).reverse();
   
   const statsCards = [
     statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Network growing', 'up', 'si-blue'),
-    statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Upcoming Events', 'This quarter', 'neu', 'si-gold'),
+    statCard('<i class="fas fa-calendar-alt"></i>', String(alumniEvents.length), 'Upcoming Events', 'From calendar', 'neu', 'si-gold'),
     statCard('<i class="fas fa-briefcase"></i>', '28', 'Job Listings', 'Posted by alumni', 'up', 'si-green'),
     statCard('<i class="fas fa-hand-holding-heart"></i>', 'GHâ‚µ' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
   ].join('');
@@ -724,7 +735,7 @@ function alumniDash() {
         </div>
         <button class="btn btn-success btn-xs" style="margin-top:8px" onclick="makeDonation('${c.id}')"><i class="fas fa-heart"></i> Donate</button>
       </div>`).join('');
-  const eventRows = getAlumniEvents().slice(0,2).map(e => `
+  const eventRows = alumniEvents.slice(0,2).map(e => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(e.title)}</div>
@@ -736,7 +747,7 @@ function alumniDash() {
             ${registrations.find(r=>r.eventId===e.id) ? 'Registered' : 'Register'}
           </button>
         </div>
-      </div>`).join('');
+      </div>`).join('') || '<div style="text-align:center;color:var(--gray-400);padding:16px">No upcoming alumni events.</div>';
   const donorRows = recentDonations.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:20px"><i class="fas fa-heart-broken" style="font-size:24px;margin-bottom:8px;display:block"></i> No donations yet</div>' : recentDonations.map(d => `
       <div style="display:flex;gap:12px;align-items:center;padding:10px;border-bottom:1px solid var(--gray-100)">
         <div class="av av-sm av-gold">${(d.name||' ')[0]}</div>

@@ -311,11 +311,16 @@ CREATE TABLE IF NOT EXISTS `events` (
   `event_date` DATE NOT NULL,
   `event_time` TIME,
   `all_day` TINYINT(1) DEFAULT 0,
+  `location` VARCHAR(255) DEFAULT NULL,
   `audience` VARCHAR(100) DEFAULT 'All',
   `description` TEXT,
+  `status` ENUM('Published','Draft','Cancelled') NOT NULL DEFAULT 'Published',
   `created_by` INT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_events_date` (`event_date`),
+  INDEX `idx_events_status_date` (`status`, `event_date`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────

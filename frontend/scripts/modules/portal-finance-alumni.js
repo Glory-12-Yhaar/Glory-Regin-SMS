@@ -850,11 +850,17 @@ function getAlumniCampaigns(){
 }
 
 function getAlumniEvents(){
-  return [
-    {id:'E001', title:'Class of 2015 10-Year Reunion', location:'Main Campus Hall', date:'Oct 15, 2026', time:'2:00 PM', description:'Celebrate a decade since graduation'},
-    {id:'E002', title:'Annual Sports Homecoming', location:'School Sports Field', date:'Nov 12, 2026', time:'9:00 AM', description:'Alumni vs Current Students'},
-    {id:'E003', title:'Mentorship Workshop', location:'Admin Building', date:'Apr 5, 2026', time:'10:00 AM', description:'Learn mentoring best practices'}
-  ];
+  return getUpcomingEvents('Alumni').map(ev => {
+    const parts = formatEventDateParts(ev.date);
+    return {
+      id: ev.id,
+      title: ev.title,
+      location: ev.location || ev.audience || 'School Campus',
+      date: parts.long || ev.date,
+      time: formatEventTime(ev),
+      description: ev.description || ''
+    };
+  });
 }
 
 function getAlumniDonations(){
@@ -1655,23 +1661,47 @@ function exportFeeStructure() {
 }
 
 // EVENTS & CALENDAR DATA
-const EVENTS_DATA = [
-  { id: 1, title: '<i class="fas fa-running"></i> Sports Day', date: '2026-03-24', time: '08:00', allDay: true, audience: 'All Students & Staff', description: 'Full-day sports competition. Students must wear house colors. Attendance compulsory. Parents welcome.' },
-  { id: 2, title: '<i class="fas fa-users"></i> PTA Meeting', date: '2026-03-20', time: '15:00', allDay: false, audience: 'Parents & Teachers', description: 'End-of-term PTA meeting in the school hall. All parents are strongly encouraged to attend.' },
-  { id: 3, title: '<i class="fas fa-file-alt"></i> Term 1 Exams Begin', date: '2026-04-01', time: '07:30', allDay: false, audience: 'Basic 4â€“6, JHS 1â€“3', description: 'Final examinations for Term 1. Detailed timetable available on the portal.' },
-  { id: 4, title: '<i class="fas fa-graduation-cap"></i> Prize Giving Ceremony', date: '2026-04-15', time: '10:00', allDay: false, audience: 'All', description: 'Annual prize-giving and graduation ceremony. Smart attire required for all.' },
-  { id: 5, title: '<img src="assets/images/Logo.png" alt="Logo" style="width:16px;height:16px;object-fit:contain"> Open Day', date: '2026-04-20', time: '09:00', allDay: false, audience: 'Prospective Parents', description: 'School open day for prospective students and parents. Tours from 9AM.' },
-  { id: 6, title: '<i class="fas fa-glass-cheers"></i> Class of 2015 10-Year Reunion', date: '2026-10-15', time: '18:00', allDay: false, audience: 'Alumni', description: 'Join us for a wonderful evening reconnecting with the Class of 2015. Dinner and drinks will be served. Please register in advance.' },
-  { id: 7, title: '<i class="fas fa-hand-holding-heart"></i> Alumni Fundraising Gala', date: '2026-11-20', time: '19:00', allDay: false, audience: 'Alumni & Parents', description: 'Annual fundraising gala to support the new Science Block project. Live auction and performances.' }
-];
+const EVENTS_DATA = window.eventsData || [];
+
+function getEventsData() {
+  return Array.isArray(window.eventsData) ? window.eventsData : EVENTS_DATA;
+}
+
+function getUpcomingEvents(audience = '', options = {}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const scope = String(audience || '').toLowerCase();
+  return getEventsData()
+    .filter(ev => ev.date >= today)
+    .filter(ev => options.includeUnpublished || (ev.status || 'Published') === 'Published')
+    .filter(ev => {
+      const target = String(ev.audience || 'All').toLowerCase();
+      return !scope || target === 'all' || target.includes(scope) || scope.includes(target);
+    })
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.time || '').localeCompare(String(b.time || '')));
+}
+
+function formatEventDateParts(dateValue) {
+  const date = new Date(dateValue + 'T00:00:00');
+  if (Number.isNaN(date.getTime())) return { month: '--', day: '--', long: '' };
+  return {
+    month: date.toLocaleDateString('en-US', { month: 'short' }),
+    day: date.toLocaleDateString('en-US', { day: '2-digit' }),
+    long: date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  };
+}
+
+function formatEventTime(ev) {
+  if (ev.allDay || ev.all_day) return 'All Day';
+  if (!ev.time) return 'Time not set';
+  return new Date(`${ev.date}T${ev.time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
 
 // EVENTS MODULE
 function eventsModule() {
   const isTeacherOrAdmin = ['Teacher', 'Admin'].includes(currentRole);
   const addEventBtn = isTeacherOrAdmin ? `<button class="btn btn-primary btn-sm" onclick="openAddEventForm()">+ Add Event</button>` : '';
 
-  // Sort events by date
-  const sortedEvents = [...EVENTS_DATA].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const sortedEvents = getUpcomingEvents('', { includeUnpublished: isTeacherOrAdmin });
 
   let html = hdr('Events & Calendar', 'School events, holidays and important dates', 'Events & Calendar') + `
   <div class="card">
@@ -1682,19 +1712,23 @@ function eventsModule() {
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:12px" id="upcoming-events">`;
 
+  if (!sortedEvents.length) {
+    html += '<div style="text-align:center;color:var(--gray-400);padding:24px">No upcoming events found.</div>';
+  }
+
   sortedEvents.forEach(event => {
-    const eventDate = new Date(event.date);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const timeStr = event.allDay ? 'All Day' : new Date(`${event.date}T${event.time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const formattedDate = formatEventDateParts(event.date).long || event.date;
+    const timeStr = formatEventTime(event);
 
     html += `
       <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:rgba(26,86,219,0.03)" onclick="viewEvent(${event.id})">
         <div style="display:flex;justify-content:space-between;align-items:start">
           <div>
-            <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:600">${event.title}</h3>
+            <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:600">${escapeHtml(event.title)}</h3>
             <p style="margin:0 0 6px 0;font-size:14px;color:var(--gray-600)"><strong>${timeStr}</strong></p>
-            <p style="margin:0 0 8px 0;font-size:13px;color:var(--gray-600)"><i class="fas fa-map-pin"></i> ${formattedDate} Â· ${event.audience}</p>
-            <p style="margin:0;font-size:13px;color:var(--gray-700)">${event.description}</p>
+            <p style="margin:0 0 8px 0;font-size:13px;color:var(--gray-600)"><i class="fas fa-map-pin"></i> ${escapeHtml(formattedDate)} Â· ${escapeHtml(event.location || event.audience || 'School Campus')}</p>
+            ${isTeacherOrAdmin ? `<p style="margin:0 0 8px 0;font-size:12px;color:var(--gray-500)">Audience: ${escapeHtml(event.audience || 'All')} Â· Status: ${escapeHtml(event.status || 'Published')}</p>` : ''}
+            <p style="margin:0;font-size:13px;color:var(--gray-700)">${escapeHtml(event.description || '')}</p>
           </div>
           ${isTeacherOrAdmin ? `<div style="display:flex;gap:4px;min-width:fit-content">
             <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();editEvent(${event.id})">Edit</button>
@@ -1723,7 +1757,7 @@ function eventsModule() {
   return html;
 }
 
-function renderCalendar(year = 2026, month = 2) { // month is 0-indexed, so 2 = March
+function renderCalendar(year = new Date().getFullYear(), month = new Date().getMonth()) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -1747,7 +1781,7 @@ function renderCalendar(year = 2026, month = 2) { // month is 0-indexed, so 2 = 
   const today = new Date();
   for (let day = 1; day <= daysInMonth; day++) {
     const cellDate = new Date(year, month, day);
-    const hasEvent = EVENTS_DATA.some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    const hasEvent = getEventsData().some(e => e.date === `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
     const isToday = cellDate.toDateString() === today.toDateString();
 
     let cellStyle = 'padding:8px;border-radius:8px;text-align:center;cursor:pointer;border:1px solid transparent;font-weight:500;';
@@ -1760,7 +1794,7 @@ function renderCalendar(year = 2026, month = 2) { // month is 0-indexed, so 2 = 
   document.getElementById('calendar-grid').innerHTML = grid;
 }
 
-let currentCalendarYear = 2026, currentCalendarMonth = 2; // Start at March 2026
+let currentCalendarYear = new Date().getFullYear(), currentCalendarMonth = new Date().getMonth();
 
 function nextMonth() {
   currentCalendarMonth++;
@@ -1813,6 +1847,17 @@ function openAddEventForm() {
           <label>Audience</label>
           <input type="text" id="event-audience" placeholder="e.g., All Students & Staff" required>
         </div>
+
+        <div class="f-row">
+          <div class="f-field">
+            <label>Location</label>
+            <input type="text" id="event-location" placeholder="e.g., School Hall">
+          </div>
+          <div class="f-field">
+            <label>Status</label>
+            <select id="event-status"><option>Published</option><option>Draft</option><option>Cancelled</option></select>
+          </div>
+        </div>
         
         <div class="f-field" style="margin-bottom:12px">
           <label>Description</label>
@@ -1830,7 +1875,7 @@ function openAddEventForm() {
   openModal(formHTML);
 }
 
-function addNewEvent(event) {
+async function addNewEvent(event) {
   event.preventDefault();
 
   const title = document.getElementById('event-title').value;
@@ -1838,65 +1883,79 @@ function addNewEvent(event) {
   const time = document.getElementById('event-time').value;
   const allDay = document.getElementById('event-allday').checked;
   const audience = document.getElementById('event-audience').value;
+  const location = document.getElementById('event-location').value;
+  const status = document.getElementById('event-status').value;
   const description = document.getElementById('event-description').value;
 
-  if (!title || !date || !time || !audience || !description) {
+  if (!title || !date || (!allDay && !time) || !audience || !description) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all fields', 'error');
     return;
   }
 
-  const newId = Math.max(...EVENTS_DATA.map(e => e.id), 0) + 1;
-
-  EVENTS_DATA.push({
-    id: newId,
+  const payload = {
     title,
-    date,
-    time,
-    allDay,
+    event_date: date,
+    event_time: allDay ? null : time,
+    all_day: allDay ? 1 : 0,
+    location,
     audience,
-    description
-  });
+    description,
+    status
+  };
 
-  closeModal();
-  showToast(`<i class="fas fa-check-circle"></i> Event "${title}" created successfully!`, 'success');
-
-  setTimeout(() => {
+  try {
+    const res = await API.events.create(payload);
+    if (!res || !res.success) throw new Error(res?.message || 'Failed to create event');
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    closeModal();
+    showToast(`<i class="fas fa-check-circle"></i> Event "${escapeHtml(title)}" created successfully!`, 'success');
     renderMain();
     renderCalendar(currentCalendarYear, currentCalendarMonth);
-  }, 1500);
+  } catch (err) {
+    showToast(`<i class="fas fa-times-circle"></i> ${escapeHtml(err.message || 'Failed to create event')}`, 'error');
+  }
 }
 
 function viewEvent(eventId) {
-  const event = EVENTS_DATA.find(e => e.id === eventId);
+  const event = getEventsData().find(e => Number(e.id) === Number(eventId));
   if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
 
-  const eventDate = new Date(event.date);
-  const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const timeStr = event.allDay ? 'All Day' : new Date(`${event.date}T${event.time}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const formattedDate = formatEventDateParts(event.date).long || event.date;
+  const timeStr = formatEventTime(event);
 
   const detailHTML = `
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
-        <h2 style="margin:0">${event.title}</h2>
+        <h2 style="margin:0">${escapeHtml(event.title)}</h2>
       </div>
       
       <div style="padding:20px">
         <div style="margin-bottom:16px">
           <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Date & Time</h4>
-          <p style="margin:0;font-size:15px">${formattedDate} Â· ${timeStr}</p>
+          <p style="margin:0;font-size:15px">${escapeHtml(formattedDate)} Â· ${escapeHtml(timeStr)}</p>
         </div>
         
         <div style="margin-bottom:16px">
           <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Audience</h4>
-          <p style="margin:0;font-size:15px">${event.audience}</p>
+          <p style="margin:0;font-size:15px">${escapeHtml(event.audience || 'All')}</p>
         </div>
+
+        <div style="margin-bottom:16px">
+          <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Location</h4>
+          <p style="margin:0;font-size:15px">${escapeHtml(event.location || 'School Campus')}</p>
+        </div>
+
+        ${['Teacher', 'Admin'].includes(currentRole) ? `<div style="margin-bottom:16px">
+          <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Status</h4>
+          <p style="margin:0;font-size:15px">${escapeHtml(event.status || 'Published')}</p>
+        </div>` : ''}
         
         <div style="margin-bottom:16px">
           <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Description</h4>
-          <p style="margin:0;font-size:14px;line-height:1.6">${event.description}</p>
+          <p style="margin:0;font-size:14px;line-height:1.6">${escapeHtml(event.description || '')}</p>
         </div>
         
         <div style="display:flex;gap:8px;margin-top:24px;justify-content:flex-end">
@@ -1914,7 +1973,7 @@ function viewEvent(eventId) {
 }
 
 function editEvent(eventId) {
-  const event = EVENTS_DATA.find(e => e.id === eventId);
+  const event = getEventsData().find(e => Number(e.id) === Number(eventId));
   if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
@@ -1924,13 +1983,13 @@ function editEvent(eventId) {
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
         <h2 style="margin:0">Edit Event</h2>
-        <p style="margin:8px 0 0 0;font-size:13px;opacity:0.9">${event.title}</p>
+        <p style="margin:8px 0 0 0;font-size:13px;opacity:0.9">${escapeHtml(event.title)}</p>
       </div>
       
       <form onsubmit="saveEditEvent(event, ${eventId})" style="padding:20px">
         <div class="f-field" style="margin-bottom:12px">
           <label>Event Title</label>
-          <input type="text" id="edit-event-title" value="${event.title}" required>
+          <input type="text" id="edit-event-title" value="${escapeAttr(event.title)}" required>
         </div>
         
         <div class="f-row">
@@ -1940,7 +1999,7 @@ function editEvent(eventId) {
           </div>
           <div class="f-field">
             <label>Time</label>
-            <input type="time" id="edit-event-time" value="${event.time}" required>
+            <input type="time" id="edit-event-time" value="${escapeAttr(event.time || '')}">
           </div>
           <div class="f-field">
             <label>All Day Event</label>
@@ -1950,12 +2009,25 @@ function editEvent(eventId) {
         
         <div class="f-field" style="margin-bottom:12px">
           <label>Audience</label>
-          <input type="text" id="edit-event-audience" value="${event.audience}" required>
+          <input type="text" id="edit-event-audience" value="${escapeAttr(event.audience || 'All')}" required>
+        </div>
+
+        <div class="f-row">
+          <div class="f-field">
+            <label>Location</label>
+            <input type="text" id="edit-event-location" value="${escapeAttr(event.location || '')}">
+          </div>
+          <div class="f-field">
+            <label>Status</label>
+            <select id="edit-event-status">
+              ${['Published', 'Draft', 'Cancelled'].map(status => `<option ${status === (event.status || 'Published') ? 'selected' : ''}>${status}</option>`).join('')}
+            </select>
+          </div>
         </div>
         
         <div class="f-field" style="margin-bottom:12px">
           <label>Description</label>
-          <textarea id="edit-event-description" rows="4" required>${event.description}</textarea>
+          <textarea id="edit-event-description" rows="4" required>${escapeHtml(event.description || '')}</textarea>
         </div>
         
         <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
@@ -1969,49 +2041,61 @@ function editEvent(eventId) {
   openModal(formHTML);
 }
 
-function saveEditEvent(eventElement, eventId) {
+async function saveEditEvent(eventElement, eventId) {
   if (eventElement && eventElement.preventDefault) {
     eventElement.preventDefault();
   }
 
-  const event = EVENTS_DATA.find(e => e.id === eventId);
+  const event = getEventsData().find(e => Number(e.id) === Number(eventId));
   if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
 
-  event.title = document.getElementById('edit-event-title').value;
-  event.date = document.getElementById('edit-event-date').value;
-  event.time = document.getElementById('edit-event-time').value;
-  event.allDay = document.getElementById('edit-event-allday').checked;
-  event.audience = document.getElementById('edit-event-audience').value;
-  event.description = document.getElementById('edit-event-description').value;
+  const allDay = document.getElementById('edit-event-allday').checked;
+  const payload = {
+    title: document.getElementById('edit-event-title').value,
+    event_date: document.getElementById('edit-event-date').value,
+    event_time: allDay ? null : document.getElementById('edit-event-time').value,
+    all_day: allDay ? 1 : 0,
+    location: document.getElementById('edit-event-location').value,
+    audience: document.getElementById('edit-event-audience').value,
+    description: document.getElementById('edit-event-description').value,
+    status: document.getElementById('edit-event-status').value
+  };
 
-  closeModal();
-  showToast('<i class="fas fa-check-circle"></i> Event updated successfully!', 'success');
-
-  setTimeout(() => {
+  try {
+    const res = await API.events.update(eventId, payload);
+    if (!res || !res.success) throw new Error(res?.message || 'Failed to update event');
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    closeModal();
+    showToast('<i class="fas fa-check-circle"></i> Event updated successfully!', 'success');
     renderMain();
     renderCalendar(currentCalendarYear, currentCalendarMonth);
-  }, 1500);
+  } catch (err) {
+    showToast(`<i class="fas fa-times-circle"></i> ${escapeHtml(err.message || 'Failed to update event')}`, 'error');
+  }
 }
 
-function deleteEvent(eventId) {
-  const event = EVENTS_DATA.find(e => e.id === eventId);
+async function deleteEvent(eventId) {
+  const event = getEventsData().find(e => Number(e.id) === Number(eventId));
   if (!event) {
     showToast('<i class="fas fa-times-circle"></i> Event not found', 'error');
     return;
   }
 
   if (confirm(`Are you sure you want to delete "${event.title}"? This action cannot be undone.`)) {
-    EVENTS_DATA.splice(EVENTS_DATA.indexOf(event), 1);
-    closeModal();
-    showToast('<i class="fas fa-check-circle"></i> Event deleted successfully!', 'success');
-
-    setTimeout(() => {
+    try {
+      const res = await API.events.delete(eventId);
+      if (!res || !res.success) throw new Error(res?.message || 'Failed to delete event');
+      if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+      closeModal();
+      showToast('<i class="fas fa-check-circle"></i> Event deleted successfully!', 'success');
       renderMain();
       renderCalendar(currentCalendarYear, currentCalendarMonth);
-    }, 1500);
+    } catch (err) {
+      showToast(`<i class="fas fa-times-circle"></i> ${escapeHtml(err.message || 'Failed to delete event')}`, 'error');
+    }
   }
 }
 
