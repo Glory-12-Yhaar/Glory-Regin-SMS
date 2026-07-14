@@ -49,6 +49,13 @@ if ($method === 'POST') {
         if (empty($body[$f])) jsonResponse(['success' => false, 'message' => "Field '$f' required"], 422);
     }
 
+    $studentId = (int)$body['student_id'];
+    $studentCheck = $db->prepare("SELECT COUNT(*) FROM students WHERE id = ?");
+    $studentCheck->execute([$studentId]);
+    if ((int)$studentCheck->fetchColumn() === 0) {
+        jsonResponse(['success' => false, 'message' => 'Selected student does not exist'], 422);
+    }
+
     // UPSERT: update if exists for same student+subject+term+year
     $year = $body['academic_year'] ?? '2024/2025';
     $stmt = $db->prepare(
@@ -59,10 +66,10 @@ if ($method === 'POST') {
            exam_score  = VALUES(exam_score)"
     );
     $stmt->execute([
-        (int)$body['student_id'],
+        $studentId,
         htmlspecialchars(trim($body['subject']), ENT_QUOTES),
-        (float)($body['class_score'] ?? 0),
-        (float)($body['exam_score']  ?? 0),
+        min(50, max(0, (float)($body['class_score'] ?? 0))),
+        min(50, max(0, (float)($body['exam_score']  ?? 0))),
         $body['term'],
         $year
     ]);

@@ -256,6 +256,26 @@ CREATE TABLE assignments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
+CREATE TABLE exams (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  subject VARCHAR(150) NOT NULL,
+  class_id INT NOT NULL,
+  exam_date DATE NOT NULL,
+  duration_minutes INT NOT NULL DEFAULT 120,
+  venue VARCHAR(120) DEFAULT NULL,
+  invigilator_id INT DEFAULT NULL,
+  term VARCHAR(50) NOT NULL DEFAULT '1st Term',
+  academic_year VARCHAR(20) NOT NULL DEFAULT '2024/2025',
+  status ENUM('Scheduled','Completed','Cancelled') NOT NULL DEFAULT 'Scheduled',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_exams_class FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+  CONSTRAINT fk_exams_invigilator FOREIGN KEY (invigilator_id) REFERENCES staff(id) ON DELETE SET NULL,
+  INDEX idx_exams_class_date (class_id, exam_date),
+  INDEX idx_exams_term_year (term, academic_year)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL,
+        <<<'SQL'
 CREATE TABLE assignment_submissions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   assignment_id INT NOT NULL,
@@ -635,6 +655,15 @@ SQL,
     ]);
     ok('Seeded scores.');
 
+    insertRows($pdo, "INSERT INTO exams (subject,class_id,exam_date,duration_minutes,venue,invigilator_id,term,academic_year,status) VALUES (?,?,?,?,?,?,?,?,?)", [
+        ['Mathematics',11,'2025-04-01',120,'Hall A',1,'1st Term','2024/2025','Scheduled'],
+        ['English',11,'2025-04-02',120,'Hall A',2,'1st Term','2024/2025','Scheduled'],
+        ['Science',11,'2025-04-03',90,'Hall A',5,'1st Term','2024/2025','Scheduled'],
+        ['Mathematics',10,'2025-04-01',120,'Classroom',1,'1st Term','2024/2025','Scheduled'],
+        ['Science',9,'2025-04-03',90,'Classroom',5,'1st Term','2024/2025','Scheduled'],
+    ]);
+    ok('Seeded exams.');
+
     insertRows($pdo, "INSERT INTO fees (student_id,term,academic_year,amount_due,amount_paid,receipt_no,payment_date,status) VALUES (?,?,?,?,?,?,?,?)", [
         [1,'1st Term','2024/2025',2500,2500,'RCP-0038','2025-01-10','Paid'],
         [2,'1st Term','2024/2025',2500,2500,'RCP-0039','2025-01-09','Paid'],
@@ -742,7 +771,7 @@ SQL,
 
     $tables = [
         'users','staff','classes','subjects','students','parents','parent_student','teachers',
-        'student_scores','assignments','assignment_submissions','fees','fee_structure','payments',
+        'student_scores','exams','assignments','assignment_submissions','fees','fee_structure','payments',
         'expenses','salary','attendance','timetable','events','notices','messages','contact_messages',
         'alumni','settings','admissions','hero_slides','news_articles','yearbooks'
     ];

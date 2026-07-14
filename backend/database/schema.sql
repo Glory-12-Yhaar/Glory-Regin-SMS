@@ -189,6 +189,25 @@ CREATE TABLE IF NOT EXISTS `assignments` (
   FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS `exams` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `subject` VARCHAR(150) NOT NULL,
+  `class_id` INT NOT NULL,
+  `exam_date` DATE NOT NULL,
+  `duration_minutes` INT NOT NULL DEFAULT 120,
+  `venue` VARCHAR(120) DEFAULT NULL,
+  `invigilator_id` INT DEFAULT NULL,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
+  `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
+  `status` ENUM('Scheduled','Completed','Cancelled') NOT NULL DEFAULT 'Scheduled',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`invigilator_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL,
+  INDEX `idx_exams_class_date` (`class_id`, `exam_date`),
+  INDEX `idx_exams_term_year` (`term`, `academic_year`)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS `assignment_submissions` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `assignment_id` INT NOT NULL,

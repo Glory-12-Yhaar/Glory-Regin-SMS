@@ -154,6 +154,18 @@ const API = {
     dashboard: () => apiRequest('/reports/dashboard.php'),
     analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
 
+    exams: {
+        list:   (params = {}) => apiRequest('/exams/index.php?' + new URLSearchParams(params)),
+        create: (data)        => apiRequest('/exams/index.php', 'POST', data),
+        update: (id, data)    => apiRequest('/exams/index.php?id=' + id, 'PUT', data),
+        delete: (id)          => apiRequest('/exams/index.php?id=' + id, 'DELETE'),
+    },
+
+    grades: {
+        list: (params = {}) => apiRequest('/grades/index.php?' + new URLSearchParams(params)),
+        save: (data)       => apiRequest('/grades/index.php', 'POST', data),
+    },
+
     // ── Parents ──────────────────────────────────────────────
     parents: {
         list:        (params = {}) => apiRequest('/parents/index.php?' + new URLSearchParams(params)),
@@ -357,6 +369,13 @@ function getAdmissionDbId(admId) {
 async function syncAllDataFromBackend() {
     console.log("Syncing all data with MySQL backend...");
 
+    try {
+        const res = await API.dashboard();
+        if (res && res.success && res.data) {
+            window.dashboardReportData = res.data;
+        }
+    } catch (e) { console.error("Error syncing dashboard reports:", e); }
+
     // 1. Classes
     try {
         const res = await API.classes.list();
@@ -531,7 +550,54 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing timetables:", e); }
 
-    // 9. Yearbook
+    // 9. Exams, grades, and reports
+    try {
+        const res = await API.exams.list();
+        if (res && res.success && res.data && Array.isArray(window.examsData)) {
+            examsData.splice(0, examsData.length, ...res.data.map(e => ({
+                id: parseInt(e.id, 10),
+                subject: e.subject || '',
+                class_id: e.class_id ? parseInt(e.class_id, 10) : null,
+                className: e.class_name || '',
+                date: e.exam_date || '',
+                duration: parseInt(e.duration_minutes || 0, 10),
+                venue: e.venue || '',
+                invigilator_id: e.invigilator_id ? parseInt(e.invigilator_id, 10) : null,
+                invigilator: e.invigilator_name || '',
+                term: e.term || '',
+                academic_year: e.academic_year || '',
+                status: e.status || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing exams:", e); }
+
+    try {
+        const res = await API.grades.list();
+        if (res && res.success && res.data && Array.isArray(window.gradesData)) {
+            gradesData.splice(0, gradesData.length, ...res.data.map(g => ({
+                id: parseInt(g.id, 10),
+                student_id: parseInt(g.student_id, 10),
+                studentCode: g.student_code || '',
+                studentName: g.student_name || '',
+                className: g.class_name || '',
+                subject: g.subject || '',
+                classScore: parseFloat(g.class_score || 0),
+                examScore: parseFloat(g.exam_score || 0),
+                totalScore: parseFloat(g.total_score || 0),
+                term: g.term || '',
+                academic_year: g.academic_year || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing grades:", e); }
+
+    try {
+        const res = await API.analytics();
+        if (res && res.success && res.data) {
+            window.reportsAnalyticsData = res.data;
+        }
+    } catch (e) { console.error("Error syncing report analytics:", e); }
+
+    // 10. Yearbook
     try {
         const res = await API.yearbook.list();
         if (res && res.success && res.data) {
@@ -577,7 +643,7 @@ window.applyApiClientOverrides = function() {
     }
 };
 
-// No-op local saving functions to prevent overwriting server state with stale local mock data
+// Server-backed pages save through API overrides only.
 saveStudentRecords = () => {};
 saveTeacherRecords = () => {};
 saveParentRecords = () => {};

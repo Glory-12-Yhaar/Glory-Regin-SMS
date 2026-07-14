@@ -260,10 +260,18 @@ function printEnrollmentAttendanceReport() {
   setTimeout(() => { printWindow.print(); }, 250);
 }
 
+function getMonthlyEnrollmentAttendanceData() {
+  const dashboard = window.dashboardReportData || {};
+  const monthly = Array.isArray(dashboard.monthly_enrollment_attendance) ? dashboard.monthly_enrollment_attendance : [];
+  const months = monthly.map(m => m.month);
+  const enrollmentData = monthly.map(m => parseInt(m.enrollment || 0, 10));
+  const attendanceData = monthly.map(m => parseFloat(m.attendance || 0));
+  const classRows = Array.isArray(dashboard.students_per_class) ? dashboard.students_per_class : [];
+  return { months, enrollmentData, attendanceData, classRows, totalStudents: dashboard.total_students || 0, avgAttendance: dashboard.avg_attendance || 0 };
+}
+
 function exportEnrollmentAttendanceToExcel() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
-  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+  const { months, enrollmentData, attendanceData, classRows } = getMonthlyEnrollmentAttendanceData();
 
   let csv = 'Monthly Enrollment & Attendance Report\n';
   csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
@@ -275,19 +283,15 @@ function exportEnrollmentAttendanceToExcel() {
   }
 
   csv += '\n\nClass-wise Summary\n';
-  csv += 'Class,Peak Enrollment,Average Attendance\n';
-  csv += 'Form 1,35,92%\n';
-  csv += 'Form 2,47,97%\n';
-  csv += 'Form 3,20,98%\n';
+  csv += 'Class,Current Enrollment\n';
+  classRows.forEach(row => { csv += row.class_name + ',' + row.student_count + '\n'; });
 
   csv += '\n\nKey Metrics\n';
   csv += 'Metric,Value\n';
-  csv += 'Total Enrollment Growth,42 to 102 (+142.9%)\n';
-  csv += 'Attendance Improvement,88% to 96% (+9.1%)\n';
-  csv += 'Monthly Average Enrollment,67.3 students\n';
-  csv += 'Monthly Average Attendance,92.5%\n';
-  csv += 'Highest Enrollment Month,December (102 students)\n';
-  csv += 'Peak Attendance Month,October & November (97-98%)\n';
+  const avgEnrollment = enrollmentData.length ? Math.round((enrollmentData.reduce((a, b) => a + b, 0) / enrollmentData.length) * 10) / 10 : 0;
+  const avgAttendance = attendanceData.length ? Math.round((attendanceData.reduce((a, b) => a + b, 0) / attendanceData.length) * 10) / 10 : 0;
+  csv += 'Monthly Average Enrollment,' + avgEnrollment + ' students\n';
+  csv += 'Monthly Average Attendance,' + avgAttendance + '%\n';
 
   const element = document.createElement('a');
   element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
@@ -300,9 +304,7 @@ function exportEnrollmentAttendanceToExcel() {
 }
 
 function downloadEnrollmentAttendancePDF() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
-  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
+  const { months, enrollmentData, attendanceData, classRows, totalStudents, avgAttendance } = getMonthlyEnrollmentAttendanceData();
 
   let html = '<html><head><meta charset="UTF-8"><style>';
   html += 'body{font-family:Arial,sans-serif;margin:20px;color:#333}';
@@ -317,10 +319,9 @@ function downloadEnrollmentAttendancePDF() {
   html += '<p style="color:#666;font-size:12px">Generated on ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</p>';
 
   html += '<h2>Summary Metrics</h2>';
-  html += '<div class="stat"><div class="stat-val">102</div><div class="stat-lbl">Current Enrollment</div></div>';
-  html += '<div class="stat"><div class="stat-val">96%</div><div class="stat-lbl">Avg Attendance</div></div>';
-  html += '<div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Active Classes</div></div>';
-  html += '<div class="stat"><div class="stat-val">842</div><div class="stat-lbl">Total Students</div></div>';
+  html += '<div class="stat"><div class="stat-val">' + totalStudents + '</div><div class="stat-lbl">Current Enrollment</div></div>';
+  html += '<div class="stat"><div class="stat-val">' + avgAttendance + '%</div><div class="stat-lbl">Avg Attendance</div></div>';
+  html += '<div class="stat"><div class="stat-val">' + classRows.length + '</div><div class="stat-lbl">Active Classes</div></div>';
 
   html += '<h2>Monthly Breakdown</h2>';
   html += '<table><tr><th>Month</th><th>Enrollment</th><th>Attendance %</th><th>Performance</th></tr>';
@@ -332,19 +333,15 @@ function downloadEnrollmentAttendancePDF() {
 
   html += '<div class="page-break"></div>';
   html += '<h2>Class-wise Analysis</h2>';
-  html += '<table><tr><th>Class</th><th>Peak Enrollment</th><th>Average Attendance</th></tr>';
-  html += '<tr><td>Form 1</td><td>35 students</td><td>92%</td></tr>';
-  html += '<tr><td>Form 2</td><td>47 students</td><td>97%</td></tr>';
-  html += '<tr><td>Form 3</td><td>20 students</td><td>98%</td></tr>';
+  html += '<table><tr><th>Class</th><th>Current Enrollment</th></tr>';
+  classRows.forEach(row => { html += '<tr><td>' + row.class_name + '</td><td>' + row.student_count + ' students</td></tr>'; });
   html += '</table>';
 
   html += '<h2>Key Statistics</h2>';
   html += '<table>';
   html += '<tr><th>Metric</th><th>Value</th></tr>';
-  html += '<tr><td>Enrollment Growth (Jan-Dec)</td><td>42 to 102 (+142.9%)</td></tr>';
-  html += '<tr><td>Attendance Improvement</td><td>88% to 96% (+9.1%)</td></tr>';
-  html += '<tr><td>Monthly Average Enrollment</td><td>67.3 students</td></tr>';
-  html += '<tr><td>Monthly Average Attendance</td><td>92.5%</td></tr>';
+  html += '<tr><td>Monthly Average Enrollment</td><td>' + (enrollmentData.length ? Math.round((enrollmentData.reduce((a, b) => a + b, 0) / enrollmentData.length) * 10) / 10 : 0) + ' students</td></tr>';
+  html += '<tr><td>Monthly Average Attendance</td><td>' + (attendanceData.length ? Math.round((attendanceData.reduce((a, b) => a + b, 0) / attendanceData.length) * 10) / 10 : 0) + '%</td></tr>';
   html += '</table>';
 
   html += '</body></html>';
@@ -363,34 +360,33 @@ function downloadEnrollmentAttendancePDF() {
 // MONTHLY ENROLLMENT & ATTENDANCE REPORT
 // -----------------------------------
 function showMonthlyEnrollmentAttendanceReport() {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const enrollmentData = [42, 48, 45, 52, 58, 62, 68, 75, 82, 88, 94, 102];
-  const attendanceData = [88, 89, 87, 90, 92, 93, 94, 96, 95, 97, 98, 96];
-  const classData = {
-    'Basic 1-3': { enr: [12, 14, 13, 16, 18, 20, 22, 25, 28, 30, 32, 35], att: [85, 86, 84, 87, 89, 90, 91, 93, 92, 94, 95, 93] },
-    'Basic 4-6': { enr: [18, 20, 19, 22, 25, 28, 30, 33, 36, 40, 43, 47], att: [88, 89, 87, 91, 93, 94, 95, 97, 96, 98, 99, 97] },
-    'JHS 1-3': { enr: [12, 14, 13, 14, 15, 14, 16, 17, 18, 18, 19, 20], att: [92, 93, 91, 92, 93, 94, 95, 96, 95, 97, 98, 98] }
-  };
+  const { months, enrollmentData, attendanceData, classRows, totalStudents, avgAttendance } = getMonthlyEnrollmentAttendanceData();
+  const avgEnrollment = enrollmentData.length ? Math.round((enrollmentData.reduce((a, b) => a + b, 0) / enrollmentData.length) * 10) / 10 : 0;
+  const monthlyAvgAttendance = attendanceData.length ? Math.round((attendanceData.reduce((a, b) => a + b, 0) / attendanceData.length) * 10) / 10 : 0;
+  const peakEnrollment = enrollmentData.length ? Math.max(...enrollmentData) : 0;
+  const peakEnrollmentMonth = peakEnrollment ? months[enrollmentData.indexOf(peakEnrollment)] : '';
+  const peakAttendance = attendanceData.length ? Math.max(...attendanceData) : 0;
+  const peakAttendanceMonth = peakAttendance ? months[attendanceData.indexOf(peakAttendance)] : '';
 
   let html = hdr('<i class="fas fa-chart-bar"></i> Monthly Enrollment & Attendance Report', 'Comprehensive analysis of student enrollment and attendance trends', 'Report') + `
   <div class="stats-row">
     <div class="stat-card si-blue">
-      <div class="stat-val">102</div>
+      <div class="stat-val">${totalStudents}</div>
       <div class="stat-lbl">Current Enrollment</div>
       <div class="stat-sub">+8 this month</div>
     </div>
     <div class="stat-card si-green">
-      <div class="stat-val">96%</div>
+      <div class="stat-val">${avgAttendance}%</div>
       <div class="stat-lbl">Avg Attendance</div>
       <div class="stat-sub">+2% improvement</div>
     </div>
     <div class="stat-card si-gold">
-      <div class="stat-val">3</div>
+      <div class="stat-val">${classRows.length}</div>
       <div class="stat-lbl">Active Classes</div>
       <div class="stat-sub">Basic & JHS</div>
     </div>
     <div class="stat-card si-purple">
-      <div class="stat-val">842</div>
+      <div class="stat-val">${totalStudents}</div>
       <div class="stat-lbl">Total Students</div>
       <div class="stat-sub">All enrolled</div>
     </div>
@@ -425,20 +421,15 @@ function showMonthlyEnrollmentAttendanceReport() {
   <div class="card mb20">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Class-wise Enrollment & Attendance Breakdown</span></div>
     <div class="g3">
-      ${Object.entries(classData).map(([cls, data]) => `
+      ${classRows.map(row => `
       <div style="padding:12px;border:1px solid var(--gray-200);border-radius:8px">
-        <div style="font-weight:700;color:var(--blue-main);margin-bottom:10px">${cls}</div>
+        <div style="font-weight:700;color:var(--blue-main);margin-bottom:10px">${escapeHtml(row.class_name)}</div>
         <div style="margin-bottom:12px">
-          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Enrollment: ${data.enr[11]} students (+${data.enr[11] - data.enr[10]} this month)</div>
-          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${(data.enr[11] / 35) * 100}%"></div></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Attendance: ${data.att[11]}%</div>
-          <div class="prog-bar"><div class="prog-fill pf-green" style="width:${data.att[11]}%"></div></div>
+          <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px">Enrollment: ${row.student_count} students</div>
+          <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${totalStudents ? (row.student_count / totalStudents) * 100 : 0}%"></div></div>
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-100);font-size:10px;color:var(--gray-500)">
-          <div>Peak: ${Math.max(...data.enr)} students</div>
-          <div>Avg Att: ${Math.round(data.att.reduce((a, b) => a + b, 0) / data.att.length)}%</div>
+          <div>Database class total</div>
         </div>
       </div>`).join('')}
     </div>
@@ -449,12 +440,12 @@ function showMonthlyEnrollmentAttendanceReport() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Key Metrics</span></div>
       <div style="padding:12px 0">
         ${[
-      ['Enrollment Growth', 'Jan-Dec', '42 to 102 students', '+142.9%', 'success'],
-      ['Attendance Improvement', 'Jan-Dec', '88% to 96%', '+9.1%', 'success'],
-      ['Monthly Avg Enrollment', '2024/2025', '67.3 students', 'Stable', 'info'],
-      ['Monthly Avg Attendance', '2024/2025', '92.5%', 'Excellent', 'success'],
-      ['Highest Enrollment Month', 'December', '102 students', 'Peak term', 'gold'],
-      ['Highest Attendance Month', 'October/Nov', '97-98%', 'Peak performance', 'success']
+      ['Current Enrollment', 'Database', totalStudents + ' students', 'Live', 'info'],
+      ['Current Avg Attendance', 'Database', avgAttendance + '%', 'Live', 'success'],
+      ['Monthly Avg Enrollment', 'Database', avgEnrollment + ' students', 'Calculated', 'info'],
+      ['Monthly Avg Attendance', 'Database', monthlyAvgAttendance + '%', 'Calculated', 'success'],
+      ['Highest Enrollment Month', peakEnrollmentMonth || 'N/A', peakEnrollment + ' students', 'Peak', 'gold'],
+      ['Highest Attendance Month', peakAttendanceMonth || 'N/A', peakAttendance + '%', 'Peak', 'success']
     ].map(([label, period, value, change, color]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
           <div>
@@ -477,23 +468,23 @@ function showMonthlyEnrollmentAttendanceReport() {
           <table class="tbl" style="font-size:11px">
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Q1 (Jan-Mar)</td>
-              <td style="text-align:right;font-weight:600">135 students</td>
-              <td style="text-align:right;color:var(--gray-500)">44.4%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(0, 3).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q1</td>
             </tr>
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Q2 (Apr-Jun)</td>
-              <td style="text-align:right;font-weight:600">172 students</td>
-              <td style="text-align:right;color:var(--gray-500)">56.6%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(3, 6).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q2</td>
             </tr>
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Q3 (Jul-Sep)</td>
-              <td style="text-align:right;font-weight:600">225 students</td>
-              <td style="text-align:right;color:var(--gray-500)">74.0%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(6, 9).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q3</td>
             </tr>
             <tr>
               <td style="padding:6px 0">Q4 (Oct-Dec)</td>
-              <td style="text-align:right;font-weight:600">274 students</td>
-              <td style="text-align:right;color:var(--gray-500)">90.1%</td>
+              <td style="text-align:right;font-weight:600">${enrollmentData.slice(9, 12).reduce((a, b) => a + b, 0)} students</td>
+              <td style="text-align:right;color:var(--gray-500)">Q4</td>
             </tr>
           </table>
         </div>
@@ -502,15 +493,15 @@ function showMonthlyEnrollmentAttendanceReport() {
           <table class="tbl" style="font-size:11px">
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Excellent (=95%)</td>
-              <td style="text-align:right;font-weight:600">7 months</td>
+              <td style="text-align:right;font-weight:600">${attendanceData.filter(v => v >= 95).length} months</td>
             </tr>
             <tr style="border-bottom:1px solid var(--gray-100)">
               <td style="padding:6px 0">Very Good (90-94%)</td>
-              <td style="text-align:right;font-weight:600">4 months</td>
+              <td style="text-align:right;font-weight:600">${attendanceData.filter(v => v >= 90 && v < 95).length} months</td>
             </tr>
             <tr>
               <td style="padding:6px 0">Good (85-89%)</td>
-              <td style="text-align:right;font-weight:600">1 month</td>
+              <td style="text-align:right;font-weight:600">${attendanceData.filter(v => v < 90).length} months</td>
             </tr>
           </table>
         </div>
@@ -533,7 +524,7 @@ function showMonthlyEnrollmentAttendanceReport() {
       </thead>
       <tbody>
         ${enrollmentData.map((enr, i) => {
-      const prevEnr = i > 0 ? enrollmentData[i - 1] : 42;
+      const prevEnr = i > 0 ? enrollmentData[i - 1] : enr;
       const change = enr - prevEnr;
       const att = attendanceData[i];
       const trend = change > 0 ? '<i class="fas fa-chart-line"></i>' : change < 0 ? '<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>' : '<i class="fas fa-arrow-right"></i>';
@@ -3395,20 +3386,223 @@ function attendanceModule() {
 }
 
 // EXAMS MODULE
+function formatShortDate(dateString) {
+  if (!dateString) return '';
+  const d = new Date(dateString + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return dateString;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function formatDuration(minutes) {
+  const mins = parseInt(minutes || 0, 10);
+  if (!mins) return '';
+  if (mins % 60 === 0) return (mins / 60) + ' hrs';
+  return Math.floor(mins / 60) + ' hr ' + (mins % 60) + ' mins';
+}
+
+function gradeFromAverage(avg) {
+  if (avg >= 90) return 'A';
+  if (avg >= 80) return 'B';
+  if (avg >= 70) return 'C';
+  if (avg >= 60) return 'D';
+  return 'E';
+}
+
+function buildReportRowsFromGrades() {
+  const grouped = new Map();
+  gradesData.forEach(g => {
+    const key = g.studentCode || String(g.student_id);
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        studentCode: key,
+        studentName: g.studentName,
+        className: g.className,
+        total: 0,
+        count: 0
+      });
+    }
+    const row = grouped.get(key);
+    row.total += g.totalScore;
+    row.count += 1;
+  });
+  const rows = Array.from(grouped.values()).map(row => ({
+    ...row,
+    total: Math.round(row.total),
+    average: row.count ? Math.round((row.total / row.count) * 10) / 10 : 0
+  }));
+  rows.sort((a, b) => b.average - a.average);
+  rows.forEach((row, i) => {
+    row.grade = gradeFromAverage(row.average);
+    row.position = String(i + 1);
+  });
+  return rows;
+}
+
+function calculatePassRate(rows) {
+  if (!rows.length) return 0;
+  return Math.round((rows.filter(r => r.average >= 50).length / rows.length) * 100);
+}
+
+function calculateBelowAverageRate(rows) {
+  if (!rows.length) return 0;
+  return Math.round((rows.filter(r => r.average < 50).length / rows.length) * 100);
+}
+
+function buildPerformanceInsights(analytics, rows) {
+  const subjectEntries = Object.entries(analytics.subjectPerformance || {});
+  const best = subjectEntries
+    .map(([name, data]) => ({ name, avg: data.totalStudents ? Math.round((data.totalScore / data.totalStudents) * 10) / 10 : 0 }))
+    .sort((a, b) => b.avg - a.avg)[0];
+  const atRisk = Array.isArray(analytics.studentAtRisk) ? analytics.studentAtRisk.length : rows.filter(r => r.average < 50).length;
+  const items = [];
+  if (best) items.push(`<li><i class="fas fa-check-circle"></i> Strongest subject: ${escapeHtml(best.name)} at ${best.avg}% average</li>`);
+  items.push(`<li><i class="fas fa-chart-line"></i> Overall average performance is ${escapeHtml(String(analytics.avgPerformance || 0))}%</li>`);
+  items.push(`<li><i class="fas fa-exclamation-triangle"></i> ${atRisk} student${atRisk === 1 ? '' : 's'} require academic support</li>`);
+  return items.join('');
+}
+
+async function openScheduleExamForm(examId = null) {
+  if (currentRole !== 'Admin') return showToast('Only administrators can schedule exams', 'error');
+  const exam = examId ? examsData.find(e => e.id === examId) : null;
+  const form = `
+  <div style="background:white;border-radius:8px;padding:20px;max-width:560px">
+    <h3 style="margin:0 0 20px;color:var(--blue-dark)">${exam ? 'Edit Exam' : 'Schedule Exam'}</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Subject</label><input id="exam-subject" value="${escapeAttr(exam?.subject || '')}"></div>
+      <div class="form-field"><label>Class</label><select id="exam-class">${classesData.map(c => `<option value="${c.id}" ${c.id === exam?.class_id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input id="exam-date" type="date" value="${escapeAttr(exam?.date || '')}"></div>
+      <div class="form-field"><label>Duration (minutes)</label><input id="exam-duration" type="number" min="1" value="${escapeAttr(String(exam?.duration || 120))}"></div>
+      <div class="form-field"><label>Venue</label><input id="exam-venue" value="${escapeAttr(exam?.venue || '')}"></div>
+      <div class="form-field"><label>Invigilator</label><select id="exam-invigilator"><option value="">-- Select Staff --</option>${teachersData.map(t => `<option value="${t.id}" ${t.id === exam?.invigilator_id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Term</label><input id="exam-term" value="${escapeAttr(exam?.term || '1st Term')}"></div>
+      <div class="form-field"><label>Academic Year</label><input id="exam-year" value="${escapeAttr(exam?.academic_year || '2024/2025')}"></div>
+      <div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveExamSchedule(${examId || 'null'})">${exam ? 'Save Changes' : 'Schedule Exam'}</button>
+      </div>
+    </div>
+  </div>`;
+  openModal(form);
+}
+
+async function saveExamSchedule(examId = null) {
+  const payload = {
+    subject: document.getElementById('exam-subject')?.value.trim(),
+    class_id: parseInt(document.getElementById('exam-class')?.value || 0, 10),
+    exam_date: document.getElementById('exam-date')?.value,
+    duration_minutes: parseInt(document.getElementById('exam-duration')?.value || 120, 10),
+    venue: document.getElementById('exam-venue')?.value.trim(),
+    invigilator_id: document.getElementById('exam-invigilator')?.value || null,
+    term: document.getElementById('exam-term')?.value.trim(),
+    academic_year: document.getElementById('exam-year')?.value.trim()
+  };
+  if (!payload.subject || !payload.class_id || !payload.exam_date) return showToast('Subject, class, and date are required', 'error');
+  const res = examId ? await API.exams.update(examId, payload) : await API.exams.create(payload);
+  if (res && res.success) {
+    closeModal();
+    await syncAllDataFromBackend();
+    renderMain();
+    showToast(examId ? 'Exam updated successfully' : 'Exam scheduled successfully', 'success');
+  } else {
+    showToast(res?.message || 'Failed to save exam', 'error');
+  }
+}
+
+async function deleteExam(examId) {
+  if (currentRole !== 'Admin') return showToast('Only administrators can delete exams', 'error');
+  if (!confirm('Delete this exam schedule?')) return;
+  const res = await API.exams.delete(examId);
+  if (res && res.success) {
+    await syncAllDataFromBackend();
+    renderMain();
+    showToast('Exam deleted', 'success');
+  } else {
+    showToast(res?.message || 'Failed to delete exam', 'error');
+  }
+}
+
+function switchExamTab(index) {
+  document.querySelectorAll('.exam-tab-content').forEach((tab, i) => {
+    tab.style.display = i === index ? 'block' : 'none';
+  });
+  document.querySelectorAll('.mod-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === index);
+  });
+}
+
+function filterExamTable() {
+  const query = (document.getElementById('exam-search')?.value || '').toLowerCase();
+  document.querySelectorAll('#exam-table-body .exam-row').forEach(row => {
+    const subject = row.getAttribute('data-subject') || '';
+    const className = row.getAttribute('data-class') || '';
+    row.style.display = !query || subject.includes(query) || className.includes(query) ? '' : 'none';
+  });
+}
+
+function onStudentSelected() {
+  const code = document.getElementById('report-student-selector')?.value;
+  const preview = document.getElementById('selected-report-preview');
+  if (!preview) return;
+  if (!code) {
+    preview.innerHTML = '<i class="fas fa-thumbtack"></i> Select a student above to view their report data.';
+    return;
+  }
+  const rows = buildReportRowsFromGrades();
+  const row = rows.find(r => r.studentCode === code);
+  if (!row) {
+    preview.innerHTML = 'No report data available for the selected student.';
+    return;
+  }
+  preview.innerHTML = `<strong>${escapeHtml(row.studentName)}</strong> · ${escapeHtml(row.className)} · Average: <strong>${row.average}%</strong> · Grade: <strong>${row.grade}</strong>`;
+}
+
+function filterReportCards() {
+  const search = (document.getElementById('report-student-search')?.value || '').toLowerCase();
+  const classFilter = document.getElementById('report-class-filter')?.value || '';
+  document.querySelectorAll('#report-cards-body .report-row').forEach(row => {
+    const student = row.getAttribute('data-student') || '';
+    const className = row.getAttribute('data-class') || '';
+    row.style.display = (!search || student.includes(search)) && (!classFilter || className === classFilter) ? '' : 'none';
+  });
+}
+
+function viewReportCard(studentCode) {
+  const rows = buildReportRowsFromGrades();
+  const row = rows.find(r => r.studentCode === studentCode);
+  if (!row) return showToast('Report data not found', 'error');
+  const scores = gradesData.filter(g => g.studentCode === studentCode);
+  const html = `
+  <div style="background:white;border-radius:8px;padding:20px;max-width:720px">
+    <h3 style="margin:0 0 8px;color:var(--blue-dark)">${escapeHtml(row.studentName)}</h3>
+    <div style="font-size:12px;color:var(--gray-500);margin-bottom:16px">${escapeHtml(row.className)} · Average ${row.average}% · Grade ${row.grade}</div>
+    <table class="tbl">
+      <thead><tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Term</th></tr></thead>
+      <tbody>${scores.map(s => `<tr><td>${escapeHtml(s.subject)}</td><td>${s.classScore}</td><td>${s.examScore}</td><td>${s.totalScore}</td><td>${escapeHtml(s.term)} ${escapeHtml(s.academic_year)}</td></tr>`).join('')}</tbody>
+    </table>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+  </div>`;
+  openModal(html, true);
+}
+
+function updateAnalysis() {
+  const subject = document.getElementById('analysis-subject')?.value || 'All Subjects';
+  const className = document.getElementById('analysis-class')?.value || '';
+  const filtered = gradesData.filter(g => (subject === 'All Subjects' || g.subject === subject) && (!className || g.className === className));
+  if (!filtered.length) return showToast('No analysis data for the selected filters', 'info');
+  const avg = Math.round((filtered.reduce((sum, g) => sum + g.totalScore, 0) / filtered.length) * 10) / 10;
+  showToast('Filtered average: ' + avg + '% from ' + filtered.length + ' score records', 'info');
+}
+
 function examsModule() {
   const isAdmin = currentRole === 'Admin';
   const isTeacher = currentRole === 'Teacher';
   const isStudent = currentRole === 'Student';
   const readableClasses = isTeacher ? getAssignedClassNamesForTeacher() : isStudent ? [getCurrentStudentRecord().student_class] : classesData.map(c => c.name);
-  const allExamRows = classesData.flatMap(c => (SUBJECTS_BY_CLASS[c.name] || c.subjects || ['Mathematics', 'English']).slice(0, 3).map((subject, i) => [
-    subject,
-    c.name,
-    ['Apr 1', 'Apr 2', 'Apr 3'][i] || 'Apr 4',
-    i === 2 ? '1.5 hrs' : '2 hrs',
-    c.level === 'JHS' ? 'Hall A' : 'Classroom',
-    c.teacher
-  ]));
-  const examRows = allExamRows.filter(([_, className]) => !isTeacher && !isStudent || readableClasses.includes(className));
+  const examRows = examsData.filter(e => (!isTeacher && !isStudent) || readableClasses.includes(e.className));
+  const reportRows = buildReportRowsFromGrades();
+  const analytics = window.reportsAnalyticsData || {};
+  const subjectOptions = Object.keys(analytics.subjectPerformance || {});
+  const classOptions = classesData.map(c => c.name);
 
   if (isTeacher) {
     return hdr('Exam Schedule', 'View exam schedule information for your permitted classes', 'Exams') + `
@@ -3420,14 +3614,14 @@ function examsModule() {
       <table class="tbl">
         <thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th></tr></thead>
         <tbody id="exam-table-body">
-          ${examRows.length ? examRows.map(([s, c, d, du, v, inv]) => `
-          <tr class="exam-row" data-subject="${s.toLowerCase()}" data-class="${c.toLowerCase()}">
-            <td style="font-weight:600">${escapeHtml(s)}</td>
-            <td>${escapeHtml(c)}</td>
-            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(d)}</td>
-            <td>${escapeHtml(du)}</td>
-            <td>${escapeHtml(v)}</td>
-            <td style="font-size:11px">${escapeHtml(inv)}</td>
+          ${examRows.length ? examRows.map(e => `
+          <tr class="exam-row" data-subject="${escapeAttr((e.subject || '').toLowerCase())}" data-class="${escapeAttr((e.className || '').toLowerCase())}">
+            <td style="font-weight:600">${escapeHtml(e.subject)}</td>
+            <td>${escapeHtml(e.className)}</td>
+            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(formatShortDate(e.date))}</td>
+            <td>${escapeHtml(formatDuration(e.duration))}</td>
+            <td>${escapeHtml(e.venue)}</td>
+            <td style="font-size:11px">${escapeHtml(e.invigilator)}</td>
           </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">No exams scheduled for your assigned classes.</td></tr>'}
         </tbody>
       </table>
@@ -3452,16 +3646,16 @@ function examsModule() {
       <table class="tbl">
         <thead><tr><th>Subject</th><th>Class</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th><th>Actions</th></tr></thead>
         <tbody id="exam-table-body">
-          ${examRows.map(([s, c, d, du, v, inv]) => `
-          <tr class="exam-row" data-subject="${s.toLowerCase()}" data-class="${c.toLowerCase()}">
-            <td style="font-weight:600">${s}</td>
-            <td>${c}</td>
-            <td style="color:var(--blue-main);font-weight:600">${d}</td>
-            <td>${du}</td>
-            <td>${v}</td>
-            <td style="font-size:11px">${inv}</td>
-            <td style="font-size:11px">${isAdmin ? `<button class="btn btn-sm" style="padding:4px 8px;background:var(--info);color:white;border:none;border-radius:4px;cursor:pointer" onclick="editExam('${s}','${c}')">Edit</button> <button class="btn btn-sm" style="padding:4px 8px;background:var(--danger);color:white;border:none;border-radius:4px;cursor:pointer" onclick="deleteExam('${s}')">Delete</button>` : '<span class="badge b-info">Read Only</span>'}</td>
-          </tr>`).join('')}
+          ${examRows.length ? examRows.map(e => `
+          <tr class="exam-row" data-subject="${escapeAttr((e.subject || '').toLowerCase())}" data-class="${escapeAttr((e.className || '').toLowerCase())}">
+            <td style="font-weight:600">${escapeHtml(e.subject)}</td>
+            <td>${escapeHtml(e.className)}</td>
+            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(formatShortDate(e.date))}</td>
+            <td>${escapeHtml(formatDuration(e.duration))}</td>
+            <td>${escapeHtml(e.venue)}</td>
+            <td style="font-size:11px">${escapeHtml(e.invigilator)}</td>
+            <td style="font-size:11px">${isAdmin ? `<button class="btn btn-sm" style="padding:4px 8px;background:var(--info);color:white;border:none;border-radius:4px;cursor:pointer" onclick="openScheduleExamForm(${e.id})">Edit</button> <button class="btn btn-sm" style="padding:4px 8px;background:var(--danger);color:white;border:none;border-radius:4px;cursor:pointer" onclick="deleteExam(${e.id})">Delete</button>` : '<span class="badge b-info">Read Only</span>'}</td>
+          </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">No exams scheduled.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -3478,14 +3672,7 @@ function examsModule() {
           <label style="display:block;margin-bottom:8px;font-weight:600;font-size:13px">Select Student</label>
           <select id="report-student-selector" onchange="onStudentSelected()" style="width:100%;padding:10px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;cursor:pointer">
             <option value="">-- Choose a student --</option>
-            <option value="Ama Serwaa">Ama Serwaa (JHS 1)</option>
-            <option value="Kwame Asante">Kwame Asante (Basic 6)</option>
-            <option value="Abena Mensah">Abena Mensah (Basic 6)</option>
-            <option value="Kofi Boateng">Kofi Boateng (Basic 6)</option>
-            <option value="Akosua Darko">Akosua Darko (JHS 1)</option>
-            <option value="Yaw Mensah">Yaw Mensah (Basic 5)</option>
-            <option value="Adwoa Frimpong">Adwoa Frimpong (Basic 5)</option>
-            <option value="Kweku Ofori">Kweku Ofori (JHS 2)</option>
+            ${reportRows.map(r => `<option value="${escapeAttr(r.studentCode)}">${escapeHtml(r.studentName)} (${escapeHtml(r.className)})</option>`).join('')}
           </select>
         </div>
         <div>
@@ -3515,7 +3702,7 @@ function examsModule() {
       <table class="tbl">
         <thead><tr><th style="width:25%">Student Name</th><th style="width:15%">Class</th><th style="width:15%">Total Marks</th><th style="width:15%">Average</th><th style="width:12%">Grade</th><th style="width:12%">Position</th><th style="width:15%">Action</th></tr></thead>
         <tbody id="report-cards-body">
-          ${[['Ama Serwaa', 'JHS 1', '590', '84%', 'B', '8th'], ['Kwame Asante', 'Basic 6', '455', '76%', 'C', '8th'], ['Abena Mensah', 'Basic 6', '546', '91%', 'A', '2nd'], ['Kofi Boateng', 'Basic 6', '384', '64%', 'C', '18th'], ['Akosua Darko', 'JHS 1', '570', '95%', 'A', '1st'], ['Yaw Mensah', 'Basic 5', '492', '82%', 'B', '5th'], ['Adwoa Frimpong', 'Basic 5', '522', '87%', 'A', '3rd'], ['Kweku Ofori', 'JHS 2', '378', '63%', 'C', '22nd']].map(([name, cls, total, avg, grade, pos]) => '<tr class="report-row" data-student="' + name.toLowerCase() + '" data-class="' + cls + '"><td style="font-weight:600">' + name + '</td><td>' + cls + '</td><td style="color:var(--blue-main);font-weight:600">' + total + '</td><td>' + avg + '</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : grade === 'C' ? 'var(--warning)' : 'var(--danger)') + '">' + grade + '</span></td><td>' + pos + '</td><td><button class="btn btn-sm" style="padding:4px 8px;background:var(--blue-main);color:white;border:none;border-radius:4px;cursor:pointer" onclick="viewReportCard(\'' + name + '\')"><i class="fas fa-file"></i> View Report</button></td></tr>').join('')}
+          ${reportRows.length ? reportRows.map(r => '<tr class="report-row" data-student="' + escapeAttr(r.studentName.toLowerCase()) + '" data-class="' + escapeAttr(r.className) + '"><td style="font-weight:600">' + escapeHtml(r.studentName) + '</td><td>' + escapeHtml(r.className) + '</td><td style="color:var(--blue-main);font-weight:600">' + r.total + '</td><td>' + r.average + '%</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (r.grade === 'A' ? 'var(--success)' : r.grade === 'B' ? 'var(--info)' : r.grade === 'C' ? 'var(--warning)' : 'var(--danger)') + '">' + r.grade + '</span></td><td>' + r.position + '</td><td><button class="btn btn-sm" style="padding:4px 8px;background:var(--blue-main);color:white;border:none;border-radius:4px;cursor:pointer" onclick="viewReportCard(\'' + escapeAttr(r.studentCode) + '\')"><i class="fas fa-file"></i> View Report</button></td></tr>').join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">No report data available.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -3528,42 +3715,39 @@ function examsModule() {
         <span class="card-title"><i class="fas fa-chart-bar"></i> Results Analysis & Statistics</span>
         <div style="display:flex;gap:8px">
           <select id="analysis-subject" style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;cursor:pointer" onchange="updateAnalysis()">
-            <option>All Subjects</option><option>Mathematics</option><option>English Language</option><option>Integrated Science</option><option>ICT & Computing</option><option>Social Studies</option>
+            <option>All Subjects</option>${subjectOptions.map(s => `<option>${escapeHtml(s)}</option>`).join('')}
           </select>
           <select id="analysis-class" style="padding:8px 12px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;cursor:pointer" onchange="updateAnalysis()">
-            <option value="">All Classes</option><option>Creche</option><option>Nursery</option><option>KG 1</option><option>KG 2</option><option>Basic 1</option><option>Basic 2</option><option>Basic 3</option><option>Basic 4</option><option>Basic 5</option><option>Basic 6</option><option>JHS 1</option><option>JHS 2</option><option>JHS 3</option>
+            <option value="">All Classes</option>${classOptions.map(c => `<option>${escapeHtml(c)}</option>`).join('')}
           </select>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px">
         <div style="padding:15px;background:var(--blue-xpale);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--blue-dark)">92.5%</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--blue-dark)">${escapeHtml(String(analytics.avgPerformance || 0))}%</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">Class Average</div>
         </div>
         <div style="padding:15px;background:var(--success-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--success)">78%</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--success)">${escapeHtml(String(calculatePassRate(reportRows)))}%</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">Pass Rate</div>
         </div>
         <div style="padding:15px;background:var(--warning-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--warning)">45</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--warning)">${reportRows.filter(r => r.grade === 'A').length}</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">A Grade Count</div>
         </div>
         <div style="padding:15px;background:var(--info-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--info)">62</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--info)">${reportRows.filter(r => r.grade === 'B').length}</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">B Grade Count</div>
         </div>
         <div style="padding:15px;background:var(--danger-light);border-radius:8px;text-align:center">
-          <div style="font-size:24px;font-weight:bold;color:var(--danger)">22%</div>
+          <div style="font-size:24px;font-weight:bold;color:var(--danger)">${escapeHtml(String(calculateBelowAverageRate(reportRows)))}%</div>
           <div style="font-size:11px;color:var(--gray-600);margin-top:5px">Below Average</div>
         </div>
       </div>
       <div style="padding:15px;background:var(--gray-50);border-radius:8px;border-left:4px solid var(--blue-main)">
         <div style="font-weight:600;color:var(--blue-dark);margin-bottom:10px"><i class="fas fa-chart-line"></i> Performance Insight</div>
         <ul style="margin:0;padding:0;list-style:none;font-size:12px;color:var(--gray-600);line-height:1.8">
-          <li><i class="fas fa-check-circle"></i> Strong performance in Mathematics with 94% average</li>
-          <li><i class="fas fa-check-circle"></i> English Language shows consistent improvement</li>
-          <li><i class="fas fa-exclamation-triangle"></i> 15 students require remedial support in Science</li>
-          <li><i class="fas fa-lightbulb"></i> Recommend extra tuition for bottom 20% in ICT</li>
+          ${buildPerformanceInsights(analytics, reportRows)}
         </ul>
       </div>
     </div>
@@ -3573,10 +3757,15 @@ function examsModule() {
 
 // GRADES ENTRY MODULE
 function gradesModule() {
-  const classOptions = (currentRole === 'Teacher' ? getAssignedClassNamesForTeacher() : classesData.map(c => c.name))
-    .map(c => `<option>${escapeHtml(c)}</option>`).join('');
+  const classNames = currentRole === 'Teacher' ? getAssignedClassNamesForTeacher() : classesData.map(c => c.name);
+  const selectedClass = window.selectedGradesClass || classNames[0] || '';
+  const selectedSubject = window.selectedGradesSubject || (getVisibleSubjectsForRole(subjectsData)[0]?.name || subjectsData[0]?.name || '');
+  const selectedTerm = window.selectedGradesTerm || '1st Term';
+  const selectedYear = window.selectedGradesYear || '2024/2025';
+  const classOptions = classNames.map(c => `<option ${c === selectedClass ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
   const subjectOptions = (currentRole === 'Teacher' ? getVisibleSubjectsForRole(subjectsData) : subjectsData)
-    .map(s => `<option>${escapeHtml(s.name)}</option>`).join('');
+    .map(s => `<option ${s.name === selectedSubject ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+  const students = enrolledStudents.filter(s => !selectedClass || s.student_class === selectedClass);
 
   return hdr('Enter Student Grades', currentRole === 'Teacher' ? 'Record scores for your assigned classes only' : 'Record class and exam scores for all students', 'Grade Entry') + `
   <div class="card mb20">
@@ -3584,31 +3773,25 @@ function gradesModule() {
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px">
       <div class="f-field">
         <label>Class</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+        <select id="grade-class" onchange="window.selectedGradesClass=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
           ${classOptions}
         </select>
       </div>
       <div class="f-field">
         <label>Subject</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+        <select id="grade-subject" onchange="window.selectedGradesSubject=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
           ${subjectOptions}
         </select>
       </div>
       <div class="f-field">
         <label>Term</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
-          <option>1st Term 2024/2025</option>
-          <option>2nd Term 2024/2025</option>
-          <option>3rd Term 2024/2025</option>
+        <select id="grade-term" onchange="window.selectedGradesTerm=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+          ${['1st Term','2nd Term','3rd Term'].map(t => `<option ${t === selectedTerm ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
       </div>
       <div class="f-field">
-        <label>Type</label>
-        <select style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
-          <option>Class Score</option>
-          <option>Exam Score</option>
-          <option>Both</option>
-        </select>
+        <label>Academic Year</label>
+        <input id="grade-year" value="${escapeAttr(selectedYear)}" onchange="window.selectedGradesYear=this.value;renderMain()" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
       </div>
     </div>
   </div>
@@ -3627,16 +3810,51 @@ function gradesModule() {
         </tr>
       </thead>
       <tbody>
-        ${[['1', 'Ama Serwaa', '45', '43', '88', 'A', 'Complete'], ['2', 'Kwame Asante', '38', '34', '72', 'B', 'Complete'], ['3', 'Abena Mensah', '48', '43', '91', 'A', 'Complete'], ['4', 'Kofi Boateng', '32', '32', '64', 'C', 'Pending'], ['5', 'Akosua Darko', '48', '47', '95', 'A', 'Complete'], ['6', 'Yaw Mensah', '42', '40', '82', 'B', 'Complete'], ['7', 'Adwoa Frimpong', '45', '42', '87', 'A', 'Complete'], ['8', 'Kweku Ofori', '35', '28', '63', 'C', 'Pending']].map(([idx, name, cls, exam, total, grade, status]) => '<tr><td style="text-align:center;color:var(--gray-400)">' + idx + '</td><td style="font-weight:600">' + name + '</td><td><input type="number" value="' + cls + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td><input type="number" value="' + exam + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td style="font-weight:700;color:var(--blue-dark)">' + total + '</td><td><span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : 'var(--warning)') + '">' + grade + '</span></td><td><span class="badge ' + (status === 'Complete' ? 'b-success' : 'b-warning') + '">' + status + '</span></td></tr>').join('')}
+        ${students.length ? students.map((student, i) => {
+          const existing = gradesData.find(g => g.student_id === student.id && g.subject === selectedSubject && g.term === selectedTerm && g.academic_year === selectedYear);
+          const classScore = existing ? existing.classScore : '';
+          const examScore = existing ? existing.examScore : '';
+          const total = existing ? existing.totalScore : 0;
+          const grade = existing ? gradeFromAverage(total) : '';
+          return '<tr data-student-id="' + student.id + '"><td style="text-align:center;color:var(--gray-400)">' + (i + 1) + '</td><td style="font-weight:600">' + escapeHtml(student.name) + '</td><td><input class="grade-class-score" type="number" value="' + classScore + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td><input class="grade-exam-score" type="number" value="' + examScore + '" min="0" max="50" style="width:70px;border:1.5px solid var(--gray-200);border-radius:6px;padding:6px;text-align:center;font-family:Poppins,sans-serif"></td><td style="font-weight:700;color:var(--blue-dark)">' + total + '</td><td>' + (grade ? '<span style="display:inline-block;padding:4px 10px;border-radius:4px;font-weight:700;color:white;background:' + (grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--info)' : 'var(--warning)') + '">' + grade + '</span>' : '') + '</td><td><span class="badge ' + (existing ? 'b-success' : 'b-warning') + '">' + (existing ? 'Complete' : 'Pending') + '</span></td></tr>';
+        }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">No students found for the selected class.</td></tr>'}
       </tbody>
     </table>
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn btn-primary" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Grades saved! You can now generate report cards.', 'success')" style="flex:1"><i class="fas fa-check-circle"></i> Save All Grades</button>
-      <button class="btn btn-secondary" onclick="alert('Draft saved')" style="flex:1"><i class="fas fa-clipboard-list"></i> Save as Draft</button>
+      <button class="btn btn-primary" onclick="saveGradeEntries()" style="flex:1"><i class="fas fa-check-circle"></i> Save All Grades</button>
       <button class="btn btn-secondary" onclick="navTo('reportcards')" style="flex:1"><i class="fas fa-file"></i> View Report Cards</button>
     </div>
   </div>
   `;
+}
+
+async function saveGradeEntries() {
+  if (!window.API?.grades?.save) return showToast('Backend API is unavailable. Grades were not saved.', 'error');
+  const subject = document.getElementById('grade-subject')?.value;
+  const term = document.getElementById('grade-term')?.value || '1st Term';
+  const academicYear = document.getElementById('grade-year')?.value || '2024/2025';
+  if (!subject) return showToast('Select a subject before saving grades', 'error');
+
+  const rows = Array.from(document.querySelectorAll('tr[data-student-id]'));
+  let saved = 0;
+  for (const row of rows) {
+    const studentId = parseInt(row.getAttribute('data-student-id'), 10);
+    const classScore = parseFloat(row.querySelector('.grade-class-score')?.value || 0);
+    const examScore = parseFloat(row.querySelector('.grade-exam-score')?.value || 0);
+    const res = await API.grades.save({
+      student_id: studentId,
+      subject,
+      class_score: classScore,
+      exam_score: examScore,
+      term,
+      academic_year: academicYear
+    });
+    if (res && res.success) saved += 1;
+  }
+
+  await syncAllDataFromBackend();
+  renderMain();
+  showToast(saved + ' grade record' + (saved === 1 ? '' : 's') + ' saved', 'success');
 }
 
 function viewClassTimetable(className) {
@@ -3661,6 +3879,11 @@ const admissionsData = [];
 const enrolledStudents = [];
 const teachersData = [];
 const classesData = [];
+const examsData = [];
+const gradesData = [];
+window.examsData = examsData;
+window.gradesData = gradesData;
+window.reportsAnalyticsData = null;
 
 const STUDENT_RECORDS_KEY = 'gr_student_records';
 const TEACHER_RECORDS_KEY = 'gr_teacher_records';
@@ -3770,43 +3993,4 @@ let subjectsData = [];
 // PARENTS DATA
 const parentsData = [];
 
-// Student scores data
-const studentScores = {
-  '2024-0042': {
-    name: 'Ama Serwaa',
-    class: 'JHS 1',
-    classTeacher: 'Mr. Kweku Amponsah',
-    stream: 'Mixed',
-    picture: 'A',
-    attendance: 96,
-    term: '1st',
-    year: '2024/2025',
-    scores: [
-      { subject: 'Mathematics', classScore: 45, examScore: 43, totalMarks: 100 },
-      { subject: 'English Language', classScore: 48, examScore: 44, totalMarks: 100 },
-      { subject: 'Integrated Science', classScore: 42, examScore: 43, totalMarks: 100 },
-      { subject: 'ICT & Computing', classScore: 48, examScore: 47, totalMarks: 100 },
-      { subject: 'Social Studies', classScore: 40, examScore: 38, totalMarks: 100 },
-      { subject: 'French Language', classScore: 38, examScore: 34, totalMarks: 100 },
-      { subject: 'Religious Studies', classScore: 42, examScore: 38, totalMarks: 100 }
-    ]
-  },
-  '2024-0043': {
-    name: 'Kwame Asante',
-    class: 'Basic 6',
-    classTeacher: 'Mr. Boateng Sr.',
-    stream: 'General',
-    picture: 'K',
-    attendance: 88,
-    term: '1st',
-    year: '2024/2025',
-    scores: [
-      { subject: 'Mathematics', classScore: 35, examScore: 32, totalMarks: 100 },
-      { subject: 'English Language', classScore: 42, examScore: 40, totalMarks: 100 },
-      { subject: 'History', classScore: 44, examScore: 42, totalMarks: 100 },
-      { subject: 'Geography', classScore: 40, examScore: 38, totalMarks: 100 },
-      { subject: 'ICT', classScore: 38, examScore: 36, totalMarks: 100 },
-      { subject: 'French Language', classScore: 35, examScore: 33, totalMarks: 100 }
-    ]
-  }
-};
+// Student scores are loaded from backend student_scores via gradesData.

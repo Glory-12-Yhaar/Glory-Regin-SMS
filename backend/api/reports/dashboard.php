@@ -149,6 +149,11 @@ if ($role === 'Admin') {
 }
 
 if ($role === 'Student') {
+    $termStmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'current_term' LIMIT 1");
+    $term     = $termStmt->fetchColumn() ?: '1st Term';
+    $yearStmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'academic_year' LIMIT 1");
+    $year     = $yearStmt->fetchColumn() ?: '2024/2025';
+
     // Get student record linked to this user
     $stStmt = $db->prepare("SELECT s.id, s.name, s.student_code, s.attendance, c.name AS class_name FROM students s LEFT JOIN classes c ON c.id = s.class_id WHERE s.user_id = ? LIMIT 1");
     $stStmt->execute([$user['id']]);
@@ -156,12 +161,12 @@ if ($role === 'Student') {
     if ($student) {
         $data['student'] = $student;
         // Latest term scores
-        $scStmt = $db->prepare("SELECT subject, class_score, exam_score, (class_score+exam_score) AS total FROM student_scores WHERE student_id = ? AND term = '1st Term' AND academic_year = '2024/2025'");
-        $scStmt->execute([$student['id']]);
+        $scStmt = $db->prepare("SELECT subject, class_score, exam_score, (class_score+exam_score) AS total FROM student_scores WHERE student_id = ? AND term = ? AND academic_year = ?");
+        $scStmt->execute([$student['id'], $term, $year]);
         $data['scores'] = $scStmt->fetchAll();
         // Fees
-        $feStmt = $db->prepare("SELECT amount_due, amount_paid, status FROM fees WHERE student_id = ? AND term = '1st Term' LIMIT 1");
-        $feStmt->execute([$student['id']]);
+        $feStmt = $db->prepare("SELECT amount_due, amount_paid, status FROM fees WHERE student_id = ? AND term = ? AND academic_year = ? LIMIT 1");
+        $feStmt->execute([$student['id'], $term, $year]);
         $data['fees'] = $feStmt->fetch();
     }
 }
