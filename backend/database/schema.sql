@@ -403,17 +403,18 @@ CREATE TABLE IF NOT EXISTS `admissions` (
 CREATE TABLE IF NOT EXISTS `timetable` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `class_id` INT NOT NULL,
-  `subject` VARCHAR(100) NOT NULL,
-  `teacher_id` INT,
+  `subject` VARCHAR(150) NOT NULL,
+  `teacher_id` INT DEFAULT NULL,
   `day_of_week` ENUM('Monday','Tuesday','Wednesday','Thursday','Friday') NOT NULL,
   `start_time` TIME NOT NULL,
   `end_time` TIME NOT NULL,
-  `room` VARCHAR(50),
+  `room` VARCHAR(80) DEFAULT NULL,
   `period_label` VARCHAR(100) DEFAULT NULL,
-  `term` VARCHAR(50) DEFAULT 'Term 1, 2025',
+  `term` VARCHAR(80) NOT NULL DEFAULT 'Term 1, 2025',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL,
+  INDEX `idx_timetable_class_term` (`class_id`, `term`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────

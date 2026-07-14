@@ -526,16 +526,8 @@ async function syncAllDataFromBackend() {
     try {
         const res = await API.timetable.get();
         if (res && res.success && res.data) {
-            const formatted = {};
-            res.data.forEach(row => {
-                const cls = row.class_name;
-                const term = row.term;
-                const schedule = typeof row.schedule === 'string' ? JSON.parse(row.schedule) : row.schedule;
-                if (!formatted[cls]) formatted[cls] = {};
-                formatted[cls][term] = schedule;
-            });
             for (let k in timetablesData) delete timetablesData[k];
-            Object.assign(timetablesData, formatted);
+            Object.assign(timetablesData, res.data);
         }
     } catch (e) { console.error("Error syncing timetables:", e); }
 
@@ -686,7 +678,7 @@ apiOverrides.saveNewTimetable = async function() {
     const res = await API.timetable.save({
         class_name: cls,
         term: term,
-        schedule: schedule
+        timetable: schedule
     });
     if (res && res.success) {
         closeModal();
@@ -717,7 +709,7 @@ apiOverrides.saveEditedTimetable = async function(cls, term) {
     const res = await API.timetable.save({
         class_name: cls,
         term: term,
-        schedule: schedule
+        timetable: schedule
     });
     if (res && res.success) {
         closeModal();

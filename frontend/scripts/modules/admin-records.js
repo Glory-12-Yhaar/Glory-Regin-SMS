@@ -2851,7 +2851,6 @@ function timetableModule() {
     selectedClass = getReadableClassForRole('Basic 2');
   }
   const selectedTerm = window.selectedTimetableTerm || 'Term 1, 2025';
-  ensureTimetablesForAllClasses(selectedTerm);
 
   // Build class tabs for admin
   let classTabsHtml = '';
@@ -2906,7 +2905,6 @@ function timetableModule() {
 
 // -- backend-backed timetable state --
 function loadTimetablesFromStorage() {
-  ensureTimetablesForAllClasses(window.selectedTimetableTerm || 'Term 1, 2025');
 }
 function saveTimetablesToStorage() {
 }
@@ -2927,7 +2925,6 @@ function refreshTimetableView() {
   const cls = currentRole === 'Admin'
     ? (window.selectedTimetableClass || classesData[0].name)
     : getReadableClassForRole('Basic 2');
-  ensureTimetablesForAllClasses(term);
   const area = document.getElementById('tt-display-area');
   if (area) area.innerHTML = getTimetableDisplay(cls, term);
 }
@@ -3085,36 +3082,43 @@ function updateCreateFormPeriods() {
   if (grid) grid.innerHTML = buildCreateGrid(cls.value);
 }
 
-function saveNewTimetable() {
-  const clsEl = document.getElementById('create-tt-class');
-  const termEl = document.getElementById('create-tt-term');
-  if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
-  const cls = clsEl.value, term = termEl.value;
-  if (timetablesData[cls] && timetablesData[cls][term]) {
-    if (!confirm('Timetable exists for ' + cls + ' · ' + term + '. Overwrite?')) return;
-  }
-  const periods = getPeriodsForClass(cls);
-  const schedule = [];
-  let hasContent = false;
-  periods.forEach((p, idx) => {
-    const subjects = [];
-    for (let d = 0; d < 5; d++) {
-      const input = document.getElementById('create-p-' + idx + '-' + d);
-      const val = input ? input.value.trim() : '';
-      subjects.push(val || '—');
-      if (val && val !== '—' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
+async function saveNewTimetable() {
+  if (window.API?.timetable?.save) {
+    const clsEl = document.getElementById('create-tt-class');
+    const termEl = document.getElementById('create-tt-term');
+    if (!clsEl || !termEl) { showToast('Select class and term', 'error'); return; }
+    const cls = clsEl.value, term = termEl.value;
+    const periods = getPeriodsForClass(cls);
+    const schedule = [];
+    let hasContent = false;
+    periods.forEach((p, idx) => {
+      const subjects = [];
+      for (let d = 0; d < 5; d++) {
+        const input = document.getElementById('create-p-' + idx + '-' + d);
+        const val = input ? input.value.trim() : '';
+        subjects.push(val || '-');
+        if (val && val !== '-' && val !== 'â€”' && val !== 'Morning Assembly' && p.type === 'period') hasContent = true;
+      }
+      schedule.push([p.label, subjects]);
+    });
+    if (!hasContent) { showToast('Fill in at least one subject', 'error'); return; }
+
+    const res = await API.timetable.save({ class_name: cls, term, timetable: schedule });
+    if (res && res.success) {
+      closeModal();
+      window.selectedTimetableClass = cls;
+      window.selectedTimetableTerm = term;
+      await syncAllDataFromBackend();
+      renderMain();
+      showToast('<i class="fas fa-check-circle"></i> Timetable created successfully', 'success');
+    } else {
+      showToast(res?.message || 'Failed to create timetable', 'error');
     }
-    schedule.push([p.label, subjects]);
-  });
-  if (!hasContent) { showToast('Fill in at least one subject', 'error'); return; }
-  if (!timetablesData[cls]) timetablesData[cls] = {};
-  timetablesData[cls][term] = schedule;
-  saveTimetablesToStorage();
-  closeModal();
-  window.selectedTimetableClass = cls;
-  window.selectedTimetableTerm = term;
-  renderMain();
-  showToast('<i class="fas fa-check-circle"></i> Timetable created for ' + cls + ' · ' + term, 'success');
+    return;
+  }
+
+  showToast('Backend API is unavailable. Timetable was not saved.', 'error');
+  return;
 }
 
 // -- Edit Timetable (Admin) --
@@ -3165,37 +3169,59 @@ function openEditTimetableForm() {
   openModal(form, true);
 }
 
-function saveEditedTimetable(cls, term) {
-  const schedule = timetablesData[cls] && timetablesData[cls][term];
-  if (!schedule) return;
-  schedule.forEach(([period], idx) => {
-    const pLow = period.toLowerCase();
-    const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
-    if (isFixed) return;
-    for (let d = 0; d < 5; d++) {
-      const input = document.getElementById('edit-p-' + idx + '-' + d);
-      if (input) schedule[idx][1][d] = input.value.trim() || '—';
+async function saveEditedTimetable(cls, term) {
+  if (window.API?.timetable?.save) {
+    const schedule = timetablesData[cls] && timetablesData[cls][term];
+    if (!schedule) return;
+    schedule.forEach(([period], idx) => {
+      const pLow = period.toLowerCase();
+      const isFixed = pLow.includes('break') || pLow.includes('assembly') || pLow.includes('closing') || (pLow.includes('7:30') && !pLow.includes('p'));
+      if (isFixed) return;
+      for (let d = 0; d < 5; d++) {
+        const input = document.getElementById('edit-p-' + idx + '-' + d);
+        if (input) schedule[idx][1][d] = input.value.trim() || '-';
+      }
+    });
+
+    const res = await API.timetable.save({ class_name: cls, term, timetable: schedule });
+    if (res && res.success) {
+      closeModal();
+      await syncAllDataFromBackend();
+      refreshTimetableView();
+      showToast('<i class="fas fa-check-circle"></i> Timetable updated successfully', 'success');
+    } else {
+      showToast(res?.message || 'Failed to save timetable changes', 'error');
     }
-  });
-  saveTimetablesToStorage();
-  closeModal();
-  refreshTimetableView();
-  showToast('<i class="fas fa-check-circle"></i> Timetable updated for ' + cls, 'success');
+    return;
+  }
+
+  showToast('Backend API is unavailable. Timetable changes were not saved.', 'error');
+  return;
 }
 
 // -- Delete --
-function deleteTimetable() {
-  if (currentRole !== 'Admin') return;
-  const cls = window.selectedTimetableClass || classesData[0].name;
-  const termEl = document.getElementById('tt-term-select');
-  const term = termEl ? termEl.value : 'Term 1, 2025';
-  if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
-  if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
-  delete timetablesData[cls][term];
-  if (Object.keys(timetablesData[cls]).length === 0) delete timetablesData[cls];
-  saveTimetablesToStorage();
-  refreshTimetableView();
-  showToast('<i class="fas fa-trash"></i> Timetable deleted', 'success');
+async function deleteTimetable() {
+  if (window.API?.timetable?.delete) {
+    if (currentRole !== 'Admin') return;
+    const cls = window.selectedTimetableClass || classesData[0].name;
+    const termEl = document.getElementById('tt-term-select');
+    const term = termEl ? termEl.value : 'Term 1, 2025';
+    if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
+    if (!confirm('Delete timetable for ' + cls + ' Â· ' + term + '?')) return;
+
+    const res = await API.timetable.delete(cls, term);
+    if (res && res.success) {
+      await syncAllDataFromBackend();
+      refreshTimetableView();
+      showToast('<i class="fas fa-trash"></i> Timetable deleted', 'success');
+    } else {
+      showToast(res?.message || 'Failed to delete timetable', 'error');
+    }
+    return;
+  }
+
+  showToast('Backend API is unavailable. Timetable was not deleted.', 'error');
+  return;
 }
 
 // -- Print --
@@ -3625,44 +3651,6 @@ function viewClassTimetable(className) {
   navTo('timetable');
 }
 
-// TIMETABLES DATA
-const timetablesData = {
-  'Basic 2': {
-    'Term 1, 2025': [
-      ['P1 · 7:30–8:20', ['English Language', 'Mathematics', 'Integrated Science', 'English', 'Assembly']],
-      ['P2 · 8:20–9:10', ['Mathematics', 'English', 'Physical Education', 'Science', 'Mathematics']],
-      ['Break · 9:10–9:30', ['—', '—', '—', '—', '—']],
-      ['P3 · 9:30–10:20', ['Science', 'Social Studies', 'Mathematics', 'English', 'Science']],
-      ['P4 · 10:20–11:10', ['Social Studies', 'English', 'English', 'Science', 'English']],
-      ['Lunch · 11:10–12:00', ['—', '—', '—', '—', '—']],
-      ['P5 · 12:00–12:50', ['ICT', 'Science', 'Social Studies', 'Mathematics', 'Social Studies']],
-      ['P6 · 12:50–13:40', ['Physical Education', 'Social Studies', 'ICT', 'Physical Education', 'ICT']]
-    ]
-  }
-};
-
-function buildDefaultTimetableForClass(className) {
-  const subjects = SUBJECTS_BY_CLASS[className] || ['English', 'Mathematics', 'Science', 'Computing', 'RME'];
-  const periods = getPeriodsForClass(className);
-  let subjectIndex = 0;
-  return periods.map(period => {
-    if (period.type === 'break' || period.type === 'close') return [period.label, ['—', '—', '—', '—', '—']];
-    if (period.type === 'assembly') return [period.label, ['Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly', 'Morning Assembly']];
-    if (period.type === 'special' && period.dayLabels) return [period.label, period.dayLabels];
-    return [period.label, Array.from({ length: 5 }, () => {
-      const subject = subjects[subjectIndex % subjects.length];
-      subjectIndex += 1;
-      return subject;
-    })];
-  });
-}
-
-function ensureTimetablesForAllClasses(term = 'Term 1, 2025') {
-  classesData.forEach(c => {
-    if (!timetablesData[c.name]) timetablesData[c.name] = {};
-    if (!timetablesData[c.name][term]) timetablesData[c.name][term] = buildDefaultTimetableForClass(c.name);
-  });
-}
 
 // REPORT CARDS MODULE
 // -----------------------------------
@@ -3721,6 +3709,14 @@ function getClassActiveStudentCount(className) {
   return getActiveStudents(enrolledStudents).filter(s => s.student_class === className).length;
 }
 
+const timetablesData = {};
+
+function buildDefaultTimetableForClass(className) {
+  return [];
+}
+
+function ensureTimetablesForAllClasses(term = 'Term 1, 2025') {
+}
 function createOrUpdateParentFromAdmission(admission, student) {
   const childText = `${student.name} (${student.student_class})`;
   const parentKey = (admission.parent_email || admission.parent_phone || admission.parent_name || '').toLowerCase();
