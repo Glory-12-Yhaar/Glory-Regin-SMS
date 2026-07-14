@@ -3882,10 +3882,15 @@ const classesData = [];
 const examsData = [];
 const gradesData = [];
 const assignmentsData = [];
+const feesData = [];
+const paymentsData = [];
 window.examsData = examsData;
 window.gradesData = gradesData;
 window.assignmentsData = assignmentsData;
+window.feesData = feesData;
+window.paymentsData = paymentsData;
 window.reportsAnalyticsData = null;
+window.financeReportData = null;
 
 const STUDENT_RECORDS_KEY = 'gr_student_records';
 const TEACHER_RECORDS_KEY = 'gr_teacher_records';
