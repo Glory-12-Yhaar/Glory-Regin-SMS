@@ -82,7 +82,7 @@ function adminDash() {
   const statsCards = [
     statCard('<i class="fas fa-graduation-cap"></i>', '' + totalStudents, 'Total Students', 'Open records', 'up', 'si-blue', true, 'navTo("students")'),
     statCard('<i class="fas fa-chalkboard-user"></i>', '' + totalTeachers, 'Total Teachers', 'Staff records', 'up', 'si-gold', true, 'navTo("teachers")'),
-    statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(finance.collected).toLocaleString(), 'Fees Collected', finance.payments.length + ' payments', 'up', 'si-green', true, 'navTo("fees")'),
+    statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(finance.collected).toLocaleString(), 'Fees Collected', finance.payments.length + ' payments', 'up', 'si-green', true, 'navTo("fees")'),
     statCard('<i class="fas fa-exclamation-triangle"></i>', '' + pendingFees, 'Pending Fees', 'Needs attention', 'dn', 'si-red', true, 'navTo("fees")')
   ].join('');
   const monthlySeries = ADMIN_DASHBOARD_STATE.dashboard.monthly_enrollment_attendance || [];
@@ -100,7 +100,7 @@ function adminDash() {
   }).join('');
   const monthLabels = (monthlySeries.length ? monthlySeries.map(row => row.month) : ['No data'])
     .map(m => `<span>${escapeHtml(m)}</span>`).join('');
-  const recentStudentRows = recentStudents.map((student, index) => [student.name, student.student_class || student.class || 'Unassigned', student.status || 'Active', student.fees_status || student.feeStatus || 'Pending', ['blue', 'gold', 'purple', 'green', 'teal'][index % 5]]).map(([n, c, s, f, av]) => `
+  const recentStudentRows = recentStudents.map((student, index) => [student.name, student.student_class || student.class_name || student.class || 'Unassigned', student.status || 'Active', student.fees_status || student.feeStatus || 'Pending', ['blue', 'gold', 'purple', 'green', 'teal'][index % 5]]).map(([n, c, s, f, av]) => `
           <tr style="cursor:pointer" onclick="navTo('students')">
             <td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-${av}">${n[0]}</div><strong>${n}</strong></div></td>
             <td>${c}</td>
@@ -605,7 +605,7 @@ function parentDash() {
           <div style="font-size:12px;font-weight:600">${escapeHtml(s.name)} Â· ${escapeHtml(s.class)}</div>
           <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">${s.feeStatus}</span>
         </div>
-        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GHâ‚µ ${Number(s.feeAmount||0).toLocaleString()}</div>
+        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GH₵ ${Number(s.feeAmount||0).toLocaleString()}</div>
         <button class="btn btn-info btn-xs" style="margin-top:8px" onclick="viewPaymentHistory('${s.studentId}')"><i class="fas fa-history"></i> Payment History</button>
       </div>`).join('');
   const eventRows = [['Mar 20', 'PTA Meeting', '3:00 PM School Hall'], ['Mar 24', 'Sports Day', 'All day event'], ['Apr 01', 'Term Exams Begin', '8:00 AM daily']].map(([d, e, t]) => `
@@ -645,15 +645,15 @@ function accountDash() {
     ['Net Balance', finance.net, Math.max(0, Math.round(finance.net / target * 100))]
   ];
   const statsCards = [
-    statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(finance.collected).toLocaleString(), 'Total Collected', finance.payments.length + ' records', 'up', 'si-blue', true, 'navTo("payments")'),
-    statCard('<i class="fas fa-hourglass-half"></i>', 'GHâ‚µ' + Number(finance.outstanding).toLocaleString(), 'Outstanding Fees', finance.pendingCount + ' pending', 'dn', 'si-red', true, 'navTo("debtors")'),
-    statCard('<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>', 'GHâ‚µ' + Number(finance.expenses).toLocaleString(), 'Total Expenses', 'Auto budget view', 'neu', 'si-gold', true, 'navTo("expenses")'),
-    statCard('<i class="fas fa-chart-bar"></i>', 'GHâ‚µ' + Number(finance.net).toLocaleString(), 'Net Balance', finance.net >= 0 ? 'Surplus' : 'Deficit', finance.net >= 0 ? 'up' : 'dn', finance.net >= 0 ? 'si-green' : 'si-red', true, 'navTo("reports")')
+    statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(finance.collected).toLocaleString(), 'Total Collected', finance.payments.length + ' records', 'up', 'si-blue', true, 'navTo("payments")'),
+    statCard('<i class="fas fa-hourglass-half"></i>', 'GH₵' + Number(finance.outstanding).toLocaleString(), 'Outstanding Fees', finance.pendingCount + ' pending', 'dn', 'si-red', true, 'navTo("debtors")'),
+    statCard('<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>', 'GH₵' + Number(finance.expenses).toLocaleString(), 'Total Expenses', 'Auto budget view', 'neu', 'si-gold', true, 'navTo("expenses")'),
+    statCard('<i class="fas fa-chart-bar"></i>', 'GH₵' + Number(finance.net).toLocaleString(), 'Net Balance', finance.net >= 0 ? 'Surplus' : 'Deficit', finance.net >= 0 ? 'up' : 'dn', finance.net >= 0 ? 'si-green' : 'si-red', true, 'navTo("reports")')
   ].join('');
   const revenueRows = revenueItems.map(([c, amount, p]) => `
       <div style="margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span>${c}</span><span style="font-weight:600">GHâ‚µ${Number(amount).toLocaleString()}</span>
+          <span>${c}</span><span style="font-weight:600">GH₵${Number(amount).toLocaleString()}</span>
         </div>
         <div class="prog-bar"><div class="prog-fill pf-blue" style="width:${Math.min(100, p)}%"></div></div>
       </div>`).join('');
@@ -699,7 +699,7 @@ function alumniDash() {
     statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Network growing', 'up', 'si-blue'),
     statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Upcoming Events', 'This quarter', 'neu', 'si-gold'),
     statCard('<i class="fas fa-briefcase"></i>', '28', 'Job Listings', 'Posted by alumni', 'up', 'si-green'),
-    statCard('<i class="fas fa-hand-holding-heart"></i>', 'GHâ‚µ' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
+    statCard('<i class="fas fa-hand-holding-heart"></i>', 'GH₵' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
   ].join('');
   const announcementRows = getAlumniAnnouncements().slice(0,2).map(a => `
       <div style="display:flex;gap:12px;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px;border-left:4px solid var(--${a.color||'blue'})">
@@ -716,8 +716,8 @@ function alumniDash() {
           <span class="badge b-green">${c.percentage}%</span>
         </div>
         <div style="font-size:11px;color:var(--gray-500);display:flex;justify-content:space-between;margin-bottom:6px">
-          <span>Raised: GHâ‚µ${Number(c.raised||0).toLocaleString()}</span>
-          <span>Goal: GHâ‚µ${Number(c.goal||0).toLocaleString()}</span>
+          <span>Raised: GH₵${Number(c.raised||0).toLocaleString()}</span>
+          <span>Goal: GH₵${Number(c.goal||0).toLocaleString()}</span>
         </div>
         <div style="height:6px;background:var(--gray-200);border-radius:4px;overflow:hidden">
           <div style="height:100%;width:${c.percentage}%;background:linear-gradient(90deg, #10b981, #34d399)"></div>
@@ -743,7 +743,7 @@ function alumniDash() {
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between">
             <span style="font-size:12px;font-weight:600;color:var(--gray-800)">${escapeHtml(d.name)}</span>
-            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">GHâ‚µ${Number(d.amount||0).toLocaleString()}</span>
+            <span style="font-size:11px;font-weight:700;color:var(--green-dark)">GH₵${Number(d.amount||0).toLocaleString()}</span>
           </div>
           <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(d.campaign)}</div>
         </div>

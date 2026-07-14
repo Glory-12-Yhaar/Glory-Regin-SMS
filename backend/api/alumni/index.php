@@ -8,6 +8,7 @@
 require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/user-provisioning.php';
 
 $user   = requireAuth();
 $db     = getDB();
@@ -27,6 +28,8 @@ if ($method === 'GET') {
         $params[] = (int)$_GET['class_year'];
     }
 
+    $db->beginTransaction();
+    $account = provisionUserAccount($db, $code, htmlspecialchars(trim($body['name']), ENT_QUOTES), $body['email'] ?? null, 'Alumni', $body['password'] ?? null);
     $stmt = $db->prepare(
         "SELECT id, alumni_code, name, class_year, profession, location, bio,
                 email, phone, instagram, linkedin, twitter, facebook, avatar, avatar_color
@@ -66,7 +69,10 @@ if ($method === 'POST') {
         $body['avatar']       ?? strtoupper(substr($body['name'], 0, 2)),
         $body['avatar_color'] ?? 'blue',
     ]);
-    jsonResponse(['success' => true, 'message' => 'Alumni added', 'id' => $db->lastInsertId(), 'alumni_code' => $code], 201);
+    $alumniId = $db->lastInsertId();
+    $db->prepare('UPDATE alumni SET user_id = ? WHERE id = ?')->execute([$account['id'], $alumniId]);
+    $db->commit();
+    jsonResponse(['success' => true, 'message' => 'Alumni and user account created', 'id' => $alumniId, 'alumni_code' => $code, 'account' => $account], 201);
 }
 
 jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);
@@ -77,6 +83,9 @@ if ($method === 'PUT') {
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) jsonResponse(['success' => false, 'message' => 'id required'], 422);
     $body = getRequestBody();
+    $linked = $db->prepare('SELECT user_id FROM alumni WHERE id = ?');
+    $linked->execute([$id]);
+    updateProvisionedPassword($db, ($uid = $linked->fetchColumn()) ? (int)$uid : null, $body);
     $fields = []; $params = [];
     foreach (['name','class_year','profession','location','bio','email','phone','instagram','linkedin','twitter','facebook'] as $f) {
         if (array_key_exists($f, $body)) { $fields[] = "$f = ?"; $params[] = $body[$f]; }

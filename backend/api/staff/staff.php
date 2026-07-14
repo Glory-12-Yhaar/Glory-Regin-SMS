@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/user-provisioning.php';
 
 $user   = requireAuth();
 $db     = getDB();
@@ -99,6 +100,7 @@ if ($method === 'PUT') {
             }
         }
 
+        updateProvisionedPassword($db, $staff['user_id'] ? (int)$staff['user_id'] : null, $body);
         // Update users table status and details if user_id exists
         if ($staff['user_id']) {
             $uFields = [];

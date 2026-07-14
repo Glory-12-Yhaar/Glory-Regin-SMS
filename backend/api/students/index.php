@@ -8,6 +8,7 @@
 require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/user-provisioning.php';
 
 $user = requireAuth();
 $db   = getDB();
@@ -101,6 +102,8 @@ if ($method === 'POST') {
     $count = (int)$countStmt->fetchColumn() + 1;
     $code = $year . '-' . str_pad($count, 2, '0', STR_PAD_LEFT);
 
+    $db->beginTransaction();
+    $account = provisionUserAccount($db, $code, htmlspecialchars(trim($body['name']), ENT_QUOTES), $body['email'] ?? null, 'Student', $body['password'] ?? null);
     $stmt = $db->prepare(
         "INSERT INTO students (student_code, name, class_id, stream, gender, dob, address, photo, attendance, status)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')"
@@ -118,10 +121,12 @@ if ($method === 'POST') {
     ]);
 
     $id = $db->lastInsertId();
+    $db->prepare('UPDATE students SET user_id = ? WHERE id = ?')->execute([$account['id'], $id]);
     if (!empty($body['guardian_name'])) {
         associateParentWithStudent($db, $id, $body['guardian_name'], $body['guardian_phone'] ?? null, $body['guardian_email'] ?? null, $body['address'] ?? null);
     }
-    jsonResponse(['success' => true, 'message' => 'Student created', 'id' => $id, 'student_code' => $code], 201);
+    $db->commit();
+    jsonResponse(['success' => true, 'message' => 'Student and user account created', 'id' => $id, 'student_code' => $code, 'account' => $account], 201);
 }
 
 jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);

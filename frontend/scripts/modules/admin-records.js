@@ -793,6 +793,7 @@ function editStudent(studentId) {
         <label>Parent Phone</label>
         <input type="tel" id="edit-std-parent-phone" value="${student.parent_phone || ''}">
       </div>
+      <div class="form-field" style="grid-column:1/-1"><label>New Login Password</label><input type="password" id="edit-std-password" minlength="6" placeholder="Leave blank to keep the current password"></div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="saveStudentChanges('${studentId}')"><i class="fas fa-save"></i> Save Changes</button>
         <button class="btn btn-secondary" style="flex:1" onclick="viewStudent('${studentId}')">Cancel</button>
@@ -818,7 +819,8 @@ async function saveStudentChanges(studentId) {
     status: document.getElementById('edit-std-status')?.value || student.status,
     address: document.getElementById('edit-std-address')?.value || '',
     guardian_name: document.getElementById('edit-std-parent-name')?.value || '',
-    guardian_phone: document.getElementById('edit-std-parent-phone')?.value || ''
+    guardian_phone: document.getElementById('edit-std-parent-phone')?.value || '',
+    password: document.getElementById('edit-std-password')?.value || undefined
   });
   if (!res || !res.success) {
     showToast(res?.message || 'Failed to update student', 'error');

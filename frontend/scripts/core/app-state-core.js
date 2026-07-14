@@ -824,12 +824,18 @@ const MENUS = {
         { id: 'timetable', ic: '<i class="fas fa-calendar"></i>', lbl: 'Timetable' },
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
         { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exams & Reports' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
       ]
     },
     {
       g: 'Finance', items: [
         { id: 'fees', ic: '<i class="fas fa-money-bill"></i>', lbl: 'Fees / Payments' },
+        { id: 'feestructure', ic: '<i class="fas fa-building"></i>', lbl: 'Fee Structure' },
+        { id: 'payments', ic: '<i class="fas fa-money-bill-wave"></i>', lbl: 'Record Payment' },
+        { id: 'expenses', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Expenses' },
+        { id: 'salary', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Salary / Payroll' },
+        { id: 'receipts', ic: '<i class="fas fa-file-invoice"></i>', lbl: 'Invoices & Receipts' },
+        { id: 'scholarships', ic: '<i class="fas fa-gift"></i>', lbl: 'Scholarships' },
+        { id: 'debtors', ic: '<i class="fas fa-users-slash"></i>', lbl: 'Debtors' },
       ]
     },
     {
@@ -868,7 +874,6 @@ const MENUS = {
     {
       g: 'Academics', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignment / Homework' },
         { id: 'materials', ic: '<i class="fas fa-cloud-upload-alt"></i>', lbl: 'Upload Learning Materials' },
       ]
     },
@@ -900,7 +905,6 @@ const MENUS = {
     {
       g: 'Academic', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
         { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exam Results' },
         { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Card' },
       ]
@@ -926,7 +930,6 @@ const MENUS = {
       g: 'Academics', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance Tracking' },
         { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Cards / Results' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignment Tracking' },
       ]
     },
     {
@@ -955,6 +958,7 @@ const MENUS = {
     },
     {
       g: 'Payroll & Structure', items: [
+        { id: 'feestructure', ic: '<i class="fas fa-building"></i>', lbl: 'Fee Structure' },
         { id: 'salary', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Salary / Payroll' },
         { id: 'receipts', ic: '<i class="fas fa-file-invoice"></i>', lbl: 'Invoice & Receipts' },
       ]
@@ -1544,6 +1548,12 @@ function getSavedNavigationState() {
 function toggleRS() { document.getElementById('role-switcher').classList.toggle('open') }
 function switchRole(role, preferredMod) {
   const sessionUser = getSessionUser();
+  const authenticatedRole = normalizeRoleName(sessionUser?.role);
+  if (sessionUser && authenticatedRole && role !== authenticatedRole) {
+    document.getElementById('role-switcher')?.classList.remove('open');
+    showToast(`You are signed in as ${authenticatedRole}. Sign out to use another account.`, 'warning');
+    role = authenticatedRole;
+  }
   currentRole = role;
   document.getElementById('role-switcher').classList.remove('open');
   document.getElementById('top-role').textContent = role.toUpperCase();
@@ -1889,7 +1899,6 @@ function renderMain() {
     grades: () => gradesModule(),
     exams: () => examsModule(),
     admissions: () => admissionsModule(),
-    assignments: () => assignmentsModule(),
     fees: () => feesModule(),
     payments: () => paymentsModule(),
     events: () => eventsModule(),
@@ -1914,7 +1923,7 @@ function renderMain() {
     sba: () => sbaModule(),
     children: () => childrenModule(),
     salary: () => salaryModule(),
-    feestructure: () => feeStructModule(),
+    feestructure: () => sharedFeeStructModule(),
     scholarships: () => scholarshipsModule(),
     debtors: () => debtorsModule(),
     receipts: () => receiptsModule(),

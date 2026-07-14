@@ -77,6 +77,9 @@ const API = {
         create:      (data)        => apiRequest('/fees/index.php',    'POST', data),
         payments:    (params = {}) => apiRequest('/fees/payment.php?' + new URLSearchParams(params)),
         recordPayment: (data)      => apiRequest('/fees/payment.php',  'POST', data),
+        structure:   (params = {}) => apiRequest('/fees/structure.php?' + new URLSearchParams(params)),
+        saveStructure: (data)      => apiRequest('/fees/structure.php', 'POST', data),
+        deleteStructure: (id)      => apiRequest('/fees/structure.php?id=' + id, 'DELETE'),
     },
 
     // ── Events ───────────────────────────────────────────────
@@ -475,6 +478,19 @@ async function syncAllDataFromBackend() {
     } catch (e) { console.error("Error syncing parents:", e); }
 
     // 4b. Fees and payments
+    window.feeStructureData = Array.isArray(window.feeStructureData) ? window.feeStructureData : [];
+    if (['Admin', 'Accountant'].includes(window.currentRole || currentRole)) {
+        try {
+            const res = await API.fees.structure();
+            if (res && res.success && Array.isArray(res.data)) {
+                window.feeStructureData.splice(0, window.feeStructureData.length, ...res.data.map(row => ({
+                    id: parseInt(row.id, 10), classId: parseInt(row.class_id, 10), className: row.class_name || '',
+                    term: row.term || '', academicYear: row.academic_year || '', amount: parseFloat(row.amount || 0)
+                })));
+            }
+        } catch (e) { console.error("Error syncing fee structure:", e); }
+    }
+
     try {
         const res = await API.fees.list({ limit: 500 });
         if (res && res.success && res.data && Array.isArray(window.feesData)) {

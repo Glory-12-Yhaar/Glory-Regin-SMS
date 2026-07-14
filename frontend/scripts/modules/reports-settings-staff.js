@@ -331,11 +331,11 @@ function generateReportCard(studentId) {
         </div>
         <div class="rc-box">
           <h4>School Fees / Next Term</h4>
-          <div class="rc-line"><span>Arrears from Last Term</span><strong>GHâ‚µ ${arrears.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Fees Paid</span><strong>GHâ‚µ ${paidFees.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Balance Fee</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Books / PTA / Other</span><strong>GHâ‚µ 0</strong></div>
-          <div class="rc-line"><span>Total</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Arrears from Last Term</span><strong>GH₵ ${arrears.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Fees Paid</span><strong>GH₵ ${paidFees.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Balance Fee</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Books / PTA / Other</span><strong>GH₵ 0</strong></div>
+          <div class="rc-line"><span>Total</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
         </div>
       </div>
 
@@ -539,10 +539,10 @@ function assignmentsModule() {
   const createButtonHTML = (isTeacher || isAdmin) ? `<button class="btn btn-primary btn-sm" onclick="openCreateAssignmentForm()">+ New Assignment</button>` : '';
 
   let html = hdr('Assignments Module', isTeacher ? 'Assignments for your assigned classes' : isStudent ? 'Your class assignments' : 'Create and manage class assignments', 'Assignments') + `
-  <div class="g21">
-    <div class="card">
+  <div class="g21 assignments-layout">
+    <div class="card assignments-list-card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> ${isStudent ? 'My Assignments' : 'All Assignments'}</span>${createButtonHTML}</div>
-      <table class="tbl">
+      <div class="table-wrapper"><table class="tbl assignments-table">
         <thead><tr><th>Title</th><th>Subject</th>${!isStudent ? '<th>Class</th>' : ''}<th>Due Date</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>`;
 
@@ -571,14 +571,14 @@ function assignmentsModule() {
     });
   }
 
-  html += `</tbody></table></div>`;
+  html += `</tbody></table></div></div>`;
 
   // Create Assignment Form
   if (isTeacher || isAdmin) {
     const classChoices = isTeacher ? classesData.filter(c => teacherClassNames.includes(c.name)) : classesData;
     const subjectChoices = isTeacher ? getVisibleSubjectsForRole(subjectsData) : subjectsData;
     html += `
-    <div class="card">
+    <div class="card assignment-form-card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Create New Assignment</span></div>
       <form id="create-assignment-form" onsubmit="createAssignment(event)">
         <div class="f-field" style="margin-bottom:12px">
@@ -963,7 +963,7 @@ function getPaymentRecords() {
 }
 
 function formatMoney(amount) {
-  return 'GHÃ¢â€šÂµ' + Number(amount || 0).toLocaleString();
+  return 'GH₵' + Number(amount || 0).toLocaleString();
 }
 
 function feeStatusClass(status) {
@@ -1138,7 +1138,7 @@ function feesModule() {
   }
 
   // Admin/Accountant view: Show all students fees
-  const recordPaymentBtn = isAccountant ? `<button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button>` : '';
+  const recordPaymentBtn = (isAdmin || isAccountant) ? `<button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button>` : '';
   const feeRecords = getFeeRecords();
   const totalDue = feeRecords.reduce((sum, f) => sum + Number(f.amountDue || 0), 0);
   const totalPaid = feeRecords.reduce((sum, f) => sum + Number(f.amountPaid || 0), 0);
@@ -1161,10 +1161,10 @@ function feesModule() {
       </tr>`;
   }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:18px">No fee records found.</td></tr>';
   const structureRows = classesData.map(c => {
-    const fee = feeRecords.find(f => f.className === c.name);
+    const fee = (window.feeStructureData || []).find(f => Number(f.classId) === Number(c.id));
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
       <span style="font-size:13px;font-weight:600">${escapeHtml(c.name)}</span>
-      <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">${fee ? formatMoney(fee.amountDue) : 'Not set'}</span>
+      <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">${fee ? formatMoney(fee.amount) : 'Not set'}</span>
     </div>`;
   }).join('') || '<div style="padding:12px;color:var(--gray-400)">No class fee structure found.</div>';
 
@@ -1299,7 +1299,7 @@ function paymentsModule() {
       <form onsubmit="recordPayment(event)">
         <div class="f-row">
           <div class="f-field"><label>Student</label><select id="pay-student" required>${studentOptions}</select></div>
-          <div class="f-field"><label>Method</label><select id="pay-method" required><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+          <div class="f-field"><label>Method</label><select id="pay-method" required><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Cheque</option><option>Paystack</option></select></div>
         </div>
         <div class="f-row">
           <div class="f-field"><label>Amount Paying</label><input type="number" id="pay-amount" placeholder="0.00" min="1" step="0.01" required></div>
@@ -1350,12 +1350,18 @@ async function recordPayment(event) {
   const date = document.getElementById('pay-date').value;
   const method = document.getElementById('pay-method').value;
   const remarks = document.getElementById('pay-remarks').value;
-  const receiptNo = document.getElementById('pay-receipt').value.trim();
+  let receiptNo = document.getElementById('pay-receipt').value.trim();
   const receivedBy = document.getElementById('pay-received-by').value.trim();
 
   if (!studentId || !amount || amount <= 0 || !term || !academicYear || !date) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields correctly', 'error');
     return;
+  }
+
+  if (method === 'Paystack') {
+    const transaction = await openPaystackCheckout(amount);
+    if (!transaction) return;
+    receiptNo = transaction.reference || transaction.trxref || receiptNo;
   }
 
   const res = await API.fees.recordPayment({
@@ -1378,6 +1384,28 @@ async function recordPayment(event) {
   showToast(`<i class="fas fa-check-circle"></i> Payment processed. Receipt ${res.receipt_no} issued`, 'success');
   event.target.reset();
   setTimeout(() => navTo('fees'), 800);
+}
+
+const PAYSTACK_PUBLIC_KEY = 'pk_live_3ea0367bf3251d4990bd3a9d6e513103ad62df0e';
+function openPaystackCheckout(amount) {
+  return new Promise(resolve => {
+    if (typeof PaystackPop === 'undefined') {
+      showToast('Paystack could not load. Check your connection and try again.', 'error');
+      return resolve(null);
+    }
+    const user = getSessionUser() || {};
+    const reference = 'GRPS-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+    new PaystackPop().newTransaction({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user.email || 'payments@gloryreign.edu.gh',
+      amount: Math.round(Number(amount) * 100),
+      currency: 'GHS',
+      reference,
+      onSuccess: transaction => resolve(transaction || { reference }),
+      onCancel: () => { showToast('Paystack payment cancelled', 'info'); resolve(null); },
+      onError: error => { showToast(error?.message || 'Paystack payment failed', 'error'); resolve(null); }
+    });
+  });
 }
 
 
@@ -2119,7 +2147,7 @@ function reportsModule() {
     const pending = payments.filter(p => p.status === 'Pending').length;
     return hdr('Financial Reports', 'Revenue, collections, outstanding fees, and payroll summaries', 'Reports') + `
     <div class="stats-row">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
+      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
       ${statCard('<i class="fas fa-hourglass-half"></i>', pending, 'Pending Accounts', 'Need follow-up', pending ? 'dn' : 'up', pending ? 'si-red' : 'si-green')}
       ${statCard('<i class="fas fa-receipt"></i>', payments.length, 'Receipts', 'Generated records', 'neu', 'si-gold')}
       ${statCard('<i class="fas fa-briefcase"></i>', 'Payroll', 'Next Run', 'Month end', 'neu', 'si-purple')}
@@ -3345,6 +3373,7 @@ async function editStaffAPI(id) {
           <option ${s.status==='Inactive'?'selected':''}>Inactive</option>
         </select>
       </div>
+      <div class="form-field" style="grid-column:1/-1"><label>New Login Password</label><input type="password" id="edit-staff-password" minlength="6" placeholder="Leave blank to keep the current password"></div>
       <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-primary" style="flex:1" onclick="submitEditStaffAPI(${s.id})"><i class="fas fa-check"></i> Save Changes</button>
         <button class="btn btn-secondary" style="flex:1" onclick="navTo('staff')">Cancel</button>
@@ -3364,6 +3393,7 @@ async function submitEditStaffAPI(id) {
     position:     document.getElementById('edit-staff-position')?.value.trim(),
     salary_grade: document.getElementById('edit-staff-salary-grade')?.value.trim(),
     status:       document.getElementById('edit-staff-status')?.value,
+    password:     document.getElementById('edit-staff-password')?.value || undefined,
   };
 
   const res = await API.staff.update(id, data);
@@ -3795,7 +3825,7 @@ function alumniModule() {
   <div class="stats-row">
     ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985â€“2024', 'neu', 'si-blue')}
     ${statCard('<i class="fas fa-globe"></i>', '48', 'Countries', 'Alumni worldwide', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-handshake"></i>', 'GHâ‚µ42K', 'Donations', 'This year', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Donations', 'This year', 'up', 'si-green')}
     ${statCard('<i class="fas fa-file-alt"></i>', '14', 'Pending Requests', 'Certificates etc', 'dn', 'si-red')}
   </div>
   ${alumniDirectory()}`;
