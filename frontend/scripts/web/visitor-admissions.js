@@ -178,6 +178,24 @@ function visitorHome() {
   const schoolPhone = schoolInfo.phone || '0243611971 / 0205096091';
   const schoolEmail = schoolInfo.email || SCHOOL_EMAIL;
   const schoolAddress = schoolInfo.address || 'P.O. Box 42, Jirapa, Upper West Region, Ghana';
+  const publicEvents = (typeof getUpcomingEvents === 'function' ? getUpcomingEvents() : []).slice(0, 3);
+  const eventCards = publicEvents.map(ev => {
+    const parts = typeof formatEventDateParts === 'function' ? formatEventDateParts(ev.date) : { month: '', day: '', long: ev.date };
+    const time = typeof formatEventTime === 'function' ? formatEventTime(ev) : (ev.time || 'Time not set');
+    return `<div class="card">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div style="min-width:54px;height:54px;background:var(--blue-xpale);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <span style="font-size:10px;color:var(--blue-main);font-weight:800">${escapeHtml(parts.month)}</span>
+          <span style="font-size:20px;font-weight:900;color:var(--blue-dark)">${escapeHtml(parts.day)}</span>
+        </div>
+        <div>
+          <h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">${escapeHtml(ev.title)}</h3>
+          <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:8px">${escapeHtml(time)} Â· ${escapeHtml(ev.audience || 'All')}</p>
+          <p style="font-size:12px;color:var(--gray-600);line-height:1.6;margin:0">${escapeHtml(ev.description || '')}</p>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
   return `<section id="home-section" class="public-section">
   <div class="visitor-hero visitor-hero-photo"${heroStyle}>
     <h1>${escapeHtml(hero?.title || 'Glory Reign Preparatory School')}</h1>
@@ -217,6 +235,10 @@ function visitorHome() {
   <section id="gallery-section" class="public-section">
     <div class="section-title"><h2>Gallery</h2><p>A quick look at school life, learning and celebrations.</p></div>
     <div class="g3">${['assets/images/student.jpeg', 'assets/images/teacher.jpeg', 'assets/images/Hero.jpeg'].map((img, i) => `<div class="public-gallery-tile" style="background-image:url('${img}')"><span>${['Students', 'Teachers', 'Campus Life'][i]}</span></div>`).join('')}</div>
+  </section>
+  <section id="events-section" class="public-section">
+    <div class="section-title"><h2>Events</h2><p>Upcoming school activities and public calendar dates.</p></div>
+    <div class="g3">${eventCards || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No upcoming events published yet.</div>'}</div>
   </section>
   <section id="news-section" class="public-section">
     <div class="section-title"><h2>News</h2><p>Latest stories from Glory Reign Preparatory School.</p></div>

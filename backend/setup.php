@@ -409,13 +409,16 @@ CREATE TABLE events (
   event_date DATE NOT NULL,
   event_time TIME DEFAULT NULL,
   all_day TINYINT(1) NOT NULL DEFAULT 0,
+  location VARCHAR(255) DEFAULT NULL,
   audience VARCHAR(120) NOT NULL DEFAULT 'All',
   description TEXT DEFAULT NULL,
+  status ENUM('Published','Draft','Cancelled') NOT NULL DEFAULT 'Published',
   created_by INT DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_events_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_events_date (event_date)
+  INDEX idx_events_date (event_date),
+  INDEX idx_events_status_date (status, event_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
@@ -687,10 +690,10 @@ SQL,
         [12,'1st Term','2024/2025',2700],
     ]);
 
-    insertRows($pdo, "INSERT INTO events (title,event_date,event_time,all_day,audience,description,created_by) VALUES (?,?,?,?,?,?,?)", [
-        ['End of Term Exams','2025-03-21','08:00:00',1,'All','Final exams for all classes.',1],
-        ['PTA Meeting','2025-03-28','14:00:00',0,'Parents','Parents and Teachers Association meeting.',1],
-        ['Sports Day','2025-04-05','08:00:00',1,'All','Annual inter-house sports competition.',1],
+    insertRows($pdo, "INSERT INTO events (title,event_date,event_time,all_day,location,audience,description,status,created_by) VALUES (?,?,?,?,?,?,?,?,?)", [
+        ['End of Term Exams','2026-08-21','08:00:00',1,'School Campus','All','Final exams for all classes.','Published',1],
+        ['PTA Meeting','2026-08-28','14:00:00',0,'School Hall','Parents','Parents and Teachers Association meeting.','Published',1],
+        ['Sports Day','2026-09-05','08:00:00',1,'Sports Field','All','Annual inter-house sports competition.','Published',1],
     ]);
     insertRows($pdo, "INSERT INTO notices (icon,title,audience,posted_by,notice_date,message,priority,attachment) VALUES (?,?,?,?,?,?,?,?)", [
         ['<i class=\"fas fa-file-alt\"></i>','End of Term Examination Timetable','All','Admin','2025-03-10','The end of term examination timetable is now available.','Important',null],
