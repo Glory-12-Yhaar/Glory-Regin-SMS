@@ -551,6 +551,28 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing events:", e); }
 
+    try {
+        const res = await API.notices.list({ limit: 500 });
+        if (res && res.success && res.data && Array.isArray(window.noticesData)) {
+            noticesData.splice(0, noticesData.length, ...res.data.map(n => ({
+                id: parseInt(n.id, 10),
+                icon: n.icon || '<i class="fas fa-bullhorn"></i>',
+                title: n.title || '',
+                audience: n.audience || 'All',
+                posted_by: n.posted_by || '',
+                postedBy: n.posted_by || '',
+                notice_date: n.notice_date || '',
+                date: n.notice_date || '',
+                message: n.message || '',
+                priority: n.priority || 'Normal',
+                status: n.status || 'Published',
+                attachment: n.attachment || '',
+                created_at: n.created_at || '',
+                updated_at: n.updated_at || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing notices:", e); }
+
     // 5. Admissions
     try {
         const res = await API.admissions.list({ limit: 200 });

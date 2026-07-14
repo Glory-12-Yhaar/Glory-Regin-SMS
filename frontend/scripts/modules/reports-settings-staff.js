@@ -1397,6 +1397,78 @@ function viewArchivedTeachers() {
 }
 
 
+function getNoticesData(options = {}) {
+  const list = Array.isArray(window.noticesData) ? window.noticesData : [];
+  return list
+    .filter(n => options.includeUnpublished || (n.status || 'Published') === 'Published')
+    .sort((a, b) => String(b.notice_date || b.date || '').localeCompare(String(a.notice_date || a.date || '')) || Number(b.id || 0) - Number(a.id || 0));
+}
+
+function noticePriorityBadge(priority = 'Normal') {
+  const cls = priority === 'Urgent' ? 'b-danger' : priority === 'Important' ? 'b-warning' : 'b-info';
+  return `<span class="badge ${cls}">${escapeHtml(priority)}</span>`;
+}
+
+function noticesModule() {
+  const canManage = ['Admin', 'Teacher'].includes(currentRole);
+  const notices = getNoticesData({ includeUnpublished: canManage });
+  const publishedCount = notices.filter(n => (n.status || 'Published') === 'Published').length;
+  const urgentCount = notices.filter(n => n.priority === 'Urgent').length;
+  const draftCount = notices.filter(n => n.status === 'Draft').length;
+  const rows = notices.map(n => `
+    <div class="notice-item" data-title="${escapeAttr(String(n.title || '').toLowerCase())}" data-audience="${escapeAttr(n.audience || 'All')}" data-status="${escapeAttr(n.status || 'Published')}" style="padding:14px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:10px;background:#fff">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div class="notice-icon" style="background:var(--blue-xpale);width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--blue-main)">${n.icon || '<i class="fas fa-bullhorn"></i>'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+            <h4 style="margin:0;color:var(--blue-dark);font-size:14px">${escapeHtml(n.title || '')}</h4>
+            <div style="display:flex;gap:6px;align-items:center">${noticePriorityBadge(n.priority)}${canManage ? `<span class="badge b-gray">${escapeHtml(n.status || 'Published')}</span>` : ''}</div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-400);margin:4px 0 8px">${escapeHtml(n.notice_date || n.date || '')} &middot; ${escapeHtml(n.audience || 'All')} &middot; ${escapeHtml(n.posted_by || n.postedBy || 'School')}</div>
+          <p style="margin:0;color:var(--gray-600);font-size:12.5px;line-height:1.6">${escapeHtml(n.message || '')}</p>
+          ${canManage ? `<div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-secondary btn-xs" onclick="editNotice(${n.id})">Edit</button><button class="btn btn-danger btn-xs" onclick="deleteNotice(${n.id})">Delete</button></div>` : ''}
+        </div>
+      </div>
+    </div>`).join('') || '<div style="text-align:center;color:var(--gray-400);padding:24px">No notices found.</div>';
+
+  const formHtml = canManage ? `
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-plus-circle"></i> Publish Notice</span></div>
+      <form onsubmit="publishNotice(event)">
+        <div class="f-field" style="margin-bottom:10px"><label>Title</label><input id="notice-title" required></div>
+        <div class="f-row">
+          <div class="f-field"><label>Audience</label><select id="notice-audience"><option>All</option><option>Students</option><option>Teachers</option><option>Staff</option><option>Parents</option><option>Alumni</option><option>Public</option></select></div>
+          <div class="f-field"><label>Priority</label><select id="notice-priority"><option>Normal</option><option>Important</option><option>Urgent</option></select></div>
+        </div>
+        <div class="f-row">
+          <div class="f-field"><label>Status</label><select id="notice-status"><option>Published</option><option>Draft</option><option>Archived</option></select></div>
+          <div class="f-field"><label>Attachment URL</label><input id="notice-attachment" placeholder="Optional"></div>
+        </div>
+        <div class="f-field" style="margin-bottom:12px"><label>Message</label><textarea id="notice-message" style="min-height:120px" required></textarea></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-primary" type="submit">Publish Notice</button><button class="btn btn-secondary" type="button" onclick="draftNotice()">Save Draft</button></div>
+      </form>
+    </div>` : '';
+
+  return hdr('Notices', 'School announcements and official communication', 'Notices') + `
+    <div class="stats-row">
+      ${statCard('<i class="fas fa-bullhorn"></i>', publishedCount, 'Published', 'Visible notices', 'up', 'si-blue')}
+      ${statCard('<i class="fas fa-exclamation-triangle"></i>', urgentCount, 'Urgent', 'High priority', urgentCount ? 'dn' : 'neu', 'si-red')}
+      ${statCard('<i class="fas fa-file-alt"></i>', draftCount, 'Drafts', canManage ? 'Not public' : 'Internal', 'neu', 'si-gold')}
+    </div>
+    <div class="${canManage ? 'g21' : ''}">
+      ${formHtml}
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-list"></i> Notice Board</span></div>
+        <div class="toolbar">
+          <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="notice-search" placeholder="Search notices..." oninput="filterNotices()"></div>
+          <button class="btn btn-secondary btn-sm filter-btn active" data-audience="All" onclick="filterByAudience('All')">All</button>
+          ${['Students','Teachers','Parents','Alumni','Public'].map(a => `<button class="btn btn-secondary btn-sm filter-btn" data-audience="${a}" onclick="filterByAudience('${a}')">${a}</button>`).join('')}
+        </div>
+        <div>${rows}</div>
+      </div>
+    </div>`;
+}
+
 function filterNotices() {
   const searchTerm = (document.getElementById('notice-search')?.value || '').toLowerCase();
   const noticeItems = document.querySelectorAll('.notice-item');
@@ -1428,6 +1500,8 @@ async function publishNotice(event) {
   const title    = document.getElementById('notice-title').value.trim();
   const audience = document.getElementById('notice-audience').value;
   const priority = document.getElementById('notice-priority').value;
+  const status   = document.getElementById('notice-status')?.value || 'Published';
+  const attachment = document.getElementById('notice-attachment')?.value.trim() || '';
   const message  = document.getElementById('notice-message').value.trim();
 
   if (!title || !message) {
@@ -1438,8 +1512,16 @@ async function publishNotice(event) {
   const btn = event.target.querySelector('[type=submit]') || event.target.querySelector('.btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing...'; }
 
-  const res = await API.notices.create({ title, audience, priority, message,
-    posted_by: currentRole, notice_date: new Date().toISOString().split('T')[0] });
+  const res = await API.notices.create({
+    title,
+    audience,
+    priority,
+    status,
+    attachment,
+    message,
+    posted_by: getSessionUser()?.name || currentRole,
+    notice_date: new Date().toISOString().split('T')[0]
+  });
 
   if (btn) { btn.disabled = false; btn.textContent = 'Publish Notice'; }
 
@@ -1449,24 +1531,38 @@ async function publishNotice(event) {
   }
 
   event.target.reset();
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast(`<i class="fas fa-check-circle"></i> Notice "${title}" published!`, 'success');
-  setTimeout(() => renderMain(), 1200);
+  renderMain();
 }
 
-function draftNotice() {
-  const title = document.getElementById('notice-title').value;
+async function draftNotice() {
+  const title = document.getElementById('notice-title').value.trim();
+  const message = document.getElementById('notice-message').value.trim() || 'Draft notice';
 
   if (!title) {
     showToast('<i class="fas fa-times-circle"></i> Please enter a title for your draft', 'error');
     return;
   }
 
-  showToast(`<i class="fas fa-file-alt"></i> Draft "${title}" saved to your account`, 'info');
-  document.querySelector('form[onsubmit="publishNotice(event)"]').reset();
+  const res = await API.notices.create({
+    title,
+    message,
+    audience: document.getElementById('notice-audience')?.value || 'All',
+    priority: document.getElementById('notice-priority')?.value || 'Normal',
+    status: 'Draft',
+    posted_by: getSessionUser()?.name || currentRole,
+    notice_date: new Date().toISOString().split('T')[0]
+  });
+  if (!res || !res.success) return showToast(res?.message || 'Failed to save draft', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast(`<i class="fas fa-file-alt"></i> Draft "${escapeHtml(title)}" saved`, 'info');
+  document.querySelector('form[onsubmit="publishNotice(event)"]')?.reset();
+  renderMain();
 }
 
 function editNotice(noticeId) {
-  const notice = NOTICES_DATA.find(n => n.id === noticeId);
+  const notice = getNoticesData({ includeUnpublished: true }).find(n => Number(n.id) === Number(noticeId));
   if (!notice) {
     showToast('<i class="fas fa-times-circle"></i> Notice not found', 'error');
     return;
@@ -1476,13 +1572,13 @@ function editNotice(noticeId) {
     <div style="max-width:850px;background:white;border-radius:12px;overflow:hidden">
       <div style="padding:20px;background:var(--blue-main);color:white">
         <h2 style="margin:0">Edit Notice</h2>
-        <p style="margin:8px 0 0 0;font-size:13px;opacity:0.9">${notice.title}</p>
+        <p style="margin:8px 0 0 0;font-size:13px;opacity:0.9">${escapeHtml(notice.title)}</p>
       </div>
       
       <form onsubmit="saveEditNotice(event, ${noticeId})" style="padding:20px">
         <div class="f-field" style="margin-bottom:12px">
           <label>Notice Title</label>
-          <input type="text" id="edit-notice-title" value="${notice.title}" required>
+          <input type="text" id="edit-notice-title" value="${escapeAttr(notice.title)}" required>
         </div>
         
         <div class="f-field" style="margin-bottom:12px">
@@ -1493,8 +1589,22 @@ function editNotice(noticeId) {
             <option value="Staff" ${notice.audience === 'Staff' ? 'selected' : ''}>Staff</option>
             <option value="Teachers" ${notice.audience === 'Teachers' ? 'selected' : ''}>Teachers</option>
             <option value="Parents" ${notice.audience === 'Parents' ? 'selected' : ''}>Parents</option>
-            <option value="Form 3" ${notice.audience === 'Form 3' ? 'selected' : ''}>Form 3 Only</option>
+            <option value="Alumni" ${notice.audience === 'Alumni' ? 'selected' : ''}>Alumni</option>
+            <option value="Public" ${notice.audience === 'Public' ? 'selected' : ''}>Public</option>
           </select>
+        </div>
+
+        <div class="f-row">
+          <div class="f-field">
+            <label>Status</label>
+            <select id="edit-notice-status" required>
+              ${['Published', 'Draft', 'Archived'].map(status => `<option value="${status}" ${status === (notice.status || 'Published') ? 'selected' : ''}>${status}</option>`).join('')}
+            </select>
+          </div>
+          <div class="f-field">
+            <label>Attachment URL</label>
+            <input id="edit-notice-attachment" value="${escapeAttr(notice.attachment || '')}">
+          </div>
         </div>
         
         <div class="f-field" style="margin-bottom:12px">
@@ -1508,7 +1618,7 @@ function editNotice(noticeId) {
         
         <div class="f-field" style="margin-bottom:12px">
           <label>Message</label>
-          <textarea id="edit-notice-message" style="min-height:120px" required>${notice.message}</textarea>
+          <textarea id="edit-notice-message" style="min-height:120px" required>${escapeHtml(notice.message || '')}</textarea>
         </div>
         
         <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
@@ -1522,42 +1632,45 @@ function editNotice(noticeId) {
   openModal(formHTML);
 }
 
-function saveEditNotice(event, noticeId) {
+async function saveEditNotice(event, noticeId) {
   event.preventDefault();
 
-  const notice = NOTICES_DATA.find(n => n.id === noticeId);
+  const notice = getNoticesData({ includeUnpublished: true }).find(n => Number(n.id) === Number(noticeId));
   if (!notice) {
     showToast('<i class="fas fa-times-circle"></i> Notice not found', 'error');
     return;
   }
 
-  notice.title = document.getElementById('edit-notice-title').value;
-  notice.audience = document.getElementById('edit-notice-audience').value;
-  notice.priority = document.getElementById('edit-notice-priority').value;
-  notice.message = document.getElementById('edit-notice-message').value;
+  const payload = {
+    title: document.getElementById('edit-notice-title').value,
+    audience: document.getElementById('edit-notice-audience').value,
+    priority: document.getElementById('edit-notice-priority').value,
+    status: document.getElementById('edit-notice-status').value,
+    attachment: document.getElementById('edit-notice-attachment').value,
+    message: document.getElementById('edit-notice-message').value
+  };
 
+  const res = await API.notices.update(noticeId, payload);
+  if (!res || !res.success) return showToast(res?.message || 'Failed to update notice', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   closeModal();
   showToast('<i class="fas fa-check-circle"></i> Notice updated successfully!', 'success');
-
-  setTimeout(() => {
-    renderMain();
-  }, 1500);
+  renderMain();
 }
 
-function deleteNotice(noticeId) {
-  const notice = NOTICES_DATA.find(n => n.id === noticeId);
+async function deleteNotice(noticeId) {
+  const notice = getNoticesData({ includeUnpublished: true }).find(n => Number(n.id) === Number(noticeId));
   if (!notice) {
     showToast('<i class="fas fa-times-circle"></i> Notice not found', 'error');
     return;
   }
 
   if (confirm(`Are you sure you want to delete "${notice.title}"? This action cannot be undone.`)) {
-    NOTICES_DATA.splice(NOTICES_DATA.indexOf(notice), 1);
+    const res = await API.notices.delete(noticeId);
+    if (!res || !res.success) return showToast(res?.message || 'Failed to delete notice', 'error');
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     showToast('<i class="fas fa-check-circle"></i> Notice deleted successfully!', 'success');
-
-    setTimeout(() => {
-      renderMain();
-    }, 1500);
+    renderMain();
   }
 }
 
@@ -3974,7 +4087,7 @@ const SYSTEM_LOGS = [
   { level: 'INFO', message: 'Student enrollment: Ama Serwaa', time: '2025-03-17 08:05:33', type: 'enrollment' },
   { level: 'WARNING', message: 'Failed login attempt', time: '2025-03-17 08:10:45', type: 'security' },
   { level: 'INFO', message: 'Fee payment recorded - GHS 5,000', time: '2025-03-17 08:30:12', type: 'payment' },
-  { level: 'INFO', message: 'Notice published: School Holiday', time: '2025-03-17 09:00:00', type: 'admin' },
+  { level: 'INFO', message: 'System settings reviewed', time: '2025-03-17 09:00:00', type: 'admin' },
   { level: 'ERROR', message: 'Backup storage 80% full', time: '2025-03-17 09:15:22', type: 'system' },
   { level: 'INFO', message: 'Timetable updated for Form 3', time: '2025-03-17 10:00:00', type: 'academic' },
   { level: 'INFO', message: 'Academic Report generated', time: '2025-03-17 10:30:00', type: 'report' },

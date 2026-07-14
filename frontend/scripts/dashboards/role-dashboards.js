@@ -433,16 +433,14 @@ function studentDash() {
         <div style="font-size:11px;color:var(--blue-main);font-weight:700;min-width:42px">${t}</div>
         <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} Â· ${tc}</div></div>
       </div>`).join('');
-  const studentEvents = (typeof getUpcomingEvents === 'function' ? getUpcomingEvents('Students') : []).slice(0, 3);
-  const noticeRows = studentEvents.length ? studentEvents.map(ev => {
-    const parts = typeof formatEventDateParts === 'function' ? formatEventDateParts(ev.date) : { long: ev.date };
-    const time = typeof formatEventTime === 'function' ? formatEventTime(ev) : (ev.time || 'Time not set');
-    return `
+  const studentNotices = (typeof getNoticesData === 'function' ? getNoticesData() : (window.noticesData || []))
+    .filter(n => ['All', 'Students'].includes(n.audience || 'All'))
+    .slice(0, 3);
+  const noticeRows = studentNotices.length ? studentNotices.map(n => `
       <div class="notice-item" style="padding:10px 0">
-        <div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px"><i class="fas fa-calendar-alt"></i></div>
-        <div class="notice-content"><h4>${escapeHtml(ev.title)}</h4><p>${escapeHtml(parts.long || ev.date)} Â· ${escapeHtml(time)}</p></div>
-      </div>`;
-  }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No upcoming student events.</div>';
+        <div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px">${n.icon || '<i class="fas fa-bullhorn"></i>'}</div>
+        <div class="notice-content"><h4>${escapeHtml(n.title || '')}</h4><p>${escapeHtml(n.notice_date || n.date || '')} Â· ${escapeHtml(n.priority || 'Normal')}</p></div>
+      </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No notices for students.</div>';
 
   return hdr('Student Dashboard', 'Welcome, ' + studentName + ' Â· ' + studentClass + ' Â· ID No: ' + studentId + ' Â· ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/student/index.html', {

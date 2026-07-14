@@ -170,6 +170,26 @@ function deleteHeroSlide(slideId) {
 }
 
 function visitorHome() {
+  if ((!window.noticesData || !window.noticesData.length) && typeof API !== 'undefined' && API.notices) {
+    API.notices.list({ limit: 6 }).then(res => {
+      if (res && res.success && Array.isArray(res.data) && Array.isArray(window.noticesData)) {
+        window.noticesData.splice(0, window.noticesData.length, ...res.data.map(n => ({
+          id: parseInt(n.id, 10),
+          icon: n.icon || '<i class="fas fa-bullhorn"></i>',
+          title: n.title || '',
+          audience: n.audience || 'All',
+          posted_by: n.posted_by || '',
+          notice_date: n.notice_date || '',
+          date: n.notice_date || '',
+          message: n.message || '',
+          priority: n.priority || 'Normal',
+          status: n.status || 'Published',
+          attachment: n.attachment || ''
+        })));
+        if (currentRole === 'Visitor' && typeof renderMain === 'function') renderMain();
+      }
+    }).catch(() => {});
+  }
   const hero = getActiveHeroSlide();
   const heroStyle = hero?.image ? ` style="background-image:linear-gradient(135deg,rgba(10,34,64,.82),rgba(26,86,219,.62)),url('${escapeAttr(hero.image)}')"` : '';
   const sourceArticles = (typeof newsArticles === 'undefined') ? [] : newsArticles;
@@ -179,6 +199,7 @@ function visitorHome() {
   const schoolEmail = schoolInfo.email || SCHOOL_EMAIL;
   const schoolAddress = schoolInfo.address || 'P.O. Box 42, Jirapa, Upper West Region, Ghana';
   const publicEvents = (typeof getUpcomingEvents === 'function' ? getUpcomingEvents() : []).slice(0, 3);
+  const publicNotices = (typeof getNoticesData === 'function' ? getNoticesData() : (window.noticesData || []).filter(n => (n.status || 'Published') === 'Published')).slice(0, 3);
   const eventCards = publicEvents.map(ev => {
     const parts = typeof formatEventDateParts === 'function' ? formatEventDateParts(ev.date) : { month: '', day: '', long: ev.date };
     const time = typeof formatEventTime === 'function' ? formatEventTime(ev) : (ev.time || 'Time not set');
@@ -196,6 +217,19 @@ function visitorHome() {
       </div>
     </div>`;
   }).join('');
+  const noticeCards = publicNotices.map(n => `<div class="card">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="width:42px;height:42px;border-radius:8px;background:var(--blue-xpale);display:flex;align-items:center;justify-content:center;color:var(--blue-main)">${n.icon || '<i class="fas fa-bullhorn"></i>'}</div>
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin:0">${escapeHtml(n.title || '')}</h3>
+          <span class="badge ${n.priority === 'Urgent' ? 'b-danger' : n.priority === 'Important' ? 'b-warning' : 'b-info'}">${escapeHtml(n.priority || 'Normal')}</span>
+        </div>
+        <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:8px">${escapeHtml(n.notice_date || n.date || '')} &middot; ${escapeHtml(n.audience || 'All')}</p>
+        <p style="font-size:12px;color:var(--gray-600);line-height:1.6;margin:0">${escapeHtml(n.message || '')}</p>
+      </div>
+    </div>
+  </div>`).join('');
   return `<section id="home-section" class="public-section">
   <div class="visitor-hero visitor-hero-photo"${heroStyle}>
     <h1>${escapeHtml(hero?.title || 'Glory Reign Preparatory School')}</h1>
@@ -239,6 +273,10 @@ function visitorHome() {
   <section id="events-section" class="public-section">
     <div class="section-title"><h2>Events</h2><p>Upcoming school activities and public calendar dates.</p></div>
     <div class="g3">${eventCards || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No upcoming events published yet.</div>'}</div>
+  </section>
+  <section id="notices-section" class="public-section">
+    <div class="section-title"><h2>Notices</h2><p>Official announcements from the school office.</p></div>
+    <div class="g3">${noticeCards || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No public notices published yet.</div>'}</div>
   </section>
   <section id="news-section" class="public-section">
     <div class="section-title"><h2>News</h2><p>Latest stories from Glory Reign Preparatory School.</p></div>

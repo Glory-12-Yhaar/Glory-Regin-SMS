@@ -35,8 +35,8 @@ if (in_array($role, ['Admin', 'Teacher'])) {
         "SELECT COUNT(*) FROM events WHERE event_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)"
     )->fetchColumn();
 
-    // Unread notices
-    $data['total_notices'] = (int)$db->query("SELECT COUNT(*) FROM notices")->fetchColumn();
+    // Published notices
+    $data['total_notices'] = (int)$db->query("SELECT COUNT(*) FROM notices WHERE status = 'Published'")->fetchColumn();
 
     // Students per class
     $stmt = $db->query(
@@ -139,6 +139,7 @@ if ($role === 'Admin') {
     $stmt = $db->query(
         "SELECT CONCAT('Notice published: ', title) AS message, notice_date AS activity_time, 'purple' AS color
          FROM notices
+         WHERE status = 'Published'
          ORDER BY notice_date DESC, id DESC
          LIMIT 3"
     );

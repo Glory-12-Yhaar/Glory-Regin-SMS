@@ -431,11 +431,13 @@ CREATE TABLE notices (
   notice_date DATE DEFAULT NULL,
   message TEXT DEFAULT NULL,
   priority ENUM('Normal','Important','Urgent') NOT NULL DEFAULT 'Normal',
+  status ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
   attachment VARCHAR(255) DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_notices_date (notice_date),
-  INDEX idx_notices_audience (audience)
+  INDEX idx_notices_audience (audience),
+  INDEX idx_notices_status_date (status, notice_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
@@ -695,9 +697,9 @@ SQL,
         ['PTA Meeting','2026-08-28','14:00:00',0,'School Hall','Parents','Parents and Teachers Association meeting.','Published',1],
         ['Sports Day','2026-09-05','08:00:00',1,'Sports Field','All','Annual inter-house sports competition.','Published',1],
     ]);
-    insertRows($pdo, "INSERT INTO notices (icon,title,audience,posted_by,notice_date,message,priority,attachment) VALUES (?,?,?,?,?,?,?,?)", [
-        ['<i class=\"fas fa-file-alt\"></i>','End of Term Examination Timetable','All','Admin','2025-03-10','The end of term examination timetable is now available.','Important',null],
-        ['<i class=\"fas fa-money-bill\"></i>','Fees Payment Deadline','Parents','Accountant','2025-03-08','All outstanding fees must be paid by March 15th.','Urgent',null],
+    insertRows($pdo, "INSERT INTO notices (icon,title,audience,posted_by,notice_date,message,priority,status,attachment) VALUES (?,?,?,?,?,?,?,?,?)", [
+        ['<i class=\"fas fa-file-alt\"></i>','End of Term Examination Timetable','All','Admin','2026-08-10','The end of term examination timetable is now available.','Important','Published',null],
+        ['<i class=\"fas fa-money-bill\"></i>','Fees Payment Deadline','Parents','Accountant','2026-08-08','All outstanding fees must be paid by August 15th.','Urgent','Published',null],
     ]);
     ok('Seeded events and notices.');
 

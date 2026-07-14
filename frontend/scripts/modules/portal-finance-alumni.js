@@ -834,11 +834,14 @@ function getCurrentAlumniProfile() {
 }
 
 function getAlumniAnnouncements(){
-  return [
-    {title:'Annual Alumni General Meeting', description:'Join us virtually on Zoom to discuss upcoming projects.', date:'2 days ago', color:'blue'},
-    {title:'Call for Mentorship Program', description:'Volunteer to mentor final year students.', date:'1 week ago', color:'gold'},
-    {title:'Homecoming 2026 Planning', description:'Save the date for our biggest reunion yet!', date:'2 weeks ago', color:'green'}
-  ];
+  const notices = (typeof getNoticesData === 'function' ? getNoticesData() : (window.noticesData || []))
+    .filter(n => ['All', 'Alumni', 'Public'].includes(n.audience || 'All'));
+  return notices.map(n => ({
+    title: n.title || '',
+    description: n.message || '',
+    date: n.notice_date || n.date || '',
+    color: n.priority === 'Urgent' ? 'danger' : n.priority === 'Important' ? 'gold' : 'blue'
+  }));
 }
 
 function getAlumniCampaigns(){

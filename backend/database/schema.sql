@@ -335,8 +335,13 @@ CREATE TABLE IF NOT EXISTS `notices` (
   `notice_date` DATE,
   `message` TEXT,
   `priority` ENUM('Normal','Important','Urgent') DEFAULT 'Normal',
+  `status` ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
   `attachment` VARCHAR(255),
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_notices_date` (`notice_date`),
+  INDEX `idx_notices_audience` (`audience`),
+  INDEX `idx_notices_status_date` (`status`, `notice_date`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
