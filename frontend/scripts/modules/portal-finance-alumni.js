@@ -705,23 +705,15 @@ function viewPaymentHistory(studentId){
 // -----------------------------------
 // ALUMNI DASHBOARD HELPERS
 // -----------------------------------
-const ALUMNI_LIST_KEY = 'gr_alumni_list';
-const ALUMNI_DONATIONS_KEY = 'gr_alumni_donations';
 const ALUMNI_EVENTS_KEY = 'gr_alumni_events';
 const ALUMNI_REGISTRATIONS_KEY = 'gr_alumni_registrations';
 
 function getAlumniList(){
-  try{
-    const raw = appMemoryStorage.getItem(ALUMNI_LIST_KEY);
-    if(raw) return JSON.parse(raw);
-    const sample = [
-      {id:'A001', name:'Samuel Amponsah', gradYear:2015, profession:'Software Engineer', location:'Accra', bio:'Working at tech startup', avatar:'blue'},
-      {id:'A002', name:'Grace Mensah', gradYear:2018, profession:'Banker', location:'Kumasi', bio:'Senior Associate at GCB', avatar:'gold'},
-      {id:'A003', name:'David Boateng', gradYear:2020, profession:'Doctor', location:'Takoradi', bio:'Medical resident at Korle-Bu', avatar:'green'}
-    ];
-    appMemoryStorage.setItem(ALUMNI_LIST_KEY, JSON.stringify(sample));
-    return sample;
-  }catch(e){return []}
+  return Object.values(ALUMNI_DATA || {}).map(a => ({
+    ...a,
+    gradYear: a.gradYear || a.classYear,
+    avatar: a.avatarColor || a.avatar || 'blue'
+  }));
 }
 
 function getCurrentAlumniProfile() {
@@ -780,19 +772,11 @@ function getAlumniEvents(){
 
 function getAlumniDonations(){
   try{
-    const raw = appMemoryStorage.getItem(ALUMNI_DONATIONS_KEY);
-    if(raw) return JSON.parse(raw);
-    const sample = [
-      {id:'D001', name:'Samuel Amponsah', amount:500, campaign:'Science Lab', date:'Mar 15, 2025', status:'Completed', method:'Bank Transfer'},
-      {id:'D002', name:'Grace Mensah', amount:1000, campaign:'Scholarship Fund', date:'Mar 10, 2025', status:'Completed', method:'Mobile Money'},
-      {id:'D003', name:'David Boateng', amount:250, campaign:'WiFi Upgrade', date:'Mar 8, 2025', status:'Completed', method:'Card'}
-    ];
-    appMemoryStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(sample));
-    return sample;
+    return [];
   }catch(e){return []}
 }
 
-function saveAlumniDonations(list){ appMemoryStorage.setItem(ALUMNI_DONATIONS_KEY, JSON.stringify(list)); }
+function saveAlumniDonations(list){}
 
 function getAlumniEventRegistrations(){
   try{
@@ -820,7 +804,7 @@ function openAlumniDirectory(){
             <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
             <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="connectWithAlumni('${a.id}')"><i class="fas fa-user-plus"></i> Connect</button>
+          <button class="btn btn-secondary btn-sm" onclick="showAlumniProfile('${a.id}')"><i class="fas fa-user"></i> Profile</button>
         </div>`).join('')}
       </div>
       <button class="btn btn-secondary" style="margin-top:16px" onclick="navTo('dashboard')"><i class="fas fa-arrow-left"></i> Back</button>
@@ -846,13 +830,9 @@ function filterAlumniDirectory(){
       <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
       <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="connectWithAlumni('${a.id}')"><i class="fas fa-user-plus"></i> Connect</button>
+    <button class="btn btn-secondary btn-sm" onclick="showAlumniProfile('${a.id}')"><i class="fas fa-user"></i> Profile</button>
   </div>`).join('');
   document.getElementById('alumni-list').innerHTML = html || '<div style="text-align:center;color:var(--gray-400);padding:20px">No alumni found</div>';
-}
-
-function connectWithAlumni(alumniId){
-  showToast('<i class="fas fa-check-circle"></i> Connection request sent', 'success');
 }
 
 function openAlumniJobs(){
@@ -2542,16 +2522,20 @@ function balanceSheetModule() {
 }
 
 // ALUMNI DIRECTORY
-function alumniDirectory() {
+function alumniDirectory(options = {}) {
+  const publicView = options.publicView || currentRole === 'Visitor';
+  const alumniRows = Object.values(ALUMNI_DATA || {})
+    .filter(a => !publicView || (a.status || 'Published') === 'Published');
+  const years = [...new Set(alumniRows.map(a => a.classYear).filter(Boolean))].sort((a, b) => b - a);
+  const professions = [...new Set(alumniRows.map(a => a.profession).filter(Boolean))].sort();
   return `<div class="toolbar">
-    <button class="btn btn-primary" onclick="toggleAddAlumniForm()"><i class="fas fa-plus"></i> Add Alumni</button>
+    ${publicView ? '' : '<button class="btn btn-primary" onclick="toggleAddAlumniForm()"><i class="fas fa-plus"></i> Add Alumni</button>'}
     <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="alumni-search" placeholder="Search alumni..." onkeyup="filterAlumni()"></div>
-    <select id="alumni-year-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Years</option><option value="2021">Class of 2021</option><option value="2020">Class of 2020</option><option value="2019">Class of 2019</option><option value="2018">Class of 2018</option><option value="2017">Class of 2017</option><option value="2016">Class of 2016</option><option value="2015">Class of 2015</option><option value="2014">Class of 2014</option><option value="2013">Class of 2013</option><option value="2012">Class of 2012</option></select>
-    <select id="alumni-profession-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Professions</option><option value="Software Engineer">Engineering</option><option value="Medical Doctor">Medicine</option><option value="Lawyer">Law</option><option value="Teacher">Education</option><option value="Nurse">Healthcare</option><option value="Business">Business</option></select>
+    <select id="alumni-year-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Years</option>${years.map(y => `<option value="${escapeAttr(String(y))}">Class of ${escapeHtml(String(y))}</option>`).join('')}</select>
+    <select id="alumni-profession-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Professions</option>${professions.map(p => `<option value="${escapeAttr(p)}">${escapeHtml(p)}</option>`).join('')}</select>
   </div>
 
-  <!-- ADD ALUMNI FORM -->
-  <div id="alumni-form-wrap" style="display:none;margin-bottom:20px">
+  ${publicView ? '' : `<div id="alumni-form-wrap" style="display:none;margin-bottom:20px">
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-user-plus"></i> Add New Alumni</span></div>
       <div class="form-grid">
@@ -2565,6 +2549,8 @@ function alumniDirectory() {
         <div class="form-field"><label>LinkedIn Profile</label><input type="text" id="alumni-linkedin" placeholder="linkedin.com/in/username"></div>
         <div class="form-field"><label>Twitter Handle</label><input type="text" id="alumni-twitter" placeholder="@username"></div>
         <div class="form-field"><label>Facebook URL</label><input type="text" id="alumni-facebook" placeholder="facebook.com/username"></div>
+        <div class="form-field"><label>Status</label><select id="alumni-status"><option>Published</option><option>Draft</option><option>Archived</option></select></div>
+        <label class="form-field" style="display:flex;align-items:center;gap:8px;margin-top:22px"><input type="checkbox" id="alumni-featured"> Featured on website</label>
         <div class="form-field" style="grid-column:1/-1"><label>Bio</label><textarea id="alumni-bio" placeholder="Brief biography..." style="min-height:60px;font-family:Poppins,sans-serif;border:1.5px solid var(--gray-200);border-radius:6px;padding:8px;font-size:12px"></textarea></div>
         <div style="grid-column:1/-1;display:flex;gap:8px">
           <button class="btn btn-primary" style="flex:1" onclick="submitAlumni()"><i class="fas fa-check"></i> Add Alumni Member</button>
@@ -2572,23 +2558,24 @@ function alumniDirectory() {
         </div>
       </div>
     </div>
-  </div>
+  </div>`}
 
   <div class="g3" id="alumni-grid">
-    ${Object.values(ALUMNI_DATA).map(a => `
+    ${alumniRows.map(a => `
     <div class="card alumni-card" data-name="${a.name.toLowerCase()}" data-year="${a.classYear}" data-profession="${a.profession.toLowerCase()}" style="cursor:pointer" onclick="if(!event.target.closest('button')) showAlumniProfile('${a.id}')">
       <div style="display:flex;gap:12px;margin-bottom:14px">
-        <div class="av av-lg av-${a.avatarColor}">${a.avatar}</div>
-        <div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${a.name}</div>
-        <span class="badge b-info" style="margin-top:4px">Class of ${a.classYear}</span></div>
+        <div class="av av-lg av-${a.avatarColor || 'blue'}">${escapeHtml(a.avatar || getInitials(a.name, 'AL'))}</div>
+        <div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
+        <span class="badge b-info" style="margin-top:4px">Class of ${escapeHtml(String(a.classYear || 'N/A'))}</span>${!publicView ? `<span class="badge ${a.status === 'Published' ? 'b-success' : a.status === 'Draft' ? 'b-warning' : 'b-gray'}" style="margin-left:4px">${escapeHtml(a.status || 'Published')}</span>` : ''}</div>
       </div>
-      <div style="font-size:13px;font-weight:600;margin-bottom:4px">${a.profession}</div>
-      <div style="font-size:11px;color:var(--gray-400);margin-bottom:14px"><i class="fas fa-map-pin"></i> ${a.location}</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">${escapeHtml(a.profession || '')}</div>
+      <div style="font-size:11px;color:var(--gray-400);margin-bottom:14px"><i class="fas fa-map-pin"></i> ${escapeHtml(a.location || '')}</div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="showAlumniProfile('${a.id}')">Profile</button>
-        <button class="btn btn-primary btn-xs" style="flex:1" onclick="showConnectModal('${a.id}')">Connect</button>
+        <button class="btn btn-primary btn-xs" style="flex:1" onclick="showConnectModal('${a.id}')">Links</button>
+        ${!publicView ? `<button class="btn btn-danger btn-xs" onclick="deleteAlumni('${a.id}')"><i class="fas fa-trash"></i></button>` : ''}
       </div>
-    </div>`).join('')}
+    </div>`).join('') || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No alumni records found.</div>'}
   </div>`;
 }
 
@@ -2688,14 +2675,15 @@ function certificatesModule() {
 
 // ALUMNI PUBLIC MODULE
 function alumniPubModule() {
+  const count = Object.values(ALUMNI_DATA || {}).filter(a => (a.status || 'Published') === 'Published').length;
   return `<div class="visitor-hero" style="margin-bottom:26px">
     <h1><i class="fas fa-medal"></i> Our Distinguished Alumni</h1>
-    <p>Glory Reign Preparatory School alumni are making their mark across Ghana and around the world. Join our growing network of over 5,200 graduates.</p>
+    <p>Glory Reign Preparatory School alumni are making their mark across Ghana and around the world. Browse ${count} published alumni profiles from the school database.</p>
     <div class="hero-btns">
-      <button class="hero-btn-gold" onclick="openAlumniDirectory()">Connect with Alumni</button>
+    <button class="hero-btn-gold" onclick="document.getElementById('alumni-search')?.focus()">Browse Alumni</button>
       <button class="hero-btn-outline" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Alumni association details opened', 'success')">Alumni Association</button>
     </div>
-  </div>`+ alumniDirectory();
+  </div>`+ alumniDirectory({ publicView: true });
 }
 
 

@@ -2256,14 +2256,13 @@ const SETTINGS_DATA = {
   },
   academic: {
     academicYear: '2024/2025',
-    currentTerm: 'Term 1',
+    currentTerm: '1st Term',
     termStartDate: '2025-01-13',
     termEndDate: '2025-04-11',
     academicYears: '2024/2025,2025/2026,2026/2027'
   },
   system: {
     maintenanceMode: false,
-    backupFrequency: 'Daily',
     maxUploadSize: '50MB',
     language: 'English'
   },
@@ -2287,18 +2286,115 @@ const SETTINGS_DATA = {
   }
 };
 
-// SETTINGS DATA IS SERVER/AUTHORITY OWNED
-function saveSettingsToStorage() {
+function boolSetting(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
 }
 
-function loadSettingsFromStorage() {
-  if (SETTINGS_DATA.schoolInfo) {
-    SETTINGS_DATA.schoolInfo.email = SCHOOL_EMAIL;
+function applySettingsFromBackend(data = {}) {
+  SETTINGS_DATA.schoolInfo = {
+    schoolName: data.school_name ?? data.schoolinfo_schoolname ?? SETTINGS_DATA.schoolInfo.schoolName,
+    schoolCode: data.school_code ?? data.schoolinfo_schoolcode ?? SETTINGS_DATA.schoolInfo.schoolCode,
+    schoolMotto: data.school_motto ?? data.motto ?? data.schoolinfo_schoolmotto ?? SETTINGS_DATA.schoolInfo.schoolMotto,
+    schoolLogo: data.school_logo ?? data.schoolinfo_schoollogo ?? SETTINGS_DATA.schoolInfo.schoolLogo,
+    region: data.region ?? data.schoolinfo_region ?? SETTINGS_DATA.schoolInfo.region,
+    district: data.district ?? data.schoolinfo_district ?? SETTINGS_DATA.schoolInfo.district,
+    phone: data.phone ?? data.schoolinfo_phone ?? SETTINGS_DATA.schoolInfo.phone,
+    email: data.email ?? data.schoolinfo_email ?? SCHOOL_EMAIL,
+    address: data.address ?? data.schoolinfo_address ?? SETTINGS_DATA.schoolInfo.address,
+    website: data.website ?? data.schoolinfo_website ?? SETTINGS_DATA.schoolInfo.website
+  };
+  SETTINGS_DATA.academic = {
+    academicYear: data.academic_year ?? data.academic_academicyear ?? SETTINGS_DATA.academic.academicYear,
+    currentTerm: data.current_term ?? data.academic_currentterm ?? SETTINGS_DATA.academic.currentTerm,
+    termStartDate: data.term_start_date ?? data.academic_termstartdate ?? SETTINGS_DATA.academic.termStartDate,
+    termEndDate: data.term_end_date ?? data.academic_termenddate ?? SETTINGS_DATA.academic.termEndDate,
+    academicYears: data.academic_years ?? data.academic_academicyears ?? SETTINGS_DATA.academic.academicYears
+  };
+  SETTINGS_DATA.system = {
+    maintenanceMode: boolSetting(data.maintenance_mode ?? data.system_maintenancemode, SETTINGS_DATA.system.maintenanceMode),
+    maxUploadSize: data.max_upload_size ?? data.system_maxuploadsize ?? SETTINGS_DATA.system.maxUploadSize,
+    language: data.language ?? data.system_language ?? SETTINGS_DATA.system.language
+  };
+  SETTINGS_DATA.security = {
+    passwordPolicy: data.password_policy ?? data.security_passwordpolicy ?? SETTINGS_DATA.security.passwordPolicy,
+    sessionTimeout: data.session_timeout ?? data.security_sessiontimeout ?? SETTINGS_DATA.security.sessionTimeout,
+    twoFactorAuth: boolSetting(data.two_factor_auth ?? data.security_twofactorauth, SETTINGS_DATA.security.twoFactorAuth),
+    apiKeyRotation: data.api_key_rotation ?? data.security_apikeyrotation ?? SETTINGS_DATA.security.apiKeyRotation
+  };
+  SETTINGS_DATA.appearance = {
+    theme: data.theme ?? data.appearance_theme ?? SETTINGS_DATA.appearance.theme,
+    accentColor: data.accent_color ?? data.appearance_accentcolor ?? SETTINGS_DATA.appearance.accentColor,
+    fontSize: data.font_size ?? data.appearance_fontsize ?? SETTINGS_DATA.appearance.fontSize,
+    compactMode: boolSetting(data.compact_mode ?? data.appearance_compactmode, SETTINGS_DATA.appearance.compactMode)
+  };
+  SETTINGS_DATA.notifications = {
+    emailNotifications: boolSetting(data.email_notifications ?? data.notifications_emailnotifications, SETTINGS_DATA.notifications.emailNotifications),
+    smsNotifications: boolSetting(data.sms_notifications ?? data.notifications_smsnotifications, SETTINGS_DATA.notifications.smsNotifications),
+    pushNotifications: boolSetting(data.push_notifications ?? data.notifications_pushnotifications, SETTINGS_DATA.notifications.pushNotifications),
+    dailyDigest: boolSetting(data.daily_digest ?? data.notifications_dailydigest, SETTINGS_DATA.notifications.dailyDigest)
+  };
+  if (typeof applyTheme === 'function') {
+    darkMode = SETTINGS_DATA.appearance.theme === 'Dark';
+    applyTheme();
   }
 }
 
-// Load settings on initialization
-loadSettingsFromStorage();
+function flattenSettingsForBackend() {
+  return {
+    school_name: SETTINGS_DATA.schoolInfo.schoolName,
+    school_code: SETTINGS_DATA.schoolInfo.schoolCode,
+    school_motto: SETTINGS_DATA.schoolInfo.schoolMotto,
+    motto: SETTINGS_DATA.schoolInfo.schoolMotto,
+    school_logo: SETTINGS_DATA.schoolInfo.schoolLogo,
+    region: SETTINGS_DATA.schoolInfo.region,
+    district: SETTINGS_DATA.schoolInfo.district,
+    phone: SETTINGS_DATA.schoolInfo.phone,
+    email: SETTINGS_DATA.schoolInfo.email,
+    address: SETTINGS_DATA.schoolInfo.address,
+    website: SETTINGS_DATA.schoolInfo.website,
+    academic_year: SETTINGS_DATA.academic.academicYear,
+    current_term: SETTINGS_DATA.academic.currentTerm,
+    term_start_date: SETTINGS_DATA.academic.termStartDate,
+    term_end_date: SETTINGS_DATA.academic.termEndDate,
+    academic_years: SETTINGS_DATA.academic.academicYears,
+    maintenance_mode: SETTINGS_DATA.system.maintenanceMode ? '1' : '0',
+    max_upload_size: SETTINGS_DATA.system.maxUploadSize,
+    language: SETTINGS_DATA.system.language,
+    password_policy: SETTINGS_DATA.security.passwordPolicy,
+    session_timeout: SETTINGS_DATA.security.sessionTimeout,
+    two_factor_auth: SETTINGS_DATA.security.twoFactorAuth ? '1' : '0',
+    api_key_rotation: SETTINGS_DATA.security.apiKeyRotation,
+    theme: SETTINGS_DATA.appearance.theme,
+    accent_color: SETTINGS_DATA.appearance.accentColor,
+    font_size: SETTINGS_DATA.appearance.fontSize,
+    compact_mode: SETTINGS_DATA.appearance.compactMode ? '1' : '0',
+    email_notifications: SETTINGS_DATA.notifications.emailNotifications ? '1' : '0',
+    sms_notifications: SETTINGS_DATA.notifications.smsNotifications ? '1' : '0',
+    push_notifications: SETTINGS_DATA.notifications.pushNotifications ? '1' : '0',
+    daily_digest: SETTINGS_DATA.notifications.dailyDigest ? '1' : '0'
+  };
+}
+
+async function saveSettingsToStorage() {
+  if (typeof API === 'undefined' || !API.settings) return false;
+  const res = await API.settings.update(flattenSettingsForBackend());
+  return !!(res && res.success);
+}
+
+async function loadSettingsFromStorage() {
+  if (typeof API === 'undefined' || !API.settings) {
+    SETTINGS_DATA.schoolInfo.email = SCHOOL_EMAIL;
+    return false;
+  }
+  const res = await API.settings.get();
+  if (res && res.success && res.data) {
+    applySettingsFromBackend(res.data);
+    return true;
+  }
+  return false;
+}
 
 function settingsModule() {
   if (currentRole !== 'Admin') {
@@ -2317,7 +2413,7 @@ function settingsModule() {
 
   return hdr('System Settings', 'Configure school information and system preferences', 'Settings') + `
   <div class="mod-tabs" id="settings-tabs">
-    ${['School Info', 'Academic', 'System', 'Security', 'Appearance', 'Notifications'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchSettingsTab(${i})">${t}</div>`).join('')}
+    ${['School Info', 'System', 'Security', 'Appearance', 'Notifications'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchSettingsTab(${i})">${t}</div>`).join('')}
   </div>
 
   <!-- SCHOOL INFO TAB -->
@@ -2353,7 +2449,7 @@ function settingsModule() {
 
       <div class="card">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Academic Calendar</span></div>
-        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year">${(SETTINGS_DATA.academic.academicYears || '2024/2025,2025/2026,2026/2027').split(',').map(y => `<option ${y === SETTINGS_DATA.academic.academicYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="f-field"><label>Current Term</label><select id="current-term">${['Term 1', 'Term 2', 'Term 3'].map(t => `<option ${t === SETTINGS_DATA.academic.currentTerm ? 'selected' : ''}\>${t}</option>`).join('')}</select></div></div>
+        <div class="f-row"><div class="f-field"><label>Academic Year</label><select id="academic-year">${(SETTINGS_DATA.academic.academicYears || '2024/2025,2025/2026,2026/2027').split(',').map(y => `<option ${y === SETTINGS_DATA.academic.academicYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="f-field"><label>Current Term</label><select id="current-term">${['1st Term', '2nd Term', '3rd Term'].map(t => `<option ${t === SETTINGS_DATA.academic.currentTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div></div>
         <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="${SETTINGS_DATA.academic.termStartDate}"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="${SETTINGS_DATA.academic.termEndDate}"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
@@ -2399,11 +2495,6 @@ function settingsModule() {
           <select id="maintenance-mode">
             <option value="false" ${SETTINGS_DATA.system.maintenanceMode === false || SETTINGS_DATA.system.maintenanceMode === 'false' ? 'selected' : ''}>Disabled</option>
             <option value="true" ${SETTINGS_DATA.system.maintenanceMode === true || SETTINGS_DATA.system.maintenanceMode === 'true' ? 'selected' : ''}>Enabled</option>
-          </select>
-        </div>
-        <div class="f-field"><label>Backup Frequency</label>
-          <select id="backup-frequency">
-            ${['Hourly', 'Daily', 'Weekly', 'Monthly'].map(f => `<option ${f === SETTINGS_DATA.system.backupFrequency ? 'selected' : ''}>${f}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -2537,9 +2628,10 @@ function previewSchoolLogo() {
   reader.readAsDataURL(input.files[0]);
 }
 
-function saveSchoolBrand() {
+async function saveSchoolBrand() {
   SETTINGS_DATA.schoolInfo.schoolMotto = document.getElementById('school-motto').value;
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> School logo and motto saved successfully!', 'success');
 }
 
@@ -2554,7 +2646,7 @@ function resetBrandForm() {
   showToast('Form reset to saved values', 'info');
 }
 
-function saveSchoolInfo() {
+async function saveSchoolInfo() {
   SETTINGS_DATA.schoolInfo = {
     schoolName: document.getElementById('school-name').value,
     schoolCode: document.getElementById('school-code').value,
@@ -2565,7 +2657,8 @@ function saveSchoolInfo() {
     address: document.getElementById('school-address').value,
     website: document.getElementById('school-website').value
   };
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> School information saved successfully!', 'success');
 }
 
@@ -2580,7 +2673,7 @@ function resetSchoolForm() {
   showToast('Form reset to saved values', 'info');
 }
 
-function saveAcademicCalendar() {
+async function saveAcademicCalendar() {
   SETTINGS_DATA.academic = {
     academicYear: document.getElementById('academic-year').value,
     currentTerm: document.getElementById('current-term').value,
@@ -2588,7 +2681,8 @@ function saveAcademicCalendar() {
     termEndDate: document.getElementById('term-end-date').value,
     academicYears: SETTINGS_DATA.academic.academicYears
   };
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> Academic calendar updated successfully!', 'success');
 }
 
@@ -2652,33 +2746,33 @@ async function deleteAcademicYear(year) {
   navTo('settings');
 }
 
-function saveSystemSettings() {
+async function saveSystemSettings() {
   SETTINGS_DATA.system = {
     maintenanceMode: document.getElementById('maintenance-mode').value === 'true',
-    backupFrequency: document.getElementById('backup-frequency').value,
     maxUploadSize: document.getElementById('max-upload').value,
     language: document.getElementById('system-language').value
   };
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> System settings saved successfully!', 'success');
 }
 
 function resetSystemForm() {
   document.getElementById('maintenance-mode').value = SETTINGS_DATA.system.maintenanceMode;
-  document.getElementById('backup-frequency').value = SETTINGS_DATA.system.backupFrequency;
   document.getElementById('max-upload').value = SETTINGS_DATA.system.maxUploadSize;
   document.getElementById('system-language').value = SETTINGS_DATA.system.language;
   showToast('Form reset to saved values', 'info');
 }
 
-function saveSecuritySettings() {
+async function saveSecuritySettings() {
   SETTINGS_DATA.security = {
     passwordPolicy: document.getElementById('password-policy').value,
     sessionTimeout: document.getElementById('session-timeout').value,
     twoFactorAuth: document.getElementById('two-factor').value === 'true',
     apiKeyRotation: document.getElementById('api-rotation').value
   };
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> Security settings saved successfully!', 'success');
 }
 
@@ -2690,7 +2784,7 @@ function resetSecurityForm() {
   showToast('Form reset to saved values', 'info');
 }
 
-function saveAppearanceSettings() {
+async function saveAppearanceSettings() {
   const selectedTheme = document.getElementById('theme-select').value;
   SETTINGS_DATA.appearance = {
     theme: selectedTheme,
@@ -2701,7 +2795,8 @@ function saveAppearanceSettings() {
   // Apply theme immediately if it changed
   darkMode = selectedTheme === 'Dark';
   applyTheme();
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> Appearance settings saved successfully!', 'success');
 }
 
@@ -2713,14 +2808,15 @@ function resetAppearanceForm() {
   showToast('Form reset to saved values', 'info');
 }
 
-function saveNotificationSettings() {
+async function saveNotificationSettings() {
   SETTINGS_DATA.notifications = {
     emailNotifications: document.getElementById('email-notif').checked,
     smsNotifications: document.getElementById('sms-notif').checked,
     pushNotifications: document.getElementById('push-notif').checked,
     dailyDigest: document.getElementById('daily-digest').checked
   };
-  saveSettingsToStorage();
+  const saved = await saveSettingsToStorage();
+  if (!saved) return showToast('Failed to save settings to database', 'error');
   showToast('<i class="fas fa-check-circle"></i> Notification preferences saved successfully!', 'success');
 }
 
@@ -3645,12 +3741,16 @@ function exportStaffToExcel() {
 
 // ALUMNI MODULE (Admin view)
 function alumniModule() {
+  const alumni = Object.values(ALUMNI_DATA);
+  const published = alumni.filter(a => (a.status || 'Published') === 'Published').length;
+  const featured = alumni.filter(a => a.featured).length;
+  const locations = new Set(alumni.map(a => String(a.location || '').split(/[·,;-]/)[0].trim()).filter(Boolean));
   return hdr('Alumni Module', 'Manage alumni records and engagement', 'Alumni') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Class 1985â€“2024', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-globe"></i>', '48', 'Countries', 'Alumni worldwide', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-handshake"></i>', 'GHâ‚µ42K', 'Donations', 'This year', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-file-alt"></i>', '14', 'Pending Requests', 'Certificates etc', 'dn', 'si-red')}
+    ${statCard('<i class="fas fa-medal"></i>', alumni.length, 'Total Alumni', 'Database records', 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-eye"></i>', published, 'Published', 'Visible on website', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-star"></i>', featured, 'Featured', 'Highlighted first', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-map-marker-alt"></i>', locations.size, 'Locations', 'From alumni records', 'neu', 'si-purple')}
   </div>
   ${alumniDirectory()}`;
 }
@@ -3661,45 +3761,49 @@ function toggleAddAlumniForm() {
   form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-function submitAlumni() {
-  const name = document.getElementById('alumni-name').value;
+async function submitAlumni() {
+  const name = document.getElementById('alumni-name').value.trim();
   const year = document.getElementById('alumni-year').value;
-  const profession = document.getElementById('alumni-profession').value;
-  const location = document.getElementById('alumni-location').value;
-  const email = document.getElementById('alumni-email').value;
-  const phone = document.getElementById('alumni-phone').value;
+  const profession = document.getElementById('alumni-profession').value.trim();
+  const location = document.getElementById('alumni-location').value.trim();
+  const email = document.getElementById('alumni-email').value.trim();
+  const phone = document.getElementById('alumni-phone').value.trim();
 
   if (!name || !year || !profession || !location || !email || !phone) {
     showToast('Please fill in all required fields', 'error');
     return;
   }
 
-  const id = 'ALM' + String(Object.keys(ALUMNI_DATA).length + 1).padStart(3, '0');
-  ALUMNI_DATA[id] = {
-    id, name, classYear: parseInt(year), profession, location, avatar: name.substring(0, 2).toUpperCase(),
-    avatarColor: ['purple', 'blue', 'green', 'gold', 'teal', 'orange', 'pink'][Object.keys(ALUMNI_DATA).length % 7],
-    bio: document.getElementById('alumni-bio').value || 'Alumni member',
-    email, phone,
-    instagram: document.getElementById('alumni-instagram').value,
-    linkedin: document.getElementById('alumni-linkedin').value,
-    twitter: document.getElementById('alumni-twitter').value,
-    facebook: document.getElementById('alumni-facebook').value
-  };
-
+  const res = await API.alumni.create({
+    name,
+    class_year: parseInt(year, 10),
+    profession,
+    location,
+    bio: document.getElementById('alumni-bio').value.trim() || 'Alumni member',
+    email,
+    phone,
+    instagram: document.getElementById('alumni-instagram').value.trim(),
+    linkedin: document.getElementById('alumni-linkedin').value.trim(),
+    twitter: document.getElementById('alumni-twitter').value.trim(),
+    facebook: document.getElementById('alumni-facebook').value.trim(),
+    status: document.getElementById('alumni-status')?.value || 'Published',
+    featured: document.getElementById('alumni-featured')?.checked ? 1 : 0
+  });
+  if (!res || !res.success) return showToast(res?.message || 'Failed to add alumni member', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('Alumni member added successfully!', 'success');
-  toggleAddAlumniForm();
-  navTo('alumni');
+  renderMain();
 }
 
 function filterAlumni() {
-  const search = document.getElementById('alumni-search').value.toLowerCase();
-  const yearFilter = document.getElementById('alumni-year-filter').value;
-  const profFilter = document.getElementById('alumni-profession-filter').value.toLowerCase();
+  const search = (document.getElementById('alumni-search')?.value || '').toLowerCase();
+  const yearFilter = document.getElementById('alumni-year-filter')?.value || '';
+  const profFilter = (document.getElementById('alumni-profession-filter')?.value || '').toLowerCase();
 
   document.querySelectorAll('.alumni-card').forEach(card => {
-    const name = card.getAttribute('data-name');
-    const year = card.getAttribute('data-year');
-    const prof = card.getAttribute('data-profession');
+    const name = card.getAttribute('data-name') || '';
+    const year = card.getAttribute('data-year') || '';
+    const prof = card.getAttribute('data-profession') || '';
 
     const matchesSearch = name.includes(search);
     const matchesYear = !yearFilter || year === yearFilter;
@@ -3722,21 +3826,21 @@ function showAlumniProfile(alumniId) {
         </div>
         <div style="padding:20px">
           <div style="display:flex;gap:20px;margin-bottom:20px">
-            <div class="av av-xl av-${alumni.avatarColor}">${alumni.avatar}</div>
+            <div class="av av-xl av-${alumni.avatarColor || 'blue'}">${alumni.avatar}</div>
             <div style="flex:1">
-              <div style="font-size:18px;font-weight:700;margin-bottom:4px">${alumni.name}</div>
+              <div style="font-size:18px;font-weight:700;margin-bottom:4px">${escapeHtml(alumni.name)}</div>
               <span class="badge b-info" style="margin-bottom:12px;display:block">Class of ${alumni.classYear}</span>
-              <div style="font-size:13px;font-weight:600;color:var(--blue-main);margin-bottom:8px">${alumni.profession}</div>
-              <div style="font-size:11px;color:var(--gray-500)"><i class="fas fa-map-pin"></i> ${alumni.location}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--blue-main);margin-bottom:8px">${escapeHtml(alumni.profession)}</div>
+              <div style="font-size:11px;color:var(--gray-500)"><i class="fas fa-map-pin"></i> ${escapeHtml(alumni.location)}</div>
             </div>
           </div>
           <div style="background:var(--blue-xpale);padding:15px;border-radius:8px;margin-bottom:20px">
             <div style="font-size:12px;font-weight:600;margin-bottom:8px">Bio</div>
-            <div style="font-size:12px;color:var(--gray-700)">${alumni.bio}</div>
+            <div style="font-size:12px;color:var(--gray-700)">${escapeHtml(alumni.bio)}</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-            <div><div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Email</div><div style="font-size:12px;color:var(--blue-main)">${alumni.email}</div></div>
-            <div><div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Phone</div><div style="font-size:12px">${alumni.phone}</div></div>
+            <div><div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Email</div><div style="font-size:12px;color:var(--blue-main)">${escapeHtml(alumni.email)}</div></div>
+            <div><div style="font-size:11px;color:var(--gray-500);margin-bottom:4px">Phone</div><div style="font-size:12px">${escapeHtml(alumni.phone)}</div></div>
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" style="flex:1" onclick="showConnectModal('${alumniId}');document.querySelector('.modal-overlay')?.remove()"><i class="fas fa-paper-plane"></i> Connect</button>
@@ -3781,6 +3885,17 @@ function showConnectModal(alumniId) {
   const existing = document.querySelector('.modal-overlay');
   if (existing) existing.remove();
   document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+async function deleteAlumni(alumniId) {
+  const alumni = ALUMNI_DATA[alumniId];
+  if (!alumni?.dbId) return showToast('Alumni database record not found', 'error');
+  if (!confirm(`Delete alumni record for ${alumni.name}?`)) return;
+  const res = await API.alumni.delete(alumni.dbId);
+  if (!res || !res.success) return showToast(res?.message || 'Failed to delete alumni record', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast('Alumni record deleted', 'success');
+  renderMain();
 }
 
 

@@ -357,7 +357,7 @@ function visitorHome() {
   </div>
   </section>
   <div class="stats-row mb24">
-    ${statCard('<i class="fas fa-graduation-cap"></i>', '5,200+', 'Alumni Worldwide', 'And growing', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>', Object.values(ALUMNI_DATA || {}).filter(a => (a.status || 'Published') === 'Published').length, 'Published Alumni', 'From database', 'up', 'si-blue')}
     ${statCard('<i class="fas fa-chalkboard-user"></i>', '64', 'Expert Teachers', 'Dedicated faculty', 'neu', 'si-gold')}
     ${statCard('<i class="fas fa-trophy"></i>', '98%', 'Pass Rate', 'Consistent excellence', 'up', 'si-green')}
     ${statCard('<i class="fas fa-calendar-alt"></i>', '40', 'Years of Excellence', 'Since 1985', 'neu', 'si-purple')}

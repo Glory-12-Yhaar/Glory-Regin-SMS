@@ -383,9 +383,12 @@ CREATE TABLE IF NOT EXISTS `alumni` (
   `facebook` VARCHAR(200),
   `avatar` VARCHAR(10),
   `avatar_color` VARCHAR(30),
+  `status` ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
+  `featured` TINYINT(1) NOT NULL DEFAULT 0,
   `user_id` INT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_alumni_status` (`status`, `featured`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -408,8 +411,8 @@ CREATE TABLE IF NOT EXISTS `attendance` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `settings` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `setting_key` VARCHAR(100) UNIQUE NOT NULL,
-  `setting_value` TEXT,
+  `setting_key` VARCHAR(120) UNIQUE NOT NULL,
+  `setting_value` LONGTEXT,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

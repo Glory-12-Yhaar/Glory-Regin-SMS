@@ -374,6 +374,12 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing dashboard reports:", e); }
 
+    try {
+        if (typeof loadSettingsFromStorage === 'function') {
+            await loadSettingsFromStorage();
+        }
+    } catch (e) { console.error("Error syncing settings:", e); }
+
     // 1. Classes
     try {
         const res = await API.classes.list();
@@ -744,6 +750,37 @@ async function syncAllDataFromBackend() {
             })));
         }
     } catch (e) { console.error("Error syncing assignments:", e); }
+
+    try {
+        const res = await API.alumni.list();
+        if (res && res.success && Array.isArray(res.data) && window.ALUMNI_DATA) {
+            Object.keys(ALUMNI_DATA).forEach(k => delete ALUMNI_DATA[k]);
+            res.data.forEach(a => {
+                const code = a.alumni_code || ('ALM' + String(a.id).padStart(3, '0'));
+                ALUMNI_DATA[code] = {
+                    dbId: parseInt(a.id, 10),
+                    id: code,
+                    alumni_id: code,
+                    name: a.name || '',
+                    classYear: parseInt(a.class_year || 0, 10) || '',
+                    gradYear: parseInt(a.class_year || 0, 10) || '',
+                    profession: a.profession || '',
+                    location: a.location || '',
+                    bio: a.bio || '',
+                    email: a.email || '',
+                    phone: a.phone || '',
+                    instagram: a.instagram || '',
+                    linkedin: a.linkedin || '',
+                    twitter: a.twitter || '',
+                    facebook: a.facebook || '',
+                    avatar: a.avatar || getInitials(a.name || 'AL', 'AL'),
+                    avatarColor: a.avatar_color || 'blue',
+                    status: a.status || 'Published',
+                    featured: String(a.featured) === '1' || a.featured === true
+                };
+            });
+        }
+    } catch (e) { console.error("Error syncing alumni:", e); }
 
     try {
         const res = await API.grades.list();
@@ -1897,6 +1934,15 @@ apiOverrides.viewArchivedTeachers = async function() {
 
 // Run overrides immediately as script is loaded after script.js
 window.applyApiClientOverrides();
+
+if (API.settings && typeof applySettingsFromBackend === 'function') {
+    API.settings.get().then(res => {
+        if (res && res.success && res.data) {
+            applySettingsFromBackend(res.data);
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public settings:', e));
+}
 
 if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles)) {
     API.news.list().then(res => {
