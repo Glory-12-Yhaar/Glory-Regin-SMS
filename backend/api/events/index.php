@@ -48,6 +48,7 @@ if ($method === 'POST') {
         if (empty($body[$f])) jsonResponse(['success' => false, 'message' => "Field '$f' required"], 422);
     }
 
+    $eventTime = trim((string)($body['event_time'] ?? ''));
     $stmt = $db->prepare(
         "INSERT INTO events (title, event_date, event_time, all_day, location, audience, description, status, created_by)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -55,7 +56,7 @@ if ($method === 'POST') {
     $stmt->execute([
         htmlspecialchars(trim($body['title']), ENT_QUOTES),
         $body['event_date'],
-        $body['event_time']  ?? null,
+        $eventTime !== '' ? $eventTime : null,
         (int)($body['all_day'] ?? 0),
         $body['location']    ?? null,
         $body['audience']    ?? 'All',
@@ -77,7 +78,10 @@ if ($method === 'PUT') {
     }
     $fields = []; $params = [];
     foreach (['title','event_date','event_time','all_day','location','audience','description','status'] as $f) {
-        if (array_key_exists($f, $body)) { $fields[] = "$f = ?"; $params[] = $body[$f]; }
+        if (array_key_exists($f, $body)) {
+            $fields[] = "$f = ?";
+            $params[] = $f === 'event_time' && trim((string)$body[$f]) === '' ? null : $body[$f];
+        }
     }
     if (empty($fields)) jsonResponse(['success' => false, 'message' => 'Nothing to update'], 422);
     $params[] = $id;

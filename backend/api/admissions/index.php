@@ -86,8 +86,9 @@ function enrollAdmission(PDO $db, int $admissionId, ?string $notes = null): arra
         $studentId = (int)$db->lastInsertId();
     }
 
+    $parentId = 0;
     if (!empty($admission['parent_name'])) {
-        associateParentWithStudent(
+        $parentId = associateParentWithStudent(
             $db,
             $studentId,
             $admission['parent_name'],
@@ -100,7 +101,7 @@ function enrollAdmission(PDO $db, int $admissionId, ?string $notes = null): arra
     $db->prepare("UPDATE admissions SET status = 'Enrolled', notes = ? WHERE id = ?")
        ->execute([$notes ?: 'Enrolled into students table', $admissionId]);
 
-    return ['student_id' => $studentId, 'student_code' => $studentCode];
+    return ['student_id' => $studentId, 'student_code' => $studentCode, 'parent_id' => $parentId];
 }
 
 ensureAdmissionRuntimeColumns($db);
@@ -219,6 +220,8 @@ if ($method === 'PUT') {
                 'message' => 'Application enrolled',
                 'student_id' => $student['student_id'],
                 'student_code' => $student['student_code'],
+                'parent_id' => $student['parent_id'],
+                'parent_default_password' => 'parent123',
             ]);
         } catch (Throwable $e) {
             $db->rollBack();

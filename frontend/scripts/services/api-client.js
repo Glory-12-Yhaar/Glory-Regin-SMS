@@ -9,6 +9,16 @@ const API_BASE = (() => {
     return baseDir.replace(/\/frontend\/?$/, '') + '/backend/api';
 })();
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    }[char]));
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────
 async function apiRequest(endpoint, method = 'GET', body = null) {
     const opts = {
@@ -99,16 +109,6 @@ const API = {
     },
 
     // ── Messages ─────────────────────────────────────────────
-    messages: {
-        inbox: (params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type: 'inbox', ...params })),
-        sent:  (params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type: 'sent',  ...params })),
-        folder:(type, params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type, ...params })),
-        recipients:(params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ action: 'recipients', ...params })),
-        send:  (data)        => apiRequest('/messages/index.php',  'POST', data),
-        update:(id, action)  => apiRequest('/messages/index.php?id=' + id, 'PUT', { action }),
-        delete:(id)          => apiRequest('/messages/index.php?id=' + id, 'DELETE'),
-    },
-
     // ── Assignments ──────────────────────────────────────────
     assignments: {
         list:        (params = {}) => apiRequest('/assignments/index.php?'      + new URLSearchParams(params)),
@@ -191,8 +191,10 @@ const API = {
     contact: {
         submit:   (data) => apiRequest('/contact/index.php',     'POST', data),
         list:     ()     => apiRequest('/contact/index.php'),
-        markRead: (id)   => apiRequest('/contact/index.php?id=' + id, 'PUT'),
+        markRead: (id, isRead = true) => apiRequest('/contact/index.php?id=' + id, 'PUT', { is_read: isRead }),
+        markAllRead: () => apiRequest('/contact/index.php', 'POST', { action: 'mark_all_read' }),
         delete:   (id)   => apiRequest('/contact/index.php?id=' + id, 'DELETE'),
+        deleteAll: ()    => apiRequest('/contact/index.php?all=1', 'DELETE'),
     },
 
     // ── Subjects ─────────────────────────────────────────────
@@ -231,8 +233,9 @@ const API = {
 
     // ── Yearbook ─────────────────────────────────────────────
     yearbook: {
-        list:   ()          => apiRequest('/yearbook/index.php'),
+        list:   (params = {}) => apiRequest('/yearbook/index.php?' + new URLSearchParams(params)),
         save:   (data)      => apiRequest('/yearbook/index.php', 'POST', data),
+        delete: (year)      => apiRequest('/yearbook/index.php?' + new URLSearchParams({ year }), 'DELETE'),
     },
 };
 
@@ -389,6 +392,12 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing dashboard reports:", e); }
 
+    try {
+        if (typeof loadSettingsFromStorage === 'function') {
+            await loadSettingsFromStorage();
+        }
+    } catch (e) { console.error("Error syncing settings:", e); }
+
     // 1. Classes
     try {
         const res = await API.classes.list();
@@ -413,6 +422,34 @@ async function syncAllDataFromBackend() {
     try {
         const res = await API.staff.list();
         if (res && res.success && res.data) {
+            window.staffData = res.data.map(s => ({
+                id: parseInt(s.id, 10),
+                staff_id: parseInt(s.id, 10),
+                staff_code: s.staff_code || '',
+                name: s.name || '',
+                email: s.email || '',
+                phone: s.phone || '',
+                category: s.category || '',
+                department: s.department || '',
+                position: s.position || '',
+                qualifications: s.qualifications || '',
+                salary_grade: s.salary_grade || '',
+                join_date: s.join_date || '',
+                gender: s.gender || '',
+                dob: s.dob || '',
+                address: s.address || '',
+                emergency_contact: s.emergency_contact || '',
+                emergency_phone: s.emergency_phone || '',
+                performance: s.performance || '',
+                status: s.status || 'Active',
+                avatar: s.avatar || '',
+                archived_at: s.archived_at || '',
+                subject: s.subject || '',
+                class_assigned: s.class_assigned || '',
+                experience: s.experience || 0,
+                schedule: s.schedule || '',
+                avatar_color: s.avatar_color || 'blue'
+            }));
             teachersData.splice(0, teachersData.length, ...res.data.filter(t => t.category === 'Teaching').map(t => ({
                 teacher_id: 'T' + String(t.id).padStart(3, '0'),
                 id: t.id,
@@ -668,7 +705,30 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing news:", e); }
 
-    // 8. Timetables
+    // 8. Contact Messages
+    try {
+        if (typeof contactMessages !== 'undefined' && Array.isArray(contactMessages)) {
+            const res = await API.contact.list();
+            if (res && res.success && Array.isArray(res.data)) {
+                contactMessages.splice(0, contactMessages.length, ...res.data.map(m => {
+                    const sentAt = m.sent_at ? new Date(String(m.sent_at).replace(' ', 'T')) : null;
+                    return {
+                        id: parseInt(m.id, 10),
+                        name: m.name || '',
+                        email: m.email || '',
+                        subject: m.subject || '',
+                        message: m.message || '',
+                        sent_at: m.sent_at || '',
+                        date: sentAt && !isNaN(sentAt) ? sentAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '',
+                        time: sentAt && !isNaN(sentAt) ? sentAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
+                        read: Number(m.is_read || 0) === 1
+                    };
+                }));
+            }
+        }
+    } catch (e) { console.error("Error syncing contact messages:", e); }
+
+    // 9. Timetables
     try {
         const res = await API.timetable.get();
         if (res && res.success && res.data) {
@@ -725,6 +785,37 @@ async function syncAllDataFromBackend() {
     } catch (e) { console.error("Error syncing assignments:", e); }
 
     try {
+        const res = await API.alumni.list();
+        if (res && res.success && Array.isArray(res.data) && window.ALUMNI_DATA) {
+            Object.keys(ALUMNI_DATA).forEach(k => delete ALUMNI_DATA[k]);
+            res.data.forEach(a => {
+                const code = a.alumni_code || ('ALM' + String(a.id).padStart(3, '0'));
+                ALUMNI_DATA[code] = {
+                    dbId: parseInt(a.id, 10),
+                    id: code,
+                    alumni_id: code,
+                    name: a.name || '',
+                    classYear: parseInt(a.class_year || 0, 10) || '',
+                    gradYear: parseInt(a.class_year || 0, 10) || '',
+                    profession: a.profession || '',
+                    location: a.location || '',
+                    bio: a.bio || '',
+                    email: a.email || '',
+                    phone: a.phone || '',
+                    instagram: a.instagram || '',
+                    linkedin: a.linkedin || '',
+                    twitter: a.twitter || '',
+                    facebook: a.facebook || '',
+                    avatar: a.avatar || getInitials(a.name || 'AL', 'AL'),
+                    avatarColor: a.avatar_color || 'blue',
+                    status: a.status || 'Published',
+                    featured: String(a.featured) === '1' || a.featured === true
+                };
+            });
+        }
+    } catch (e) { console.error("Error syncing alumni:", e); }
+
+    try {
         const res = await API.grades.list();
         if (res && res.success && res.data && Array.isArray(window.gradesData)) {
             gradesData.splice(0, gradesData.length, ...res.data.map(g => ({
@@ -752,18 +843,29 @@ async function syncAllDataFromBackend() {
 
     // 10. Yearbook
     try {
-        const res = await API.yearbook.list();
+        const params = currentRole === 'Visitor' ? { public: 1 } : {};
+        const res = await API.yearbook.list(params);
         if (res && res.success && res.data) {
+            const rows = Array.isArray(res.data) ? res.data : Object.values(res.data);
             const formatted = {};
-            res.data.forEach(row => {
+            rows.forEach(row => {
+                const layout = typeof row.layout === 'string'
+                    ? JSON.parse(row.layout || '{}')
+                    : (row.layout || {});
                 formatted[row.year] = {
                     year: row.year,
                     title: row.title,
                     status: row.status,
-                    totalGrads: parseInt(row.total_graduates || 0, 10),
-                    totalPhotos: parseInt(row.total_photos || 0, 10),
-                    coverImg: row.cover_image || '#1e3a8a',
-                    ...(typeof row.layout === 'string' ? JSON.parse(row.layout) : row.layout || {})
+                    totalGrads: parseInt(row.totalGrads ?? row.total_grads ?? row.total_graduates ?? 0, 10),
+                    totalPhotos: parseInt(row.totalPhotos ?? row.total_photos ?? 0, 10),
+                    coverImg: row.coverImg || row.cover_img || row.cover_image || '#1e3a8a',
+                    pdfUrl: row.pdfUrl || row.pdf_url || '',
+                    classes: row.classes || layout.classes || {},
+                    teachers: row.teachers || layout.teachers || [],
+                    leaders: row.leaders || layout.leaders || [],
+                    achievements: row.achievements || layout.achievements || [],
+                    events: row.events || layout.events || [],
+                    tributes: row.tributes || layout.tributes || []
                 };
             });
             for (let k in YEARBOOK_DATA) delete YEARBOOK_DATA[k];
@@ -1119,8 +1221,64 @@ apiOverrides.deleteArticle = async function(articleId) {
 };
 
 // ── YEARBOOK ACTIONS OVERRIDES ──────────────────────────
+// CONTACT MESSAGE ACTIONS OVERRIDES
+apiOverrides.markMessageAs = async function(id, read) {
+    const res = await API.contact.markRead(id, read);
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast(`<i class="fas fa-check-circle"></i> Message marked as ${read ? 'read' : 'unread'}`, 'success');
+    } else {
+        showToast(res?.message || 'Failed to update message', 'error');
+    }
+};
+
+apiOverrides.markAllAsRead = async function() {
+    const res = await API.contact.markAllRead();
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> All messages marked as read', 'success');
+    } else {
+        showToast(res?.message || 'Failed to mark messages as read', 'error');
+    }
+};
+
+apiOverrides.deleteContactMessage = async function(id) {
+    if (!confirm('Delete this message?')) return;
+    const res = await API.contact.delete(id);
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> Message deleted', 'success');
+    } else {
+        showToast(res?.message || 'Failed to delete message', 'error');
+    }
+};
+
+apiOverrides.deleteAllMessages = async function() {
+    if (!Array.isArray(contactMessages) || contactMessages.length === 0) {
+        showToast('<i class="fas fa-times-circle"></i> No messages to delete', 'warning');
+        return;
+    }
+    if (!confirm(`Delete all ${contactMessages.length} messages? This cannot be undone.`)) return;
+    const res = await API.contact.deleteAll();
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> All messages deleted', 'success');
+    } else {
+        showToast(res?.message || 'Failed to delete messages', 'error');
+    }
+};
+
 apiOverrides.adminYearbookModule = function() {
-    const ybs = Object.values(YEARBOOK_DATA);
+    const ybs = Object.values(YEARBOOK_DATA)
+        .sort((a, b) => String(b.year || '').localeCompare(String(a.year || '')));
     const rows = ybs.map(yb => `
       <tr>
         <td><strong>${escapeHtml(yb.year)}</strong></td>
@@ -1131,8 +1289,8 @@ apiOverrides.adminYearbookModule = function() {
         <td>
           <div style="display:flex;gap:6px">
             <button class="btn btn-secondary btn-xs" onclick="openYearbook('${yb.year}')">Preview</button>
-            <button class="btn btn-secondary btn-xs" onclick="showToast('Edit mode enabled via database. Check back soon!', 'info')">Edit Content</button>
             ${yb.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="publishYearbook('${yb.year}')">Publish</button>` : ''}
+            <button class="btn btn-danger btn-xs" onclick="deleteYearbook('${yb.year}')">Delete</button>
           </div>
         </td>
       </tr>
@@ -1160,6 +1318,7 @@ apiOverrides.openCreateYearbookModal = function() {
         <div class="f-field" style="margin-top:20px"><label>Academic Year</label><input type="text" id="new-yb-year" placeholder="e.g. 2028"></div>
         <div class="f-field"><label>Yearbook Title</label><input type="text" id="new-yb-title" placeholder="Class of 2028 Yearbook"></div>
         <div class="f-field"><label>Cover Color Theme</label><input type="color" id="new-yb-theme" value="#1e3a8a" style="padding:0;height:40px;width:100%"></div>
+        <div class="f-field"><label>PDF URL</label><input type="text" id="new-yb-pdf" placeholder="assets/yearbooks/class-of-2028.pdf"></div>
         <div style="display:flex;gap:10px;margin-top:24px">
           <button class="btn btn-primary" style="flex:1" onclick="submitCreateYearbookForm()">Create</button>
           <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -1172,21 +1331,23 @@ apiOverrides.submitCreateYearbookForm = async function() {
     const year = document.getElementById('new-yb-year')?.value?.trim();
     const title = document.getElementById('new-yb-title')?.value?.trim();
     const theme = document.getElementById('new-yb-theme')?.value;
+    const pdfUrl = document.getElementById('new-yb-pdf')?.value?.trim();
     if (!year || !title) { showToast('Please enter both year and title', 'error'); return; }
     
     const res = await API.yearbook.save({
         year,
         title,
-        cover_image: theme,
+        coverImg: theme,
+        pdfUrl,
         status: 'Draft',
-        total_graduates: 0,
-        total_photos: 0,
-        layout: {
-            classes: [],
+        totalGrads: 0,
+        totalPhotos: 0,
+        classes: {},
             teachers: [],
+        leaders: [],
+        achievements: [],
             events: [],
             tributes: []
-        }
     });
     if (res && res.success) {
         showToast('Yearbook initialized successfully!', 'success');
@@ -1204,16 +1365,17 @@ apiOverrides.publishYearbook = async function(year) {
     const res = await API.yearbook.save({
         year: yb.year,
         title: yb.title,
-        cover_image: yb.coverImg,
+        coverImg: yb.coverImg,
+        pdfUrl: yb.pdfUrl || '',
         status: 'Published',
-        total_graduates: yb.totalGrads,
-        total_photos: yb.totalPhotos,
-        layout: {
-            classes: yb.classes || [],
-            teachers: yb.teachers || [],
-            events: yb.events || [],
-            tributes: yb.tributes || []
-        }
+        totalGrads: yb.totalGrads,
+        totalPhotos: yb.totalPhotos,
+        classes: yb.classes || {},
+        teachers: yb.teachers || [],
+        leaders: yb.leaders || [],
+        achievements: yb.achievements || [],
+        events: yb.events || [],
+        tributes: yb.tributes || []
     });
     if (res && res.success) {
         showToast('Yearbook published successfully!', 'success');
@@ -1221,6 +1383,18 @@ apiOverrides.publishYearbook = async function(year) {
         renderMain();
     } else {
         showToast(res?.message || 'Failed to publish yearbook', 'error');
+    }
+};
+
+apiOverrides.deleteYearbook = async function(year) {
+    if (!confirm(`Delete yearbook ${year}? This cannot be undone.`)) return;
+    const res = await API.yearbook.delete(year);
+    if (res && res.success) {
+        showToast('Yearbook deleted successfully!', 'success');
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to delete yearbook', 'error');
     }
 };
 
@@ -1234,8 +1408,8 @@ apiOverrides.submitStudentEnrollment = async function() {
   const parentName = document.getElementById('std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('std-parent-phone')?.value.trim();
 
-  if (!name || !dob || !gender || !classId) {
-    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+  if (!name || !dob || !gender || !classId || !parentName || !parentPhone) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields, including parent name and phone', 'error');
     return;
   }
 
@@ -1251,7 +1425,7 @@ apiOverrides.submitStudentEnrollment = async function() {
   });
 
   if (res && res.success) {
-    showToast('<i class="fas fa-check-circle"></i> Student enrolled successfully!', 'success');
+    showToast('<i class="fas fa-check-circle"></i> Student enrolled and parent account linked. Default parent password: parent123', 'success');
     await syncAllDataFromBackend();
     navTo('students');
   } else {
@@ -1822,34 +1996,13 @@ apiOverrides.viewArchivedTeachers = async function() {
 // Run overrides immediately as script is loaded after script.js
 window.applyApiClientOverrides();
 
-async function restoreAuthenticatedPortalSession() {
-    try {
-        const response = await fetch(API_BASE + '/auth/me.php', {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        if (!response.ok) return false;
-        const result = await response.json();
-        if (!result?.success || !result.user) return false;
-
-        if (typeof setSessionUser === 'function') setSessionUser(result.user);
-        else window.SESSION_USER = result.user;
-        loginRole = normalizeRoleName(result.user.role);
-        doLogin();
-        await syncAllDataFromBackend();
-        if (typeof renderMain === 'function') renderMain();
-        return true;
-    } catch (error) {
-        console.error('Unable to restore portal session:', error);
-        return false;
-    }
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', restoreAuthenticatedPortalSession, { once: true });
-} else {
-    restoreAuthenticatedPortalSession();
+if (API.settings && typeof applySettingsFromBackend === 'function') {
+    API.settings.get().then(res => {
+        if (res && res.success && res.data) {
+            applySettingsFromBackend(res.data);
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public settings:', e));
 }
 
 if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles)) {
@@ -1868,4 +2021,48 @@ if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles))
             if (typeof renderMain === 'function') renderMain();
         }
     }).catch(e => console.error('Error syncing public news:', e));
+}
+
+if (currentRole === 'Visitor' && API.events && Array.isArray(window.eventsData)) {
+    API.events.list({ from: new Date().toISOString().slice(0, 10), limit: 6 }).then(res => {
+        if (res && res.success && Array.isArray(res.data)) {
+            window.eventsData.splice(0, window.eventsData.length, ...res.data.map(ev => ({
+                id: parseInt(ev.id, 10),
+                title: ev.title || '',
+                date: ev.event_date || ev.date || '',
+                event_date: ev.event_date || ev.date || '',
+                time: (ev.event_time || ev.time || '').slice(0, 5),
+                event_time: ev.event_time || ev.time || '',
+                allDay: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1',
+                all_day: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1' ? 1 : 0,
+                location: ev.location || '',
+                audience: ev.audience || 'All',
+                description: ev.description || '',
+                status: ev.status || 'Published'
+            })));
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public events:', e));
+}
+
+if (currentRole === 'Visitor' && API.notices && Array.isArray(window.noticesData)) {
+    API.notices.list({ limit: 6 }).then(res => {
+        if (res && res.success && Array.isArray(res.data)) {
+            window.noticesData.splice(0, window.noticesData.length, ...res.data.map(n => ({
+                id: parseInt(n.id, 10),
+                icon: n.icon || '<i class="fas fa-bullhorn"></i>',
+                title: n.title || '',
+                audience: n.audience || 'All',
+                posted_by: n.posted_by || '',
+                postedBy: n.posted_by || '',
+                notice_date: n.notice_date || '',
+                date: n.notice_date || '',
+                message: n.message || '',
+                priority: n.priority || 'Normal',
+                status: n.status || 'Published',
+                attachment: n.attachment || ''
+            })));
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public notices:', e));
 }

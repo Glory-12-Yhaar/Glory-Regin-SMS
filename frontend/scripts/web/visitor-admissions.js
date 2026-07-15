@@ -3,6 +3,8 @@
 // VISITOR HOME
 // -----------------------------------
 let publicNewsSyncStarted = false;
+let publicEventsSyncStarted = false;
+let publicNoticesSyncStarted = false;
 
 function getHeroSlides() {
   return Object.values(window.cachedHeroSlides || {})
@@ -211,6 +213,8 @@ function startHeroCarousel() {
 
 function visitorHome() {
   if (!Array.isArray(window.newsArticles)) window.newsArticles = [];
+  if (!Array.isArray(window.eventsData)) window.eventsData = [];
+  if (!Array.isArray(window.noticesData)) window.noticesData = [];
   if ((!window.cachedHeroSlides || !Object.values(window.cachedHeroSlides).length) && typeof API !== 'undefined' && API.heroSlides) {
     API.heroSlides.list().then(res => {
       if (res && res.success && Array.isArray(res.data)) {
@@ -219,7 +223,32 @@ function visitorHome() {
       }
     }).catch(() => {});
   }
-  if ((!window.noticesData || !window.noticesData.length) && typeof API !== 'undefined' && API.notices) {
+  if (!publicEventsSyncStarted && typeof API !== 'undefined' && API.events) {
+    publicEventsSyncStarted = true;
+    API.events.list({ from: new Date().toISOString().slice(0, 10), limit: 6 }).then(res => {
+      if (res && res.success && Array.isArray(res.data) && Array.isArray(window.eventsData)) {
+        window.eventsData.splice(0, window.eventsData.length, ...res.data.map(ev => ({
+          id: parseInt(ev.id, 10),
+          title: ev.title || '',
+          date: ev.event_date || ev.date || '',
+          event_date: ev.event_date || ev.date || '',
+          time: (ev.event_time || ev.time || '').slice(0, 5),
+          event_time: ev.event_time || ev.time || '',
+          allDay: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1',
+          all_day: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1' ? 1 : 0,
+          location: ev.location || '',
+          audience: ev.audience || 'All',
+          description: ev.description || '',
+          status: ev.status || 'Published'
+        })));
+        if (currentRole === 'Visitor' && typeof renderMain === 'function') renderMain();
+      }
+    }).catch(() => {
+      publicEventsSyncStarted = false;
+    });
+  }
+  if (!publicNoticesSyncStarted && typeof API !== 'undefined' && API.notices) {
+    publicNoticesSyncStarted = true;
     API.notices.list({ limit: 6 }).then(res => {
       if (res && res.success && Array.isArray(res.data) && Array.isArray(window.noticesData)) {
         window.noticesData.splice(0, window.noticesData.length, ...res.data.map(n => ({
@@ -237,7 +266,9 @@ function visitorHome() {
         })));
         if (currentRole === 'Visitor' && typeof renderMain === 'function') renderMain();
       }
-    }).catch(() => {});
+    }).catch(() => {
+      publicNoticesSyncStarted = false;
+    });
   }
   if (!publicNewsSyncStarted && (!window.newsArticles || !window.newsArticles.length) && typeof API !== 'undefined' && API.news) {
     publicNewsSyncStarted = true;
@@ -326,7 +357,7 @@ function visitorHome() {
   </div>
   </section>
   <div class="stats-row mb24">
-    ${statCard('<i class="fas fa-graduation-cap"></i>', '5,200+', 'Alumni Worldwide', 'And growing', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-graduation-cap"></i>', Object.values(ALUMNI_DATA || {}).filter(a => (a.status || 'Published') === 'Published').length, 'Published Alumni', 'From database', 'up', 'si-blue')}
     ${statCard('<i class="fas fa-chalkboard-user"></i>', '64', 'Expert Teachers', 'Dedicated faculty', 'neu', 'si-gold')}
     ${statCard('<i class="fas fa-trophy"></i>', '98%', 'Pass Rate', 'Consistent excellence', 'up', 'si-green')}
     ${statCard('<i class="fas fa-calendar-alt"></i>', '40', 'Years of Excellence', 'Since 1985', 'neu', 'si-purple')}

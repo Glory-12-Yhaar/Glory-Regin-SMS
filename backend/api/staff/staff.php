@@ -40,6 +40,7 @@ if ($method === 'PUT') {
     $body = getRequestBody();
     $db->beginTransaction();
     try {
+        $targetCategory = $body['category'] ?? $staff['category'];
         // Update staff table
         $fields  = [];
         $params  = [];
@@ -65,6 +66,10 @@ if ($method === 'PUT') {
             $db->prepare("UPDATE staff SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
         }
 
+        if ($targetCategory !== 'Teaching') {
+            $db->prepare("DELETE FROM teachers WHERE staff_id = ?")->execute([$id]);
+        }
+
         // Update / Insert teachers table
         $tFields  = [];
         $tParams  = [];
@@ -76,27 +81,33 @@ if ($method === 'PUT') {
             }
         }
 
-        if (!empty($tFields)) {
+        if ($targetCategory === 'Teaching' && (!empty($tFields) || ($staff['category'] !== 'Teaching'))) {
             // Check if teacher row exists
             $tCheck = $db->prepare("SELECT id FROM teachers WHERE staff_id = ?");
             $tCheck->execute([$id]);
             if ($tCheck->fetch()) {
-                $tParams[] = $id;
-                $db->prepare("UPDATE teachers SET " . implode(', ', $tFields) . " WHERE staff_id = ?")->execute($tParams);
-            } else {
-                $category = $body['category'] ?? $staff['category'];
-                if ($category === 'Teaching') {
-                    $insertFields = ['staff_id'];
-                    $insertVals = [$id];
-                    foreach ($tAllowed as $tf) {
-                        if (array_key_exists($tf, $body)) {
-                            $insertFields[] = $tf;
-                            $insertVals[] = $body[$tf];
-                        }
-                    }
-                    $placeholders = array_fill(0, count($insertFields), '?');
-                    $db->prepare("INSERT INTO teachers (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $placeholders) . ")")->execute($insertVals);
+                if (!empty($tFields)) {
+                    $tParams[] = $id;
+                    $db->prepare("UPDATE teachers SET " . implode(', ', $tFields) . " WHERE staff_id = ?")->execute($tParams);
                 }
+            } else {
+                $insertFields = ['staff_id'];
+                $insertVals = [$id];
+                $defaults = [
+                    'subject' => $body['subject'] ?? $body['position'] ?? $staff['position'] ?? null,
+                    'class_assigned' => $body['class_assigned'] ?? 'Not Assigned',
+                    'experience' => (int)($body['experience'] ?? 0),
+                    'schedule' => $body['schedule'] ?? 'Mon-Fri',
+                    'avatar_color' => $body['avatar_color'] ?? 'blue',
+                ];
+                foreach ($tAllowed as $tf) {
+                    if (array_key_exists($tf, $body) || array_key_exists($tf, $defaults)) {
+                        $insertFields[] = $tf;
+                        $insertVals[] = $body[$tf] ?? $defaults[$tf] ?? null;
+                    }
+                }
+                $placeholders = array_fill(0, count($insertFields), '?');
+                $db->prepare("INSERT INTO teachers (" . implode(', ', $insertFields) . ") VALUES (" . implode(', ', $placeholders) . ")")->execute($insertVals);
             }
         }
 
@@ -115,7 +126,7 @@ if ($method === 'PUT') {
             }
             if (array_key_exists('status', $body)) {
                 $uFields[] = "status = ?";
-                $uParams[] = $body['status'];
+                $uParams[] = $body['status'] === 'Active' ? 'Active' : 'Inactive';
             }
             if (!empty($uFields)) {
                 $uParams[] = $staff['user_id'];

@@ -105,29 +105,32 @@ CREATE TABLE IF NOT EXISTS `student_scores` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `staff` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `staff_code` VARCHAR(20) UNIQUE NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(150) UNIQUE NOT NULL,
-  `phone` VARCHAR(30),
+  `staff_code` VARCHAR(30) NOT NULL UNIQUE,
+  `name` VARCHAR(150) NOT NULL,
+  `email` VARCHAR(180) NOT NULL UNIQUE,
+  `phone` VARCHAR(40) DEFAULT NULL,
   `category` ENUM('Teaching','Admin','Support') NOT NULL,
-  `department` VARCHAR(100),
-  `position` VARCHAR(100),
-  `qualifications` TEXT,
-  `salary_grade` VARCHAR(30),
-  `join_date` DATE,
+  `department` VARCHAR(120) DEFAULT NULL,
+  `position` VARCHAR(120) DEFAULT NULL,
+  `qualifications` TEXT DEFAULT NULL,
+  `salary_grade` VARCHAR(40) DEFAULT NULL,
+  `join_date` DATE DEFAULT NULL,
   `gender` ENUM('Male','Female') NOT NULL,
-  `dob` DATE,
-  `address` TEXT,
-  `emergency_contact` VARCHAR(100),
-  `emergency_phone` VARCHAR(30),
-  `performance` VARCHAR(20),
-  `status` ENUM('Active','Inactive','On Leave','Archived') DEFAULT 'Active',
-  `avatar` VARCHAR(10),
-  `user_id` INT,
+  `dob` DATE DEFAULT NULL,
+  `address` TEXT DEFAULT NULL,
+  `emergency_contact` VARCHAR(150) DEFAULT NULL,
+  `emergency_phone` VARCHAR(40) DEFAULT NULL,
+  `performance` VARCHAR(40) DEFAULT NULL,
+  `status` ENUM('Active','Inactive','On Leave','Archived') NOT NULL DEFAULT 'Active',
+  `avatar` VARCHAR(20) DEFAULT NULL,
+  `user_id` INT DEFAULT NULL,
   `archived_at` DATETIME DEFAULT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_staff_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_staff_category_status` (`category`, `status`),
+  INDEX `idx_staff_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- TEACHERS (extended view of staff)
@@ -347,37 +350,19 @@ CREATE TABLE IF NOT EXISTS `notices` (
 -- ───────────────────────────────────────────
 -- MESSAGES
 -- ───────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS `messages` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `sender_id` INT NOT NULL,
-  `receiver_id` INT NOT NULL,
-  `subject` VARCHAR(200),
-  `body` TEXT NOT NULL,
-  `status` ENUM('sent','draft') NOT NULL DEFAULT 'sent',
-  `attachment_name` VARCHAR(255),
-  `attachment_data` LONGTEXT,
-  `sent_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `read_at` DATETIME,
-  `sender_archived` TINYINT(1) NOT NULL DEFAULT 0,
-  `receiver_archived` TINYINT(1) NOT NULL DEFAULT 0,
-  `sender_deleted` TINYINT(1) NOT NULL DEFAULT 0,
-  `receiver_deleted` TINYINT(1) NOT NULL DEFAULT 0,
-  FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
 -- ───────────────────────────────────────────
 -- CONTACT MESSAGES (public)
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `contact_messages` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(150),
-  `subject` VARCHAR(200),
+  `name` VARCHAR(150) NOT NULL,
+  `email` VARCHAR(180) DEFAULT NULL,
+  `subject` VARCHAR(220) DEFAULT NULL,
   `message` TEXT NOT NULL,
-  `sent_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `is_read` TINYINT(1) DEFAULT 0
-) ENGINE=InnoDB;
+  `sent_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  INDEX `idx_contact_read` (`is_read`, `sent_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- ALUMNI
@@ -398,9 +383,12 @@ CREATE TABLE IF NOT EXISTS `alumni` (
   `facebook` VARCHAR(200),
   `avatar` VARCHAR(10),
   `avatar_color` VARCHAR(30),
+  `status` ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
+  `featured` TINYINT(1) NOT NULL DEFAULT 0,
   `user_id` INT,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_alumni_status` (`status`, `featured`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -423,8 +411,8 @@ CREATE TABLE IF NOT EXISTS `attendance` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `settings` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `setting_key` VARCHAR(100) UNIQUE NOT NULL,
-  `setting_value` TEXT,
+  `setting_key` VARCHAR(120) UNIQUE NOT NULL,
+  `setting_value` LONGTEXT,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -507,12 +495,16 @@ CREATE TABLE IF NOT EXISTS `yearbooks` (
   `year` VARCHAR(10) UNIQUE NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `cover_img` VARCHAR(255) DEFAULT '#1e3a8a',
+  `pdf_url` VARCHAR(255) DEFAULT NULL,
   `status` ENUM('Published', 'Draft') DEFAULT 'Draft',
   `total_grads` INT DEFAULT 0,
   `total_photos` INT DEFAULT 0,
   `data` LONGTEXT,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_yearbooks_status_year` (`status`, `year`),
+  INDEX `idx_yearbooks_year` (`year`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- ADDITIONAL RELATIONSHIPS

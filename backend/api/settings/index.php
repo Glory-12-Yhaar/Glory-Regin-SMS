@@ -9,7 +9,6 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 

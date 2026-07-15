@@ -193,72 +193,6 @@ function showNewsArticle(title, content, article = {}) {
   openModal(modal);
 }
 
-// -----------------------------------
-// MESSAGING & CHAT DATA STORAGE
-// -----------------------------------
-let currentChat = null;  // Track current conversation
-const MESSAGES_KEY = 'gr_all_messages';
-let allMessages = [];
-
-function saveAllMessages() {
-  try { appMemoryStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages)); } catch(e){}
-}
-
-function addMessage({ sender, senderRole, recipient, recipientRole, subject='', text='' }){
-  const now = new Date();
-  const id = (allMessages.length ? Math.max(...allMessages.map(m=>m.id||0)) : 0) + 1;
-  const msg = {
-    id,
-    sender,
-    senderRole,
-    recipient,
-    recipientRole: String(recipientRole || '').toLowerCase(),
-    subject,
-    text,
-    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    date: now.toLocaleDateString(),
-    read: false
-  };
-  allMessages.push(msg);
-  saveAllMessages();
-  notifyMessageRecipient(msg);
-  return msg;
-}
-
-// Load messages from storage or fall back to sample data
-try{
-  const raw = appMemoryStorage.getItem(MESSAGES_KEY);
-  if(raw) allMessages = JSON.parse(raw);
-}catch(e){ allMessages = []; }
-if(!allMessages || allMessages.length === 0){
-  allMessages = [
-    { id: 1, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Ama, great work on your last test! You scored 88/100.', time: '9:00 AM', date: 'Mar 20' },
-    { id: 2, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Thank you sir! I will work harder for the next exam.', time: '9:15 AM', date: 'Mar 20' },
-    { id: 3, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Test Score', text: 'That\'s the spirit! Focus on Chapter 6 for the next exam.', time: '9:17 AM', date: 'Mar 20' },
-    { id: 4, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Hello Sir, how is Ama doing in your class?', time: '2:30 PM', date: 'Mar 19' },
-    { id: 5, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Progress Update', text: 'She is doing very well! Her test scores are excellent.', time: '3:45 PM', date: 'Mar 19' },
-    { id: 6, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Thank you for the update! We really appreciate your support.', time: '4:00 PM', date: 'Mar 19' },
-    { id: 7, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Fee Payment', text: 'Good morning, I want to inquire about the school fees payment.', time: '8:15 AM', date: 'Mar 20' },
-    { id: 8, sender: 'Admin Office', senderRole: 'admin', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Fee Payment', text: 'The fees are due by the end of this month. Please visit the office with your receipt.', time: '9:30 AM', date: 'Mar 20' },
-    { id: 9, sender: 'Mrs. Asante', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Exam Schedule', text: 'When will the final exams start?', time: '10:00 AM', date: 'Mar 20' },
-    { id: 10, sender: 'Admin Office', senderRole: 'admin', recipient: 'Mrs. Asante', recipientRole: 'teacher', subject: 'Exam Schedule', text: 'Exams start on April 5th. Detailed schedule will be shared by Friday.', time: '10:45 AM', date: 'Mar 20' }
-  ];
-  saveAllMessages();
-}
-allMessages = allMessages.map(m => ({
-  ...m,
-  recipientRole: String(m.recipientRole || '').toLowerCase(),
-  senderRole: String(m.senderRole || '').toLowerCase(),
-  read: typeof m.read === 'boolean' ? m.read : true
-}));
-saveAllMessages();
-
-function getUnreadCount(userName, otherName){
-  return allMessages.filter(m=>m.sender===otherName && m.recipient===userName && !m.read).length;
-}
-
-let messageChats = {};  // Dynamic - will be populated based on current user conversations
-
 // CONTACT MESSAGES STORAGE
 let contactMessages = [];
 
@@ -527,7 +461,7 @@ async function saveDraft() {
   }
 }
 
-function sendContactMessage() {
+async function sendContactMessage() {
   const nameInput = document.querySelector('.contact-form input[placeholder="Full name"]');
   const emailInput = document.querySelector('.contact-form input[placeholder="your@email.com"]');
   const subjectInput = document.querySelector('.contact-form input[placeholder="What is this about?"]');
@@ -544,21 +478,16 @@ function sendContactMessage() {
   if (!subject) { showToast('<i class="fas fa-times-circle"></i> Please enter a subject', 'error'); return; }
   if (!message) { showToast('<i class="fas fa-times-circle"></i> Please enter your message', 'error'); return; }
 
-  // Create message object
-  const newMessage = {
-    id: Date.now(),
-    name,
-    email,
-    subject,
-    message,
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    status: 'New',
-    read: false
-  };
+  if (typeof API === 'undefined' || !API.contact) {
+    showToast('Contact backend is not available. Message was not sent.', 'error');
+    return;
+  }
 
-  // Store message
-  contactMessages.push(newMessage);
+  const res = await API.contact.submit({ name, email, subject, message });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to send message', 'error');
+    return;
+  }
 
   // Clear form
   nameInput.value = '';
@@ -569,10 +498,6 @@ function sendContactMessage() {
   // Notify admin
   showToast('<i class="fas fa-check-circle"></i> Message sent successfully! The admin will respond soon.', 'success');
 
-  // Update admin notification
-  const newMessagesCount = contactMessages.filter(m => !m.read).length;
-  const badge = document.querySelector('[data-contact-badge]');
-  if (badge) badge.textContent = newMessagesCount;
 }
 
 function visitorContact() {
@@ -878,9 +803,9 @@ function viewGeneralPaymentHistory() {
   showToast('<i class="fas fa-history"></i> Opening full payment history...', 'info');
 }
 
-function openMessagingFromTeacherShortcut(teacherId) {
-  navTo('messaging');
-  showToast('<i class="fas fa-envelope"></i> Opening messaging interface...', 'info');
+function openTeacherShortcut(teacherId) {
+  navTo('teachers');
+  showToast('<i class="fas fa-chalkboard-teacher"></i> Opening teacher details...', 'info');
 }
 
 function viewAssignmentDetails(assignmentId) {
@@ -1181,20 +1106,6 @@ function createNewAssignment() {
   saveAssignments(assignments);
   showToast(`<i class="fas fa-check-circle"></i> Assignment "${title}" created for ${className}!`, 'success');
   navTo('dashboard');
-}
-
-function sendLegacyChatMessage() {
-  const input = document.querySelector('.chat-inp');
-  const message = input?.value.trim();
-
-  if (!message) {
-    showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
-    return;
-  }
-
-  showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
-  input.value = '';
-  renderMain();
 }
 
 // -----------------------------------
@@ -1880,8 +1791,6 @@ function updatePassword() {
   showToast('<i class="fas fa-check-circle"></i> Password updated!', 'success');
 }
 
-// Send chat message
-
 // Create/Edit record
 function createRecord(type) {
   const title = type.charAt(0).toUpperCase() + type.slice(1);
@@ -2121,11 +2030,6 @@ function initButtonHandlers() {
     }
   });
 
-  // Chat send buttons
-  document.querySelectorAll('.chat-send').forEach(btn => {
-    btn.onclick = function () { sendMessage(this); };
-  });
-
   // Generic save buttons
   document.querySelectorAll('.btn').forEach(btn => {
     const text = btn.innerHTML;
@@ -2178,7 +2082,7 @@ function initButtonHandlers() {
         btn.onclick = function () { deleteRecord(1, 'Record'); };
       }
       if (text.includes('Message')) {
-        btn.onclick = function () { navTo('messaging'); };
+        btn.onclick = function () { navTo('contact'); };
       }
       if (text.includes('Grade')) {
         btn.onclick = function () { navTo('exams'); };
@@ -2329,55 +2233,7 @@ function initMobileSidebarHandlers() {
 // -----------------------------------
 // DIGITAL YEARBOOK DATA
 // -----------------------------------
-const YEARBOOK_DATA = {
-  '2026': {
-    year: '2026',
-    title: 'Class of 2026 Yearbook',
-    coverImg: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
-    totalGrads: 120,
-    totalPhotos: 450,
-    classes: {
-      'JHS 3': [
-        { name: 'Ama Mensah', avatar: 'AM', color: 'blue', quote: 'Success comes through hard work.', ambition: 'Software Engineer', awards: ['Best in ICT'] },
-        { name: 'Kofi Owusu', avatar: 'KO', color: 'green', quote: 'The future belongs to those who prepare for it.', ambition: 'Medical Doctor', awards: ['Best in Science'] },
-      ],
-      'JHS 2': [
-        { name: 'Esi Appiah', avatar: 'EA', color: 'purple', quote: 'Dream big and dare to fail.', ambition: 'Lawyer', awards: [] },
-        { name: 'Kwame Nkrumah', avatar: 'KN', color: 'gold', quote: 'Forward ever, backward never.', ambition: 'Politician', awards: ['Leadership Award'] },
-      ]
-    },
-    teachers: [
-      { name: 'Mr. John Doe', avatar: 'JD', subject: 'Mathematics', service: '10 Years', message: 'I am proud of the Class of 2026. Reach for the stars!' },
-      { name: 'Mrs. Jane Smith', avatar: 'JS', subject: 'Science', service: '5 Years', message: 'Always stay curious and never stop learning.' }
-    ],
-    leaders: [
-      { role: 'Head Boy', name: 'Yaw Boakye' },
-      { role: 'Head Girl', name: 'Abena Osei' },
-      { role: 'Sports Prefect', name: 'Kwasi Arthur' }
-    ],
-    achievements: [
-      { title: 'Best Student Overall', winner: 'Ama Mensah' },
-      { title: 'Sports Personality of the Year', winner: 'Kwasi Arthur' }
-    ],
-    events: [
-      { name: 'Speech & Prize Giving Day', desc: 'A day of celebrating academic excellence.', icon: 'fa-trophy', bg: '#fef3c7' },
-      { name: 'Cultural Day', desc: 'Showcasing our rich Ghanaian heritage.', icon: 'fa-drum', bg: '#d1fae5' },
-      { name: 'Excursion to Kakum', desc: 'An unforgettable trip to Kakum National Park.', icon: 'fa-tree', bg: '#dbeafe' }
-    ],
-    tributes: [
-      { author: 'Headteacher', text: 'You have been an exceptional year group. We will miss your energy and dedication.' },
-      { author: 'Alumni Association', text: 'Welcome to the Alumni Network! Your journey has just begun.' }
-    ]
-  },
-  '2025': {
-    year: '2025',
-    title: 'Class of 2025 Yearbook',
-    coverImg: 'linear-gradient(135deg, #047857, #10b981)',
-    totalGrads: 105,
-    totalPhotos: 320,
-    classes: {}, teachers: [], leaders: [], achievements: [], events: [], tributes: []
-  }
-};
+const YEARBOOK_DATA = {};
 
 let currentYearbookYear = null;
 let currentYearbookTab = 'dashboard';
@@ -2394,9 +2250,21 @@ function yearbookModule() {
 
 function renderYearbookDashboard() {
   let html = hdr('Digital Yearbook', 'Explore and download past yearbooks', 'Yearbooks');
+  const yearbooks = Object.values(YEARBOOK_DATA)
+    .filter(yb => currentRole !== 'Visitor' || yb.status === 'Published')
+    .sort((a, b) => String(b.year || '').localeCompare(String(a.year || '')));
+
+  if (!yearbooks.length) {
+    return html + `<div class="card" style="margin-top:20px;text-align:center;color:var(--gray-500);padding:32px">
+      <i class="fas fa-book-open" style="font-size:32px;color:var(--gray-300);margin-bottom:12px"></i>
+      <div style="font-weight:700;color:var(--blue-dark);margin-bottom:6px">No published yearbooks yet</div>
+      <div style="font-size:13px">Published yearbook editions will appear here from the database.</div>
+    </div>`;
+  }
+
   html += `<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:20px;margin-top:20px">`;
   
-  Object.values(YEARBOOK_DATA).forEach(yb => {
+  yearbooks.forEach(yb => {
     html += `
     <div class="card" style="padding:0;overflow:hidden;cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'" onclick="openYearbook('${yb.year}')">
       <div style="height:140px;background:${yb.coverImg};display:flex;align-items:center;justify-content:center;color:white;font-size:32px;font-weight:800;position:relative">
@@ -2430,6 +2298,18 @@ function closeYearbook() {
 
 function renderYearbookView(year) {
   const yb = YEARBOOK_DATA[year];
+  if (!yb) {
+    return hdr('Digital Yearbook', 'Explore and download past yearbooks', 'Yearbooks') + `<div class="card" style="margin-top:20px;text-align:center;color:var(--gray-500);padding:32px">
+      <div style="font-weight:700;color:var(--blue-dark);margin-bottom:8px">Yearbook not found</div>
+      <button class="btn btn-secondary btn-sm" onclick="closeYearbook()">Back to Yearbooks</button>
+    </div>`;
+  }
+  yb.classes = yb.classes || {};
+  yb.teachers = yb.teachers || [];
+  yb.leaders = yb.leaders || [];
+  yb.achievements = yb.achievements || [];
+  yb.events = yb.events || [];
+  yb.tributes = yb.tributes || [];
   const tabs = [
     { id: 'classes', icon: 'fa-users', lbl: 'Graduating Classes' },
     { id: 'teachers', icon: 'fa-chalkboard-teacher', lbl: 'Teachers' },
@@ -2442,10 +2322,10 @@ function renderYearbookView(year) {
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
     <button class="btn btn-icon" onclick="closeYearbook()"><i class="fas fa-arrow-left"></i></button>
     <h1 style="margin:0;font-size:24px;color:var(--blue-dark)">${yb.title}</h1>
-    <div style="margin-left:auto;display:flex;gap:10px">
+    ${yb.pdfUrl ? `<div style="margin-left:auto;display:flex;gap:10px">
       <button class="btn btn-secondary btn-sm" onclick="openPdfViewerModal()"><i class="fas fa-file-pdf"></i> View PDF</button>
-      <button class="btn btn-primary btn-sm" onclick="showToast('Downloading Yearbook...', 'success')"><i class="fas fa-download"></i> Download</button>
-    </div>
+      <a class="btn btn-primary btn-sm" href="${yb.pdfUrl}" download><i class="fas fa-download"></i> Download</a>
+    </div>` : ''}
   </div>
   
   <div class="tabs">
@@ -2455,7 +2335,11 @@ function renderYearbookView(year) {
   <div style="margin-top:20px">`;
 
   if (currentYearbookTab === 'classes') {
-    Object.keys(yb.classes).forEach(cls => {
+    const classNames = Object.keys(yb.classes);
+    if (!classNames.length) {
+      html += `<div class="card" style="text-align:center;color:var(--gray-500);padding:28px">No graduating class profiles have been added for this yearbook.</div>`;
+    }
+    classNames.forEach(cls => {
       html += `<div class="card mb20">
         <div class="card-hdr"><span class="card-title">${cls}</span></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:16px">`;
@@ -2471,6 +2355,9 @@ function renderYearbookView(year) {
       html += `</div></div>`;
     });
   } else if (currentYearbookTab === 'teachers') {
+    if (!yb.teachers.length) {
+      html += `<div class="card" style="text-align:center;color:var(--gray-500);padding:28px">No teacher messages have been added for this yearbook.</div>`;
+    } else {
     html += `<div class="g3">`;
     yb.teachers.forEach(tc => {
       html += `<div class="card" style="text-align:center">
@@ -2482,9 +2369,13 @@ function renderYearbookView(year) {
       </div>`;
     });
     html += `</div>`;
+    }
   } else if (currentYearbookTab === 'leaders') {
     html += `<div class="g2"><div class="card"><div class="card-hdr"><span class="card-title">School Leaders</span></div>`;
     html += `<ul style="list-style:none;padding:0;margin:0">`;
+    if (!yb.leaders.length) {
+      html += `<li style="padding:16px 0;color:var(--gray-500)">No leaders have been added.</li>`;
+    }
     yb.leaders.forEach(ld => {
       html += `<li style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)">
         <span style="font-weight:600;color:var(--gray-800)">${ld.role}</span>
@@ -2495,6 +2386,9 @@ function renderYearbookView(year) {
     
     html += `<div class="card"><div class="card-hdr"><span class="card-title">Achievements</span></div>`;
     html += `<ul style="list-style:none;padding:0;margin:0">`;
+    if (!yb.achievements.length) {
+      html += `<li style="padding:16px 0;color:var(--gray-500)">No achievements have been added.</li>`;
+    }
     yb.achievements.forEach(ac => {
       html += `<li style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)">
         <span style="font-weight:600;color:var(--gray-800)"><i class="fas fa-trophy" style="color:var(--gold);margin-right:8px"></i>${ac.title}</span>
@@ -2503,6 +2397,9 @@ function renderYearbookView(year) {
     });
     html += `</ul></div></div>`;
   } else if (currentYearbookTab === 'events') {
+    if (!yb.events.length) {
+      html += `<div class="card" style="text-align:center;color:var(--gray-500);padding:28px">No event galleries have been added for this yearbook.</div>`;
+    } else {
     html += `<div class="g3">`;
     yb.events.forEach(ev => {
       html += `<div class="card" style="text-align:center;cursor:pointer" onclick="openAlbumView('${ev.name}', '${ev.icon}', '${ev.bg}')">
@@ -2513,7 +2410,11 @@ function renderYearbookView(year) {
       </div>`;
     });
     html += `</div>`;
+    }
   } else if (currentYearbookTab === 'tributes') {
+    if (!yb.tributes.length) {
+      html += `<div class="card" style="text-align:center;color:var(--gray-500);padding:28px">No tributes have been added for this yearbook.</div>`;
+    } else {
     html += `<div class="g2">`;
     yb.tributes.forEach(tr => {
       html += `<div class="card">
@@ -2522,6 +2423,7 @@ function renderYearbookView(year) {
       </div>`;
     });
     html += `</div>`;
+    }
   }
 
   html += `</div>`;
@@ -2532,6 +2434,25 @@ function renderYearbookView(year) {
 // ADMIN YEARBOOK MODULE
 // -----------------------------------
 function adminYearbookModule() {
+  const yearbooks = Object.values(YEARBOOK_DATA)
+    .sort((a, b) => String(b.year || '').localeCompare(String(a.year || '')));
+  const rows = yearbooks.map(yb => `
+    <tr>
+      <td><strong>${yb.year}</strong></td>
+      <td>${yb.title}</td>
+      <td><span class="badge b-${yb.status === 'Published' ? 'success' : 'warning'}">${yb.status}</span></td>
+      <td>${yb.totalGrads || 0}</td>
+      <td>${yb.totalPhotos || 0}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-xs" onclick="openYearbook('${yb.year}')">Preview</button>
+          ${yb.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="publishYearbook('${yb.year}')">Publish</button>` : ''}
+          <button class="btn btn-danger btn-xs" onclick="deleteYearbook('${yb.year}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
   return hdr('Yearbook Management', 'Create and manage digital yearbooks', 'Admin Yearbook') + `
   <div class="toolbar" style="margin-bottom:20px">
     <button class="btn btn-primary" onclick="openCreateYearbookModal()"><i class="fas fa-plus"></i> Create Yearbook</button>
@@ -2541,58 +2462,28 @@ function adminYearbookModule() {
     <table class="tbl">
       <thead><tr><th>Academic Year</th><th>Title</th><th>Status</th><th>Graduates</th><th>Photos</th><th>Actions</th></tr></thead>
       <tbody>
-        <tr>
-          <td><strong>2026</strong></td><td>Class of 2026 Yearbook</td><td><span class="badge b-success">Published</span></td><td>120</td><td>450</td>
-          <td>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-secondary btn-xs" onclick="openYearbook('2026')">Preview</button>
-              <button class="btn btn-secondary btn-xs" onclick="showToast('Edit mode enabled', 'info')">Edit Content</button>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td><strong>2027</strong></td><td>Class of 2027 Yearbook</td><td><span class="badge b-warning">Draft</span></td><td>0</td><td>0</td>
-          <td>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-secondary btn-xs" onclick="showToast('Edit mode enabled', 'info')">Edit Content</button>
-              <button class="btn btn-primary btn-xs" onclick="showToast('Yearbook Published successfully!', 'success')">Publish</button>
-            </div>
-          </td>
-        </tr>
+        ${rows || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:24px">No yearbooks found.</td></tr>'}
       </tbody>
     </table>
-  </div>
-  
-  <div class="card" style="margin-top:20px">
-    <div class="card-hdr"><span class="card-title">Content Management (Draft: 2027)</span></div>
-    <div class="tabs">
-      <div class="tab active"><i class="fas fa-users"></i> Students</div>
-      <div class="tab"><i class="fas fa-chalkboard-teacher"></i> Teachers</div>
-      <div class="tab"><i class="fas fa-images"></i> Events & Galleries</div>
-    </div>
-    <div style="margin-top:20px;display:flex;gap:16px;flex-wrap:wrap">
-      <button class="btn btn-secondary" onclick="openBulkPhotoUploadModal()"><i class="fas fa-upload"></i> Bulk Upload Photos</button>
-      <button class="btn btn-secondary" onclick="openAddStudentProfileModal()"><i class="fas fa-user-plus"></i> Add Student Profile</button>
-      <button class="btn btn-secondary" onclick="showToast('Opening CSV import tool...', 'info')"><i class="fas fa-file-csv"></i> Import Quotes & Ambitions</button>
-    </div>
   </div>`;
 }
 
 function openPdfViewerModal() {
+  const yb = YEARBOOK_DATA[currentYearbookYear] || {};
+  if (!yb.pdfUrl) {
+    showToast('No PDF has been uploaded for this yearbook.', 'warning');
+    return;
+  }
   openModal(`
     <div style="width:900px;max-width:95vw;height:80vh;display:flex;flex-direction:column;background:#333;color:white;border-radius:8px;overflow:hidden">
       <div style="padding:16px;background:#222;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #444">
-        <div style="font-size:16px;font-weight:600"><i class="fas fa-file-pdf" style="color:var(--red)"></i> Yearbook_2026_Final.pdf</div>
+        <div style="font-size:16px;font-weight:600"><i class="fas fa-file-pdf" style="color:var(--red)"></i> ${yb.title || 'Yearbook'}${yb.year ? ' - ' + yb.year : ''}</div>
         <div style="display:flex;gap:12px">
-          <button class="btn btn-icon" style="color:white" onclick="showToast('Downloading...', 'success')"><i class="fas fa-download"></i></button>
+          <a class="btn btn-icon" style="color:white" href="${yb.pdfUrl}" download><i class="fas fa-download"></i></a>
           <button class="btn btn-icon" style="color:white" onclick="closeModal()"><i class="fas fa-times"></i></button>
         </div>
       </div>
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#555">
-        <div style="background:white;width:70%;height:90%;box-shadow:0 10px 30px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:var(--gray-400)">
-          [PDF Document Viewer Mockup]
-        </div>
-      </div>
+      <iframe src="${yb.pdfUrl}" title="${yb.title || 'Yearbook'}" style="flex:1;border:0;background:white"></iframe>
     </div>
   `, true);
 }
@@ -2601,48 +2492,12 @@ function openCreateYearbookModal() {
   openModal(`
     <div style="padding:24px;width:400px;max-width:90vw">
       <h3 style="margin-top:0;color:var(--blue-dark)"><i class="fas fa-plus-circle"></i> Create New Yearbook</h3>
-      <div class="f-field" style="margin-top:20px"><label>Academic Year</label><input type="text" placeholder="e.g. 2028"></div>
-      <div class="f-field"><label>Yearbook Title</label><input type="text" placeholder="Class of 2028 Yearbook"></div>
-      <div class="f-field"><label>Cover Color Theme</label><input type="color" value="#1e3a8a" style="padding:0;height:40px;width:100%"></div>
+      <div class="f-field" style="margin-top:20px"><label>Academic Year</label><input type="text" id="new-yb-year" placeholder="e.g. 2028"></div>
+      <div class="f-field"><label>Yearbook Title</label><input type="text" id="new-yb-title" placeholder="Class of 2028 Yearbook"></div>
+      <div class="f-field"><label>Cover Color Theme</label><input type="color" id="new-yb-theme" value="#1e3a8a" style="padding:0;height:40px;width:100%"></div>
+      <div class="f-field"><label>PDF URL</label><input type="text" id="new-yb-pdf" placeholder="assets/yearbooks/class-of-2028.pdf"></div>
       <div style="display:flex;gap:10px;margin-top:24px">
-        <button class="btn btn-primary" style="flex:1" onclick="closeModal();showToast('Yearbook initialized!', 'success')">Create</button>
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
-  `, true);
-}
-
-function openBulkPhotoUploadModal() {
-  openModal(`
-    <div style="padding:24px;width:500px;max-width:90vw">
-      <h3 style="margin-top:0;color:var(--blue-dark)"><i class="fas fa-upload"></i> Bulk Upload Photos</h3>
-      <p style="font-size:12px;color:var(--gray-500)">Upload ZIP files containing student portraits or drag multiple JPG/PNG images here.</p>
-      
-      <div style="border:2px dashed var(--blue-main);background:var(--blue-50);padding:40px;text-align:center;border-radius:12px;margin:20px 0;cursor:pointer">
-        <i class="fas fa-cloud-upload-alt" style="font-size:48px;color:var(--blue-main);margin-bottom:12px"></i>
-        <div style="font-weight:600;color:var(--blue-dark)">Drag & Drop files here</div>
-        <div style="font-size:11px;color:var(--gray-500);margin-top:8px">Maximum file size: 50MB</div>
-      </div>
-      
-      <div style="display:flex;justify-content:flex-end">
-        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-      </div>
-    </div>
-  `, true);
-}
-
-function openAddStudentProfileModal() {
-  openModal(`
-    <div style="padding:24px;width:500px;max-width:90vw">
-      <h3 style="margin-top:0;color:var(--blue-dark)"><i class="fas fa-user-plus"></i> Add Student Profile</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
-        <div class="f-field" style="grid-column:1/-1"><label>Student Name</label><input type="text" placeholder="Full Name"></div>
-        <div class="f-field"><label>Class</label><select class="select-sm" style="width:100%"><option>JHS 3</option><option>JHS 2</option></select></div>
-        <div class="f-field"><label>Future Ambition</label><input type="text" placeholder="e.g. Engineer"></div>
-        <div class="f-field" style="grid-column:1/-1"><label>Personal Quote</label><textarea placeholder="A short memorable quote..." style="min-height:60px"></textarea></div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:24px">
-        <button class="btn btn-primary" style="flex:1" onclick="closeModal();showToast('Student profile added!', 'success')">Save Profile</button>
+        <button class="btn btn-primary" style="flex:1" onclick="submitCreateYearbookForm()">Create</button>
         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
       </div>
     </div>

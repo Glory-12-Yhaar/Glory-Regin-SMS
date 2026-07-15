@@ -441,28 +441,6 @@ CREATE TABLE notices (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
-CREATE TABLE messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  sender_id INT NOT NULL,
-  receiver_id INT NOT NULL,
-  subject VARCHAR(220) DEFAULT NULL,
-  body TEXT NOT NULL,
-  status ENUM('sent','draft') NOT NULL DEFAULT 'sent',
-  attachment_name VARCHAR(255) DEFAULT NULL,
-  attachment_data LONGTEXT DEFAULT NULL,
-  sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  read_at DATETIME DEFAULT NULL,
-  sender_archived TINYINT(1) NOT NULL DEFAULT 0,
-  receiver_archived TINYINT(1) NOT NULL DEFAULT 0,
-  sender_deleted TINYINT(1) NOT NULL DEFAULT 0,
-  receiver_deleted TINYINT(1) NOT NULL DEFAULT 0,
-  CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_messages_sender (sender_id, sent_at),
-  INDEX idx_messages_receiver (receiver_id, sent_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-SQL,
-        <<<'SQL'
 CREATE TABLE contact_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -491,10 +469,13 @@ CREATE TABLE alumni (
   facebook VARCHAR(220) DEFAULT NULL,
   avatar VARCHAR(20) DEFAULT NULL,
   avatar_color VARCHAR(30) DEFAULT NULL,
+  status ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
+  featured TINYINT(1) NOT NULL DEFAULT 0,
   user_id INT DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_alumni_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_alumni_status (status, featured),
   INDEX idx_alumni_year (class_year),
   INDEX idx_alumni_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -503,7 +484,7 @@ SQL,
 CREATE TABLE settings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   setting_key VARCHAR(120) NOT NULL UNIQUE,
-  setting_value TEXT DEFAULT NULL,
+  setting_value LONGTEXT DEFAULT NULL,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
@@ -564,12 +545,15 @@ CREATE TABLE yearbooks (
   year VARCHAR(10) NOT NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
   cover_img VARCHAR(255) DEFAULT '#1e3a8a',
+  pdf_url VARCHAR(255) DEFAULT NULL,
   status ENUM('Published','Draft') NOT NULL DEFAULT 'Draft',
   total_grads INT NOT NULL DEFAULT 0,
   total_photos INT NOT NULL DEFAULT 0,
   data LONGTEXT DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_yearbooks_status_year (status, year),
+  INDEX idx_yearbooks_year (year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
     ];
@@ -737,10 +721,6 @@ SQL,
         ['Admin','Stationery Supplies',1800,'2025-03-15','Accountant'],
     ]);
 
-    insertRows($pdo, "INSERT INTO messages (sender_id,receiver_id,subject,body) VALUES (?,?,?,?)", [
-        [1,2,'Welcome','Welcome to the new portal.'],
-        [2,1,'Re: Welcome','Thank you.'],
-    ]);
     insertRows($pdo, "INSERT INTO contact_messages (name,email,subject,message,is_read) VALUES (?,?,?,?,?)", [
         ['Prospective Parent','prospect@example.com','Admission inquiry','Please send admission details.',0],
     ]);
@@ -754,6 +734,8 @@ SQL,
         ['school_name','Glory Reign Preparatory School'],
         ['school_code','SCH-0024'],
         ['motto','Excellence in Learning'],
+        ['school_motto','Excellence in Learning'],
+        ['school_logo','assets/images/Logo.png'],
         ['region','Upper West Region'],
         ['district','Jirapa'],
         ['phone','+233 24 000 0000'],
@@ -764,9 +746,22 @@ SQL,
         ['current_term','1st Term'],
         ['term_start_date','2025-01-06'],
         ['term_end_date','2025-04-15'],
+        ['academic_years','2024/2025,2025/2026,2026/2027'],
         ['maintenance_mode','0'],
         ['max_upload_size','10MB'],
         ['language','English'],
+        ['password_policy','Strong'],
+        ['session_timeout','30 minutes'],
+        ['two_factor_auth','0'],
+        ['api_key_rotation','90 days'],
+        ['theme','Light'],
+        ['accent_color','Blue'],
+        ['font_size','Normal'],
+        ['compact_mode','0'],
+        ['email_notifications','1'],
+        ['sms_notifications','0'],
+        ['push_notifications','1'],
+        ['daily_digest','1'],
     ]);
 
     insertRows($pdo, "INSERT INTO admissions (applicant_name,dob,gender,class_applying,parent_name,parent_phone,parent_email,address,previous_school,status,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?)", [
@@ -782,15 +777,15 @@ SQL,
     insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,content,status) VALUES (?,?,?,?,?,?,?)", [
         ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','The Glory Reign Preparatory School digital campus portal now connects key academic, finance, communication, and public website records directly to the school database. News and blog updates published here are shared with the public website while drafts remain available only to administrators.','Published'],
     ]);
-    insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?)", [
-        ['2025','Class of 2025 Graduation','#1e3a8a','Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],
+    insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,pdf_url,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?,?)", [
+        ['2025','Class of 2025 Graduation','#1e3a8a',null,'Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],
     ]);
     ok('Seeded academic, finance, content, and portal data.');
 
     $tables = [
         'users','staff','classes','subjects','students','parents','parent_student','teachers',
         'student_scores','exams','assignments','assignment_submissions','fees','fee_structure','payments',
-        'expenses','salary','attendance','timetable','events','notices','messages','contact_messages',
+        'expenses','salary','attendance','timetable','events','notices','contact_messages',
         'alumni','settings','admissions','hero_slides','news_articles','yearbooks'
     ];
     foreach ($tables as $table) {

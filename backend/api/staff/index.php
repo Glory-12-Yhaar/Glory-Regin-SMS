@@ -42,7 +42,8 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare(
         "SELECT s.id, s.staff_code, s.name, s.email, s.phone, s.category, s.department, s.position,
-                s.salary_grade, s.join_date, s.gender, s.dob, s.address, s.status, s.performance, s.avatar, s.archived_at,
+                s.qualifications, s.salary_grade, s.join_date, s.gender, s.dob, s.address,
+                s.emergency_contact, s.emergency_phone, s.status, s.performance, s.avatar, s.archived_at,
                 t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color
          FROM staff s
          LEFT JOIN teachers t ON t.staff_id = s.id
