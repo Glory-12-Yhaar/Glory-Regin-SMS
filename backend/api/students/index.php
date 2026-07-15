@@ -88,40 +88,59 @@ if ($method === 'POST') {
     requireRole(['Admin']);
     $body = getRequestBody();
 
-    $required = ['name', 'gender', 'class_id'];
+    $required = ['name', 'gender', 'class_id', 'guardian_name', 'guardian_phone'];
     foreach ($required as $field) {
         if (empty($body[$field])) {
             jsonResponse(['success' => false, 'message' => "Field '$field' is required"], 422);
         }
     }
 
-    // Auto-generate student code
-    $year = date('Y');
-    $countStmt = $db->query("SELECT COUNT(*) FROM students WHERE student_code LIKE '$year-%'");
-    $count = (int)$countStmt->fetchColumn() + 1;
-    $code = $year . '-' . str_pad($count, 2, '0', STR_PAD_LEFT);
+    $db->beginTransaction();
+    try {
+        // Auto-generate student code
+        $year = date('Y');
+        $countStmt = $db->query("SELECT COUNT(*) FROM students WHERE student_code LIKE '$year-%'");
+        $count = (int)$countStmt->fetchColumn() + 1;
+        $code = $year . '-' . str_pad($count, 2, '0', STR_PAD_LEFT);
 
-    $stmt = $db->prepare(
-        "INSERT INTO students (student_code, name, class_id, stream, gender, dob, address, photo, attendance, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')"
-    );
-    $stmt->execute([
-        $code,
-        htmlspecialchars(trim($body['name']), ENT_QUOTES),
-        (int)$body['class_id'],
-        $body['stream'] ?? 'General',
-        $body['gender'],
-        $body['dob']    ?? null,
-        $body['address'] ?? null,
-        $body['photo']  ?? null,
-        $body['attendance'] ?? 0,
-    ]);
+        $stmt = $db->prepare(
+            "INSERT INTO students (student_code, name, class_id, stream, gender, dob, address, photo, attendance, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')"
+        );
+        $stmt->execute([
+            $code,
+            htmlspecialchars(trim($body['name']), ENT_QUOTES),
+            (int)$body['class_id'],
+            $body['stream'] ?? 'General',
+            $body['gender'],
+            $body['dob']    ?? null,
+            $body['address'] ?? null,
+            $body['photo']  ?? null,
+            $body['attendance'] ?? 0,
+        ]);
 
-    $id = $db->lastInsertId();
-    if (!empty($body['guardian_name'])) {
-        associateParentWithStudent($db, $id, $body['guardian_name'], $body['guardian_phone'] ?? null, $body['guardian_email'] ?? null, $body['address'] ?? null);
+        $id = (int)$db->lastInsertId();
+        $parentId = associateParentWithStudent(
+            $db,
+            $id,
+            $body['guardian_name'],
+            $body['guardian_phone'] ?? null,
+            $body['guardian_email'] ?? null,
+            $body['address'] ?? null
+        );
+        $db->commit();
+        jsonResponse([
+            'success' => true,
+            'message' => 'Student created and parent account linked',
+            'id' => $id,
+            'student_code' => $code,
+            'parent_id' => $parentId,
+            'parent_default_password' => 'parent123',
+        ], 201);
+    } catch (Throwable $e) {
+        $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Failed to create student: ' . $e->getMessage()], 500);
     }
-    jsonResponse(['success' => true, 'message' => 'Student created', 'id' => $id, 'student_code' => $code], 201);
 }
 
 jsonResponse(['success' => false, 'message' => 'Method not allowed'], 405);

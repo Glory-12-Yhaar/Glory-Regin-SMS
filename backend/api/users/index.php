@@ -46,8 +46,7 @@ if ($method === 'POST') {
     $check->execute([$body['username'], $body['email']]);
     if ($check->fetch()) jsonResponse(['success' => false, 'message' => 'Username or email already exists'], 409);
 
-    $count = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn() + 1;
-    $code  = 'user' . str_pad($count, 3, '0', STR_PAD_LEFT);
+    $code  = generateUniqueUserCode($db);
     $hash  = password_hash($body['password'], PASSWORD_BCRYPT, ['cost' => 12]);
 
     $stmt = $db->prepare(

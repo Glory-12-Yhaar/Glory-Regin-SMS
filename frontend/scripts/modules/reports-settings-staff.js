@@ -3249,11 +3249,11 @@ async function deleteUserAccount(userId, name) {
 
 // STAFF MODULE
 function staffModule() {
-  // Start with in-memory stats, then fetch live data and update the table
-  const totalStaff    = Object.keys(STAFF_DATA).length;
-  const teachingStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Teaching').length;
-  const adminStaff    = Object.values(STAFF_DATA).filter(s => s.category === 'Admin').length;
-  const supportStaff  = Object.values(STAFF_DATA).filter(s => s.category === 'Support').length;
+  const staffRows = Array.isArray(window.staffData) ? window.staffData : [];
+  const totalStaff    = staffRows.length;
+  const teachingStaff = staffRows.filter(s => s.category === 'Teaching').length;
+  const adminStaff    = staffRows.filter(s => s.category === 'Admin').length;
+  const supportStaff  = staffRows.filter(s => s.category === 'Support').length;
 
   // Kick off API load after render
   setTimeout(refreshStaffTable, 50);
@@ -3261,9 +3261,9 @@ function staffModule() {
   return hdr('Staff Management', 'Manage school staff - teaching, admin and support personnel', 'Staff') + `
   <div class="stats-row">
     ${statCard('<i class="fas fa-users"></i>', '<span id="stat-staff-total">' + totalStaff + '</span>', 'Total Staff', 'All categories', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>', '' + teachingStaff, 'Teaching Staff', 'Academic staff', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-building"></i>', '' + adminStaff, 'Admin Staff', 'Administrative team', 'neu', 'si-green')}
-    ${statCard('<i class="fas fa-wrench"></i>', '' + supportStaff, 'Support Staff', 'Support services', 'neu', 'si-purple')}
+    ${statCard('<i class="fas fa-chalkboard-user"></i>', '<span id="stat-staff-teaching">' + teachingStaff + '</span>', 'Teaching Staff', 'Academic staff', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-building"></i>', '<span id="stat-staff-admin">' + adminStaff + '</span>', 'Admin Staff', 'Administrative team', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-wrench"></i>', '<span id="stat-staff-support">' + supportStaff + '</span>', 'Support Staff', 'Support services', 'neu', 'si-purple')}
   </div>
   
   <div class="toolbar" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap">
@@ -3285,7 +3285,7 @@ function staffModule() {
         <div class="form-field"><label>Phone Number *</label><input type="tel" id="staff-phone" placeholder="+233 XXX XXX XXXX"></div>
         <div class="form-field"><label>Gender *</label><select id="staff-gender"><option>-- Select --</option><option>Male</option><option>Female</option></select></div>
         <div class="form-field"><label>Date of Birth *</label><input type="date" id="staff-dob"></div>
-        <div class="form-field"><label>Category *</label><select id="staff-category"><option>-- Select --</option><option>Teaching</option><option>Admin</option><option>Support</option></select></div>
+        <div class="form-field"><label>Category *</label><select id="staff-category" onchange="toggleStaffTeachingFields()"><option>-- Select --</option><option>Teaching</option><option>Admin</option><option>Support</option></select></div>
         <div class="form-field"><label>Department *</label><input type="text" id="staff-department" placeholder="e.g., Mathematics, Finance"></div>
         <div class="form-field"><label>Position/Title *</label><input type="text" id="staff-position" placeholder="e.g., Senior Teacher, Accountant"></div>
         <div class="form-field" style="grid-column:1/-1"><label>Qualifications *</label><textarea id="staff-qualifications" placeholder="Education and certifications..." style="min-height:60px;font-family:Poppins,sans-serif;border:1.5px solid var(--gray-200);border-radius:6px;padding:8px;font-size:12px"></textarea></div>
@@ -3294,7 +3294,12 @@ function staffModule() {
         <div class="form-field"><label>Address</label><input type="text" id="staff-address" placeholder="Residential address"></div>
         <div class="form-field"><label>Emergency Contact Name</label><input type="text" id="staff-emergency-contact" placeholder="Name"></div>
         <div class="form-field"><label>Emergency Contact Phone</label><input type="tel" id="staff-emergency-phone" placeholder="+233 XXX XXX XXXX"></div>
-        <div class="form-field" style="grid-column:1/-1"><label>Assignments/Roles (comma-separated)</label><input type="text" id="staff-assignments" placeholder="e.g., JHS 1 Math, Math Coordinator"></div>
+        <div id="staff-teaching-fields" style="grid-column:1/-1;display:none;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+          <div class="form-field"><label>Subject</label><input type="text" id="staff-subject" placeholder="e.g., Mathematics"></div>
+          <div class="form-field"><label>Class Assigned</label><input type="text" id="staff-class-assigned" placeholder="e.g., JHS 1"></div>
+          <div class="form-field"><label>Experience</label><input type="number" min="0" id="staff-experience" placeholder="Years"></div>
+          <div class="form-field"><label>Schedule</label><input type="text" id="staff-schedule" placeholder="e.g., Mon-Fri"></div>
+        </div>
         <div style="grid-column:1/-1;display:flex;gap:8px">
           <button class="btn btn-primary" style="flex:1" onclick="submitStaffForm()"><i class="fas fa-check"></i> Add Staff</button>
           <button class="btn btn-secondary" style="flex:1" onclick="toggleStaffForm()">Cancel</button>
@@ -3312,29 +3317,7 @@ function staffModule() {
     <table class="tbl">
       <thead><tr><th>#</th><th>Staff Name</th><th>Category</th><th>Department</th><th>Position</th><th>Phone</th><th>Join Date</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody id="staff-list-body">
-        ${Object.values(STAFF_DATA).map((staff, i) => `
-        <tr class="staff-row" data-category="${staff.category}" data-name="${staff.name.toLowerCase()}" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewStaffDetail('${staff.id}')">
-          <td style="color:var(--gray-400);font-size:11px">${i + 1}</td>
-          <td>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div class="av av-sm av-${['blue','purple','gold','green','teal'][i%5]}">${staff.avatar}</div>
-              <div><div style="font-weight:600;font-size:12px">${staff.name}</div><div style="font-size:10px;color:var(--gray-500)">${staff.id}</div></div>
-            </div>
-          </td>
-          <td><span class="badge ${staff.category==='Teaching'?'b-info':(staff.category==='Admin'?'b-success':'b-warning')}">${staff.category}</span></td>
-          <td style="font-size:11px">${staff.department}</td>
-          <td style="font-size:11px;color:var(--gray-600)">${staff.position}</td>
-          <td style="font-size:10px">${staff.phone}</td>
-          <td style="font-size:10px;color:var(--gray-500)">${new Date(staff.joinDate).toLocaleDateString()}</td>
-          <td><span class="badge ${staff.status==='Active'?'b-success':'b-danger'}">${staff.status}</span></td>
-          <td>
-            <div style="display:flex;gap:3px;justify-content:center">
-              <button class="btn btn-secondary btn-xs" onclick="viewStaffDetail('${staff.id}')" title="View"><i class="fas fa-eye"></i></button>
-              <button class="btn btn-primary btn-xs" onclick="editStaff('${staff.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-danger btn-xs" onclick="deleteStaff('${staff.id}')" title="Delete"><i class="fas fa-trash"></i></button>
-            </div>
-          </td>
-        </tr>`).join('')}
+        <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--gray-400)"><i class="fas fa-spinner fa-spin"></i> Loading staff from database...</td></tr>
       </tbody>
     </table>
   </div>`;
@@ -3361,6 +3344,10 @@ async function submitStaffForm() {
   const address      = document.getElementById('staff-address')?.value.trim();
   const emergencyContact = document.getElementById('staff-emergency-contact')?.value.trim();
   const emergencyPhone   = document.getElementById('staff-emergency-phone')?.value.trim();
+  const subject      = document.getElementById('staff-subject')?.value.trim();
+  const classAssigned = document.getElementById('staff-class-assigned')?.value.trim();
+  const experience   = parseInt(document.getElementById('staff-experience')?.value || '0', 10);
+  const schedule     = document.getElementById('staff-schedule')?.value.trim();
 
   if (!name || !email || !phone || !gender || gender === '-- Select --' ||
       !dob || !category || category === '-- Select --' ||
@@ -3372,12 +3359,23 @@ async function submitStaffForm() {
   const btn = document.querySelector('#staff-form-wrap .btn-primary');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
 
-  const res = await API.staff.create({
+  const payload = {
     name, email, phone, gender, dob, category, department, position,
     qualifications, salary_grade: salaryGrade, join_date: joinDate,
     address, emergency_contact: emergencyContact, emergency_phone: emergencyPhone,
     status: 'Active'
-  });
+  };
+  if (category === 'Teaching') {
+    Object.assign(payload, {
+      subject: subject || position,
+      class_assigned: classAssigned || 'Not Assigned',
+      experience,
+      schedule: schedule || 'Mon-Fri',
+      avatar_color: 'blue'
+    });
+  }
+
+  const res = await API.staff.create(payload);
 
   if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Add Staff'; }
 
@@ -3386,28 +3384,26 @@ async function submitStaffForm() {
     return;
   }
 
-  // Also update in-memory so stats stay accurate until next full reload
-  STAFF_DATA[res.staff_code] = {
-    id: res.staff_code, name, email, phone, gender, dob, category,
-    department, position, qualifications, salaryGrade, joinDate,
-    address, emergencyContact, emergencyPhone,
-    assignments: [], status: 'Active', performance: '4.0/5',
-    avatar: name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-  };
-
   showToast('<i class="fas fa-check-circle"></i> ' + name + ' added (ID: ' + res.staff_code + ')', 'success', 4000);
 
   // Clear form and refresh table
   ['staff-name','staff-email','staff-phone','staff-dob','staff-department',
    'staff-position','staff-qualifications','staff-salary-grade','staff-join-date',
-   'staff-address','staff-emergency-contact','staff-emergency-phone','staff-assignments']
+   'staff-address','staff-emergency-contact','staff-emergency-phone','staff-subject','staff-class-assigned','staff-experience','staff-schedule']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('staff-gender').value    = '-- Select --';
   document.getElementById('staff-category').value  = '-- Select --';
+  toggleStaffTeachingFields();
   document.getElementById('staff-form-wrap').style.display = 'none';
 
-  // Reload the staff table from the API
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   await refreshStaffTable();
+}
+
+function toggleStaffTeachingFields() {
+  const category = document.getElementById('staff-category')?.value;
+  const fields = document.getElementById('staff-teaching-fields');
+  if (fields) fields.style.display = category === 'Teaching' ? 'grid' : 'none';
 }
 
 // Reload staff table rows from the API without re-rendering the whole page
@@ -3417,11 +3413,40 @@ async function refreshStaffTable() {
   if (loading) loading.style.display = 'none';
   if (!res || !res.success) return;
 
+  window.staffData = res.data.map(s => ({
+    id: parseInt(s.id, 10),
+    staff_id: parseInt(s.id, 10),
+    staff_code: s.staff_code || '',
+    name: s.name || '',
+    email: s.email || '',
+    phone: s.phone || '',
+    category: s.category || '',
+    department: s.department || '',
+    position: s.position || '',
+    qualifications: s.qualifications || '',
+    salary_grade: s.salary_grade || '',
+    join_date: s.join_date || '',
+    gender: s.gender || '',
+    dob: s.dob || '',
+    address: s.address || '',
+    emergency_contact: s.emergency_contact || '',
+    emergency_phone: s.emergency_phone || '',
+    performance: s.performance || '',
+    status: s.status || 'Active',
+    avatar: s.avatar || '',
+    archived_at: s.archived_at || '',
+    subject: s.subject || '',
+    class_assigned: s.class_assigned || '',
+    experience: s.experience || 0,
+    schedule: s.schedule || '',
+    avatar_color: s.avatar_color || 'blue'
+  }));
+
   const tbody = document.getElementById('staff-list-body');
   if (!tbody) { renderMain(); return; }
 
   const colors = ['blue','purple','gold','green','teal'];
-  tbody.innerHTML = res.data.map((s, i) => `
+  tbody.innerHTML = res.data.length ? res.data.map((s, i) => `
     <tr class="staff-row" data-category="${s.category}" data-name="${s.name.toLowerCase()}" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewStaffDetailAPI(${s.id})">
       <td style="color:var(--gray-400);font-size:11px">${i + 1}</td>
       <td>
@@ -3446,11 +3471,16 @@ async function refreshStaffTable() {
           <button class="btn btn-danger btn-xs" onclick="deleteStaffAPI(${s.id},'${s.name.replace(/'/g,"\\'")}');" title="Delete"><i class="fas fa-trash"></i></button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--gray-400)">No staff records found.</td></tr>';
 
-  // Update total stat card
   const totalEl = document.getElementById('stat-staff-total');
   if (totalEl) totalEl.textContent = res.total || res.data.length;
+  const teachingEl = document.getElementById('stat-staff-teaching');
+  const adminEl = document.getElementById('stat-staff-admin');
+  const supportEl = document.getElementById('stat-staff-support');
+  if (teachingEl) teachingEl.textContent = res.data.filter(s => s.category === 'Teaching').length;
+  if (adminEl) adminEl.textContent = res.data.filter(s => s.category === 'Admin').length;
+  if (supportEl) supportEl.textContent = res.data.filter(s => s.category === 'Support').length;
 }
 
 async function deleteStaffAPI(id, name) {
@@ -3476,8 +3506,15 @@ async function editStaffAPI(id) {
       <div class="form-field"><label>Full Name *</label><input type="text" id="edit-staff-name" value="${s.name}"></div>
       <div class="form-field"><label>Email *</label><input type="email" id="edit-staff-email" value="${s.email}"></div>
       <div class="form-field"><label>Phone</label><input type="tel" id="edit-staff-phone" value="${s.phone || ''}"></div>
+      <div class="form-field"><label>Gender</label>
+        <select id="edit-staff-gender">
+          <option ${s.gender==='Male'?'selected':''}>Male</option>
+          <option ${s.gender==='Female'?'selected':''}>Female</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Date of Birth</label><input type="date" id="edit-staff-dob" value="${s.dob || ''}"></div>
       <div class="form-field"><label>Category *</label>
-        <select id="edit-staff-category">
+        <select id="edit-staff-category" onchange="toggleEditStaffTeachingFields()">
           <option ${s.category==='Teaching'?'selected':''}>Teaching</option>
           <option ${s.category==='Admin'?'selected':''}>Admin</option>
           <option ${s.category==='Support'?'selected':''}>Support</option>
@@ -3486,12 +3523,24 @@ async function editStaffAPI(id) {
       <div class="form-field"><label>Department</label><input type="text" id="edit-staff-department" value="${s.department || ''}"></div>
       <div class="form-field"><label>Position</label><input type="text" id="edit-staff-position" value="${s.position || ''}"></div>
       <div class="form-field"><label>Salary Grade</label><input type="text" id="edit-staff-salary-grade" value="${s.salary_grade || ''}"></div>
+      <div class="form-field"><label>Join Date</label><input type="date" id="edit-staff-join-date" value="${s.join_date || ''}"></div>
       <div class="form-field"><label>Status</label>
         <select id="edit-staff-status">
           <option ${s.status==='Active'?'selected':''}>Active</option>
           <option ${s.status==='On Leave'?'selected':''}>On Leave</option>
           <option ${s.status==='Inactive'?'selected':''}>Inactive</option>
+          <option ${s.status==='Archived'?'selected':''}>Archived</option>
         </select>
+      </div>
+      <div class="form-field"><label>Emergency Contact</label><input type="text" id="edit-staff-emergency-contact" value="${s.emergency_contact || ''}"></div>
+      <div class="form-field"><label>Emergency Phone</label><input type="tel" id="edit-staff-emergency-phone" value="${s.emergency_phone || ''}"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Address</label><input type="text" id="edit-staff-address" value="${s.address || ''}"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Qualifications</label><textarea id="edit-staff-qualifications" style="min-height:90px">${s.qualifications || ''}</textarea></div>
+      <div id="edit-staff-teaching-fields" style="grid-column:1/-1;display:${s.category === 'Teaching' ? 'grid' : 'none'};grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+        <div class="form-field"><label>Subject</label><input type="text" id="edit-staff-subject" value="${s.subject || ''}"></div>
+        <div class="form-field"><label>Class Assigned</label><input type="text" id="edit-staff-class-assigned" value="${s.class_assigned || ''}"></div>
+        <div class="form-field"><label>Experience</label><input type="number" min="0" id="edit-staff-experience" value="${s.experience || 0}"></div>
+        <div class="form-field"><label>Schedule</label><input type="text" id="edit-staff-schedule" value="${s.schedule || ''}"></div>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-primary" style="flex:1" onclick="submitEditStaffAPI(${s.id})"><i class="fas fa-check"></i> Save Changes</button>
@@ -3507,12 +3556,25 @@ async function submitEditStaffAPI(id) {
     name:         document.getElementById('edit-staff-name')?.value.trim(),
     email:        document.getElementById('edit-staff-email')?.value.trim(),
     phone:        document.getElementById('edit-staff-phone')?.value.trim(),
+    gender:       document.getElementById('edit-staff-gender')?.value,
+    dob:          document.getElementById('edit-staff-dob')?.value,
     category:     document.getElementById('edit-staff-category')?.value,
     department:   document.getElementById('edit-staff-department')?.value.trim(),
     position:     document.getElementById('edit-staff-position')?.value.trim(),
+    qualifications: document.getElementById('edit-staff-qualifications')?.value.trim(),
     salary_grade: document.getElementById('edit-staff-salary-grade')?.value.trim(),
+    join_date:    document.getElementById('edit-staff-join-date')?.value,
+    address:      document.getElementById('edit-staff-address')?.value.trim(),
+    emergency_contact: document.getElementById('edit-staff-emergency-contact')?.value.trim(),
+    emergency_phone: document.getElementById('edit-staff-emergency-phone')?.value.trim(),
     status:       document.getElementById('edit-staff-status')?.value,
   };
+  if (data.category === 'Teaching') {
+    data.subject = document.getElementById('edit-staff-subject')?.value.trim();
+    data.class_assigned = document.getElementById('edit-staff-class-assigned')?.value.trim();
+    data.experience = parseInt(document.getElementById('edit-staff-experience')?.value || '0', 10);
+    data.schedule = document.getElementById('edit-staff-schedule')?.value.trim();
+  }
 
   const res = await API.staff.update(id, data);
   if (!res || !res.success) {
@@ -3520,7 +3582,14 @@ async function submitEditStaffAPI(id) {
     return;
   }
   showToast('<i class="fas fa-check-circle"></i> Staff updated successfully', 'success');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   navTo('staff');
+}
+
+function toggleEditStaffTeachingFields() {
+  const category = document.getElementById('edit-staff-category')?.value;
+  const fields = document.getElementById('edit-staff-teaching-fields');
+  if (fields) fields.style.display = category === 'Teaching' ? 'grid' : 'none';
 }
 
 async function viewStaffDetailAPI(id) {
@@ -3530,24 +3599,39 @@ async function viewStaffDetailAPI(id) {
 }
 
 function viewStaffDetail_render(s) {
-  // Map API field names to the shape viewStaffDetail expects
   const mapped = {
-    id: s.staff_code, name: s.name, email: s.email, phone: s.phone,
-    gender: s.gender, dob: s.dob, category: s.category, department: s.department,
-    position: s.position, qualifications: s.qualifications, salaryGrade: s.salary_grade,
-    joinDate: s.join_date, address: s.address, emergencyContact: s.emergency_contact,
-    emergencyPhone: s.emergency_phone, assignments: [], status: s.status,
+    dbId: s.id,
+    id: s.staff_code || ('STF' + String(s.id).padStart(3, '0')),
+    name: s.name || '',
+    email: s.email || '',
+    phone: s.phone || '',
+    gender: s.gender || '',
+    dob: s.dob || '',
+    category: s.category || '',
+    department: s.department || '',
+    position: s.position || '',
+    qualifications: s.qualifications || '',
+    salaryGrade: s.salary_grade || '',
+    joinDate: s.join_date || '',
+    address: s.address || '',
+    emergencyContact: s.emergency_contact || '',
+    emergencyPhone: s.emergency_phone || '',
+    assignments: [s.subject, s.class_assigned, s.schedule].filter(Boolean),
+    status: s.status || 'Active',
     performance: s.performance || '4.0/5',
-    avatar: s.avatar || s.name.slice(0,2).toUpperCase()
+    avatar: s.avatar || String(s.name || 'ST').slice(0,2).toUpperCase()
   };
-  // Temporarily put in STAFF_DATA so the original viewStaffDetail can render it
-  STAFF_DATA[mapped.id] = mapped;
-  viewStaffDetail(mapped.id);
+  viewStaffDetail(mapped);
 }
 
-function viewStaffDetail(staffId) {
-  const staff = STAFF_DATA[staffId];
+function viewStaffDetail(staffRecord) {
+  const staff = typeof staffRecord === 'object'
+    ? staffRecord
+    : (Array.isArray(window.staffData) ? window.staffData.find(s => String(s.id) === String(staffRecord) || String(s.staff_code) === String(staffRecord)) : null);
   if (!staff) return;
+  const dobText = staff.dob ? new Date(staff.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+  const joinText = staff.joinDate ? new Date(staff.joinDate).toLocaleDateString() : '';
+  const tenureText = staff.joinDate ? Math.max(0, Math.floor((new Date() - new Date(staff.joinDate)) / (365 * 24 * 60 * 60 * 1000))) + ' years' : '';
 
   let html = hdr('Staff Profile', 'View complete staff member details', 'Staff') + `
   <div class="g2 mb20">
@@ -3572,7 +3656,7 @@ function viewStaffDetail(staffId) {
           </div>
           <div>
             <div style="color:var(--gray-500);font-size:11px">Date of Birth</div>
-            <div style="font-weight:600;margin-top:4px">${new Date(staff.dob).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            <div style="font-weight:600;margin-top:4px">${dobText}</div>
           </div>
           <div>
             <div style="color:var(--gray-500);font-size:11px">Email Address</div>
@@ -3610,12 +3694,12 @@ function viewStaffDetail(staffId) {
           <div style="font-weight:600;margin-top:4px">${staff.salaryGrade}</div>
         </div>
         <div>
-          <div style="color:var(--gray-500);font-size:11px">Join Date</div>
-          <div style="font-weight:600;margin-top:4px">${new Date(staff.joinDate).toLocaleDateString()}</div>
+            <div style="color:var(--gray-500);font-size:11px">Join Date</div>
+            <div style="font-weight:600;margin-top:4px">${joinText}</div>
         </div>
         <div>
-          <div style="color:var(--gray-500);font-size:11px">Tenure</div>
-          <div style="font-weight:600;margin-top:4px">${Math.floor((new Date() - new Date(staff.joinDate)) / (365 * 24 * 60 * 60 * 1000))} years</div>
+            <div style="color:var(--gray-500);font-size:11px">Tenure</div>
+            <div style="font-weight:600;margin-top:4px">${tenureText}</div>
         </div>
         <div style="grid-column:1/-1">
           <div style="color:var(--gray-500);font-size:11px">Qualifications</div>
@@ -3654,14 +3738,14 @@ function viewStaffDetail(staffId) {
       <div style="border-top:1px solid var(--gray-200);padding-top:12px">
         <div style="color:var(--gray-500);font-size:11px;margin-bottom:8px">Current Assignments/Roles</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${staff.assignments.map(a => '<span class="badge b-info" style="font-size:11px">' + a + '</span>').join('')}
+          ${(staff.assignments || []).map(a => '<span class="badge b-info" style="font-size:11px">' + a + '</span>').join('') || '<span style="color:var(--gray-400);font-size:12px">No assignments recorded</span>'}
         </div>
       </div>
     </div>
   </div>
   
   <div style="display:flex;gap:10px">
-    <button class="btn btn-primary" onclick="editStaff('${staff.id}')"><i class="fas fa-edit"></i> Edit Staff</button>
+    <button class="btn btn-primary" onclick="editStaffAPI(${staff.dbId || staff.id})"><i class="fas fa-edit"></i> Edit Staff</button>
     <button class="btn btn-secondary" onclick="navTo('staff')"><i class="fas fa-arrow-left"></i> Back to List</button>
   </div>`;
 
@@ -3669,93 +3753,28 @@ function viewStaffDetail(staffId) {
 }
 
 function editStaff(staffId) {
-  const staff = STAFF_DATA[staffId];
-  if (!staff) return;
-
-  let html = hdr('Edit Staff Member', 'Update staff information', 'Staff') + `
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-edit"></i> Edit Staff Details</span></div>
-    <div class="form-grid">
-      <div class="form-field">
-        <label>Full Name *</label>
-        <input type="text" id="edit-staff-name" placeholder="Full name" value="${staff.name}">
-      </div>
-      <div class="form-field">
-        <label>Email Address *</label>
-        <input type="email" id="edit-staff-email" placeholder="email@school.edu.gh" value="${staff.email}">
-      </div>
-      <div class="form-field">
-        <label>Phone Number *</label>
-        <input type="tel" id="edit-staff-phone" placeholder="+233 XXX XXX XXXX" value="${staff.phone}">
-      </div>
-      <div class="form-field">
-        <label>Category *</label>
-        <select id="edit-staff-category"><option value="Teaching" ${staff.category === 'Teaching' ? 'selected' : ''}>Teaching</option><option value="Admin" ${staff.category === 'Admin' ? 'selected' : ''}>Admin</option><option value="Support" ${staff.category === 'Support' ? 'selected' : ''}>Support</option></select>
-      </div>
-      <div class="form-field">
-        <label>Department *</label>
-        <input type="text" id="edit-staff-department" placeholder="Department" value="${staff.department}">
-      </div>
-      <div class="form-field">
-        <label>Position/Title *</label>
-        <input type="text" id="edit-staff-position" placeholder="Position" value="${staff.position}">
-      </div>
-      <div class="form-field">
-        <label>Salary Grade *</label>
-        <input type="text" id="edit-staff-salary-grade" placeholder="Salary Grade" value="${staff.salaryGrade}">
-      </div>
-      <div class="form-field">
-        <label>Status</label>
-        <select id="edit-staff-status"><option value="Active" ${staff.status === 'Active' ? 'selected' : ''}>Active</option><option value="On Leave">On Leave</option><option value="Retired">Retired</option></select>
-      </div>
-      <div class="form-field" style="grid-column:1/-1">
-        <label>Assignments/Roles (comma-separated)</label>
-        <input type="text" id="edit-staff-assignments" placeholder="Assignments" value="${staff.assignments.join(', ')}">
-      </div>
-      <div style="grid-column:1/-1;display:flex;gap:8px">
-        <button class="btn btn-primary" style="flex:1" onclick="submitEditStaff('${staff.id}')"><i class="fas fa-check"></i> Save Changes</button>
-        <button class="btn btn-secondary" style="flex:1" onclick="navTo('staff')">Cancel</button>
-      </div>
-    </div>
-  </div>`;
-
-  document.getElementById('main-content').innerHTML = html;
+  const staff = Array.isArray(window.staffData)
+    ? window.staffData.find(s => String(s.id) === String(staffId) || String(s.staff_code) === String(staffId))
+    : null;
+  const id = staff?.id || parseInt(staffId, 10);
+  if (!id) return showToast('Staff record not found in database cache', 'error');
+  editStaffAPI(id);
 }
 
 function submitEditStaff(staffId) {
-  // Delegate to API version
   const numId = parseInt(staffId);
-  if (!isNaN(numId)) { submitEditStaffAPI(numId); return; }
-  // Legacy in-memory fallback
-  const staff = STAFF_DATA[staffId];
-  if (!staff) return;
-  staff.name       = document.getElementById('edit-staff-name')?.value.trim();
-  staff.email      = document.getElementById('edit-staff-email')?.value.trim();
-  staff.phone      = document.getElementById('edit-staff-phone')?.value.trim();
-  staff.category   = document.getElementById('edit-staff-category')?.value;
-  staff.department = document.getElementById('edit-staff-department')?.value.trim();
-  staff.position   = document.getElementById('edit-staff-position')?.value.trim();
-  staff.salaryGrade= document.getElementById('edit-staff-salary-grade')?.value.trim();
-  staff.status     = document.getElementById('edit-staff-status')?.value;
-  staff.assignments= document.getElementById('edit-staff-assignments')?.value.split(',').map(s => s.trim()).filter(s => s);
-  showToast('<i class="fas fa-check-circle"></i> Staff information updated!', 'success', 3000);
-  setTimeout(() => navTo('staff'), 1500);
+  if (!isNaN(numId)) return submitEditStaffAPI(numId);
+  const staff = Array.isArray(window.staffData) ? window.staffData.find(s => String(s.staff_code) === String(staffId)) : null;
+  if (!staff?.id) return showToast('Staff record not found in database cache', 'error');
+  submitEditStaffAPI(staff.id);
 }
 
 function deleteStaff(staffId) {
-  // If it's a numeric DB id, use the API
   const numId = parseInt(staffId);
-  const staff = STAFF_DATA[staffId];
-  if (!isNaN(numId) && !staff) {
-    deleteStaffAPI(numId, 'this staff member');
-    return;
-  }
-  if (!staff) return;
-  if (confirm('Delete ' + staff.name + '? This cannot be undone.')) {
-    delete STAFF_DATA[staffId];
-    showToast('<i class="fas fa-check-circle"></i> Staff member deleted', 'success');
-    renderMain();
-  }
+  if (!isNaN(numId)) return deleteStaffAPI(numId, 'this staff member');
+  const staff = Array.isArray(window.staffData) ? window.staffData.find(s => String(s.staff_code) === String(staffId)) : null;
+  if (!staff?.id) return showToast('Staff record not found in database cache', 'error');
+  deleteStaffAPI(staff.id, staff.name || 'this staff member');
 }
 
 function filterStaffList() {
@@ -3774,20 +3793,43 @@ function filterStaffList() {
   });
 }
 
-function showStaffStatistics() {
-  const totalStaff = Object.keys(STAFF_DATA).length;
-  const teachingStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Teaching').length;
-  const adminStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Admin').length;
-  const supportStaff = Object.values(STAFF_DATA).filter(s => s.category === 'Support').length;
-  const activeStaff = Object.values(STAFF_DATA).filter(s => s.status === 'Active').length;
+function getStaffRowsForReports() {
+  return (Array.isArray(window.staffData) ? window.staffData : []).map(s => ({
+    id: s.staff_code || ('STF' + String(s.id || 0).padStart(3, '0')),
+    dbId: s.id,
+    name: s.name || '',
+    category: s.category || '',
+    department: s.department || '',
+    position: s.position || '',
+    email: s.email || '',
+    phone: s.phone || '',
+    salaryGrade: s.salary_grade || '',
+    joinDate: s.join_date || '',
+    status: s.status || 'Active',
+    performance: s.performance || '0'
+  }));
+}
 
-  // Calculate average performance
-  const avgPerformance = (Object.values(STAFF_DATA).reduce((sum, s) => sum + parseFloat(s.performance), 0) / totalStaff).toFixed(1);
+function showStaffStatistics() {
+  const rows = getStaffRowsForReports();
+  const totalStaff = rows.length;
+  const teachingStaff = rows.filter(s => s.category === 'Teaching').length;
+  const adminStaff = rows.filter(s => s.category === 'Admin').length;
+  const supportStaff = rows.filter(s => s.category === 'Support').length;
+  const activeStaff = rows.filter(s => s.status === 'Active').length;
+  const teachingPct = totalStaff ? ((teachingStaff / totalStaff) * 100).toFixed(0) : 0;
+  const adminPct = totalStaff ? ((adminStaff / totalStaff) * 100).toFixed(0) : 0;
+  const supportPct = totalStaff ? ((supportStaff / totalStaff) * 100).toFixed(0) : 0;
+
+  const avgPerformance = totalStaff
+    ? (rows.reduce((sum, s) => sum + (parseFloat(s.performance) || 0), 0) / totalStaff).toFixed(1)
+    : '0.0';
 
   // Get departments
   const depts = {};
-  Object.values(STAFF_DATA).forEach(s => {
-    depts[s.department] = (depts[s.department] || 0) + 1;
+  rows.forEach(s => {
+    const dept = s.department || 'Unassigned';
+    depts[dept] = (depts[dept] || 0) + 1;
   });
 
   let html = hdr('Staff Statistics & Reports', 'Comprehensive staff analysis', 'Staff') + `
@@ -3805,24 +3847,24 @@ function showStaffStatistics() {
         <div style="margin-bottom:20px">
           <div style="font-size:24px;font-weight:700;color:var(--blue-main)">${teachingStaff}</div>
           <div style="font-size:12px;color:var(--gray-500);margin-top:4px">Teaching Staff</div>
-          <div style="font-size:11px;color:var(--gray-400)">'+((teachingStaff/totalStaff)*100).toFixed(0)+'%</div>
+          <div style="font-size:11px;color:var(--gray-400)">${teachingPct}%</div>
         </div>
       </div>
-      <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill pf-blue" style="width:'+((teachingStaff/totalStaff)*100)+'%"></div></div>
+      <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill pf-blue" style="width:${teachingPct}%"></div></div>
       <div style="padding:0 12px;padding-bottom:12px;border-bottom:1px solid var(--gray-200)">
-        <div style="font-size:11px;color:var(--gray-500)">Total: '+teachingStaff+' of '+totalStaff+'</div>
+        <div style="font-size:11px;color:var(--gray-500)">Total: ${teachingStaff} of ${totalStaff}</div>
       </div>
       <div style="padding-top:12px">
         <div style="margin-bottom:12px">
           <div style="font-size:14px;font-weight:700;color:var(--blue-main)">${adminStaff}</div>
-          <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Admin Staff ('+((adminStaff/totalStaff)*100).toFixed(0)+'%)</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Admin Staff (${adminPct}%)</div>
         </div>
-        <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill pf-green" style="width:'+((adminStaff/totalStaff)*100)+'%"></div></div>
+        <div class="prog-bar" style="margin-bottom:12px"><div class="prog-fill pf-green" style="width:${adminPct}%"></div></div>
         <div style="margin-bottom:12px">
           <div style="font-size:14px;font-weight:700;color:var(--gold)">${supportStaff}</div>
-          <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Support Staff ('+((supportStaff/totalStaff)*100).toFixed(0)+'%)</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Support Staff (${supportPct}%)</div>
         </div>
-        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:'+((supportStaff/totalStaff)*100)+'%"></div></div>
+        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${supportPct}%"></div></div>
       </div>
     </div>
     
@@ -3844,8 +3886,9 @@ function showStaffStatistics() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-rankings"></i> Salary Grades Distribution</span></div>
       ${(() => {
       const salaryGrades = {};
-      Object.values(STAFF_DATA).forEach(s => {
-        salaryGrades[s.salaryGrade] = (salaryGrades[s.salaryGrade] || 0) + 1;
+      rows.forEach(s => {
+        const grade = s.salaryGrade || 'Unassigned';
+        salaryGrades[grade] = (salaryGrades[grade] || 0) + 1;
       });
       return Object.entries(salaryGrades).sort((a, b) => b[1] - a[1]).map(([grade, count]) => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:12px">
@@ -3873,15 +3916,15 @@ function showStaffStatistics() {
         </tr>
       </thead>
       <tbody>
-        ${Object.values(STAFF_DATA).map(s => `
+        ${rows.map(s => `
         <tr>
           <td style="font-weight:600">${s.name}</td>
           <td><span class="badge ${s.category === 'Teaching' ? 'b-info' : (s.category === 'Admin' ? 'b-success' : 'b-warning')}">${s.category}</span></td>
           <td>${s.department}</td>
           <td>${s.position}</td>
           <td>${s.salaryGrade}</td>
-          <td>${new Date(s.joinDate).toLocaleDateString()}</td>
-          <td>${Math.floor((new Date() - new Date(s.joinDate)) / (365 * 24 * 60 * 60 * 1000))} yrs</td>
+          <td>${s.joinDate ? new Date(s.joinDate).toLocaleDateString() : ''}</td>
+          <td>${s.joinDate ? Math.max(0, Math.floor((new Date() - new Date(s.joinDate)) / (365 * 24 * 60 * 60 * 1000))) : 0} yrs</td>
           <td>
             <div style="display:flex;align-items:center;gap:4px">
               <div style="flex:1;height:6px;background:var(--gray-200);border-radius:3px"><div style="width:${parseFloat(s.performance) * 20}%;height:100%;background:var(--blue-main);border-radius:3px"></div></div>
@@ -3902,11 +3945,12 @@ function showStaffStatistics() {
 }
 
 function exportStaffToCSV() {
+  const rows = getStaffRowsForReports();
   let csv = 'Staff Directory Export\n';
   csv += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
 
   csv += 'ID,Name,Category,Department,Position,Email,Phone,Salary Grade,Join Date,Status,Performance\n';
-  Object.values(STAFF_DATA).forEach(s => {
+  rows.forEach(s => {
     csv += `"${s.id}","${s.name}","${s.category}","${s.department}","${s.position}","${s.email}","${s.phone}","${s.salaryGrade}","${s.joinDate}","${s.status}","${s.performance}"\n`;
   });
 
@@ -3921,8 +3965,9 @@ function exportStaffToCSV() {
 }
 
 function exportStaffToExcel() {
+  const rows = getStaffRowsForReports();
   let html = '<table border="1"><tr><th>ID</th><th>Name</th><th>Category</th><th>Department</th><th>Position</th><th>Email</th><th>Phone</th><th>Salary Grade</th><th>Join Date</th><th>Status</th><th>Performance</th></tr>';
-  Object.values(STAFF_DATA).forEach(s => {
+  rows.forEach(s => {
     html += '<tr><td>' + s.id + '</td><td>' + s.name + '</td><td>' + s.category + '</td><td>' + s.department + '</td><td>' + s.position + '</td><td>' + s.email + '</td><td>' + s.phone + '</td><td>' + s.salaryGrade + '</td><td>' + s.joinDate + '</td><td>' + s.status + '</td><td>' + s.performance + '</td></tr>';
   });
   html += '</table>';

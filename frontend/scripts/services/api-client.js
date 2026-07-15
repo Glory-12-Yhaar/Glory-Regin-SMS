@@ -404,6 +404,34 @@ async function syncAllDataFromBackend() {
     try {
         const res = await API.staff.list();
         if (res && res.success && res.data) {
+            window.staffData = res.data.map(s => ({
+                id: parseInt(s.id, 10),
+                staff_id: parseInt(s.id, 10),
+                staff_code: s.staff_code || '',
+                name: s.name || '',
+                email: s.email || '',
+                phone: s.phone || '',
+                category: s.category || '',
+                department: s.department || '',
+                position: s.position || '',
+                qualifications: s.qualifications || '',
+                salary_grade: s.salary_grade || '',
+                join_date: s.join_date || '',
+                gender: s.gender || '',
+                dob: s.dob || '',
+                address: s.address || '',
+                emergency_contact: s.emergency_contact || '',
+                emergency_phone: s.emergency_phone || '',
+                performance: s.performance || '',
+                status: s.status || 'Active',
+                avatar: s.avatar || '',
+                archived_at: s.archived_at || '',
+                subject: s.subject || '',
+                class_assigned: s.class_assigned || '',
+                experience: s.experience || 0,
+                schedule: s.schedule || '',
+                avatar_color: s.avatar_color || 'blue'
+            }));
             teachersData.splice(0, teachersData.length, ...res.data.filter(t => t.category === 'Teaching').map(t => ({
                 teacher_id: 'T' + String(t.id).padStart(3, '0'),
                 id: t.id,
@@ -1288,8 +1316,8 @@ apiOverrides.submitStudentEnrollment = async function() {
   const parentName = document.getElementById('std-parent-name')?.value.trim();
   const parentPhone = document.getElementById('std-parent-phone')?.value.trim();
 
-  if (!name || !dob || !gender || !classId) {
-    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields', 'error');
+  if (!name || !dob || !gender || !classId || !parentName || !parentPhone) {
+    showToast('<i class="fas fa-times-circle"></i> Please fill all required fields, including parent name and phone', 'error');
     return;
   }
 
@@ -1305,7 +1333,7 @@ apiOverrides.submitStudentEnrollment = async function() {
   });
 
   if (res && res.success) {
-    showToast('<i class="fas fa-check-circle"></i> Student enrolled successfully!', 'success');
+    showToast('<i class="fas fa-check-circle"></i> Student enrolled and parent account linked. Default parent password: parent123', 'success');
     await syncAllDataFromBackend();
     navTo('students');
   } else {

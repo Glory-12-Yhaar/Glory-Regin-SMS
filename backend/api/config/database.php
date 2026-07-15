@@ -29,6 +29,28 @@ function getDB(): PDO {
     return $pdo;
 }
 
+function generateUniqueUserCode(PDO $db): string {
+    $next = (int)$db->query("SELECT COALESCE(MAX(CAST(SUBSTRING(user_code, 5) AS UNSIGNED)), 0) + 1 FROM users WHERE user_code LIKE 'user%'")->fetchColumn();
+    do {
+        $code = 'user' . str_pad($next++, 3, '0', STR_PAD_LEFT);
+        $check = $db->prepare("SELECT COUNT(*) FROM users WHERE user_code = ?");
+        $check->execute([$code]);
+    } while ((int)$check->fetchColumn() > 0);
+    return $code;
+}
+
+function generateUniqueUsername(PDO $db, string $name, string $fallback = 'user'): string {
+    $rawUsername = strtolower(preg_replace('/[^A-Za-z0-9]/', '', $name)) ?: $fallback;
+    $username = $rawUsername;
+    $suffix = 1;
+    while (true) {
+        $check = $db->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
+        $check->execute([$username]);
+        if ((int)$check->fetchColumn() === 0) return $username;
+        $username = $rawUsername . $suffix++;
+    }
+}
+
 function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhone = null, ?string $guardianEmail = null, ?string $guardianAddress = null): int {
     $guardianName = trim($guardianName);
     if ($guardianName === '') return 0;
@@ -64,22 +86,21 @@ function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhon
     }
 
     if (!$uId) {
-        $rawUsername = strtolower(preg_replace('/[^A-Za-z0-9]/', '', $guardianName)) ?: 'parent';
-        $username = $rawUsername;
-        $suffix = 1;
-        while (true) {
-            $check = $db->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
-            $check->execute([$username]);
-            if ((int)$check->fetchColumn() === 0) break;
-            $username = $rawUsername . $suffix++;
-        }
-
+        $username = generateUniqueUsername($db, $guardianName, 'parent');
         $email = $guardianEmail ?: $username . '@gloryreign.edu.gh';
-        $userCode = 'user' . str_pad((int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn() + 1, 3, '0', STR_PAD_LEFT);
+        $emailBase = $email;
+        $emailSuffix = 1;
+        while (true) {
+            $emailCheck = $db->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
+            $emailCheck->execute([$email]);
+            if ((int)$emailCheck->fetchColumn() === 0) break;
+            $email = preg_replace('/@/', $emailSuffix++ . '@', $emailBase, 1);
+        }
+        $userCode = generateUniqueUserCode($db);
         $passwordHash = password_hash('parent123', PASSWORD_BCRYPT, ['cost' => 10]);
         $avatar = strtoupper(substr($guardianName, 0, 2)) ?: 'P';
-        $insUser = $db->prepare("INSERT INTO users (user_code, name, username, email, password_hash, role, status, avatar) VALUES (?, ?, ?, ?, ?, 'Parent', 'Active', ?)");
-        $insUser->execute([$userCode, $guardianName, $username, $email, $passwordHash, $avatar]);
+        $insUser = $db->prepare("INSERT INTO users (user_code, name, username, email, password_hash, role, status, avatar, phone, address) VALUES (?, ?, ?, ?, ?, 'Parent', 'Active', ?, ?, ?)");
+        $insUser->execute([$userCode, $guardianName, $username, $email, $passwordHash, $avatar, $guardianPhone ?: null, $guardianAddress]);
         $uId = (int)$db->lastInsertId();
     }
 
@@ -106,21 +127,22 @@ function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhon
     }
     $params[] = $pId;
     $db->prepare("UPDATE parents SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
-    $db->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?")->execute([$guardianName, $email, $uId]);
+    $db->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?")->execute([$guardianName, $email, $guardianPhone ?: null, $guardianAddress, $uId]);
     return $pId;
 }
 
-function associateParentWithStudent(PDO $db, int $studentId, string $guardianName, ?string $guardianPhone, ?string $guardianEmail = null, ?string $guardianAddress = null): void {
+function associateParentWithStudent(PDO $db, int $studentId, string $guardianName, ?string $guardianPhone, ?string $guardianEmail = null, ?string $guardianAddress = null): int {
     $guardianName = trim($guardianName);
-    if (empty($guardianName)) return;
+    if (empty($guardianName)) return 0;
 
     $guardianPhone = trim($guardianPhone ?? '');
     $guardianEmail = filter_var(trim($guardianEmail ?? ''), FILTER_SANITIZE_EMAIL) ?: null;
     $guardianAddress = trim($guardianAddress ?? '') ?: null;
 
     $linkedParentId = ensureParentRecord($db, $guardianName, $guardianPhone, $guardianEmail, $guardianAddress);
-    if (!$linkedParentId) return;
+    if (!$linkedParentId) return 0;
     $db->prepare("DELETE FROM parent_student WHERE student_id = ?")->execute([$studentId]);
     $db->prepare("INSERT IGNORE INTO parent_student (parent_id, student_id) VALUES (?, ?)")
        ->execute([$linkedParentId, $studentId]);
+    return $linkedParentId;
 }

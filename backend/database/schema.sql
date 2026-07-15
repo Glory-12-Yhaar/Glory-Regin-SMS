@@ -105,29 +105,32 @@ CREATE TABLE IF NOT EXISTS `student_scores` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `staff` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `staff_code` VARCHAR(20) UNIQUE NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(150) UNIQUE NOT NULL,
-  `phone` VARCHAR(30),
+  `staff_code` VARCHAR(30) NOT NULL UNIQUE,
+  `name` VARCHAR(150) NOT NULL,
+  `email` VARCHAR(180) NOT NULL UNIQUE,
+  `phone` VARCHAR(40) DEFAULT NULL,
   `category` ENUM('Teaching','Admin','Support') NOT NULL,
-  `department` VARCHAR(100),
-  `position` VARCHAR(100),
-  `qualifications` TEXT,
-  `salary_grade` VARCHAR(30),
-  `join_date` DATE,
+  `department` VARCHAR(120) DEFAULT NULL,
+  `position` VARCHAR(120) DEFAULT NULL,
+  `qualifications` TEXT DEFAULT NULL,
+  `salary_grade` VARCHAR(40) DEFAULT NULL,
+  `join_date` DATE DEFAULT NULL,
   `gender` ENUM('Male','Female') NOT NULL,
-  `dob` DATE,
-  `address` TEXT,
-  `emergency_contact` VARCHAR(100),
-  `emergency_phone` VARCHAR(30),
-  `performance` VARCHAR(20),
-  `status` ENUM('Active','Inactive','On Leave','Archived') DEFAULT 'Active',
-  `avatar` VARCHAR(10),
-  `user_id` INT,
+  `dob` DATE DEFAULT NULL,
+  `address` TEXT DEFAULT NULL,
+  `emergency_contact` VARCHAR(150) DEFAULT NULL,
+  `emergency_phone` VARCHAR(40) DEFAULT NULL,
+  `performance` VARCHAR(40) DEFAULT NULL,
+  `status` ENUM('Active','Inactive','On Leave','Archived') NOT NULL DEFAULT 'Active',
+  `avatar` VARCHAR(20) DEFAULT NULL,
+  `user_id` INT DEFAULT NULL,
   `archived_at` DATETIME DEFAULT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_staff_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_staff_category_status` (`category`, `status`),
+  INDEX `idx_staff_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- TEACHERS (extended view of staff)

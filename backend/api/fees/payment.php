@@ -55,7 +55,7 @@ if ($method === 'GET') {
         $stmt = $db->prepare(
             "SELECT sp.student_id
              FROM parents pr
-             JOIN student_parents sp ON sp.parent_id = pr.id
+             JOIN parent_student sp ON sp.parent_id = pr.id
              WHERE pr.user_id = ?"
         );
         $stmt->execute([$user['id']]);
