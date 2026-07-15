@@ -2073,7 +2073,7 @@ function contactMessagesModule() {
         <div style="font-size:12.5px;color:var(--gray-700);line-height:1.6;background:white;padding:10px 12px;border-radius:6px;border:1px solid var(--gray-200)">${msg.message}</div>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn ${msg.read ? 'btn-secondary' : 'btn-primary'} btn-xs" onclick="markMessageAs(${msg.id}, ${!msg.read})">${msg.read ? '<i class="fas fa-book-open"></i> Mark Unread' : '? Mark Read'}</button>
+        <button class="btn ${msg.read ? 'btn-secondary' : 'btn-primary'} btn-xs" onclick="markMessageAs(${msg.id}, ${!msg.read})">${msg.read ? '<i class="fas fa-book-open"></i> Mark Unread' : '<i class="fas fa-check"></i> Mark Read'}</button>
         <button class="btn btn-secondary btn-xs" onclick="replyToMessage(${msg.id})"><i class="fas fa-reply"></i> Reply</button>
       </div>
     </div>
@@ -2090,42 +2090,73 @@ function contactMessagesModule() {
   ${messagesHTML}`;
 }
 
-function markMessageAs(id, read) {
-  const msg = contactMessages.find(m => m.id === id);
-  if (msg) {
-    msg.read = read;
+async function markMessageAs(id, read) {
+  if (typeof API === 'undefined' || !API.contact) {
+    showToast('Contact backend is not available. Message was not updated.', 'error');
+    return;
+  }
+  const res = await API.contact.markRead(id, read);
+  if (res && res.success) {
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     renderSidebar();
     renderMain();
     showToast(`<i class="fas fa-check-circle"></i> Message marked as ${read ? 'read' : 'unread'}`, 'success');
+  } else {
+    showToast(res?.message || 'Failed to update message', 'error');
   }
 }
 
-function markAllAsRead() {
-  contactMessages.forEach(m => m.read = true);
-  renderSidebar();
-  renderMain();
-  showToast('<i class="fas fa-check-circle"></i> All messages marked as read', 'success');
+async function markAllAsRead() {
+  if (typeof API === 'undefined' || !API.contact) {
+    showToast('Contact backend is not available. Messages were not updated.', 'error');
+    return;
+  }
+  const res = await API.contact.markAllRead();
+  if (res && res.success) {
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    renderSidebar();
+    renderMain();
+    showToast('<i class="fas fa-check-circle"></i> All messages marked as read', 'success');
+  } else {
+    showToast(res?.message || 'Failed to mark messages as read', 'error');
+  }
 }
 
-function deleteContactMessage(id) {
-  if (confirm('Delete this message?')) {
-    contactMessages = contactMessages.filter(m => m.id !== id);
+async function deleteContactMessage(id) {
+  if (!confirm('Delete this message?')) return;
+  if (typeof API === 'undefined' || !API.contact) {
+    showToast('Contact backend is not available. Message was not deleted.', 'error');
+    return;
+  }
+  const res = await API.contact.delete(id);
+  if (res && res.success) {
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     renderSidebar();
     renderMain();
     showToast('<i class="fas fa-check-circle"></i> Message deleted', 'success');
+  } else {
+    showToast(res?.message || 'Failed to delete message', 'error');
   }
 }
 
-function deleteAllMessages() {
+async function deleteAllMessages() {
   if (contactMessages.length === 0) {
     showToast('<i class="fas fa-times-circle"></i> No messages to delete', 'warning');
     return;
   }
-  if (confirm(`Delete all ${contactMessages.length} messages? This cannot be undone.`)) {
-    contactMessages = [];
+  if (!confirm(`Delete all ${contactMessages.length} messages? This cannot be undone.`)) return;
+  if (typeof API === 'undefined' || !API.contact) {
+    showToast('Contact backend is not available. Messages were not deleted.', 'error');
+    return;
+  }
+  const res = await API.contact.deleteAll();
+  if (res && res.success) {
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     renderSidebar();
     renderMain();
     showToast('<i class="fas fa-check-circle"></i> All messages deleted', 'success');
+  } else {
+    showToast(res?.message || 'Failed to delete messages', 'error');
   }
 }
 
@@ -2153,7 +2184,7 @@ function replyToMessage(id) {
   `);
 }
 
-function sendReply(msgId, recipientEmail) {
+async function sendReply(msgId, recipientEmail) {
   const textarea = document.querySelector('.reply-textarea');
   const reply = textarea?.value.trim();
 
@@ -2166,6 +2197,10 @@ function sendReply(msgId, recipientEmail) {
   if (msg) {
     const subject = encodeURIComponent("Re: " + msg.subject);
     const body = encodeURIComponent(reply + "\n\n---\nOriginal Message from " + msg.name + ":\n" + msg.message);
+    if (typeof API !== 'undefined' && API.contact) {
+      await API.contact.markRead(msgId, true);
+      if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    }
     window.location.href = `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
     msg.read = true;
   }

@@ -364,13 +364,14 @@ CREATE TABLE IF NOT EXISTS `messages` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `contact_messages` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(150),
-  `subject` VARCHAR(200),
+  `name` VARCHAR(150) NOT NULL,
+  `email` VARCHAR(180) DEFAULT NULL,
+  `subject` VARCHAR(220) DEFAULT NULL,
   `message` TEXT NOT NULL,
-  `sent_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `is_read` TINYINT(1) DEFAULT 0
-) ENGINE=InnoDB;
+  `sent_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  INDEX `idx_contact_read` (`is_read`, `sent_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- ALUMNI

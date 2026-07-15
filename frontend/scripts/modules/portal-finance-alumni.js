@@ -1838,11 +1838,11 @@ function openAddEventForm() {
           </div>
           <div class="f-field">
             <label>Time</label>
-            <input type="time" id="event-time" required>
+            <input type="time" id="event-time">
           </div>
           <div class="f-field">
             <label>All Day Event</label>
-            <input type="checkbox" id="event-allday" style="width:auto;margin-top:8px">
+            <input type="checkbox" id="event-allday" style="width:auto;margin-top:8px" onchange="toggleEventTimeField()">
           </div>
         </div>
         
@@ -1869,7 +1869,7 @@ function openAddEventForm() {
         
         <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
           <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Event</button>
+          <button type="button" class="btn btn-primary" onclick="addNewEvent(event)">Create Event</button>
         </div>
       </form>
     </div>
@@ -1878,8 +1878,16 @@ function openAddEventForm() {
   openModal(formHTML);
 }
 
+function toggleEventTimeField() {
+  const allDay = document.getElementById('event-allday')?.checked;
+  const timeInput = document.getElementById('event-time');
+  if (!timeInput) return;
+  timeInput.disabled = !!allDay;
+  if (allDay) timeInput.value = '';
+}
+
 async function addNewEvent(event) {
-  event.preventDefault();
+  if (event && event.preventDefault) event.preventDefault();
 
   const title = document.getElementById('event-title').value;
   const date = document.getElementById('event-date').value;
@@ -1894,6 +1902,10 @@ async function addNewEvent(event) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all fields', 'error');
     return;
   }
+  if (typeof API === 'undefined' || !API.events) {
+    showToast('<i class="fas fa-times-circle"></i> Events backend is not available', 'error');
+    return;
+  }
 
   const payload = {
     title,
@@ -1906,6 +1918,9 @@ async function addNewEvent(event) {
     status
   };
 
+  const btn = event?.target?.closest?.('button') || document.querySelector('button[onclick="addNewEvent(event)"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
+
   try {
     const res = await API.events.create(payload);
     if (!res || !res.success) throw new Error(res?.message || 'Failed to create event');
@@ -1913,9 +1928,11 @@ async function addNewEvent(event) {
     closeModal();
     showToast(`<i class="fas fa-check-circle"></i> Event "${escapeHtml(title)}" created successfully!`, 'success');
     renderMain();
-    renderCalendar(currentCalendarYear, currentCalendarMonth);
+    setTimeout(() => renderCalendar(currentCalendarYear, currentCalendarMonth), 100);
   } catch (err) {
     showToast(`<i class="fas fa-times-circle"></i> ${escapeHtml(err.message || 'Failed to create event')}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Create Event'; }
   }
 }
 

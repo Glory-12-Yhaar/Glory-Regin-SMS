@@ -527,7 +527,7 @@ async function saveDraft() {
   }
 }
 
-function sendContactMessage() {
+async function sendContactMessage() {
   const nameInput = document.querySelector('.contact-form input[placeholder="Full name"]');
   const emailInput = document.querySelector('.contact-form input[placeholder="your@email.com"]');
   const subjectInput = document.querySelector('.contact-form input[placeholder="What is this about?"]');
@@ -544,21 +544,16 @@ function sendContactMessage() {
   if (!subject) { showToast('<i class="fas fa-times-circle"></i> Please enter a subject', 'error'); return; }
   if (!message) { showToast('<i class="fas fa-times-circle"></i> Please enter your message', 'error'); return; }
 
-  // Create message object
-  const newMessage = {
-    id: Date.now(),
-    name,
-    email,
-    subject,
-    message,
-    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    status: 'New',
-    read: false
-  };
+  if (typeof API === 'undefined' || !API.contact) {
+    showToast('Contact backend is not available. Message was not sent.', 'error');
+    return;
+  }
 
-  // Store message
-  contactMessages.push(newMessage);
+  const res = await API.contact.submit({ name, email, subject, message });
+  if (!res || !res.success) {
+    showToast(res?.message || 'Failed to send message', 'error');
+    return;
+  }
 
   // Clear form
   nameInput.value = '';
@@ -569,10 +564,6 @@ function sendContactMessage() {
   // Notify admin
   showToast('<i class="fas fa-check-circle"></i> Message sent successfully! The admin will respond soon.', 'success');
 
-  // Update admin notification
-  const newMessagesCount = contactMessages.filter(m => !m.read).length;
-  const badge = document.querySelector('[data-contact-badge]');
-  if (badge) badge.textContent = newMessagesCount;
 }
 
 function visitorContact() {

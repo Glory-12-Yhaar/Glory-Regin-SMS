@@ -180,8 +180,10 @@ const API = {
     contact: {
         submit:   (data) => apiRequest('/contact/index.php',     'POST', data),
         list:     ()     => apiRequest('/contact/index.php'),
-        markRead: (id)   => apiRequest('/contact/index.php?id=' + id, 'PUT'),
+        markRead: (id, isRead = true) => apiRequest('/contact/index.php?id=' + id, 'PUT', { is_read: isRead }),
+        markAllRead: () => apiRequest('/contact/index.php', 'POST', { action: 'mark_all_read' }),
         delete:   (id)   => apiRequest('/contact/index.php?id=' + id, 'DELETE'),
+        deleteAll: ()    => apiRequest('/contact/index.php?all=1', 'DELETE'),
     },
 
     // ── Subjects ─────────────────────────────────────────────
@@ -642,7 +644,30 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing news:", e); }
 
-    // 8. Timetables
+    // 8. Contact Messages
+    try {
+        if (typeof contactMessages !== 'undefined' && Array.isArray(contactMessages)) {
+            const res = await API.contact.list();
+            if (res && res.success && Array.isArray(res.data)) {
+                contactMessages.splice(0, contactMessages.length, ...res.data.map(m => {
+                    const sentAt = m.sent_at ? new Date(String(m.sent_at).replace(' ', 'T')) : null;
+                    return {
+                        id: parseInt(m.id, 10),
+                        name: m.name || '',
+                        email: m.email || '',
+                        subject: m.subject || '',
+                        message: m.message || '',
+                        sent_at: m.sent_at || '',
+                        date: sentAt && !isNaN(sentAt) ? sentAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '',
+                        time: sentAt && !isNaN(sentAt) ? sentAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
+                        read: Number(m.is_read || 0) === 1
+                    };
+                }));
+            }
+        }
+    } catch (e) { console.error("Error syncing contact messages:", e); }
+
+    // 9. Timetables
     try {
         const res = await API.timetable.get();
         if (res && res.success && res.data) {
@@ -1093,6 +1118,61 @@ apiOverrides.deleteArticle = async function(articleId) {
 };
 
 // ── YEARBOOK ACTIONS OVERRIDES ──────────────────────────
+// CONTACT MESSAGE ACTIONS OVERRIDES
+apiOverrides.markMessageAs = async function(id, read) {
+    const res = await API.contact.markRead(id, read);
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast(`<i class="fas fa-check-circle"></i> Message marked as ${read ? 'read' : 'unread'}`, 'success');
+    } else {
+        showToast(res?.message || 'Failed to update message', 'error');
+    }
+};
+
+apiOverrides.markAllAsRead = async function() {
+    const res = await API.contact.markAllRead();
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> All messages marked as read', 'success');
+    } else {
+        showToast(res?.message || 'Failed to mark messages as read', 'error');
+    }
+};
+
+apiOverrides.deleteContactMessage = async function(id) {
+    if (!confirm('Delete this message?')) return;
+    const res = await API.contact.delete(id);
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> Message deleted', 'success');
+    } else {
+        showToast(res?.message || 'Failed to delete message', 'error');
+    }
+};
+
+apiOverrides.deleteAllMessages = async function() {
+    if (!Array.isArray(contactMessages) || contactMessages.length === 0) {
+        showToast('<i class="fas fa-times-circle"></i> No messages to delete', 'warning');
+        return;
+    }
+    if (!confirm(`Delete all ${contactMessages.length} messages? This cannot be undone.`)) return;
+    const res = await API.contact.deleteAll();
+    if (res && res.success) {
+        await syncAllDataFromBackend();
+        renderSidebar();
+        renderMain();
+        showToast('<i class="fas fa-check-circle"></i> All messages deleted', 'success');
+    } else {
+        showToast(res?.message || 'Failed to delete messages', 'error');
+    }
+};
+
 apiOverrides.adminYearbookModule = function() {
     const ybs = Object.values(YEARBOOK_DATA);
     const rows = ybs.map(yb => `
@@ -1812,4 +1892,48 @@ if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles))
             if (typeof renderMain === 'function') renderMain();
         }
     }).catch(e => console.error('Error syncing public news:', e));
+}
+
+if (currentRole === 'Visitor' && API.events && Array.isArray(window.eventsData)) {
+    API.events.list({ from: new Date().toISOString().slice(0, 10), limit: 6 }).then(res => {
+        if (res && res.success && Array.isArray(res.data)) {
+            window.eventsData.splice(0, window.eventsData.length, ...res.data.map(ev => ({
+                id: parseInt(ev.id, 10),
+                title: ev.title || '',
+                date: ev.event_date || ev.date || '',
+                event_date: ev.event_date || ev.date || '',
+                time: (ev.event_time || ev.time || '').slice(0, 5),
+                event_time: ev.event_time || ev.time || '',
+                allDay: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1',
+                all_day: ev.all_day === true || ev.all_day === 1 || ev.all_day === '1' ? 1 : 0,
+                location: ev.location || '',
+                audience: ev.audience || 'All',
+                description: ev.description || '',
+                status: ev.status || 'Published'
+            })));
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public events:', e));
+}
+
+if (currentRole === 'Visitor' && API.notices && Array.isArray(window.noticesData)) {
+    API.notices.list({ limit: 6 }).then(res => {
+        if (res && res.success && Array.isArray(res.data)) {
+            window.noticesData.splice(0, window.noticesData.length, ...res.data.map(n => ({
+                id: parseInt(n.id, 10),
+                icon: n.icon || '<i class="fas fa-bullhorn"></i>',
+                title: n.title || '',
+                audience: n.audience || 'All',
+                posted_by: n.posted_by || '',
+                postedBy: n.posted_by || '',
+                notice_date: n.notice_date || '',
+                date: n.notice_date || '',
+                message: n.message || '',
+                priority: n.priority || 'Normal',
+                status: n.status || 'Published',
+                attachment: n.attachment || ''
+            })));
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public notices:', e));
 }
