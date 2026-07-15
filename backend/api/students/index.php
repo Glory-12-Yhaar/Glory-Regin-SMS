@@ -17,6 +17,44 @@ $method = $_SERVER['REQUEST_METHOD'];
 $db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL");
 $db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS photo LONGTEXT DEFAULT NULL");
 
+function getTeacherStudentClassIds(PDO $db, array $user): array {
+    $stmt = $db->prepare(
+        "SELECT s.id AS staff_id, t.class_assigned
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.category = 'Teaching'
+           AND (
+             s.user_id = ?
+             OR LOWER(s.email) = LOWER(?)
+             OR LOWER(s.name) = LOWER(?)
+           )
+         ORDER BY s.user_id = ? DESC, s.id ASC
+         LIMIT 1"
+    );
+    $stmt->execute([
+        $user['id'] ?? 0,
+        $user['email'] ?? '',
+        $user['name'] ?? '',
+        $user['id'] ?? 0,
+    ]);
+    $teacher = $stmt->fetch();
+    if (!$teacher) return [];
+
+    $staffId = (int)$teacher['staff_id'];
+    $classStmt = $db->prepare(
+        "SELECT DISTINCT c.id
+         FROM classes c
+         WHERE c.teacher_id = ?
+            OR c.name = ?
+            OR EXISTS (
+                SELECT 1 FROM subjects sub
+                WHERE sub.class_id = c.id AND sub.teacher_id = ?
+            )"
+    );
+    $classStmt->execute([$staffId, $teacher['class_assigned'] ?? '', $staffId]);
+    return array_map('intval', $classStmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
 // ── GET ───────────────────────────────────────────────────────
 if ($method === 'GET') {
     $where  = ['1=1'];
@@ -32,6 +70,23 @@ if ($method === 'GET') {
     if ($user['role'] === 'Student') {
         $where[]  = 's.user_id = ?';
         $params[] = $user['id'];
+    }
+
+    if ($user['role'] === 'Teacher') {
+        $classIds = getTeacherStudentClassIds($db, $user);
+        $limit = min(200, max(1, (int)($_GET['limit'] ?? 50)));
+        if (empty($classIds)) {
+            jsonResponse([
+                'success' => true,
+                'data' => [],
+                'total' => 0,
+                'page' => 1,
+                'limit' => $limit,
+                'totalPages' => 0,
+            ]);
+        }
+        $where[] = 's.class_id IN (' . implode(',', array_fill(0, count($classIds), '?')) . ')';
+        $params = array_merge($params, $classIds);
     }
 
     // Search by name or student_code

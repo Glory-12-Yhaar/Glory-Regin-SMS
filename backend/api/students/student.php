@@ -21,6 +21,53 @@ if (!$id) jsonResponse(['success' => false, 'message' => 'Student ID required'],
 $db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL");
 $db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS photo LONGTEXT DEFAULT NULL");
 
+function getTeacherStudentClassIds(PDO $db, array $user): array {
+    $stmt = $db->prepare(
+        "SELECT s.id AS staff_id, t.class_assigned
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.category = 'Teaching'
+           AND (
+             s.user_id = ?
+             OR LOWER(s.email) = LOWER(?)
+             OR LOWER(s.name) = LOWER(?)
+           )
+         ORDER BY s.user_id = ? DESC, s.id ASC
+         LIMIT 1"
+    );
+    $stmt->execute([
+        $user['id'] ?? 0,
+        $user['email'] ?? '',
+        $user['name'] ?? '',
+        $user['id'] ?? 0,
+    ]);
+    $teacher = $stmt->fetch();
+    if (!$teacher) return [];
+
+    $staffId = (int)$teacher['staff_id'];
+    $classStmt = $db->prepare(
+        "SELECT DISTINCT c.id
+         FROM classes c
+         WHERE c.teacher_id = ?
+            OR c.name = ?
+            OR EXISTS (
+                SELECT 1 FROM subjects sub
+                WHERE sub.class_id = c.id AND sub.teacher_id = ?
+            )"
+    );
+    $classStmt->execute([$staffId, $teacher['class_assigned'] ?? '', $staffId]);
+    return array_map('intval', $classStmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
+function canAccessStudentRecord(PDO $db, array $user, array $student): bool {
+    if (($user['role'] ?? '') === 'Admin') return true;
+    if (($user['role'] ?? '') === 'Student') return (int)($student['user_id'] ?? 0) === (int)($user['id'] ?? 0);
+    if (($user['role'] ?? '') === 'Teacher') {
+        return in_array((int)($student['class_id'] ?? 0), getTeacherStudentClassIds($db, $user), true);
+    }
+    return false;
+}
+
 // Helper: fetch student row
 function fetchStudent(PDO $db, int $id): array|false {
     $stmt = $db->prepare(
@@ -47,6 +94,9 @@ function fetchStudent(PDO $db, int $id): array|false {
 if ($method === 'GET') {
     $student = fetchStudent($db, $id);
     if (!$student) jsonResponse(['success' => false, 'message' => 'Student not found'], 404);
+    if (!canAccessStudentRecord($db, $user, $student)) {
+        jsonResponse(['success' => false, 'message' => 'Student not found'], 404);
+    }
 
     // Fetch scores
     $term  = $_GET['term']          ?? '1st Term';
@@ -68,6 +118,9 @@ if ($method === 'PUT') {
     requireRole(['Admin', 'Teacher']);
     $student = fetchStudent($db, $id);
     if (!$student) jsonResponse(['success' => false, 'message' => 'Student not found'], 404);
+    if (!canAccessStudentRecord($db, $user, $student)) {
+        jsonResponse(['success' => false, 'message' => 'Student not found'], 404);
+    }
 
     $body = getRequestBody();
     $linked = $db->prepare('SELECT user_id FROM students WHERE id = ?');

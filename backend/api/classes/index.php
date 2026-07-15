@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-requireAuth();
+$user = requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -43,9 +43,39 @@ function normalizeSubjects(array $subjects): array {
     return $clean;
 }
 
+function getTeacherClassScope(PDO $db, array $user): array {
+    $stmt = $db->prepare(
+        "SELECT s.id AS staff_id, t.class_assigned
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.category = 'Teaching'
+           AND (
+             s.user_id = ?
+             OR LOWER(s.email) = LOWER(?)
+             OR LOWER(s.name) = LOWER(?)
+           )
+         ORDER BY s.user_id = ? DESC, s.id ASC
+         LIMIT 1"
+    );
+    $stmt->execute([
+        $user['id'] ?? 0,
+        $user['email'] ?? '',
+        $user['name'] ?? '',
+        $user['id'] ?? 0,
+    ]);
+    $teacher = $stmt->fetch();
+    if (!$teacher) {
+        return ['staff_id' => 0, 'class_assigned' => ''];
+    }
+
+    return [
+        'staff_id' => (int)$teacher['staff_id'],
+        'class_assigned' => (string)($teacher['class_assigned'] ?? ''),
+    ];
+}
+
 if ($method === 'GET') {
-    $stmt = $db->query(
-        "SELECT c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name AS teacher_name,
+    $sql = "SELECT c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name AS teacher_name,
                 COUNT(DISTINCT s.id)  AS student_count,
                 COALESCE(ROUND(AVG(s.attendance), 1), 0) AS attendance_avg,
                 COUNT(DISTINCT sb.id) AS subject_count,
@@ -55,8 +85,36 @@ if ($method === 'GET') {
          LEFT JOIN students s  ON s.class_id  = c.id AND s.status = 'Active'
          LEFT JOIN subjects sb ON sb.class_id = c.id
          GROUP BY c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name
-         ORDER BY c.id ASC"
-    );
+         ORDER BY c.id ASC";
+    $params = [];
+
+    if (($user['role'] ?? '') === 'Teacher') {
+        $scope = getTeacherClassScope($db, $user);
+        if (!$scope['staff_id']) {
+            jsonResponse(['success' => true, 'data' => []]);
+        }
+        $sql = "SELECT c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name AS teacher_name,
+                       COUNT(DISTINCT s.id)  AS student_count,
+                       COALESCE(ROUND(AVG(s.attendance), 1), 0) AS attendance_avg,
+                       COUNT(DISTINCT sb.id) AS subject_count,
+                       GROUP_CONCAT(DISTINCT sb.name ORDER BY sb.name ASC) AS subjects
+                FROM classes c
+                LEFT JOIN staff st    ON st.id = c.teacher_id
+                LEFT JOIN students s  ON s.class_id  = c.id AND s.status = 'Active'
+                LEFT JOIN subjects sb ON sb.class_id = c.id
+                WHERE c.teacher_id = ?
+                   OR c.name = ?
+                   OR EXISTS (
+                       SELECT 1 FROM subjects owned_subject
+                       WHERE owned_subject.class_id = c.id AND owned_subject.teacher_id = ?
+                   )
+                GROUP BY c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name
+                ORDER BY c.name ASC";
+        $params = [$scope['staff_id'], $scope['class_assigned'], $scope['staff_id']];
+    }
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
     jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
 }
 
