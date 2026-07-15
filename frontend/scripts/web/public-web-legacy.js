@@ -66,6 +66,10 @@ function visitorAdmission() {
         <div class="f-field"><label>Contact Number *</label><input id="adm-parent-phone" placeholder="+233..." maxlength="13" required></div>
         <div class="f-field"><label>Email Address</label><input id="adm-parent-email" placeholder="email@example.com" type="email"></div>
       </div>
+      <div class="f-row">
+        <div class="f-field"><label>Parent/Guardian Gender</label><select id="adm-parent-gender"><option value="">-- Select Gender --</option><option value="Female">Female</option><option value="Male">Male</option></select></div>
+        <div class="f-field"><label>Parent/Guardian Occupation</label><input id="adm-parent-occupation" placeholder="e.g. Teacher, Farmer, Trader"></div>
+      </div>
       <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="submitVisitorAdmission()">Submit Application</button>
     </div>
   </div>`;
@@ -80,6 +84,8 @@ async function submitVisitorAdmission() {
   const parentName = document.getElementById('adm-parent-name')?.value.trim();
   const parentPhone = document.getElementById('adm-parent-phone')?.value.trim();
   const parentEmail = document.getElementById('adm-parent-email')?.value.trim();
+  const parentGender = document.getElementById('adm-parent-gender')?.value;
+  const parentOccupation = document.getElementById('adm-parent-occupation')?.value.trim();
 
   if (!firstName || !lastName || !dob || !gender || !classApplying || !parentName || !parentPhone) {
     showToast('<i class="fas fa-times-circle"></i> Please fill all required fields.', 'error');
@@ -101,7 +107,9 @@ async function submitVisitorAdmission() {
       class_applying: classApplying,
       parent_name: parentName,
       parent_phone: parentPhone,
-      parent_email: parentEmail
+      parent_email: parentEmail,
+      parent_gender: parentGender,
+      parent_occupation: parentOccupation
     });
 
     if (res && res.success) {
@@ -112,6 +120,8 @@ async function submitVisitorAdmission() {
       document.getElementById('adm-parent-name').value = '';
       document.getElementById('adm-parent-phone').value = '';
       document.getElementById('adm-parent-email').value = '';
+      document.getElementById('adm-parent-gender').value = '';
+      document.getElementById('adm-parent-occupation').value = '';
     } else {
       showToast(res?.message || 'Failed to submit application. Please try again.', 'error');
     }
@@ -1931,6 +1941,15 @@ function exportAdmissionsToExcel() {
 }
 
 function downloadAdmissionsPDF() {
+  downloadTablePDF({
+    title: 'Admissions Data Report', subtitle: 'Generated: ' + new Date().toLocaleString(),
+    summary: [`Applications: ${admissionsData.length}`, `Pending: ${admissionsData.filter(a => a.status === 'Pending').length}`, `Approved: ${admissionsData.filter(a => a.status === 'Approved').length}`],
+    headers: ['Application', 'Student', 'Gender', 'Class', 'Parent', 'Phone', 'Status', 'Date'],
+    rows: admissionsData.map(a => [a.adm_id, a.name, a.gender, a.class_applying, a.parent_name, a.parent_phone, a.status, a.created]),
+    filename: 'Admissions_Data_' + new Date().toISOString().slice(0, 10) + '.pdf'
+  });
+  showToast('<i class="fas fa-check-circle"></i> Admissions PDF downloaded', 'success', 3000);
+  return;
   let html = '<html><head><meta charset="UTF-8"><style>';
   html += 'body{font-family:Arial,sans-serif;margin:15px;color:#333;font-size:12px}';
   html += 'h1{font-size:18px;margin:0 0 8px 0;color:#0066cc}h2{font-size:13px;margin:12px 0 8px 0;border-bottom:2px solid #0066cc;padding-bottom:4px}';
@@ -2177,12 +2196,19 @@ function initButtonHandlers() {
 document.getElementById('role-fab')?.style.setProperty('display', 'none');
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', function () {
-  if (typeof loadPersistentRecords === 'function') loadPersistentRecords();
-  const savedNav = typeof getSavedNavigationState === 'function' ? getSavedNavigationState() : null;
-  const sessionUser = getSessionUser();
-  const savedRole = savedNav?.role || sessionUser?.role || 'Visitor';
-  switchRole(savedRole, savedNav?.mod || 'dashboard');
+document.addEventListener('DOMContentLoaded', async function () {
+  try {
+    if (typeof loadPersistentRecords === 'function') loadPersistentRecords();
+    if (typeof restoreSessionFromBackend === 'function') await restoreSessionFromBackend();
+    const savedNav = typeof getSavedNavigationState === 'function' ? getSavedNavigationState() : null;
+    const sessionUser = getSessionUser();
+    const activeRole = sessionUser?.role || 'Visitor';
+    const savedModule = savedNav?.role === activeRole ? savedNav.mod : 'dashboard';
+    switchRole(activeRole, savedModule);
+  } catch (error) {
+    console.error('Application startup failed', error);
+    switchRole('Visitor', 'dashboard');
+  }
   initButtonHandlers();
   initMobileSidebarHandlers();
 });

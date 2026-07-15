@@ -23,6 +23,21 @@ $year = $_GET['academic_year'] ?? (
     ($db->query("SELECT setting_value FROM settings WHERE setting_key = 'academic_year' LIMIT 1")->fetchColumn()) ?: '2024/2025'
 );
 
+$defaultGradingRanges = [
+    ['grade' => 'A', 'min' => 80, 'max' => 100],
+    ['grade' => 'B', 'min' => 70, 'max' => 79],
+    ['grade' => 'C', 'min' => 60, 'max' => 69],
+    ['grade' => 'D', 'min' => 50, 'max' => 59],
+    ['grade' => 'F', 'min' => 0, 'max' => 49],
+];
+$gradingJson = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'grading_ranges' LIMIT 1")->fetchColumn();
+$decodedGradingRanges = $gradingJson ? json_decode($gradingJson, true) : null;
+$gradingRanges = is_array($decodedGradingRanges) && count($decodedGradingRanges) ? $decodedGradingRanges : $defaultGradingRanges;
+$gradeCountsTemplate = [];
+foreach ($gradingRanges as $range) {
+    $gradeCountsTemplate[(string)($range['grade'] ?? 'F')] = 0;
+}
+
 // Fetch active students
 $stmt = $db->prepare(
     "SELECT s.id, s.student_code, s.name, s.gender, s.attendance, s.status, c.name AS class_name
@@ -44,11 +59,13 @@ $scoresRaw = $scoreStmt->fetchAll();
 
 // Helper: grade
 function gradeFromTotal(float $total): string {
-    if ($total >= 90) return 'A';
-    if ($total >= 80) return 'B';
-    if ($total >= 70) return 'C';
-    if ($total >= 60) return 'D';
-    return 'E';
+    global $gradingRanges;
+    foreach ($gradingRanges as $range) {
+        if ($total >= (float)($range['min'] ?? 0) && $total <= (float)($range['max'] ?? 100)) {
+            return (string)($range['grade'] ?? 'F');
+        }
+    }
+    return 'F';
 }
 
 // Build students map and attach scores
@@ -100,12 +117,14 @@ foreach ($students as $id => &$stu) {
             ];
             // Subject aggregates
             if (!isset($analytics['subjectPerformance'][$sub])) {
-                $analytics['subjectPerformance'][$sub] = ['totalStudents'=>0,'totalScore'=>0,'grades'=>['A'=>0,'B'=>0,'C'=>0,'D'=>0,'E'=>0]];
+                $analytics['subjectPerformance'][$sub] = ['totalStudents'=>0,'totalScore'=>0,'grades'=>$gradeCountsTemplate];
             }
             $total = $r['class_score'] + $r['exam_score'];
             $analytics['subjectPerformance'][$sub]['totalStudents']++;
             $analytics['subjectPerformance'][$sub]['totalScore'] += $total;
-            $analytics['subjectPerformance'][$sub]['grades'][gradeFromTotal($total)]++;
+            $grade = gradeFromTotal($total);
+            if (!isset($analytics['subjectPerformance'][$sub]['grades'][$grade])) $analytics['subjectPerformance'][$sub]['grades'][$grade] = 0;
+            $analytics['subjectPerformance'][$sub]['grades'][$grade]++;
         }
     }
 

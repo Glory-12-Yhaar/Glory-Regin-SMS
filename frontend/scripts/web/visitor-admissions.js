@@ -385,14 +385,6 @@ function visitorHome() {
     <div class="section-title"><h2>Gallery</h2><p>A quick look at school life, learning and celebrations.</p></div>
     <div class="g3">${['assets/images/student.jpeg', 'assets/images/teacher.jpeg', 'assets/images/Hero.jpeg'].map((img, i) => `<div class="public-gallery-tile" style="background-image:url('${img}')"><span>${['Students', 'Teachers', 'Campus Life'][i]}</span></div>`).join('')}</div>
   </section>
-  <section id="events-section" class="public-section">
-    <div class="section-title"><h2>Events</h2><p>Upcoming school activities and public calendar dates.</p></div>
-    <div class="g3">${eventCards || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No upcoming events published yet.</div>'}</div>
-  </section>
-  <section id="notices-section" class="public-section">
-    <div class="section-title"><h2>Notices</h2><p>Official announcements from the school office.</p></div>
-    <div class="g3">${noticeCards || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No public notices published yet.</div>'}</div>
-  </section>
   <section id="news-section" class="public-section">
     <div class="section-title"><h2>News</h2><p>Latest stories from Glory Reign Preparatory School.</p></div>
     <div class="g3">${publishedArticles.map(article => `<div class="card"><div class="news-card-icon">${article.icon}</div><h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${escapeHtml(article.title)}</h3><p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:10px">${escapeHtml(article.desc)}</p><button class="btn btn-secondary btn-xs" onclick="showNewsArticleById(${article.id})">Read More</button></div>`).join('') || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No published news articles yet.</div>'}</div>
@@ -482,12 +474,18 @@ async function submitAdmission() {
   const parentName = document.getElementById('adm-parent-name')?.value.trim();
   const parentPhone = document.getElementById('adm-parent-phone')?.value.trim();
   const parentEmail = document.getElementById('adm-parent-email')?.value.trim();
+  const parentGender = document.getElementById('adm-parent-gender')?.value;
+  const parentOccupation = document.getElementById('adm-parent-occupation')?.value.trim();
   const address = document.getElementById('adm-parent-address')?.value.trim();
   const notes = document.getElementById('adm-medical')?.value.trim();
   const photo = window.admPictureData || null;
 
   if (!name || !dob || !gender || !classApplying || !parentName || !parentPhone) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please fill in all required fields', 'warning');
+    return;
+  }
+  if (!/^\d{1,15}$/.test(parentPhone)) {
+    showToast('<i class="fas fa-exclamation-triangle"></i> Phone number must contain numbers only and be no more than 15 digits', 'warning');
     return;
   }
 
@@ -501,6 +499,8 @@ async function submitAdmission() {
       parent_name: parentName,
       parent_phone: parentPhone,
       parent_email: parentEmail,
+      parent_gender: parentGender,
+      parent_occupation: parentOccupation,
       address,
       photo,
       notes
@@ -588,7 +588,8 @@ async function enrollStudent(admissionId) {
     parent_name: admission.parent_name,
     parent_phone: admission.parent_phone,
     house: admission.house || 'Not Assigned',
-    picture: admission.picture,
+    photo: admission.photo || admission.picture || null,
+    picture: admission.photo || admission.picture || null,
     enrolled_date: new Date().toISOString().split('T')[0]
   };
 

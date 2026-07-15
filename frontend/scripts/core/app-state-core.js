@@ -14,10 +14,10 @@ function initializeDarkMode() {
   if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
     darkMode = SETTINGS_DATA.appearance.theme === 'Dark';
   }
-  applyTheme();
+  applyTheme(false);
 }
 
-function applyTheme() {
+function applyTheme(persist = true) {
   if (darkMode) {
     document.body.classList.add('dark');
     document.documentElement.style.colorScheme = 'dark';
@@ -28,7 +28,7 @@ function applyTheme() {
   // Update Settings data
   if (SETTINGS_DATA && SETTINGS_DATA.appearance) {
     SETTINGS_DATA.appearance.theme = darkMode ? 'Dark' : 'Light';
-    saveSettingsToStorage();
+    if (persist && currentRole === 'Admin' && getSessionUser()) saveSettingsToStorage();
   }
   // Update theme selector if it exists
   const themeSelect = document.getElementById('theme-select');
@@ -567,11 +567,15 @@ function calculateTotalScore(classScore, examScore) {
 }
 
 function calculateGrade(totalScore) {
-  if (totalScore >= 90) return 'A';
-  if (totalScore >= 80) return 'B';
-  if (totalScore >= 70) return 'C';
-  if (totalScore >= 60) return 'D';
-  return 'E';
+  const ranges = (typeof SETTINGS_DATA !== 'undefined' && Array.isArray(SETTINGS_DATA.academic?.gradingRanges))
+    ? SETTINGS_DATA.academic.gradingRanges
+    : [
+        { grade: 'A', min: 80, max: 100 }, { grade: 'B', min: 70, max: 79 },
+        { grade: 'C', min: 60, max: 69 }, { grade: 'D', min: 50, max: 59 },
+        { grade: 'F', min: 0, max: 49 }
+      ];
+  const score = Number(totalScore) || 0;
+  return ranges.find(range => score >= Number(range.min) && score <= Number(range.max))?.grade || 'F';
 }
 
 function calculateAverage(scores) {
@@ -1004,7 +1008,9 @@ const MENUS = {
 function getAllowedModuleIdsForRole(role = currentRole) {
   const menuIds = (MENUS[role] || [])
     .flatMap(section => section.items.map(item => item.id));
-  if (role === 'Accountant') menuIds.push('expense_new', 'receipt_new', 'payroll_process', 'balance');
+  if (role === 'Accountant' || role === 'Admin') {
+    menuIds.push('expense_new', 'receipt_new', 'payroll_process', 'balance');
+  }
   return new Set(['dashboard', ...menuIds]);
 }
 
@@ -1516,10 +1522,19 @@ function viewNotificationDetail(notifId) {
 const NAV_STATE_KEY = 'gr_last_navigation_state';
 
 function saveNavigationState() {
+  try {
+    if (currentRole === 'Visitor') return;
+    localStorage.setItem(NAV_STATE_KEY, JSON.stringify({ role: currentRole, mod: currentMod }));
+  } catch (e) {}
 }
 
 function getSavedNavigationState() {
-  return null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(NAV_STATE_KEY) || 'null');
+    return saved && saved.role && saved.mod ? saved : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 function toggleRS() { document.getElementById('role-switcher')?.classList.toggle('open') }
@@ -1666,8 +1681,6 @@ function renderPublicNavbar() {
         <a class="nav-link" onclick="publicNavToSection('about-section');closePublicMenu()"><i class="fas fa-info-circle"></i> About</a>
         <a class="nav-link" onclick="publicNavToSection('admission-section');closePublicMenu()"><i class="fas fa-file-alt"></i> Admissions</a>
         <a class="nav-link" onclick="publicNavToSection('gallery-section');closePublicMenu()"><i class="fas fa-image"></i> Gallery</a>
-        <a class="nav-link" onclick="publicNavToSection('events-section');closePublicMenu()"><i class="fas fa-calendar-alt"></i> Events</a>
-        <a class="nav-link" onclick="publicNavToSection('notices-section');closePublicMenu()"><i class="fas fa-bullhorn"></i> Notices</a>
         <a class="nav-link" onclick="publicNavToSection('news-section');closePublicMenu()"><i class="fas fa-newspaper"></i> News</a>
         <a class="nav-link" onclick="publicNavToSection('contact-section');closePublicMenu()"><i class="fas fa-phone"></i> Contact</a>
       </div>
@@ -2063,8 +2076,48 @@ function updateMiniCal() {
   if (gridEl) gridEl.innerHTML = grid;
 }
 function bars(data, cls) {
-  const mx = Math.max(...data);
+  const mx = Math.max(1, ...data.map(Number).filter(Number.isFinite));
   return `<div class="chart-wrap">${data.map(v => `<div class="c-bar ${cls || 'pf-blue'}" style="height:${Math.round(v / mx * 140)}px;background:${cls === 'pf-gold' ? 'var(--gold)' : 'var(--blue-main)'}"></div>`).join('')}</div>`;
+}
+
+function downloadTablePDF({ title, subtitle = '', summary = [], headers = [], rows = [], filename = 'report.pdf' }) {
+  const clean = value => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7E]/g, '-');
+  const quote = value => clean(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  const dataRows = rows.length ? rows : [['No records found']];
+  const cols = Math.max(1, headers.length, ...dataRows.map(row => row.length));
+  const width = 842, height = 595, margin = 34, usable = width - margin * 2, colWidth = usable / cols;
+  const pages = [];
+  for (let offset = 0; offset < dataRows.length; offset += 24) {
+    const commands = ['BT', '/F1 16 Tf', `${margin} ${height - 38} Td`, `(${quote(title)}) Tj`, 'ET'];
+    let y = height - 58;
+    if (subtitle) { commands.push('BT', '/F1 9 Tf', `${margin} ${y} Td`, `(${quote(subtitle)}) Tj`, 'ET'); y -= 15; }
+    summary.forEach(line => { commands.push('BT', '/F1 9 Tf', `${margin} ${y} Td`, `(${quote(line)}) Tj`, 'ET'); y -= 13; });
+    y -= 5;
+    commands.push('0.10 0.34 0.73 rg', `${margin} ${y - 5} ${usable} 19 re f`, '1 1 1 rg');
+    (headers.length ? headers : Array.from({ length: cols }, (_, i) => `Column ${i + 1}`)).forEach((header, i) => commands.push('BT', '/F1 8 Tf', `${margin + i * colWidth + 4} ${y + 1} Td`, `(${quote(clean(header).slice(0, Math.max(5, Math.floor(colWidth / 5.3))))}) Tj`, 'ET'));
+    y -= 19; commands.push('0 0 0 rg');
+    dataRows.slice(offset, offset + 24).forEach((row, rowIndex) => {
+      if (rowIndex % 2) commands.push('0.96 0.97 0.99 rg', `${margin} ${y - 4} ${usable} 18 re f`, '0 0 0 rg');
+      for (let i = 0; i < cols; i++) {
+        const max = Math.max(5, Math.floor(colWidth / 5.3)); let cell = clean(row[i] ?? '');
+        if (cell.length > max) cell = cell.slice(0, max - 3) + '...';
+        commands.push('BT', '/F1 8 Tf', `${margin + i * colWidth + 4} ${y + 1} Td`, `(${quote(cell)}) Tj`, 'ET');
+      }
+      y -= 18;
+    });
+    commands.push('BT', '/F1 8 Tf', `${width - 95} 20 Td`, `(Page ${pages.length + 1}) Tj`, 'ET');
+    pages.push(commands.join('\n'));
+  }
+  const objects = []; objects[1] = '<< /Type /Catalog /Pages 2 0 R >>'; objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+  const refs = [];
+  pages.forEach((content, i) => { const page = 4 + i * 2, stream = page + 1; refs.push(`${page} 0 R`); objects[page] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${stream} 0 R >>`; objects[stream] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`; });
+  objects[2] = `<< /Type /Pages /Kids [${refs.join(' ')}] /Count ${pages.length} >>`;
+  let pdf = '%PDF-1.4\n'; const offsets = [0];
+  for (let i = 1; i < objects.length; i++) { offsets[i] = pdf.length; pdf += `${i} 0 obj\n${objects[i]}\nendobj\n`; }
+  const xref = pdf.length; pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+  for (let i = 1; i < objects.length; i++) pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' })); link.download = filename.endsWith('.pdf') ? filename : filename + '.pdf'; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 function paginationHtml() {
   const classNames = (typeof getVisibleClassesForRole === 'function' ? getVisibleClassesForRole(classesData) : classesData).map(c => c.name);

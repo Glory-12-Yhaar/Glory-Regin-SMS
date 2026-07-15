@@ -9,6 +9,49 @@ const API_BASE = (() => {
     return baseDir.replace(/\/frontend\/?$/, '') + '/backend/api';
 })();
 
+let sessionExpiryHandled = false;
+
+function handleExpiredSession() {
+    if (typeof setSessionUser === 'function') setSessionUser(null);
+    else window.SESSION_USER = null;
+
+    currentRole = 'Visitor';
+    currentMod = 'dashboard';
+
+    const appShell = document.getElementById('app-shell');
+    const loginPage = document.getElementById('login-page');
+    const roleLoginPage = document.getElementById('role-login-page');
+    if (appShell) appShell.classList.remove('active');
+    if (loginPage) loginPage.style.display = 'flex';
+    if (roleLoginPage) roleLoginPage.remove();
+    document.getElementById('role-fab')?.style.setProperty('display', 'none');
+    document.getElementById('role-switcher')?.classList.remove('open');
+
+    if (!sessionExpiryHandled) {
+        sessionExpiryHandled = true;
+        showToast('Session expired. Please log in again.', 'error');
+    }
+}
+
+async function restoreSessionFromBackend() {
+    try {
+        const response = await fetch(API_BASE + '/auth/me.php', {
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!response.ok) return null;
+        const result = await response.json();
+        if (!result?.success || !result.user) return null;
+        if (typeof setSessionUser === 'function') setSessionUser(result.user);
+        else window.SESSION_USER = result.user;
+        sessionExpiryHandled = false;
+        return typeof getSessionUser === 'function' ? getSessionUser() : result.user;
+    } catch (error) {
+        console.error('Unable to restore session', error);
+        return null;
+    }
+}
+
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
         '&': '&amp;',
@@ -33,10 +76,8 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
         const data = await res.json();
 
         if (res.status === 401) {
-            // Session expired — redirect to login
-            currentRole = 'Visitor';
-            logout();
-            showToast('Session expired. Please log in again.', 'error');
+            const hadAuthenticatedSession = (typeof getSessionUser === 'function' && !!getSessionUser()) || currentRole !== 'Visitor';
+            if (hadAuthenticatedSession) handleExpiredSession();
             return null;
         }
         return data;
@@ -270,13 +311,16 @@ async function doRoleLoginAPI(role) {
     // Store session user globally
     if (typeof setSessionUser === 'function') setSessionUser(res.user);
     else window.SESSION_USER = res.user;
+    sessionExpiryHandled = false;
     loginRole = (typeof getSessionUser === 'function' ? getSessionUser()?.role : res.user.role) || role;
 
     const roleLoginPage = document.getElementById('role-login-page');
     if (roleLoginPage) roleLoginPage.remove();
     doLogin();
     showToast(`<i class="fas fa-check-circle"></i> Welcome, ${res.user.name}!`, 'success');
-    syncAllDataFromBackend().then(() => { if (typeof renderMain === 'function') renderMain(); });
+    syncAllDataFromBackend().then(() => {
+        if (typeof renderMain === 'function' && getSessionUser()) renderMain();
+    });
 }
 
 async function doAdminLoginAPI() {
@@ -307,12 +351,15 @@ async function doAdminLoginAPI() {
 
     if (typeof setSessionUser === 'function') setSessionUser(res.user);
     else window.SESSION_USER = res.user;
+    sessionExpiryHandled = false;
     loginRole = (typeof getSessionUser === 'function' ? getSessionUser()?.role : res.user.role) || 'Admin';
     const adminPage = document.getElementById('role-login-page');
     if (adminPage) adminPage.remove();
     doLogin();
     showToast('<i class="fas fa-shield-halved"></i> Welcome, Administrator!', 'success');
-    syncAllDataFromBackend().then(() => { if (typeof renderMain === 'function') renderMain(); });
+    syncAllDataFromBackend().then(() => {
+        if (typeof renderMain === 'function' && getSessionUser()) renderMain();
+    });
 }
 
 async function logoutAPI() {
@@ -652,6 +699,8 @@ async function syncAllDataFromBackend() {
                 parent_name: a.parent_name || '',
                 parent_phone: a.parent_phone || '',
                 parent_email: a.parent_email || '',
+                parent_gender: a.parent_gender || '',
+                parent_occupation: a.parent_occupation || '',
                 photo: a.photo || null,
                 picture: a.photo || null,
                 status: a.status || 'Pending',

@@ -51,7 +51,7 @@ function generateUniqueUsername(PDO $db, string $name, string $fallback = 'user'
     }
 }
 
-function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhone = null, ?string $guardianEmail = null, ?string $guardianAddress = null): int {
+function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhone = null, ?string $guardianEmail = null, ?string $guardianAddress = null, ?string $guardianGender = null, ?string $guardianOccupation = null): int {
     $guardianName = trim($guardianName);
     if ($guardianName === '') return 0;
 
@@ -106,8 +106,8 @@ function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhon
 
     $email = $guardianEmail ?: $db->query("SELECT email FROM users WHERE id = " . (int)$uId)->fetchColumn();
     if (!$pId) {
-        $insParent = $db->prepare("INSERT INTO parents (name, email, phone, address, contact_person, user_id) VALUES (?, ?, ?, ?, ?, ?)");
-        $insParent->execute([$guardianName, $email, $guardianPhone, $guardianAddress, $guardianName, $uId]);
+        $insParent = $db->prepare("INSERT INTO parents (name, email, phone, address, contact_person, gender, occupation, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $insParent->execute([$guardianName, $email, $guardianPhone, $guardianAddress, $guardianName, $guardianGender, $guardianOccupation, $uId]);
         return (int)$db->lastInsertId();
     }
 
@@ -125,13 +125,15 @@ function ensureParentRecord(PDO $db, string $guardianName, ?string $guardianPhon
         $fields[] = "address = ?";
         $params[] = $guardianAddress;
     }
+    if (in_array($guardianGender, ['Male', 'Female'], true)) { $fields[] = "gender = ?"; $params[] = $guardianGender; }
+    if (trim($guardianOccupation ?? '') !== '') { $fields[] = "occupation = ?"; $params[] = trim($guardianOccupation); }
     $params[] = $pId;
     $db->prepare("UPDATE parents SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
     $db->prepare("UPDATE users SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?")->execute([$guardianName, $email, $guardianPhone ?: null, $guardianAddress, $uId]);
     return $pId;
 }
 
-function associateParentWithStudent(PDO $db, int $studentId, string $guardianName, ?string $guardianPhone, ?string $guardianEmail = null, ?string $guardianAddress = null): int {
+function associateParentWithStudent(PDO $db, int $studentId, string $guardianName, ?string $guardianPhone, ?string $guardianEmail = null, ?string $guardianAddress = null, ?string $guardianGender = null, ?string $guardianOccupation = null): int {
     $guardianName = trim($guardianName);
     if (empty($guardianName)) return 0;
 
@@ -139,7 +141,7 @@ function associateParentWithStudent(PDO $db, int $studentId, string $guardianNam
     $guardianEmail = filter_var(trim($guardianEmail ?? ''), FILTER_SANITIZE_EMAIL) ?: null;
     $guardianAddress = trim($guardianAddress ?? '') ?: null;
 
-    $linkedParentId = ensureParentRecord($db, $guardianName, $guardianPhone, $guardianEmail, $guardianAddress);
+    $linkedParentId = ensureParentRecord($db, $guardianName, $guardianPhone, $guardianEmail, $guardianAddress, $guardianGender, $guardianOccupation);
     if (!$linkedParentId) return 0;
     $db->prepare("DELETE FROM parent_student WHERE student_id = ?")->execute([$studentId]);
     $db->prepare("INSERT IGNORE INTO parent_student (parent_id, student_id) VALUES (?, ?)")

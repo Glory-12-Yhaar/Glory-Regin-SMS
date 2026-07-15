@@ -70,6 +70,9 @@ if ($method === 'PUT') {
     if (!$student) jsonResponse(['success' => false, 'message' => 'Student not found'], 404);
 
     $body = getRequestBody();
+    if (array_key_exists('guardian_phone', $body) && !preg_match('/^\d{1,15}$/', trim((string)$body['guardian_phone']))) {
+        jsonResponse(['success' => false, 'message' => 'Guardian phone must contain numbers only and be no more than 15 digits'], 422);
+    }
     $linked = $db->prepare('SELECT user_id FROM students WHERE id = ?');
     $linked->execute([$id]);
     updateProvisionedPassword($db, ($uid = $linked->fetchColumn()) ? (int)$uid : null, $body);

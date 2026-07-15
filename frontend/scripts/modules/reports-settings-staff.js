@@ -4,12 +4,7 @@ const studentScores = window.studentScores || (window.studentScores = Object.cre
 
 // Report-card-specific grading thresholds.
 function calculateReportGrade(score) {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  if (score >= 50) return 'E';
-  return 'F';
+  return calculateGrade(score);
 }
 
 function generateReportRemark(average) {
@@ -1970,11 +1965,7 @@ function getReportsDashboardInsights() {
 }
 
 function gradeBucket(total) {
-  if (total >= 90) return 'A';
-  if (total >= 80) return 'B';
-  if (total >= 70) return 'C';
-  if (total >= 60) return 'D';
-  return 'E';
+  return calculateGrade(total);
 }
 
 function attendanceStatus(percent) {
@@ -2029,6 +2020,11 @@ function buildEnrollmentReportRows() {
     avgAttendance: Number(row.averageAttendance || 0),
     avgPerformance: Number(row.averagePerformance || 0)
   })).sort((a, b) => a.className.localeCompare(b.className));
+}
+
+function getReportsMonthlyTrend() {
+  const dashboard = window.dashboardReportData || (typeof ADMIN_DASHBOARD_STATE !== 'undefined' ? ADMIN_DASHBOARD_STATE.dashboard : {}) || {};
+  return Array.isArray(dashboard.monthly_enrollment_attendance) ? dashboard.monthly_enrollment_attendance : [];
 }
 
 function openReportPage(type) {
@@ -2093,16 +2089,16 @@ function reportsModule() {
   <div class="report-tab-content active" data-tab="0">
     <div class="g2 mb20">
       <div class="card">
-        <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> 12-Month Performance Trend</span></div>
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> 12-Month Enrollment & Attendance</span></div>
         <div style="display:flex;gap:5px;align-items:flex-end;height:150px;padding:10px 0">
-          ${[[70, 80], [72, 82], [68, 79], [75, 85], [78, 88], [80, 90], [82, 88], [85, 91], [83, 89], [86, 92], [88, 93], [87, 92]].map(([t, e]) => `
+          ${(getReportsMonthlyTrend().length ? getReportsMonthlyTrend() : [{month:'No data',enrollment:0,attendance:0}]).map(r => `
           <div style="flex:1;display:flex;gap:2px;align-items:flex-end">
-            <div style="flex:1;background:var(--blue-main);opacity:.8;border-radius:3px 3px 0 0;height:${t * 1.4}px"></div>
-            <div style="flex:1;background:var(--gold);opacity:.75;border-radius:3px 3px 0 0;height:${e * 1.4}px"></div>
+            <div title="${escapeAttr(r.month)} enrollment: ${Number(r.enrollment || 0)}" style="flex:1;background:var(--blue-main);opacity:.8;border-radius:3px 3px 0 0;height:${Math.max(3, Number(r.enrollment || 0) / Math.max(1, ...getReportsMonthlyTrend().map(x => Number(x.enrollment || 0))) * 135)}px"></div>
+            <div title="${escapeAttr(r.month)} attendance: ${Number(r.attendance || 0)}%" style="flex:1;background:var(--gold);opacity:.75;border-radius:3px 3px 0 0;height:${Math.max(3, Number(r.attendance || 0) / 100 * 135)}px"></div>
           </div>`).join('')}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);padding:0 2px">
-          ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => `<span>${m}</span>`).join('')}
+          ${(getReportsMonthlyTrend().length ? getReportsMonthlyTrend().map(r => r.month) : ['No data']).map(m => `<span>${escapeHtml(m)}</span>`).join('')}
         </div>
       </div>
       <div class="card">
@@ -2147,9 +2143,9 @@ function reportsModule() {
         <button class="btn btn-primary" onclick="generateReportPDF('Attendance')"><i class="fas fa-download"></i> Export PDF</button>
       </div>
       <table class="tbl" id="attendance-table">
-        <thead><tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance %</th><th>Status</th></tr></thead>
+        <thead><tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Attendance %</th><th>Status</th></tr></thead>
         <tbody id="attendance-tbody">
-          ${buildAttendanceReportRows().map(row => `<tr class="attendance-row" data-student="${escapeAttr(row.name.toLowerCase())}" data-period=""><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.className)}</td><td>Database %</td><td>-</td><td>-</td><td>${reportBadge(row.attendance)}</td><td><span class="badge ${row.attendance >= 75 ? 'b-success' : 'b-warning'}" style="background:${row.attendance >= 75 ? '#d1fae5;color:#065f46' : '#fef3c7;color:#92400e'}">${escapeHtml(row.status)}</span></td></tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray-400)">No student attendance records found in the database</td></tr>'}
+          ${buildAttendanceReportRows().map(row => `<tr class="attendance-row" data-student="${escapeAttr(row.name.toLowerCase())}" data-period=""><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.className)}</td><td>Database %</td><td>-</td><td>${reportBadge(row.attendance)}</td><td><span class="badge ${row.attendance >= 75 ? 'b-success' : 'b-warning'}" style="background:${row.attendance >= 75 ? '#d1fae5;color:#065f46' : '#fef3c7;color:#92400e'}">${escapeHtml(row.status)}</span></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400)">No student attendance records found in the database</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -2165,12 +2161,12 @@ function reportsModule() {
       </div>
       ${(() => {
         const finance = typeof getFinanceSummary === 'function' ? getFinanceSummary() : { totalIncome: 0, totalExpenditure: 0, netSurplus: 0, incomeBreakdown: [], expenseBreakdown: [] };
-        const incomeRows = finance.incomeBreakdown.map(row => `<tr><td>${escapeHtml(row.source || 'Income')}</td><td>${money(row.amount || 0)}</td><td>${financePct(row.amount, finance.totalIncome)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">No income records</td></tr>';
-        const expenseRows = finance.expenseBreakdown.map(row => `<tr><td>${escapeHtml(row.category || 'Expense')}</td><td>${money(row.amount || 0)}</td><td>${financePct(row.amount, finance.totalExpenditure)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">No expenditure records</td></tr>';
+        const incomeRows = finance.incomeBreakdown.map(row => `<tr><td>${escapeHtml(row.source || 'Income')}</td><td>${formatMoney(row.amount || 0)}</td><td>${financePct(row.amount, finance.totalIncome)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">No income records</td></tr>';
+        const expenseRows = finance.expenseBreakdown.map(row => `<tr><td>${escapeHtml(row.category || 'Expense')}</td><td>${formatMoney(row.amount || 0)}</td><td>${financePct(row.amount, finance.totalExpenditure)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-400)">No expenditure records</td></tr>';
         return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;max-width:100%">
-        <div style="background:linear-gradient(135deg,var(--blue-main),#2563eb);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL INCOME</div><div style="font-size:24px;font-weight:700">${money(finance.totalIncome)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">Database finance records</div></div></div>
-        <div style="background:linear-gradient(135deg,var(--danger),#dc2626);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL EXPENDITURE</div><div style="font-size:24px;font-weight:700">${money(finance.totalExpenditure)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">Expenses and payroll</div></div></div>
-        <div style="background:linear-gradient(135deg,var(--success),#10b981);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">NET SURPLUS</div><div style="font-size:24px;font-weight:700">${money(finance.netSurplus)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">After all expenses</div></div></div>
+        <div style="background:linear-gradient(135deg,var(--blue-main),#2563eb);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL INCOME</div><div style="font-size:24px;font-weight:700">${formatMoney(finance.totalIncome)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">Database finance records</div></div></div>
+        <div style="background:linear-gradient(135deg,var(--danger),#dc2626);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">TOTAL EXPENDITURE</div><div style="font-size:24px;font-weight:700">${formatMoney(finance.totalExpenditure)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">Expenses and payroll</div></div></div>
+        <div style="background:linear-gradient(135deg,var(--success),#10b981);border-radius:8px;min-width:0"><div style="color:#fff;padding:15px"><div style="font-size:11px;opacity:.8;margin-bottom:5px">NET SURPLUS</div><div style="font-size:24px;font-weight:700">${formatMoney(finance.netSurplus)}</div><div style="font-size:10px;opacity:.7;margin-top:8px">After all expenses</div></div></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px">
         <div><div style="font-weight:600;margin-bottom:10px;font-size:13px">Income Breakdown</div><table class="tbl" style="font-size:12px"><thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead><tbody>${incomeRows}</tbody></table></div>
@@ -2236,7 +2232,38 @@ function filterReportTab(tabType) {
 
 // GENERATE REPORT PDF
 function generateReportPDF(reportType) {
+  const school = SETTINGS_DATA.schoolInfo || {};
+  let headers = [], rows = [], summary = [];
+  const visible = selector => Array.from(document.querySelectorAll(selector)).map(row => row.style.display !== 'none');
+  if (reportType === 'Academic') {
+    const flags = visible('.academic-row'); const insights = getReportsDashboardInsights();
+    headers = ['Class', 'Subject', 'Pass Rate', 'Avg Score', 'Grade A', 'Grade B', 'Grade C'];
+    rows = buildAcademicReportRows().filter((_, i) => flags[i] !== false).map(r => [r.className, r.subject, Math.round(r.pass / Math.max(1, r.count) * 100) + '%', (r.totalScore / Math.max(1, r.count)).toFixed(1), r.grades.A, r.grades.B, r.grades.C]);
+    summary = [`Pass rate: ${insights.passRate}%`, `Average score: ${insights.avgAcademic}%`];
+  } else if (reportType === 'Attendance') {
+    const flags = visible('.attendance-row');
+    rows = buildAttendanceReportRows().filter((_, i) => flags[i] !== false).map(r => [r.name, r.className, r.attendance + '%', r.status]);
+    headers = ['Student', 'Class', 'Attendance', 'Status']; summary = [`Average attendance: ${getReportsDashboardInsights().avgAttendance}%`, `Students: ${rows.length}`];
+  } else if (reportType === 'Financial') {
+    const f = getFinanceSummary(); headers = ['Type', 'Category', 'Amount', 'Share'];
+    rows = [...(f.incomeBreakdown || []).map(r => ['Income', r.source || 'Income', formatMoney(r.amount || 0), financePct(r.amount, f.totalIncome)]), ...(f.expenseBreakdown || []).map(r => ['Expense', r.category || 'Expense', formatMoney(r.amount || 0), financePct(r.amount, f.totalExpenditure)])];
+    summary = [`Total income: ${formatMoney(f.totalIncome)}`, `Total expenditure: ${formatMoney(f.totalExpenditure)}`, `Net surplus: ${formatMoney(f.netSurplus)}`];
+  } else if (reportType === 'Enrollment') {
+    const flags = visible('.enrollment-row');
+    rows = buildEnrollmentReportRows().filter((_, i) => flags[i] !== false).map(r => [r.className, r.total, r.male, r.female, r.avgAttendance + '%', r.avgPerformance + '%']);
+    headers = ['Class', 'Total', 'Male', 'Female', 'Avg Attendance', 'Avg Performance']; summary = [`Students: ${rows.reduce((sum, r) => sum + Number(r[1]), 0)}`, `Classes: ${rows.length}`];
+  }
+  downloadTablePDF({ title: `${school.schoolName || 'Glory Reign Preparatory School'} - ${reportType} Report`, subtitle: `Generated: ${new Date().toLocaleString()}`, summary, headers, rows, filename: `${reportType.toLowerCase()}_report_${new Date().toISOString().slice(0, 10)}.pdf` });
+  showToast('<i class="fas fa-check"></i> ' + reportType + ' PDF downloaded', 'success');
+}
+
+function generateReportPDFLegacy(reportType) {
   showToast('Generating ' + reportType + ' Report...', 'info');
+  const school = SETTINGS_DATA.schoolInfo || {};
+  const configuredLogo = school.schoolLogo || 'assets/images/Logo.png';
+  const logoPath = /^(data:|https?:\/\/)/i.test(configuredLogo)
+    ? configuredLogo
+    : new URL(configuredLogo.includes('/') ? configuredLogo : 'assets/images/' + configuredLogo, window.location.href).href;
 
   let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + reportType + ' Report</title><style>';
   html += 'body{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5}';
@@ -2257,7 +2284,7 @@ function generateReportPDF(reportType) {
   html += '.footer{margin-top:30px;text-align:center;color:#999;font-size:11px;border-top:1px solid #ddd;padding-top:15px}';
   html += '@media print{body{margin:0;background:#fff}}';
   html += '</style></head><body>';
-  html += '<div class="header"><h1><img src="assets/images/Logo.png" alt="Logo" style="width:30px;height:30px;object-fit:contain;margin-right:8px;display:inline-block;color:#1a56db"> Glory Reign Preparatory School</h1><p>' + reportType + ' Report</p><p>Generated: ' + new Date().toLocaleString() + '</p></div>';
+  html += '<div class="header"><h1><img src="' + escapeAttr(logoPath) + '" alt="School Logo" style="width:48px;height:48px;object-fit:contain;margin-right:10px;vertical-align:middle;display:inline-block"> ' + escapeHtml(school.schoolName || 'Glory Reign Preparatory School') + '</h1><p>' + reportType + ' Report</p><p>Generated: ' + new Date().toLocaleString() + '</p></div>';
   html += '<div class="content">';
 
   if (reportType === 'Academic') {
@@ -2278,17 +2305,16 @@ function generateReportPDF(reportType) {
   }
   else if (reportType === 'Attendance') {
     const insights = getReportsDashboardInsights();
+    const attendanceRows = buildAttendanceReportRows();
     html += '<div class="section"><div class="section-title"><i class="fas fa-clipboard-list"></i> Attendance Summary Report</div>';
     html += '<div class="stat"><div class="stat-value">' + insights.avgAttendance + '%</div><div class="stat-label">Avg Attendance</div></div>';
-    html += '<div class="stat"><div class="stat-value">' + buildAttendanceReportRows().length + '</div><div class="stat-label">Students</div></div></div>';
+    html += '<div class="stat"><div class="stat-value">' + attendanceRows.length + '</div><div class="stat-label">Students</div></div></div>';
     html += '<div class="section"><div class="section-title">Student Attendance Records</div><table>';
-    html += '<tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance %</th></tr>';
-    document.querySelectorAll('.attendance-row:not([style*="display: none"])').forEach(row => {
-      const cells = row.querySelectorAll('td');
-      html += '<tr>';
-      cells.forEach(cell => html += '<td>' + cell.innerText + '</td>');
-      html += '</tr>';
+    html += '<tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Attendance %</th></tr>';
+    attendanceRows.forEach(row => {
+      html += '<tr><td>' + escapeHtml(row.name) + '</td><td>' + escapeHtml(row.className) + '</td><td>—</td><td>—</td><td>' + row.attendance + '%</td></tr>';
     });
+    if (!attendanceRows.length) html += '<tr><td colspan="5" style="text-align:center">No attendance records found</td></tr>';
     html += '</table></div>';
   }
   else if (reportType === 'Financial') {
@@ -2296,13 +2322,13 @@ function generateReportPDF(reportType) {
       ? getFinanceSummary()
       : { totalIncome: 0, totalExpenditure: 0, netSurplus: 0, incomeBreakdown: [] };
     html += '<div class="section"><div class="section-title"><i class="fas fa-money-bill"></i> Financial Summary Report</div>';
-    html += '<div class="stat"><div class="stat-value">' + money(finance.totalIncome) + '</div><div class="stat-label">Total Income</div></div>';
-    html += '<div class="stat"><div class="stat-value">' + money(finance.totalExpenditure) + '</div><div class="stat-label">Expenditure</div></div>';
-    html += '<div class="stat"><div class="stat-value">' + money(finance.netSurplus) + '</div><div class="stat-label">Surplus</div></div></div>';
+    html += '<div class="stat"><div class="stat-value">' + formatMoney(finance.totalIncome) + '</div><div class="stat-label">Total Income</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + formatMoney(finance.totalExpenditure) + '</div><div class="stat-label">Expenditure</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + formatMoney(finance.netSurplus) + '</div><div class="stat-label">Surplus</div></div></div>';
     html += '<div class="section"><div class="section-title">Income Sources</div><table>';
     html += '<tr><th>Source</th><th>Amount</th><th>Percentage</th></tr>';
     (finance.incomeBreakdown || []).forEach(row => {
-      html += '<tr><td>' + escapeHtml(row.source || 'Income') + '</td><td>' + money(row.amount || 0) + '</td><td>' + financePct(row.amount, finance.totalIncome) + '</td></tr>';
+      html += '<tr><td>' + escapeHtml(row.source || 'Income') + '</td><td>' + formatMoney(row.amount || 0) + '</td><td>' + financePct(row.amount, finance.totalIncome) + '</td></tr>';
     });
     if (!(finance.incomeBreakdown || []).length) html += '<tr><td colspan="3">No income records found</td></tr>';
     html += '</table></div>';
@@ -2327,7 +2353,7 @@ function generateReportPDF(reportType) {
   }
 
   html += '</div><div class="footer"><p>This report was automatically generated by Glory Reign School Management System</p>';
-  html += '<p>© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
+  html += '<p>&copy; 2026 ' + escapeHtml(school.schoolName || 'Glory Reign Preparatory School') + '. All rights reserved.</p></div></body></html>';
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const link = document.createElement('a');
@@ -2358,7 +2384,14 @@ const SETTINGS_DATA = {
     currentTerm: '1st Term',
     termStartDate: '2025-01-13',
     termEndDate: '2025-04-11',
-    academicYears: '2024/2025,2025/2026,2026/2027'
+    academicYears: '2024/2025,2025/2026,2026/2027',
+    gradingRanges: [
+      { grade: 'A', min: 80, max: 100, remark: 'Excellent' },
+      { grade: 'B', min: 70, max: 79, remark: 'Very Good' },
+      { grade: 'C', min: 60, max: 69, remark: 'Good' },
+      { grade: 'D', min: 50, max: 59, remark: 'Average' },
+      { grade: 'F', min: 0, max: 49, remark: 'Fail' }
+    ]
   },
   system: {
     maintenanceMode: false,
@@ -2392,6 +2425,11 @@ function boolSetting(value, fallback = false) {
 }
 
 function applySettingsFromBackend(data = {}) {
+  let gradingRanges = SETTINGS_DATA.academic.gradingRanges;
+  try {
+    const storedRanges = typeof data.grading_ranges === 'string' ? JSON.parse(data.grading_ranges) : data.grading_ranges;
+    if (Array.isArray(storedRanges) && storedRanges.length) gradingRanges = storedRanges;
+  } catch (e) {}
   SETTINGS_DATA.schoolInfo = {
     schoolName: data.school_name ?? data.schoolinfo_schoolname ?? SETTINGS_DATA.schoolInfo.schoolName,
     schoolCode: data.school_code ?? data.schoolinfo_schoolcode ?? SETTINGS_DATA.schoolInfo.schoolCode,
@@ -2409,7 +2447,8 @@ function applySettingsFromBackend(data = {}) {
     currentTerm: data.current_term ?? data.academic_currentterm ?? SETTINGS_DATA.academic.currentTerm,
     termStartDate: data.term_start_date ?? data.academic_termstartdate ?? SETTINGS_DATA.academic.termStartDate,
     termEndDate: data.term_end_date ?? data.academic_termenddate ?? SETTINGS_DATA.academic.termEndDate,
-    academicYears: data.academic_years ?? data.academic_academicyears ?? SETTINGS_DATA.academic.academicYears
+    academicYears: data.academic_years ?? data.academic_academicyears ?? SETTINGS_DATA.academic.academicYears,
+    gradingRanges
   };
   SETTINGS_DATA.system = {
     maintenanceMode: boolSetting(data.maintenance_mode ?? data.system_maintenancemode, SETTINGS_DATA.system.maintenanceMode),
@@ -2436,7 +2475,7 @@ function applySettingsFromBackend(data = {}) {
   };
   if (typeof applyTheme === 'function') {
     darkMode = SETTINGS_DATA.appearance.theme === 'Dark';
-    applyTheme();
+    applyTheme(false);
   }
 }
 
@@ -2458,6 +2497,7 @@ function flattenSettingsForBackend() {
     term_start_date: SETTINGS_DATA.academic.termStartDate,
     term_end_date: SETTINGS_DATA.academic.termEndDate,
     academic_years: SETTINGS_DATA.academic.academicYears,
+    grading_ranges: JSON.stringify(SETTINGS_DATA.academic.gradingRanges),
     maintenance_mode: SETTINGS_DATA.system.maintenanceMode ? '1' : '0',
     max_upload_size: SETTINGS_DATA.system.maxUploadSize,
     language: SETTINGS_DATA.system.language,
@@ -2552,12 +2592,17 @@ function settingsModule() {
         <div class="f-row"><div class="f-field"><label>Term Start Date</label><input type="date" id="term-start-date" value="${SETTINGS_DATA.academic.termStartDate}"></div><div class="f-field"><label>Term End Date</label><input type="date" id="term-end-date" value="${SETTINGS_DATA.academic.termEndDate}"></div></div>
         <div style="margin-bottom:14px">
           <label style="font-size:11px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Grading Scale</label>
-          ${[['A', '80â€“100', 'Excellent'], ['B', '70â€“79', 'Very Good'], ['C', '60â€“69', 'Good'], ['D', '50â€“59', 'Average'], ['F', '0â€“49', 'Fail']].map(([g, r, l]) => `
-          <div style="display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray-100)">
-            <div class="grade-pill g${g}">${g}</div>
-            <span style="font-size:12px;flex:1">${r}</span>
-            <span style="font-size:11px;color:var(--gray-400)">${l}</span>
+          <div id="grading-ranges-list">
+          ${SETTINGS_DATA.academic.gradingRanges.map((range, index) => `
+          <div class="grading-range-row" style="display:grid;grid-template-columns:64px 1fr 1fr 1.5fr 36px;gap:8px;align-items:end;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+            <div class="f-field"><label>Grade</label><input class="grading-grade" value="${escapeAttr(range.grade)}" maxlength="3"></div>
+            <div class="f-field"><label>Minimum</label><input class="grading-min" type="number" min="0" max="100" value="${Number(range.min)}"></div>
+            <div class="f-field"><label>Maximum</label><input class="grading-max" type="number" min="0" max="100" value="${Number(range.max)}"></div>
+            <div class="f-field"><label>Remark</label><input class="grading-remark" value="${escapeAttr(range.remark || '')}"></div>
+            <button type="button" class="btn btn-danger btn-xs" style="height:38px" onclick="this.closest('.grading-range-row').remove()" title="Remove range"><i class="fas fa-trash"></i></button>
           </div>`).join('')}
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="addGradingRange()"><i class="fas fa-plus"></i> Add Grading Range</button>
         </div>
         <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="saveAcademicCalendar()"><i class="fas fa-check"></i> Update Calendar</button><button class="btn btn-secondary" onclick="resetAcademicForm()">Reset</button></div>
       </div>
@@ -2773,12 +2818,31 @@ function resetSchoolForm() {
 }
 
 async function saveAcademicCalendar() {
+  const gradingRanges = Array.from(document.querySelectorAll('.grading-range-row')).map(row => ({
+    grade: row.querySelector('.grading-grade').value.trim().toUpperCase(),
+    min: Number(row.querySelector('.grading-min').value),
+    max: Number(row.querySelector('.grading-max').value),
+    remark: row.querySelector('.grading-remark').value.trim()
+  })).sort((a, b) => b.min - a.min);
+  // Treat a repeated boundary as the start of the higher grade. This lets an
+  // admin enter A 80-100 and B 70-80 without having to calculate 79 manually.
+  gradingRanges.forEach((range, index) => {
+    if (index > 0 && range.max === gradingRanges[index - 1].min) range.max--;
+  });
+  const invalidRange = gradingRanges.some(range => !range.grade || !Number.isFinite(range.min) || !Number.isFinite(range.max) || range.min < 0 || range.max > 100 || range.min > range.max);
+  const duplicateGrade = new Set(gradingRanges.map(range => range.grade)).size !== gradingRanges.length;
+  const overlaps = gradingRanges.some((range, index) => index > 0 && range.max >= gradingRanges[index - 1].min);
+  if (!gradingRanges.length || invalidRange || duplicateGrade || overlaps) {
+    showToast('Enter at least one valid grading range. Grade names must be unique and ranges cannot overlap.', 'error');
+    return;
+  }
   SETTINGS_DATA.academic = {
     academicYear: document.getElementById('academic-year').value,
     currentTerm: document.getElementById('current-term').value,
     termStartDate: document.getElementById('term-start-date').value,
     termEndDate: document.getElementById('term-end-date').value,
-    academicYears: SETTINGS_DATA.academic.academicYears
+    academicYears: SETTINGS_DATA.academic.academicYears,
+    gradingRanges
   };
   const saved = await saveSettingsToStorage();
   if (!saved) return showToast('Failed to save settings to database', 'error');
@@ -2786,11 +2850,21 @@ async function saveAcademicCalendar() {
 }
 
 function resetAcademicForm() {
-  document.getElementById('academic-year').value = SETTINGS_DATA.academic.academicYear;
-  document.getElementById('current-term').value = SETTINGS_DATA.academic.currentTerm;
-  document.getElementById('term-start-date').value = SETTINGS_DATA.academic.termStartDate;
-  document.getElementById('term-end-date').value = SETTINGS_DATA.academic.termEndDate;
+  renderMain();
   showToast('Form reset to saved values', 'info');
+}
+
+function addGradingRange() {
+  const list = document.getElementById('grading-ranges-list');
+  if (!list) return;
+  list.insertAdjacentHTML('beforeend', `
+    <div class="grading-range-row" style="display:grid;grid-template-columns:64px 1fr 1fr 1.5fr 36px;gap:8px;align-items:end;padding:8px 0;border-bottom:1px solid var(--gray-100)">
+      <div class="f-field"><label>Grade</label><input class="grading-grade" maxlength="3"></div>
+      <div class="f-field"><label>Minimum</label><input class="grading-min" type="number" min="0" max="100"></div>
+      <div class="f-field"><label>Maximum</label><input class="grading-max" type="number" min="0" max="100"></div>
+      <div class="f-field"><label>Remark</label><input class="grading-remark"></div>
+      <button type="button" class="btn btn-danger btn-xs" style="height:38px" onclick="this.closest('.grading-range-row').remove()" title="Remove range"><i class="fas fa-trash"></i></button>
+    </div>`);
 }
 
 async function addAcademicYear() {

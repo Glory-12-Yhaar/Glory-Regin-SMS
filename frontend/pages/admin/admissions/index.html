@@ -65,11 +65,19 @@
       </div>
       <div class="form-field">
         <label>Contact Phone Number *</label>
-        <input type="tel" id="adm-parent-phone" placeholder="e.g. +233 24 000 0000">
+        <input type="tel" id="adm-parent-phone" inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" placeholder="Up to 15 digits" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)">
       </div>
       <div class="form-field">
         <label>Email Address</label>
         <input type="email" id="adm-parent-email" placeholder="e.g. parent@email.com">
+      </div>
+      <div class="form-field">
+        <label>Parent/Guardian Gender</label>
+        <select id="adm-parent-gender"><option value="">-- Select Gender --</option><option value="Female">Female</option><option value="Male">Male</option></select>
+      </div>
+      <div class="form-field">
+        <label>Parent/Guardian Occupation</label>
+        <input type="text" id="adm-parent-occupation" placeholder="e.g. Teacher, Farmer, Trader">
       </div>
       <div class="form-field">
         <label>Residential Address</label>

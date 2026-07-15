@@ -20,6 +20,8 @@ function ensureAdmissionRuntimeColumns(PDO $db): void {
     $checked = true;
 
     $db->exec("ALTER TABLE admissions ADD COLUMN IF NOT EXISTS photo LONGTEXT DEFAULT NULL");
+    $db->exec("ALTER TABLE admissions ADD COLUMN IF NOT EXISTS parent_gender ENUM('Male','Female') DEFAULT NULL");
+    $db->exec("ALTER TABLE admissions ADD COLUMN IF NOT EXISTS parent_occupation VARCHAR(120) DEFAULT NULL");
     $db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS address TEXT DEFAULT NULL");
     $db->exec("ALTER TABLE students ADD COLUMN IF NOT EXISTS photo LONGTEXT DEFAULT NULL");
 }
@@ -94,7 +96,9 @@ function enrollAdmission(PDO $db, int $admissionId, ?string $notes = null): arra
             $admission['parent_name'],
             $admission['parent_phone'] ?? null,
             $admission['parent_email'] ?? null,
-            $admission['address'] ?? null
+            $admission['address'] ?? null,
+            $admission['parent_gender'] ?? null,
+            $admission['parent_occupation'] ?? null
         );
     }
 
@@ -140,7 +144,7 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare(
         "SELECT id, applicant_name, dob, gender, class_applying, parent_name,
-                parent_phone, parent_email, address, previous_school, photo, status, notes, applied_date
+                parent_phone, parent_email, parent_gender, parent_occupation, address, previous_school, photo, status, notes, applied_date
          FROM admissions WHERE " . implode(' AND ', $where) . "
          ORDER BY applied_date DESC LIMIT $limit OFFSET $offset"
     );
@@ -160,14 +164,18 @@ if ($method === 'POST') {
     foreach ($required as $f) {
         if (empty($body[$f])) jsonResponse(['success' => false, 'message' => "Field '$f' required"], 422);
     }
+    $parentPhone = trim((string)$body['parent_phone']);
+    if (!preg_match('/^\d{1,15}$/', $parentPhone)) {
+        jsonResponse(['success' => false, 'message' => 'Parent phone must contain numbers only and be no more than 15 digits'], 422);
+    }
 
     $db->beginTransaction();
     try {
         $parentEmail = filter_var($body['parent_email'] ?? '', FILTER_SANITIZE_EMAIL) ?: null;
         $stmt = $db->prepare(
             "INSERT INTO admissions (applicant_name, dob, gender, class_applying, parent_name,
-                                      parent_phone, parent_email, address, previous_school, photo, status, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)"
+                                      parent_phone, parent_email, parent_gender, parent_occupation, address, previous_school, photo, status, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)"
         );
         $stmt->execute([
             htmlspecialchars(trim($body['applicant_name']), ENT_QUOTES),
@@ -175,8 +183,10 @@ if ($method === 'POST') {
             $body['gender']          ?? null,
             $body['class_applying'],
             htmlspecialchars(trim($body['parent_name']),    ENT_QUOTES),
-            $body['parent_phone'],
+            $parentPhone,
             $parentEmail,
+            in_array($body['parent_gender'] ?? '', ['Male', 'Female'], true) ? $body['parent_gender'] : null,
+            trim($body['parent_occupation'] ?? '') ?: null,
             $body['address']         ?? null,
             $body['previous_school'] ?? null,
             $body['photo']           ?? null,
@@ -186,9 +196,11 @@ if ($method === 'POST') {
         $parentId = ensureParentRecord(
             $db,
             $body['parent_name'],
-            $body['parent_phone'] ?? null,
+            $parentPhone,
             $parentEmail,
-            $body['address'] ?? null
+            $body['address'] ?? null,
+            $body['parent_gender'] ?? null,
+            $body['parent_occupation'] ?? null
         );
         $db->commit();
         jsonResponse(['success' => true, 'message' => 'Application submitted', 'id' => $admissionId, 'parent_id' => $parentId], 201);

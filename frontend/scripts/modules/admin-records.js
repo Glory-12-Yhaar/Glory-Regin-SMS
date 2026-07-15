@@ -270,6 +270,17 @@ function getMonthlyEnrollmentAttendanceData() {
   return { months, enrollmentData, attendanceData, classRows, totalStudents: dashboard.total_students || 0, avgAttendance: dashboard.avg_attendance || 0 };
 }
 
+function getMonthlyAttendancePerformance(enrollment, attendance) {
+  const enrolled = Number(enrollment) || 0;
+  const rate = Number(attendance) || 0;
+  if (enrolled <= 0) return { label: 'No data', color: 'gray-500', badge: 'b-neutral' };
+  if (rate >= 95) return { label: 'Excellent', color: 'success', badge: 'b-success' };
+  if (rate >= 85) return { label: 'Very Good', color: 'blue-main', badge: 'b-info' };
+  if (rate >= 75) return { label: 'Good', color: 'warning', badge: 'b-warning' };
+  if (rate >= 60) return { label: 'Fair', color: 'warning', badge: 'b-warning' };
+  return { label: 'Poor', color: 'danger', badge: 'b-danger' };
+}
+
 function exportEnrollmentAttendanceToExcel() {
   const { months, enrollmentData, attendanceData, classRows } = getMonthlyEnrollmentAttendanceData();
 
@@ -278,7 +289,7 @@ function exportEnrollmentAttendanceToExcel() {
 
   csv += 'Month,Enrollment,Attendance %,Performance\n';
   for (let i = 0; i < months.length; i++) {
-    const perf = attendanceData[i] >= 95 ? 'Excellent' : (attendanceData[i] >= 90 ? 'Very Good' : 'Good');
+    const perf = getMonthlyAttendancePerformance(enrollmentData[i], attendanceData[i]).label;
     csv += months[i] + ',' + enrollmentData[i] + ',' + attendanceData[i] + ',' + perf + '\n';
   }
 
@@ -306,6 +317,17 @@ function exportEnrollmentAttendanceToExcel() {
 function downloadEnrollmentAttendancePDF() {
   const { months, enrollmentData, attendanceData, classRows, totalStudents, avgAttendance } = getMonthlyEnrollmentAttendanceData();
 
+  const reportRows = months.map((month, i) => [month, enrollmentData[i], attendanceData[i] + '%', getMonthlyAttendancePerformance(enrollmentData[i], attendanceData[i]).label]);
+  classRows.forEach(row => reportRows.push([row.class_name, row.student_count, '', 'Current class enrollment']));
+  downloadTablePDF({
+    title: 'Monthly Enrollment & Attendance Report', subtitle: 'Generated: ' + new Date().toLocaleString(),
+    summary: [`Current enrollment: ${totalStudents}`, `Average attendance: ${avgAttendance}%`, `Active classes: ${classRows.length}`],
+    headers: ['Month / Class', 'Enrollment', 'Attendance', 'Performance / Note'], rows: reportRows,
+    filename: 'Enrollment_Attendance_Report_' + new Date().toISOString().slice(0, 10) + '.pdf'
+  });
+  showToast('<i class="fas fa-check-circle"></i> PDF report downloaded successfully', 'success', 4000);
+  return;
+
   let html = '<html><head><meta charset="UTF-8"><style>';
   html += 'body{font-family:Arial,sans-serif;margin:20px;color:#333}';
   html += 'h1{font-size:20px;margin:0 0 10px 0}h2{font-size:14px;margin:15px 0 10px 0;border-bottom:2px solid #0066cc;padding-bottom:5px}';
@@ -326,7 +348,7 @@ function downloadEnrollmentAttendancePDF() {
   html += '<h2>Monthly Breakdown</h2>';
   html += '<table><tr><th>Month</th><th>Enrollment</th><th>Attendance %</th><th>Performance</th></tr>';
   for (let i = 0; i < months.length; i++) {
-    const perf = attendanceData[i] >= 95 ? 'Excellent' : (attendanceData[i] >= 90 ? 'Very Good' : 'Good');
+    const perf = getMonthlyAttendancePerformance(enrollmentData[i], attendanceData[i]).label;
     html += '<tr><td>' + months[i] + '</td><td>' + enrollmentData[i] + '</td><td>' + attendanceData[i] + '%</td><td>' + perf + '</td></tr>';
   }
   html += '</table>';
@@ -528,14 +550,14 @@ function showMonthlyEnrollmentAttendanceReport() {
       const change = enr - prevEnr;
       const att = attendanceData[i];
       const trend = change > 0 ? '<i class="fas fa-chart-line"></i>' : change < 0 ? '<i style="transform:rotate(90deg);display:inline-block" class="fas fa-chart-line"></i>' : '<i class="fas fa-arrow-right"></i>';
-      const perfColor = att >= 95 ? 'success' : (att >= 90 ? 'blue-main' : 'warning');
+      const performance = getMonthlyAttendancePerformance(enr, att);
       return `<tr>
             <td style="font-weight:600">${months[i]}</td>
             <td style="text-align:center;font-weight:600">${enr}</td>
             <td style="text-align:center;color:${change > 0 ? 'var(--success)' : 'var(--gray-500)'}">${change > 0 ? '+' + change : change === 0 ? '—' : change}</td>
-            <td style="text-align:center;font-weight:600;color:var(--${perfColor})">${att}%</td>
+            <td style="text-align:center;font-weight:600;color:var(--${performance.color})">${att}%</td>
             <td style="text-align:center;font-size:16px">${trend}</td>
-            <td><span class="badge b-${perfColor === 'success' ? 'success' : 'info'}">${att >= 95 ? 'Excellent' : att >= 90 ? 'Very Good' : 'Good'}</span></td>
+            <td><span class="badge ${performance.badge}">${performance.label}</span></td>
           </tr>`;
     }).join('')}
       </tbody>
@@ -591,7 +613,7 @@ function showEnrollStudentForm() {
       </div>
       <div class="form-field">
         <label>Parent Phone *</label>
-        <input type="tel" id="std-parent-phone" placeholder="0244567890" required>
+        <input type="tel" id="std-parent-phone" inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" placeholder="Up to 15 digits" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" required>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="submitStudentEnrollment()"><i class="fas fa-check"></i> Enroll Student</button>
@@ -614,6 +636,10 @@ async function submitStudentEnrollment() {
 
   if (!name || !dob || !gender || !studentClass || !parentName || !parentPhone) {
     showToast('<i class=\"fas fa-times-circle\"></i> Please fill all required fields, including parent name and phone', 'error');
+    return;
+  }
+  if (!/^\d{1,15}$/.test(parentPhone)) {
+    showToast('<i class="fas fa-times-circle"></i> Parent phone must contain numbers only and be no more than 15 digits', 'error');
     return;
   }
 
@@ -670,6 +696,8 @@ function viewAdmissionDetail(admId) {
             <div><span style="color:var(--gray-500)">Parent Name:</span> <strong>${escapeHtml(a.parent_name || '')}</strong></div>
             <div><span style="color:var(--gray-500)">Parent Phone:</span> <strong>${escapeHtml(a.parent_phone || '')}</strong></div>
             <div><span style="color:var(--gray-500)">Parent Email:</span> <strong>${escapeHtml(a.parent_email || '')}</strong></div>
+            <div><span style="color:var(--gray-500)">Parent Gender:</span> <strong>${escapeHtml(a.parent_gender || 'N/A')}</strong></div>
+            <div><span style="color:var(--gray-500)">Parent Occupation:</span> <strong>${escapeHtml(a.parent_occupation || 'N/A')}</strong></div>
             <div><span style="color:var(--gray-500)">Address:</span> <strong>${escapeHtml(a.address || 'N/A')}</strong></div>
           </div>
           <div style="margin-top:10px"><span style="color:var(--gray-500)">Notes:</span> <p style="background:var(--gray-50);padding:10px;border-radius:6px;margin-top:4px">${escapeHtml(a.notes || 'None')}</p></div>
@@ -692,7 +720,9 @@ function viewStudent(studentId) {
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal Information</span></div>
       <div style="display:flex;gap:20px;margin-bottom:20px">
-        <div class="av av-xl av-${student.avatar_color}">${student.name[0]}</div>
+        ${student.photo || student.picture
+          ? `<img src="${escapeAttr(student.photo || student.picture)}" alt="${escapeAttr(student.name)}" style="width:96px;height:112px;object-fit:cover;border-radius:10px;border:2px solid var(--gray-200);flex-shrink:0">`
+          : `<div class="av av-xl av-${student.avatar_color}">${student.name[0]}</div>`}
         <div style="flex:1">
           <div style="font-size:18px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${student.name}</div>
           <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Student ID: <strong>${student.student_id}</strong></div>
@@ -791,7 +821,7 @@ function editStudent(studentId) {
       </div>
       <div class="form-field">
         <label>Parent Phone</label>
-        <input type="tel" id="edit-std-parent-phone" value="${student.parent_phone || ''}">
+        <input type="tel" id="edit-std-parent-phone" inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" value="${student.parent_phone || ''}" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)">
       </div>
       <div class="form-field" style="grid-column:1/-1"><label>New Login Password</label><input type="password" id="edit-std-password" minlength="6" placeholder="Leave blank to keep the current password"></div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
@@ -813,13 +843,19 @@ async function saveStudentChanges(studentId) {
     return;
   }
 
+  const guardianPhone = document.getElementById('edit-std-parent-phone')?.value.trim() || '';
+  if (guardianPhone && !/^\d{1,15}$/.test(guardianPhone)) {
+    showToast('<i class="fas fa-times-circle"></i> Parent phone must contain numbers only and be no more than 15 digits', 'error');
+    return;
+  }
+
   const res = await API.students.update(student.id, {
     name: document.getElementById('edit-std-name')?.value || student.name,
     class_id: parseInt(document.getElementById('edit-std-class')?.value || student.class_id || 0, 10) || null,
     status: document.getElementById('edit-std-status')?.value || student.status,
     address: document.getElementById('edit-std-address')?.value || '',
     guardian_name: document.getElementById('edit-std-parent-name')?.value || '',
-    guardian_phone: document.getElementById('edit-std-parent-phone')?.value || '',
+    guardian_phone: guardianPhone,
     password: document.getElementById('edit-std-password')?.value || undefined
   });
   if (!res || !res.success) {
@@ -3366,20 +3402,18 @@ function attendanceModule() {
   const rows = buildAttendanceSummaryRows();
   const presentCount = rows.reduce((sum, r) => sum + r.present, 0);
   const absentCount = rows.reduce((sum, r) => sum + r.absent, 0);
-  const lateCount = rows.reduce((sum, r) => sum + r.late, 0);
   return hdr('Attendance Module', 'Monitor attendance across all classes', 'Attendance') + `
   <div class="stats-row">
     ${statCard('<i class="fas fa-check-circle"></i>', presentCount, 'Present Today', 'All classes', 'up', 'si-green')}
     ${statCard('<i class="fas fa-times-circle"></i>', absentCount, 'Absent Today', 'All classes', 'dn', 'si-red')}
-    ${statCard('<i class="fas fa-clock"></i>', lateCount, 'Late Today', 'Recorded late', 'neu', 'si-gold')}
     ${statCard('<i class="fas fa-chart-bar"></i>', rows.length, 'Classes Monitored', 'Admin view', 'up', 'si-blue')}
   </div>
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-table"></i> Class Attendance Summary</span><button class="btn btn-secondary btn-sm" onclick="generateReportPDF('Attendance')"><i class="fas fa-chart-line"></i> View Reports</button></div>
     <table class="tbl">
-      <thead><tr><th>Class</th><th>Teacher</th><th>Present</th><th>Absent</th><th>Late</th><th>Date</th><th>Submitted</th></tr></thead>
+      <thead><tr><th>Class</th><th>Teacher</th><th>Present</th><th>Absent</th><th>Date</th><th>Submitted</th></tr></thead>
       <tbody>
-        ${rows.map(r => `<tr><td><strong>${escapeHtml(r.className)}</strong></td><td>${escapeHtml(r.teacher)}</td><td>${r.present}</td><td>${r.absent}</td><td>${r.late}</td><td>${formatAttendanceDate(r.date)}</td><td>${r.submittedAt ? new Date(r.submittedAt).toLocaleString() : 'Awaiting submission'}</td></tr>`).join('')}
+        ${rows.map(r => `<tr><td><strong>${escapeHtml(r.className)}</strong></td><td>${escapeHtml(r.teacher)}</td><td>${r.present}</td><td>${r.absent}</td><td>${formatAttendanceDate(r.date)}</td><td>${r.submittedAt ? new Date(r.submittedAt).toLocaleString() : 'Awaiting submission'}</td></tr>`).join('')}
       </tbody>
     </table>
   </div>`;
@@ -3401,11 +3435,7 @@ function formatDuration(minutes) {
 }
 
 function gradeFromAverage(avg) {
-  if (avg >= 90) return 'A';
-  if (avg >= 80) return 'B';
-  if (avg >= 70) return 'C';
-  if (avg >= 60) return 'D';
-  return 'E';
+  return calculateGrade(avg);
 }
 
 function buildReportRowsFromGrades() {

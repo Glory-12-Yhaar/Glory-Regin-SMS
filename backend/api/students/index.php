@@ -95,6 +95,10 @@ if ($method === 'POST') {
             jsonResponse(['success' => false, 'message' => "Field '$field' is required"], 422);
         }
     }
+    $guardianPhone = trim((string)$body['guardian_phone']);
+    if (!preg_match('/^\d{1,15}$/', $guardianPhone)) {
+        jsonResponse(['success' => false, 'message' => 'Guardian phone must contain numbers only and be no more than 15 digits'], 422);
+    }
 
     $db->beginTransaction();
     try {
@@ -125,7 +129,7 @@ if ($method === 'POST') {
             $db,
             $id,
             $body['guardian_name'],
-            $body['guardian_phone'] ?? null,
+            $guardianPhone,
             $body['guardian_email'] ?? null,
             $body['address'] ?? null
         );

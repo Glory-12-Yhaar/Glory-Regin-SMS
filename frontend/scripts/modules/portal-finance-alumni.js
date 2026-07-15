@@ -1,3 +1,8 @@
+function money(amount) {
+  if (typeof formatMoney === 'function') return formatMoney(amount);
+  return 'GH₵' + Number(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // LEARNING MATERIALS MODULE
 function learningMaterialsModule() {
   return hdr('Learning Materials', 'Upload and manage educational resources for students', 'Materials') + `
@@ -513,6 +518,14 @@ function printPaymentReceipt(){
 function downloadPaymentReceiptPDF(filename){
   const p = window.currentReceiptData;
   if(!p) return;
+  downloadTablePDF({
+    title: 'Glory Reign Preparatory School - Official Receipt', subtitle: 'Generated: ' + new Date().toLocaleString(),
+    summary: [`Receipt: ${p.receipt || ''}`, `Student: ${p.student || ''}`, `Date: ${p.date || ''}`, `Status: ${p.status || ''}`],
+    headers: ['Description', 'Amount', 'Method'], rows: [['Payment Received', 'GHS ' + Number(p.amount || 0).toLocaleString(), p.method || 'Cash']],
+    filename: (filename || 'receipt') + '_' + new Date().toISOString().slice(0,10) + '.pdf'
+  });
+  showToast('<i class="fas fa-download"></i> Receipt PDF downloaded', 'success');
+  return;
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ${p.receipt}</title><style>body{font-family:Arial;margin:20px;color:#333}h2{margin:0;color:#004}.info{border:2px solid #bbb;padding:20px;margin:20px 0}table{width:100%;margin:20px 0}th,td{text-align:left;padding:8px;border-bottom:1px solid #ddd}.amount{font-size:24px;font-weight:bold;color:#004;text-align:right}.small{font-size:10px;color:#666}</style></head><body><div style="text-align:center;margin-bottom:20px"><h2>Glory Reign Preparatory School</h2><p class="small">Official Payment Receipt</p></div><div class="info"><table><tr><td><strong>Receipt No.:</strong> ${p.receipt}</td><td><strong>Date:</strong> ${p.date}</td></tr><tr><td colspan="2"><strong>Student:</strong> ${p.student}</td></tr></table></div><table><tr><th>Description</th><th style="text-align:right">Amount</th></tr><tr><td>Payment Received</td><td class="amount">GH₵ ${Number(p.amount||0).toLocaleString()}</td></tr></table><div class="small" style="margin-top:20px"><p>Method: ${p.method||'Cash'}</p><p>Status: ${p.status}</p><p>Processed: ${new Date().toLocaleDateString()}</p><p style="margin-top:20px">Please keep this receipt for your records.</p></div></body></html>`;
   const a = document.createElement('a');
   a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
