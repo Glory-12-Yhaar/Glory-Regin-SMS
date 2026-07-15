@@ -8,14 +8,8 @@
     {{childrenStats}}
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Teacher Messages</span><span class="card-act" onclick="openParentMessenger()">Send Message</span></div>
-    <div class="chat-msgs" style="max-height:300px;overflow-y:auto">
-      {{messageHtml}}
-    </div>
-    <div class="chat-input-row">
-      <textarea id="parent-msg-input" class="chat-inp" placeholder="Message a teacher..." onkeydown="handleChatTextareaKey(event, 'Parent Serwaa', 'Mr. Amponsah', 'parent-msg-input')"></textarea>
-      <button class="chat-send" onclick="sendParentMessage()"><i class="fas fa-paper-plane"></i></button>
-    </div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> School Events</span><span class="card-act" onclick="navTo('events')">Open Calendar</span></div>
+    {{eventRows}}
   </div>
 </div>
 
@@ -27,9 +21,5 @@
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fee Payment Status</span></div>
     {{feeCards}}
-  </div>
-  <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> School Events</span></div>
-    {{eventRows}}
   </div>
 </div>

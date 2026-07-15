@@ -96,12 +96,6 @@ const API = {
     },
 
     // ── Messages ─────────────────────────────────────────────
-    messages: {
-        inbox: (params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type: 'inbox', ...params })),
-        sent:  (params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type: 'sent',  ...params })),
-        send:  (data)        => apiRequest('/messages/index.php',  'POST', data),
-    },
-
     // ── Assignments ──────────────────────────────────────────
     assignments: {
         list:        (params = {}) => apiRequest('/assignments/index.php?'      + new URLSearchParams(params)),

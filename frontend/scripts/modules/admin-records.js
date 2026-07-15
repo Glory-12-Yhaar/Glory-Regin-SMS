@@ -1314,7 +1314,6 @@ function viewTeacherProfile(teacherId) {
         ${isArchived ? `<div class="info-row"><span class="label"><i class="fas fa-box-archive"></i> Archived</span><span>${teacher.archived_date || 'Not provided'}</span></div>` : ''}
       </div>
       ${currentRole === 'Admin' ? adminAction : ''}
-      ${currentRole === 'Parent' ? `<button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="currentChat='${escapeAttr(teacher.name)}';navTo('messaging')"><i class="fas fa-envelope"></i> Message Teacher</button>` : ''}
     </div>
   </div>`;
   document.getElementById('main-content').innerHTML = html;
@@ -1765,14 +1764,14 @@ function updateParentTable(parents) {
     return;
   }
 
-  tbody.innerHTML = parents.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
+  tbody.innerHTML = parents.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button></div></td></tr>').join('');
 }
 
 // PARENTS MODULE
 // -----------------------------------
 // -----------------------------------
 function parentsModule() {
-  const parentRows = parentsData.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button><button class="btn btn-primary btn-xs" onclick="navTo(\'messaging\')">Message</button></div></td></tr>').join('');
+  const parentRows = parentsData.map((p, i) => '<tr style="cursor:pointer" onclick="if(!event.target.closest(\'button\')) viewParentProfile(\'' + p.parent_id + '\')"><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-' + p.avatar_color + '">' + p.name[0] + '</div><strong>' + p.name + '</strong></div></td><td style="font-size:11px">' + p.children + '</td><td style="font-size:11px">' + p.phone + '</td><td style="color:var(--blue-main);font-size:11px">' + p.email + '</td><td><span class="badge ' + (p.fees_status === 'All Paid' ? 'b-success' : (p.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + p.fees_status + '</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="viewParentProfile(\'' + p.parent_id + '\')">View</button></div></td></tr>').join('');
 
   return hdr('Parents Module', 'Parent/Guardian records and communication', 'Parents') +
     renderPageTemplate('pages/admin/parents/index.html', { parentRows });

@@ -838,7 +838,6 @@ const MENUS = {
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices', badge: () => getModuleBadgeCount('notices') },
         { id: 'hero_slides', ic: '<i class="fas fa-images"></i>', lbl: 'Hero Slides' },
         { id: 'news', ic: '<i class="fas fa-newspaper"></i>', lbl: 'News & Blog' },
-        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messaging' },
         { id: 'contact_messages', ic: '<i class="fas fa-envelope"></i>', lbl: 'Contact Messages', badge: () => contactMessages.filter(m => !m.read).length || 0 },
       ]
     },
@@ -846,10 +845,8 @@ const MENUS = {
       g: 'Administration', items: [
         { id: 'staff', ic: '<i class="fas fa-users"></i>', lbl: 'Staff Management' },
         { id: 'users', ic: '<i class="fas fa-key"></i>', lbl: 'User Accounts' },
-        { id: 'roles', ic: '<i class="fas fa-shield"></i>', lbl: 'Roles & Permissions' },
         { id: 'reports', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Reports & Analytics' },
         { id: 'alumni', ic: '<i class="fas fa-medal"></i>', lbl: 'Alumni Module' },
-        { id: 'backup', ic: '<i class="fas fa-hard-drive"></i>', lbl: 'Backup & Logs' },
         { id: 'settings', ic: '<i class="fas fa-cog"></i>', lbl: 'Settings' },
         { id: 'yearbook_admin', ic: '<i class="fas fa-book-open"></i>', lbl: 'Yearbook Management' },
       ]
@@ -881,7 +878,6 @@ const MENUS = {
     },
     {
       g: 'Communication', items: [
-        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messaging' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Calendar' },
       ]
@@ -909,7 +905,6 @@ const MENUS = {
       g: 'Finance & Info', items: [
         { id: 'fees', ic: '<i class="fas fa-money-bill"></i>', lbl: 'Fees Status' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
-        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages' },
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events' },
       ]
     },
@@ -937,7 +932,7 @@ const MENUS = {
     },
     {
       g: 'Communication', items: [
-        { id: 'teachers', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages with Teachers' },
+        { id: 'teachers', ic: '<i class="fas fa-chalkboard-teacher"></i>', lbl: 'Teachers' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices / Announcements' },
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Calendar' },
       ]
@@ -968,7 +963,6 @@ const MENUS = {
     {
       g: 'Reporting & Comms', items: [
         { id: 'reports', ic: '<i class="fas fa-chart-bar"></i>', lbl: 'Financial Reports' },
-        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messaging' },
       ]
     },
     {
@@ -989,7 +983,6 @@ const MENUS = {
       g: 'Community', items: [
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Reunions' },
         { id: 'donations', ic: '<i class="fas fa-handshake"></i>', lbl: 'Donations' },
-        { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
         { id: 'jobs', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Job Board' },
         { id: 'certificates', ic: '<i class="fas fa-certificate"></i>', lbl: 'Certificates Request' },
@@ -1339,7 +1332,6 @@ let APP_NOTIFICATIONS = [
   { id: 1, icon: '<i class="fas fa-clipboard-list"></i>', title: 'Assignment Update', msg: 'New assignment posted', time: '2m ago', read: false, fullMsg: 'A new assignment has been posted. Open the assignments module to view the current database records and due dates.', action: 'View Assignment', actionLink: 'assignments' },
   { id: 2, icon: '<i class="fas fa-check-circle"></i>', title: 'Grade Posted', msg: 'Your essay - Grade A', time: '1h ago', read: false, fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.', action: 'View Feedback', actionLink: 'grades' },
   { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Admission Update', msg: 'New student enrolled', time: '3h ago', read: true, fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.', action: 'View Details', actionLink: 'admissions' },
-  { id: 4, icon: '<i class="fas fa-comments"></i>', title: 'New Message', msg: 'Message from Ms. Mensah', time: '5h ago', read: true, fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.', action: 'Reply', actionLink: 'messaging' },
   { id: 5, icon: '<i class="fas fa-exclamation-triangle"></i>', title: 'Fee Reminder', msg: '5 students pending fees', time: '1d ago', read: true, fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GH₵4,800. Please follow up with parents or view the fees module for details.', action: 'View Fees', actionLink: 'fees' }
 ];
 
@@ -1347,7 +1339,8 @@ function saveAppNotifications() {
 }
 
 function getVisibleNotifications() {
-  const self = typeof getChatSelf === 'function' ? getChatSelf() : { name: '', role: String(currentRole || '').toLowerCase() };
+  const sessionUser = typeof getSessionUser === 'function' ? getSessionUser() : null;
+  const self = { name: sessionUser?.name || '', role: String(currentRole || sessionUser?.role || '').toLowerCase() };
   const role = String(self.role || currentRole || '').toLowerCase();
   return APP_NOTIFICATIONS.filter(n => {
     if (!n.recipient && !n.recipientRole) return true;
@@ -1374,27 +1367,11 @@ function addAppNotification(notification) {
     fullMsg: notification.fullMsg || notification.msg || '',
     action: notification.action || 'View',
     actionLink: notification.actionLink || 'dashboard',
-    chatWith: notification.chatWith || '',
     recipient: notification.recipient || '',
     recipientRole: notification.recipientRole || ''
   });
   saveAppNotifications();
   updateNotificationBadge();
-}
-
-function notifyMessageRecipient(message) {
-  addAppNotification({
-    icon: '<i class="fas fa-comments"></i>',
-    title: 'New Message',
-    msg: `Message from ${message.sender}`,
-    fullMsg: `${message.sender}: ${message.text}`,
-    action: 'Open Chat',
-    actionLink: 'messaging',
-    chatWith: message.sender,
-    recipient: message.recipient,
-    recipientRole: message.recipientRole
-  });
-  saveAppNotifications();
 }
 
 function markNotificationAsRead(id, event) {
@@ -1493,10 +1470,7 @@ function viewNotificationDetail(notifId) {
   saveAppNotifications();
   updateNotificationBadge();
   const actionLinkJS = escapeAttr(JSON.stringify(notif.actionLink || 'dashboard'));
-  const chatWithJS = escapeAttr(JSON.stringify(notif.chatWith || ''));
-  const actionClick = notif.actionLink === 'messaging' && notif.chatWith
-    ? `currentChat=${chatWithJS};navTo(${actionLinkJS});closeModal()`
-    : `navTo(${actionLinkJS});closeModal()`;
+  const actionClick = `navTo(${actionLinkJS});closeModal()`;
 
   let html = `<div style="max-width:500px;width:95%;background:rgba(255,255,255,0.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.5);border-radius:24px;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.15)">
       <div style="padding:24px;background:linear-gradient(135deg,var(--blue-main),#1e3a5f);color:white;display:flex;gap:16px;align-items:center;position:relative">
@@ -1898,15 +1872,12 @@ function renderMain() {
     notices: () => noticesModule(),
     hero_slides: () => heroSlidesModule(),
     news: () => currentRole === 'Visitor' ? visitorNews() : newsModule(),
-    messaging: () => messagingModule(),
     contact_messages: () => contactMessagesModule(),
     staff: () => staffModule(),
     users: () => usersModule(),
-    roles: () => rolesModule(),
     reports: () => reportsModule(),
     alumni: () => alumniModule(),
     alumni_pub: () => alumniPubModule(),
-    backup: () => backupModule(),
     settings: () => settingsModule(),
     profile: () => profileModule(),
     yearbook: () => yearbookModule(),

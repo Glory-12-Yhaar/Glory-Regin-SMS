@@ -271,11 +271,7 @@ function teacherDash() {
         <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} Â· ${submitted}/${total} submitted</div>
         <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(submitted / total * 100)}%"></div></div>
       </div>`}).join('') : '<div style="padding:20px;color:var(--gray-400);text-align:center">No assignments for your assigned classes yet.</div>';
-  const messageRows = getTeacherMessages().map(m => `
-        <div class="chat-msg ${m.fromTeacher ? 'me' : ''}">
-          <div class="av av-sm av-${m.fromTeacher ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
-          <div><div class="chat-bubble ${m.fromTeacher ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromTeacher ? 'me' : ''}">${m.fromTeacher ? 'You' : escapeHtml(m.from)} Â· ${m.time}</div></div>
-        </div>`).join('');
+  const noticeRows = noticesData.slice(0, 4).map(n => `<div style="padding:10px 0;border-bottom:1px solid var(--gray-100)"><div style="font-size:13px;font-weight:600">${escapeHtml(n.title || 'Notice')}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(n.date || n.notice_date || '')}</div></div>`).join('') || '<div style="padding:20px;color:var(--gray-400);text-align:center">No notices available.</div>';
 
   return hdr('Teacher Dashboard', 'Welcome, ' + teacher.name + ' Â· ' + teacher.department + ' Â· ' + (myClassNames.join(', ') || 'No assigned class') + ' Â· ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/teacher/index.html', {
@@ -283,7 +279,7 @@ function teacherDash() {
       scheduleRows: scheduleRowsHtml,
       assignmentCards,
       primaryClass: myClassNames[0] || 'Assigned Class',
-      messageRows
+      noticeRows
     });
 }
 
@@ -463,7 +459,6 @@ function studentDash() {
 const TEACHERS_KEY = 'gr_teachers';
 const STUDENTS_KEY = 'gr_students';
 const GRADEBOOK_KEY = 'gr_gradebook';
-const TEACHER_MESSAGES_KEY = 'gr_teacher_messages';
 const ATTENDANCE_BATCHES_KEY = 'gr_attendance_batches';
 
 function getAssignments() {
@@ -471,28 +466,6 @@ function getAssignments() {
 }
 function saveAssignments(obj) {
   window.assignmentsData = Array.isArray(obj) ? obj : Object.values(obj || {});
-}
-
-function getTeacherMessages() {
-  const raw = appMemoryStorage.getItem(TEACHER_MESSAGES_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-function saveTeacherMessages(arr) {
-  appMemoryStorage.setItem(TEACHER_MESSAGES_KEY, JSON.stringify(arr));
-}
-
-function sendTeacherChatMessage() {
-  const inp = document.querySelector('.chat-inp');
-  if (!inp) return showToast('No message box found', 'error');
-  const txt = inp.value.trim();
-  if (!txt) return showToast('Type a message first', 'error');
-  const msgs = getTeacherMessages();
-  msgs.push({ from: 'Me', text: txt, time: new Date().toLocaleString(), fromTeacher: true });
-  saveTeacherMessages(msgs);
-  try{ addMessage({ sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: '', text: txt }); }catch(e){}
-  inp.value = '';
-  showToast('<i class="fas fa-check-circle"></i> Message sent', 'success');
-  setTimeout(() => renderMain(), 120);
 }
 
 function openGradeEntryModal(studentName) {
@@ -575,11 +548,6 @@ function parentDash() {
     <button class="btn btn-secondary btn-sm" onclick="viewStudentReport('${s.studentId}')"><i class="fas fa-file"></i> Report</button>
     <button class="btn btn-info btn-sm" onclick="viewAttendance('${s.studentId}')"><i class="fas fa-chart-bar"></i> Progress</button>
   </div>`).join('');
-  const messages = getParentMessages();
-  const messageHtml = messages.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:20px"><i class="fas fa-inbox" style="font-size:32px;margin-bottom:8px;display:block"></i> No messages yet</div>' : messages.map(m=>`<div class="chat-msg ${m.fromParent ? 'me' : ''}">
-    <div class="av av-sm av-${m.fromParent ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
-    <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} Â· ${m.time}</div></div>
-  </div>`).join('');
   const assignments = getDashboardAssignments().flatMap(a => students
     .filter(child => child.class === (a.className || a.class))
     .map(child => ({
@@ -629,7 +597,6 @@ function parentDash() {
     renderPageTemplate('pages/dashboards/parent/index.html', {
       statsCards,
       childrenStats,
-      messageHtml,
       assignmentHtml,
       feeCards,
       eventRows

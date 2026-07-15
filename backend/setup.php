@@ -441,21 +441,6 @@ CREATE TABLE notices (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
-CREATE TABLE messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  sender_id INT NOT NULL,
-  receiver_id INT NOT NULL,
-  subject VARCHAR(220) DEFAULT NULL,
-  body TEXT NOT NULL,
-  sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  read_at DATETIME DEFAULT NULL,
-  CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_messages_sender (sender_id, sent_at),
-  INDEX idx_messages_receiver (receiver_id, sent_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-SQL,
-        <<<'SQL'
 CREATE TABLE contact_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -730,10 +715,6 @@ SQL,
         ['Admin','Stationery Supplies',1800,'2025-03-15','Accountant'],
     ]);
 
-    insertRows($pdo, "INSERT INTO messages (sender_id,receiver_id,subject,body) VALUES (?,?,?,?)", [
-        [1,2,'Welcome','Welcome to the new portal.'],
-        [2,1,'Re: Welcome','Thank you.'],
-    ]);
     insertRows($pdo, "INSERT INTO contact_messages (name,email,subject,message,is_read) VALUES (?,?,?,?,?)", [
         ['Prospective Parent','prospect@example.com','Admission inquiry','Please send admission details.',0],
     ]);
@@ -783,7 +764,7 @@ SQL,
     $tables = [
         'users','staff','classes','subjects','students','parents','parent_student','teachers',
         'student_scores','exams','assignments','assignment_submissions','fees','fee_structure','payments',
-        'expenses','salary','attendance','timetable','events','notices','messages','contact_messages',
+        'expenses','salary','attendance','timetable','events','notices','contact_messages',
         'alumni','settings','admissions','hero_slides','news_articles','yearbooks'
     ];
     foreach ($tables as $table) {

@@ -1674,380 +1674,6 @@ async function deleteNotice(noticeId) {
   }
 }
 
-// MESSAGING MODULE
-function messagingModule() {
-  // Route to role-specific messaging interface
-  if (currentRole === 'Student') return studentMessagingModule();
-  if (currentRole === 'Parent') return parentMessagingModule();
-  if (currentRole === 'Teacher') return teacherMessagingModule();
-  if (currentRole === 'Admin') return adminMessagingModule();
-
-  // Default fallback
-  return defaultMessagingModule();
-}
-
-// GET CONTACT INFO 
-const contactInfo = {
-  'Ama Osei': { name: 'Ama Osei', role: 'Student', avatar: 'purple', status: 'Online' },
-  'Mr. Amponsah': { name: 'Mr. Kweku Amponsah', role: 'Teacher', avatar: 'blue', status: 'Online' },
-  'Mrs. Asante': { name: 'Mrs. Adwoa Asante', role: 'Teacher', avatar: 'purple', status: 'Away' },
-  'Mr. Oduro': { name: 'Mr. Samuel Oduro', role: 'Teacher', avatar: 'green', status: 'Offline' },
-  'Parent Serwaa': { name: 'Parent Serwaa', role: 'Parent', avatar: 'gold', status: 'Offline' },
-  'Admin Office': { name: 'Admin Office', role: 'Admin', avatar: 'blue', status: 'Online' }
-};
-
-
-// DEFAULT MESSAGING MODULE
-function defaultMessagingModule() {
-  return hdr('Messages', 'Communication system', 'Messages') + `
-  <div class="card" style="text-align:center;padding:40px">
-    <div style="font-size:48px;margin-bottom:16px"><i class="fas fa-inbox" style="color:var(--gray-300)"></i></div>
-    <p style="color:var(--gray-400);font-size:14px">Messaging module is not available for your role.</p>
-  </div>`;
-}
-
-function getChatSelf() {
-  if (currentRole === 'Student') {
-    const student = getCurrentStudentRecord();
-    return { name: student.name || getSessionUser()?.name || 'Student', role: 'student', avatar: student.avatar_color || 'purple' };
-  }
-  if (currentRole === 'Parent') {
-    const user = getSessionUser();
-    return { name: user?.name || getParentProfileForSession()?.contact_person || 'Parent', role: 'parent', avatar: 'gold' };
-  }
-  if (currentRole === 'Teacher') {
-    const teacher = getCurrentTeacherProfile();
-    return { name: teacher?.name || getSessionUser()?.name || 'Teacher', role: 'teacher', avatar: teacher?.avatar_color || 'blue' };
-  }
-  if (currentRole === 'Admin') return { name: 'Admin Office', role: 'admin', avatar: 'blue' };
-  if (currentRole === 'Accountant') return { name: getSessionUser()?.name || 'Accounts Office', role: 'accountant', avatar: 'teal' };
-  return { name: getSessionUser()?.name || currentRole, role: String(currentRole || '').toLowerCase(), avatar: 'blue' };
-}
-
-function getChatContactMeta(name) {
-  if (contactInfo[name]) return contactInfo[name];
-  const teacher = teachersData.find(t => t.name === name || name.includes(t.name) || t.name.includes(name));
-  if (teacher) return { name: teacher.name, role: 'Teacher', avatar: teacher.avatar_color || 'blue', status: 'Available' };
-  const student = enrolledStudents.find(s => s.name === name);
-  if (student) return { name: student.name, role: 'Student', avatar: student.avatar_color || 'purple', status: student.student_class };
-  const parent = parentsData.find(p => [p.name, p.contact_person].includes(name));
-  if (parent) return { name: parent.contact_person || parent.name, role: 'Parent', avatar: parent.avatar_color || 'gold', status: 'Guardian' };
-  return { name: name || 'Contact', role: 'Contact', avatar: 'blue', status: 'Available' };
-}
-
-function getParentTeacherContacts() {
-  const childClasses = getParentChildren().map(child => child.class);
-  const teacherIds = new Set();
-  classesData.forEach(c => {
-    if (childClasses.includes(c.name) && c.teacher_id) teacherIds.add(c.teacher_id);
-  });
-  subjectsData.forEach(subject => {
-    childClasses.forEach(className => {
-      if (subjectAppliesToClass(subject, className) && subject.teacher_id) teacherIds.add(subject.teacher_id);
-    });
-  });
-  return teachersData.filter(t => teacherIds.has(t.teacher_id));
-}
-
-function isParentAllowedTeacherName(name) {
-  return getParentTeacherContacts().some(t => t.name === name);
-}
-
-function viewTeacherProfileByName(name) {
-  const teacher = getParentTeacherContacts().find(t => t.name === name) || teachersData.find(t => t.name === name);
-  if (!teacher) {
-    showToast('<i class="fas fa-times-circle"></i> Teacher profile not found', 'error');
-    return;
-  }
-  viewTeacherProfile(teacher.teacher_id);
-}
-
-function getAvailableChatContacts() {
-  if (currentRole === 'Student') {
-    const cls = getCurrentStudentRecord().student_class;
-    const classInfo = classesData.find(c => c.name === cls);
-    const teachers = teachersData.filter(t => t.teacher_id === classInfo?.teacher_id || (classInfo?.subjects || []).includes(t.subject));
-    return teachers.length ? teachers : teachersData.slice(0, 3);
-  }
-  if (currentRole === 'Parent') {
-    return getParentTeacherContacts();
-  }
-  if (currentRole === 'Teacher') {
-    const classes = getAssignedClassNamesForTeacher();
-    const students = enrolledStudents.filter(s => classes.includes(s.student_class)).slice(0, 12);
-    const parentNames = getParentContactsForClasses(classes);
-    return [
-      ...students.map(s => ({ name: s.name, role: 'Student', avatar_color: s.avatar_color, status: s.student_class })),
-      ...parentNames,
-      { name: 'Admin Office', role: 'Admin', avatar_color: 'blue', status: 'Online' }
-    ];
-  }
-  if (currentRole === 'Admin' || currentRole === 'Accountant') {
-    return [
-      ...teachersData.map(t => ({ name: t.name, role: 'Teacher', avatar_color: t.avatar_color, status: t.subject })),
-      ...parentsData.map(p => ({ name: p.contact_person || p.name, role: 'Parent', avatar_color: p.avatar_color, status: p.children })),
-      ...enrolledStudents.slice(0, 8).map(s => ({ name: s.name, role: 'Student', avatar_color: s.avatar_color, status: s.student_class }))
-    ];
-  }
-  return [];
-}
-
-function getParentContactsForClasses(classNames) {
-  return parentsData.filter(parent => classNames.some(cls => String(parent.children || '').includes(cls))).map(parent => ({
-    name: parent.contact_person || parent.name,
-    role: 'Parent',
-    avatar_color: parent.avatar_color || 'gold',
-    status: parent.children
-  }));
-}
-
-function renderRoleChatModule(title, subtitle) {
-  const self = getChatSelf();
-  const contacts = getAvailableChatContacts();
-  const conversations = {};
-
-  contacts.forEach(contact => {
-    const meta = getChatContactMeta(contact.name);
-    conversations[contact.name] = {
-      name: contact.name,
-      info: { ...meta, role: contact.role || meta.role, avatar: contact.avatar_color || meta.avatar, status: contact.status || meta.status },
-      lastMsg: 'Start a conversation',
-      time: ''
-    };
-  });
-
-  allMessages.filter(m => m.sender === self.name || m.recipient === self.name).forEach(msg => {
-    const otherPerson = msg.sender === self.name ? msg.recipient : msg.sender;
-    if (currentRole === 'Parent' && !contacts.some(contact => contact.name === otherPerson)) return;
-    const meta = getChatContactMeta(otherPerson);
-    conversations[otherPerson] = {
-      name: otherPerson,
-      info: conversations[otherPerson]?.info || meta,
-      lastMsg: msg.text,
-      time: msg.time || ''
-    };
-  });
-
-  const names = Object.keys(conversations);
-  if (!names.includes(currentChat)) currentChat = names[0] || null;
-  if (currentChat) markConversationReadSilent(self.name, currentChat);
-
-  const chatMessages = currentChat ? allMessages.filter(m =>
-    (m.sender === self.name && m.recipient === currentChat) ||
-    (m.sender === currentChat && m.recipient === self.name)
-  ).sort((a, b) => (a.id || 0) - (b.id || 0)) : [];
-
-  const conversationsList = Object.entries(conversations).map(([name, conv]) => {
-    const isActive = name === currentChat;
-    const unread = getUnreadCount(self.name, name);
-    return `
-      <div class="sb-item chat-contact-item${isActive ? ' active' : ''}" style="padding:10px 8px;border-radius:10px;cursor:pointer;margin-bottom:3px;transition:all .2s" onclick="openConversation('${escapeAttr(self.name)}','${escapeAttr(name)}')">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-          <div class="av av-sm av-${conv.info.avatar || 'blue'}">${getInitials(name, 'C').slice(0, 1)}</div>
-          <span style="font-size:12px;font-weight:600;flex:1;color:${isActive ? 'white' : 'var(--gray-700)'}">${escapeHtml(name)}${unread ? ` <span class="badge b-danger" style="font-size:10px;margin-left:6px">${unread}</span>` : ''}</span>
-          <span style="font-size:10px;color:${isActive ? 'rgba(255,255,255,.7)' : 'var(--gray-400)'}">${escapeHtml(conv.time || '')}</span>
-        </div>
-        <div style="font-size:11px;color:${isActive ? 'rgba(255,255,255,.8)' : 'var(--gray-400)'};padding-left:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(conv.lastMsg || '')}</div>
-      </div>`;
-  }).join('');
-
-  const currentContact = currentChat ? getChatContactMeta(currentChat) : null;
-  const messagesHTML = chatMessages.map(msg => {
-    const isSender = msg.sender === self.name;
-    const avatar = isSender ? self.avatar : (currentContact?.avatar || 'blue');
-    return `
-      <div class="chat-msg${isSender ? ' me' : ''}">
-        <div class="av av-sm av-${avatar}">${getInitials(msg.sender, 'U').slice(0, 1)}</div>
-        <div>
-          <div class="chat-bubble${isSender ? ' me-bubble' : ' them'}">${escapeHtml(msg.text)}</div>
-          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} Â· ${escapeHtml(msg.time || '')}</div>
-        </div>
-      </div>`;
-  }).join('');
-
-  return hdr(title, subtitle, 'Messages') + `
-  <div class="g21">
-    <div class="card">
-      <div style="display:flex;gap:0;height:480px">
-        <div style="width:230px;border-right:1px solid var(--gray-200);padding-right:14px;overflow-y:auto;flex-shrink:0">
-          <div style="font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;margin-bottom:10px;letter-spacing:.6px">Contacts</div>
-          ${conversationsList || '<div style="color:var(--gray-400);font-size:12px;padding:10px">No available contacts</div>'}
-        </div>
-        <div style="flex:1;padding-left:16px;display:flex;flex-direction:column;min-width:0">
-          ${currentChat && currentContact ? `
-          <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--gray-200);margin-bottom:12px">
-            <div class="av av-sm av-${currentContact.avatar || 'blue'}">${getInitials(currentChat, 'C').slice(0, 1)}</div>
-            <div>
-              <div style="font-size:13px;font-weight:700">${escapeHtml(currentContact.name || currentChat)}</div>
-              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} Â· ${escapeHtml(currentContact.status || 'Available')}</div>
-            </div>
-            <div style="margin-left:auto;display:flex;gap:8px">
-              ${currentRole === 'Parent' && currentContact.role === 'Teacher' ? `<button class="btn btn-secondary btn-xs" onclick="viewTeacherProfileByName('${escapeAttr(currentChat)}')"><i class="fas fa-user"></i> Profile</button>` : ''}
-              <button class="btn btn-secondary btn-xs" onclick="markConversationRead('${escapeAttr(self.name)}','${escapeAttr(currentChat)}')">Mark Read</button>
-              <button class="btn btn-danger btn-xs" onclick="deleteConversation('${escapeAttr(self.name)}','${escapeAttr(currentChat)}')"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>
-          <div class="chat-msgs" style="flex:1;overflow-y:auto;padding-right:8px">${messagesHTML || '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:13px">No messages yet. Send the first message.</div>'}</div>
-          <div class="chat-input-row">
-            <textarea id="role-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, '${escapeAttr(self.name)}', '${escapeAttr(currentChat)}', 'role-chat-input')"></textarea>
-            <button class="chat-send" onclick="sendChatFromTextarea('${escapeAttr(self.name)}', '${escapeAttr(currentChat)}', 'role-chat-input')"><i class="fa-regular fa-paper-plane"></i></button>
-          </div>` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400)">No conversations available</div>'}
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function studentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your teachers and school office'); }
-function parentMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your childrenâ€™s teachers and school office'); }
-function teacherMessagingModule() { return renderRoleChatModule('Messages', 'Talk with your assigned students, parents, and administration'); }
-function adminMessagingModule() { return renderRoleChatModule('Messages', 'Manage school communications'); }
-
-function sendChatFromTextarea(sender, recipient, inputId) {
-  const input = document.getElementById(inputId);
-  const text = input?.value.trim();
-  if (!text) return showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
-  sendChatMessage(sender, recipient, text);
-  if (input) input.value = '';
-}
-
-function handleChatTextareaKey(event, sender, recipient, inputId) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendChatFromTextarea(sender, recipient, inputId);
-  }
-}
-
-// SEND CHAT MESSAGE
-function sendChatMessage(sender, recipient, message) {
-  if (!message.trim()) {
-    showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
-    return;
-  }
-  if (currentRole === 'Parent' && !isParentAllowedTeacherName(recipient)) {
-    showToast('<i class="fas fa-lock"></i> Parents can only message their childrenâ€™s teachers', 'error');
-    return;
-  }
-
-  try{
-    const recipientMeta = getChatContactMeta(recipient);
-    addMessage({ sender, senderRole: currentRole.toLowerCase(), recipient, recipientRole: String(recipientMeta.role || '').toLowerCase(), subject: 'Message', text: message });
-    showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
-    renderMain();
-  }catch(e){
-    showToast('<i class="fas fa-times-circle"></i> Failed to send', 'error');
-  }
-}
-
-function markConversationReadSilent(userName, otherName){
-  let changed = false;
-  allMessages.forEach(m => {
-    if(m.recipient === userName && m.sender === otherName && !m.read){ m.read = true; changed = true; }
-  });
-
-  let notifChanged = false;
-  APP_NOTIFICATIONS.forEach(n => {
-    const isConversationNotice = n.recipient === userName &&
-      n.actionLink === 'messaging' &&
-      typeof n.fullMsg === 'string' &&
-      n.fullMsg.startsWith(otherName + ':');
-    if(isConversationNotice && !n.read){
-      n.read = true;
-      notifChanged = true;
-    }
-  });
-
-  if(changed) saveAllMessages();
-  if(notifChanged) {
-    saveAppNotifications();
-    updateNotificationBadge();
-  }
-  return changed || notifChanged;
-}
-
-function openConversation(userName, otherName){
-  currentChat = otherName;
-  markConversationReadSilent(userName, otherName);
-  renderMain();
-}
-
-function markConversationRead(userName, otherName){
-  const changed = markConversationReadSilent(userName, otherName);
-  if(changed) {
-    showToast('<i class="fas fa-check-circle"></i> Conversation marked read', 'success');
-    renderMain();
-  }
-}
-
-function deleteConversation(userName, otherName){
-  if(!confirm(`Delete conversation between ${userName} and ${otherName}?`)) return;
-  allMessages = allMessages.filter(m => !((m.sender===userName && m.recipient===otherName) || (m.sender===otherName && m.recipient===userName)));
-  saveAllMessages();
-  showToast('<i class="fas fa-check-circle"></i> Conversation deleted', 'success');
-  renderMain();
-}
-
-// Self-test utility for messaging flows (call from console)
-function runMessagingSelfTest() {
-  console.group('Messaging Self Test');
-  try{
-    // clean test messages
-    const before = allMessages.length;
-    console.log('messages before:', before);
-
-    // add message from student to teacher
-    const m1 = addMessage({ sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test', text: 'Hello teacher (test)' });
-    console.log('added m1', m1);
-
-    // ensure unread shows up
-    const unread1 = getUnreadCount('Mr. Amponsah', 'Ama Osei');
-    console.log('unread for Mr. Amponsah from Ama Osei:', unread1);
-
-    // mark read
-    markConversationRead('Mr. Amponsah', 'Ama Osei');
-    const unread2 = getUnreadCount('Mr. Amponsah', 'Ama Osei');
-    console.log('after mark read:', unread2);
-
-    // add teacher reply
-    const m2 = addMessage({ sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Re:Test', text: 'Thanks, received.' });
-    console.log('added m2', m2);
-
-    // delete conversation
-    deleteConversation('Ama Osei', 'Mr. Amponsah');
-    const after = allMessages.length;
-    console.log('messages after delete:', after);
-
-    showToast('<i class="fas fa-check-circle"></i> Messaging self-test completed (check console).', 'success', 4000);
-  }catch(e){
-    console.error(e);
-    showToast('<i class="fas fa-times-circle"></i> Self-test failed (see console)', 'error', 4000);
-  }
-  console.groupEnd();
-}
-
-// SWITCH BETWEEN CONVERSATIONS
-function switchChat(chatName) {
-  currentChat = chatName;
-  renderMain();
-}
-
-// SEND MESSAGE IN CURRENT CONVERSATION - LEGACY (kept for compatibility)
-function sendMessage(btn) {
-  const input = typeof btn === 'string' ? document.getElementById('msg-input') : btn?.previousElementSibling;
-  const message = input?.value.trim();
-
-  if (!message) {
-    showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
-    return;
-  }
-
-  const self = getChatSelf();
-  const recipient = typeof btn === 'string' ? btn : currentChat;
-  sendChatMessage(self.name, recipient, message);
-  input.value = '';
-  input.focus();
-}
-
 // CONTACT MESSAGES MODULE
 function contactMessagesModule() {
   const unreadCount = contactMessages.filter(m => !m.read).length;
@@ -2213,30 +1839,27 @@ async function sendReply(msgId, recipientEmail) {
 }
 
 function getReportsDashboardInsights() {
-  const students = enrolledStudents.map(s => ({ ...s, attendanceValue: parseFloat(String(s.attendance || '0').replace('%', '')) || 0 }));
-  const scoreRows = Object.entries(STUDENTS_DATA).flatMap(([studentName, record]) =>
-    Object.entries(record.scores || {}).map(([subject, scores]) => {
+  const payload = window.reportsAnalyticsData || {};
+  const analytics = payload.analytics || {};
+  const students = Array.isArray(payload.students) ? payload.students : [];
+  const scoreRows = students.flatMap(student =>
+    Object.entries(student.scores || {}).map(([subject, scores]) => {
       const sba = Number(scores.classScore) || 0;
       const exam = Number(scores.examScore) || 0;
-      const total = sba + exam;
-      return { studentName, subject, className: record.class, sba, exam, total };
+      return { studentName: student.name, subject, className: student.class_name || 'Unassigned', sba, exam, total: sba + exam };
     })
   );
-  const avgAttendance = students.length ? Math.round(students.reduce((sum, s) => sum + s.attendanceValue, 0) / students.length) : 0;
+  const avgAttendance = students.length ? Math.round(students.reduce((sum, s) => sum + (Number(s.attendance) || 0), 0) / students.length) : 0;
   const avgSba = scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.sba, 0) / scoreRows.length) : 0;
-  const avgAcademic = scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.total, 0) / scoreRows.length) : 0;
+  const avgAcademic = Math.round(Number(analytics.avgPerformance || 0)) || (scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.total, 0) / scoreRows.length) : 0);
   const passRate = scoreRows.length ? Math.round(scoreRows.filter(r => r.total >= 50).length / scoreRows.length * 100) : 0;
   const finance = getFinanceSummary();
   const feesCollection = finance.totalCount ? Math.round(finance.paidCount / finance.totalCount * 100) : 0;
-  const topStudent = Object.entries(STUDENTS_DATA).map(([name, record]) => {
-    const totals = Object.values(record.scores || {}).map(scores => (Number(scores.classScore) || 0) + (Number(scores.examScore) || 0));
-    const average = totals.length ? Math.round(totals.reduce((sum, n) => sum + n, 0) / totals.length) : 0;
-    return { name, className: record.class, average };
-  }).sort((a, b) => b.average - a.average)[0];
+  const topStudent = (analytics.topPerformers || [])[0] || null;
   return {
     students,
     scoreRows,
-    avgAttendance,
+    avgAttendance: Math.round(Number(analytics.attendanceStats?.averageAttendance || avgAttendance)),
     avgSba,
     avgAcademic,
     passRate,
@@ -2245,6 +1868,68 @@ function getReportsDashboardInsights() {
     enrollmentTotal: students.length,
     activeStudents: students.filter(s => (s.status || 'Active') === 'Active').length
   };
+}
+
+function gradeBucket(total) {
+  if (total >= 90) return 'A';
+  if (total >= 80) return 'B';
+  if (total >= 70) return 'C';
+  if (total >= 60) return 'D';
+  return 'E';
+}
+
+function attendanceStatus(percent) {
+  if (percent >= 95) return 'Excellent';
+  if (percent >= 85) return 'Very Good';
+  if (percent >= 75) return 'Good';
+  return 'Needs Attention';
+}
+
+function reportBadge(value, dangerAt = 75) {
+  const numeric = Number(value) || 0;
+  const cls = numeric >= dangerAt ? 'b-success' : 'b-warning';
+  return `<span class="badge ${cls}" style="background:${numeric >= dangerAt ? '#d1fae5;color:#065f46' : '#fef3c7;color:#92400e'}">${numeric}%</span>`;
+}
+
+function buildAcademicReportRows() {
+  const students = Array.isArray(window.reportsAnalyticsData?.students) ? window.reportsAnalyticsData.students : [];
+  const grouped = {};
+  students.forEach(student => {
+    const className = student.class_name || 'Unassigned';
+    Object.entries(student.scores || {}).forEach(([subject, scores]) => {
+      const key = className + '::' + subject;
+      const total = (Number(scores.classScore) || 0) + (Number(scores.examScore) || 0);
+      grouped[key] = grouped[key] || { className, subject, count: 0, totalScore: 0, pass: 0, grades: { A: 0, B: 0, C: 0 } };
+      grouped[key].count++;
+      grouped[key].totalScore += total;
+      if (total >= 50) grouped[key].pass++;
+      const grade = gradeBucket(total);
+      if (grouped[key].grades[grade] !== undefined) grouped[key].grades[grade]++;
+    });
+  });
+  return Object.values(grouped).sort((a, b) => a.className.localeCompare(b.className) || a.subject.localeCompare(b.subject));
+}
+
+function buildAttendanceReportRows() {
+  const students = Array.isArray(window.reportsAnalyticsData?.students) ? window.reportsAnalyticsData.students : [];
+  return students.map(student => ({
+    name: student.name || '',
+    className: student.class_name || 'Unassigned',
+    attendance: Math.round(Number(student.attendance || 0)),
+    status: attendanceStatus(Number(student.attendance || 0))
+  })).sort((a, b) => a.className.localeCompare(b.className) || a.name.localeCompare(b.name));
+}
+
+function buildEnrollmentReportRows() {
+  const classAnalytics = window.reportsAnalyticsData?.analytics?.classAnalytics || {};
+  return Object.entries(classAnalytics).map(([className, row]) => ({
+    className,
+    total: Number(row.totalStudents || 0),
+    male: Number(row.maleCount || 0),
+    female: Number(row.femaleCount || 0),
+    avgAttendance: Number(row.averageAttendance || 0),
+    avgPerformance: Number(row.averagePerformance || 0)
+  })).sort((a, b) => a.className.localeCompare(b.className));
 }
 
 function openReportPage(type) {
@@ -2337,18 +2022,18 @@ function reportsModule() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Academic Performance Report</span></div>
       <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
         <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input placeholder="Search by class or subject..." id="academic-search" onkeyup="filterReportTab('academic')"></div>
-        <select id="academic-filter" class="select-sm" onchange="filterReportTab('academic')"><option value="">All Classes</option><option value="JHS 1">JHS 1</option><option value="JHS 2">JHS 2</option><option value="JHS 3">JHS 3</option></select>
+        <select id="academic-filter" class="select-sm" onchange="filterReportTab('academic')"><option value="">All Classes</option>${[...new Set(buildAcademicReportRows().map(r => r.className))].map(c => `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('')}</select>
         <button class="btn btn-primary" onclick="generateReportPDF('Academic')"><i class="fas fa-download"></i> Export PDF</button>
       </div>
       <table class="tbl" id="academic-table">
         <thead><tr><th>Class</th><th>Subject</th><th>Pass Rate</th><th>Avg Score</th><th>Grade A</th><th>Grade B</th><th>Grade C</th></tr></thead>
         <tbody id="academic-tbody">
-          <tr class="academic-row" data-class="JHS 1" data-search="jhs 1 mathematics"><td>JHS 1</td><td>Mathematics</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">92%</span></td><td>78</td><td>18</td><td>22</td><td>10</td></tr>
-          <tr class="academic-row" data-class="JHS 1" data-search="jhs 1 english"><td>JHS 1</td><td>English</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">88%</span></td><td>75</td><td>15</td><td>24</td><td>11</td></tr>
-          <tr class="academic-row" data-class="JHS 2" data-search="jhs 2 mathematics"><td>JHS 2</td><td>Mathematics</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">85%</span></td><td>72</td><td>12</td><td>28</td><td>14</td></tr>
-          <tr class="academic-row" data-class="JHS 2" data-search="jhs 2 science"><td>JHS 2</td><td>Science</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">90%</span></td><td>76</td><td>20</td><td>20</td><td>6</td></tr>
-          <tr class="academic-row" data-class="JHS 3" data-search="jhs 3 mathematics"><td>JHS 3</td><td>Mathematics</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">88%</span></td><td>74</td><td>16</td><td>26</td><td>12</td></tr>
-          <tr class="academic-row" data-class="JHS 3" data-search="jhs 3 english"><td>JHS 3</td><td>English</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">85%</span></td><td>71</td><td>14</td><td>24</td><td>16</td></tr>
+          ${buildAcademicReportRows().map(row => {
+            const passRate = row.count ? Math.round(row.pass / row.count * 100) : 0;
+            const avgScore = row.count ? Math.round(row.totalScore / row.count) : 0;
+            const search = `${row.className} ${row.subject}`.toLowerCase();
+            return `<tr class="academic-row" data-class="${escapeAttr(row.className)}" data-search="${escapeAttr(search)}"><td>${escapeHtml(row.className)}</td><td>${escapeHtml(row.subject)}</td><td>${reportBadge(passRate, 50)}</td><td>${avgScore}</td><td>${row.grades.A}</td><td>${row.grades.B}</td><td>${row.grades.C}</td></tr>`;
+          }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray-400)">No academic scores found in the database</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -2360,18 +2045,12 @@ function reportsModule() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-check-circle"></i> Attendance Summary Report</span></div>
       <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
         <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input placeholder="Search by student name..." id="attendance-search" onkeyup="filterReportTab('attendance')"></div>
-        <select id="attendance-filter" class="select-sm" onchange="filterReportTab('attendance')"><option value="">All Periods</option><option value="First">First Term</option><option value="Second">Second Term</option><option value="Third">Third Term</option></select>
         <button class="btn btn-primary" onclick="generateReportPDF('Attendance')"><i class="fas fa-download"></i> Export PDF</button>
       </div>
       <table class="tbl" id="attendance-table">
         <thead><tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance %</th><th>Status</th></tr></thead>
         <tbody id="attendance-tbody">
-          <tr class="attendance-row" data-student="ama serwaa" data-period="First"><td>Ama Serwaa</td><td>JHS 1</td><td>168</td><td>2</td><td>0</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">98%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Excellent</span></td></tr>
-          <tr class="attendance-row" data-student="kwame mensah" data-period="First"><td>Kwame Mensah</td><td>JHS 1</td><td>165</td><td>4</td><td>1</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">96%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Very Good</span></td></tr>
-          <tr class="attendance-row" data-student="nana yaa" data-period="First"><td>Nana Yaa</td><td>JHS 2</td><td>162</td><td>6</td><td>2</td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">94%</span></td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">Good</span></td></tr>
-          <tr class="attendance-row" data-student="kofi asante" data-period="First"><td>Kofi Asante</td><td>JHS 2</td><td>170</td><td>0</td><td>0</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">98%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Excellent</span></td></tr>
-          <tr class="attendance-row" data-student="afua owusu" data-period="First"><td>Afua Owusu</td><td>JHS 3</td><td>168</td><td>3</td><td>1</td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">97%</span></td><td><span class="badge b-success" style="background:#d1fae5;color:#065f46">Excellent</span></td></tr>
-          <tr class="attendance-row" data-student="yaw boateng" data-period="First"><td>Yaw Boateng</td><td>JHS 3</td><td>165</td><td>5</td><td>2</td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">95%</span></td><td><span class="badge b-warning" style="background:#fef3c7;color:#92400e">Good</span></td></tr>
+          ${buildAttendanceReportRows().map(row => `<tr class="attendance-row" data-student="${escapeAttr(row.name.toLowerCase())}" data-period=""><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.className)}</td><td>Database %</td><td>-</td><td>-</td><td>${reportBadge(row.attendance)}</td><td><span class="badge ${row.attendance >= 75 ? 'b-success' : 'b-warning'}" style="background:${row.attendance >= 75 ? '#d1fae5;color:#065f46' : '#fef3c7;color:#92400e'}">${escapeHtml(row.status)}</span></td></tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray-400)">No student attendance records found in the database</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -2406,16 +2085,14 @@ function reportsModule() {
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-graduation-cap"></i> Enrollment Statistics Report</span></div>
       <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
-        <select id="enrollment-class-filter" class="select-sm" onchange="filterReportTab('enrollment')"><option value="">All Classes</option><option value="JHS 1">JHS 1</option><option value="JHS 2">JHS 2</option><option value="JHS 3">JHS 3</option></select>
+        <select id="enrollment-class-filter" class="select-sm" onchange="filterReportTab('enrollment')"><option value="">All Classes</option>${buildEnrollmentReportRows().map(r => `<option value="${escapeAttr(r.className)}">${escapeHtml(r.className)}</option>`).join('')}</select>
         <select id="enrollment-gender-filter" class="select-sm" onchange="filterReportTab('enrollment')"><option value="">All Genders</option><option value="Male">Male</option><option value="Female">Female</option></select>
         <button class="btn btn-primary" onclick="generateReportPDF('Enrollment')"><i class="fas fa-download"></i> Export PDF</button>
       </div>
       <table class="tbl" id="enrollment-table">
-        <thead><tr><th>Class</th><th>Total</th><th>Male</th><th>Female</th><th>New Students</th><th>Returning</th><th>Avg Age</th></tr></thead>
+        <thead><tr><th>Class</th><th>Total</th><th>Male</th><th>Female</th><th>Avg Attendance</th><th>Avg Performance</th></tr></thead>
         <tbody id="enrollment-tbody">
-          <tr class="enrollment-row" data-class="JHS 1" data-gender=""><td>JHS 1</td><td>140</td><td><span style="color:var(--blue-main);font-weight:600">68</span></td><td><span style="color:var(--purple);font-weight:600">72</span></td><td>28</td><td>112</td><td>13.2</td></tr>
-          <tr class="enrollment-row" data-class="JHS 2" data-gender=""><td>JHS 2</td><td>135</td><td><span style="color:var(--blue-main);font-weight:600">64</span></td><td><span style="color:var(--purple);font-weight:600">71</span></td><td>15</td><td>120</td><td>14.1</td></tr>
-          <tr class="enrollment-row" data-class="JHS 3" data-gender=""><td>JHS 3</td><td>125</td><td><span style="color:var(--blue-main);font-weight:600">61</span></td><td><span style="color:var(--purple);font-weight:600">64</span></td><td>8</td><td>117</td><td>15.3</td></tr>
+          ${buildEnrollmentReportRows().map(row => `<tr class="enrollment-row" data-class="${escapeAttr(row.className)}" data-gender=""><td>${escapeHtml(row.className)}</td><td>${row.total}</td><td><span style="color:var(--blue-main);font-weight:600">${row.male}</span></td><td><span style="color:var(--purple);font-weight:600">${row.female}</span></td><td>${row.avgAttendance}%</td><td>${row.avgPerformance}%</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400)">No enrollment records found in the database</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -2442,7 +2119,7 @@ function filterReportTab(tabType) {
   }
   else if (tabType === 'attendance') {
     const search = document.getElementById('attendance-search').value.toLowerCase();
-    const filter = document.getElementById('attendance-filter').value;
+    const filter = document.getElementById('attendance-filter')?.value || '';
     document.querySelectorAll('.attendance-row').forEach(row => {
       const matches = (!search || row.getAttribute('data-student').includes(search)) && (!filter || row.getAttribute('data-period') === filter);
       row.style.display = matches ? '' : 'none';
@@ -2485,10 +2162,11 @@ function generateReportPDF(reportType) {
   html += '<div class="content">';
 
   if (reportType === 'Academic') {
+    const insights = getReportsDashboardInsights();
     html += '<div class="section"><div class="section-title"><i class="fas fa-chart-bar"></i> Academic Performance Report</div>';
-    html += '<div class="stat"><div class="stat-value">88.7%</div><div class="stat-label">Pass Rate</div></div>';
-    html += '<div class="stat"><div class="stat-value">75.3</div><div class="stat-label">Avg Score</div></div>';
-    html += '<div class="stat"><div class="stat-value">92%</div><div class="stat-label">Top Subject</div></div></div>';
+    html += '<div class="stat"><div class="stat-value">' + insights.passRate + '%</div><div class="stat-label">Pass Rate</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + insights.avgAcademic + '%</div><div class="stat-label">Avg Score</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + buildAcademicReportRows().length + '</div><div class="stat-label">Class Subject Rows</div></div></div>';
     html += '<div class="section"><div class="section-title">Performance by Class & Subject</div><table>';
     html += '<tr><th>Class</th><th>Subject</th><th>Pass Rate</th><th>Avg Score</th><th>Grade A</th><th>Grade B</th></tr>';
     document.querySelectorAll('.academic-row:not([style*="display: none"])').forEach(row => {
@@ -2500,9 +2178,10 @@ function generateReportPDF(reportType) {
     html += '</table></div>';
   }
   else if (reportType === 'Attendance') {
+    const insights = getReportsDashboardInsights();
     html += '<div class="section"><div class="section-title"><i class="fas fa-clipboard-list"></i> Attendance Summary Report</div>';
-    html += '<div class="stat"><div class="stat-value">94.2%</div><div class="stat-label">Avg Attendance</div></div>';
-    html += '<div class="stat"><div class="stat-value">4,856</div><div class="stat-label">Present Days</div></div></div>';
+    html += '<div class="stat"><div class="stat-value">' + insights.avgAttendance + '%</div><div class="stat-label">Avg Attendance</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + buildAttendanceReportRows().length + '</div><div class="stat-label">Students</div></div></div>';
     html += '<div class="section"><div class="section-title">Student Attendance Records</div><table>';
     html += '<tr><th>Student</th><th>Class</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance %</th></tr>';
     document.querySelectorAll('.attendance-row:not([style*="display: none"])').forEach(row => {
@@ -2529,12 +2208,16 @@ function generateReportPDF(reportType) {
     if (!(finance.incomeBreakdown || []).length) html += '<tr><td colspan="3">No income records found</td></tr>';
     html += '</table></div>';
   }  else if (reportType === 'Enrollment') {
+    const enrollmentRows = buildEnrollmentReportRows();
+    const enrollmentTotal = enrollmentRows.reduce((sum, row) => sum + row.total, 0);
+    const maleTotal = enrollmentRows.reduce((sum, row) => sum + row.male, 0);
+    const femaleTotal = enrollmentRows.reduce((sum, row) => sum + row.female, 0);
     html += '<div class="section"><div class="section-title"><i class="fas fa-users"></i> Enrollment Statistics Report</div>';
-    html += '<div class="stat"><div class="stat-value">400</div><div class="stat-label">Total Students</div></div>';
-    html += '<div class="stat"><div class="stat-value">193</div><div class="stat-label">Male</div></div>';
-    html += '<div class="stat"><div class="stat-value">207</div><div class="stat-label">Female</div></div></div>';
+    html += '<div class="stat"><div class="stat-value">' + enrollmentTotal + '</div><div class="stat-label">Total Students</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + maleTotal + '</div><div class="stat-label">Male</div></div>';
+    html += '<div class="stat"><div class="stat-value">' + femaleTotal + '</div><div class="stat-label">Female</div></div></div>';
     html += '<div class="section"><div class="section-title">Enrollment by Class</div><table>';
-    html += '<tr><th>Class</th><th>Total</th><th>Male</th><th>Female</th><th>New</th><th>Returning</th></tr>';
+    html += '<tr><th>Class</th><th>Total</th><th>Male</th><th>Female</th><th>Avg Attendance</th><th>Avg Performance</th></tr>';
     document.querySelectorAll('.enrollment-row:not([style*="display: none"])').forEach(row => {
       const cells = row.querySelectorAll('td');
       html += '<tr>';
@@ -3047,28 +2730,6 @@ function resetNotificationForm() {
   document.getElementById('push-notif').checked = SETTINGS_DATA.notifications.pushNotifications;
   document.getElementById('daily-digest').checked = SETTINGS_DATA.notifications.dailyDigest;
   showToast('Form reset to saved values', 'info');
-}
-
-// ROLES MODULE
-function rolesModule() {
-  const rolesRows = [['Admin', '3', 'Full System Access', 'Admin', 'Active', 'danger'], ['Accountant', '2', 'Financial Modules', 'Accountant', 'Active', 'warning'], ['Teacher', '64', 'Academic Modules', 'Teacher', 'Active', 'info'], ['Student', '842', 'Student View Only', 'Student', 'Active', 'success'], ['Parent', '520', 'Parent View Only', 'Parent', 'Active', 'info'], ['Alumni', '1,240', 'Alumni Portal', 'Alumni', 'Active', 'purple'], ['Visitor', '-', 'Public Pages Only', 'Visitor', 'Active', 'gray']].map(([r, u, a, d, s, c]) => `
-    <tr>
-      <td style="font-weight:700">${r}</td>
-      <td>${u}</td>
-      <td><span class="badge b-${c}">${a}</span></td>
-      <td><span class="badge b-gray">${d}</span></td>
-      <td><span class="badge b-success">${s}</span></td>
-      <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="alert('Editing role')">Edit</button><button class="btn btn-primary btn-xs" onclick="alert('Managing permissions')">Perms</button></div></td>
-    </tr>`).join('');
-
-  const permissionsRows = ['Students', 'Teachers', 'Classes', 'Fees', 'Reports', 'Settings', 'Users', 'Notices', 'Events'].map(m => `
-    <tr>
-      <td style="font-weight:600">${m}</td>
-      ${[true, true, true, m !== 'Settings' && m !== 'Reports'].map(p => `<td style="text-align:center;font-size:16px;color:${p ? 'var(--success)' : 'var(--danger)'}">${p ? '?' : '?'}</td>`).join('')}
-    </tr>`).join('');
-
-  return hdr('Roles & Permissions', 'Manage user roles and access control', 'Roles') +
-    renderPageTemplate('pages/admin/roles/index.html', { rolesRows, permissionsRows });
 }
 
 // USERS MODULE
@@ -4110,14 +3771,8 @@ function showConnectModal(alumniId) {
             </div>
           </div>
           
-          <div style="background:var(--gray-50);padding:15px;border-radius:8px;margin-bottom:20px">
-            <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:12px">Send Message to Alumni</div>
-            <textarea id="alumni-message" placeholder="Type your message..." style="width:100%;min-height:100px;padding:10px;border:1.5px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;font-size:12px;resize:vertical"></textarea>
-          </div>
-          
           <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" style="flex:1" onclick="sendMessageToAlumni('${alumniId}')"><i class="fas fa-paper-plane"></i> Send Message</button>
-            <button class="btn btn-secondary" onclick="document.querySelector('.modal-overlay')?.remove()">Cancel</button>
+            <button class="btn btn-secondary" style="flex:1" onclick="document.querySelector('.modal-overlay')?.remove()">Close</button>
           </div>
         </div>
       </div>
@@ -4128,169 +3783,6 @@ function showConnectModal(alumniId) {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-function sendMessageToAlumni(alumniId) {
-  const alumni = ALUMNI_DATA[alumniId];
-  const message = document.getElementById('alumni-message').value;
-
-  if (!message.trim()) {
-    showToast('Please type a message', 'error');
-    return;
-  }
-
-  showToast('Message sent to ' + alumni.name + '!', 'success');
-
-  // Store message in messaging system (would connect to backend in real app)
-  const msgId = 'MSG' + Date.now();
-  const timestamp = new Date().toLocaleString();
-
-  console.log('Message sent to:', alumni.name);
-  console.log('Message:', message);
-  console.log('Time:', timestamp);
-
-  document.querySelector('.modal-overlay')?.remove();
-}
-
-// VISITOR MANAGEMENT MODULE
-// BACKUP MODULE
-// BACKUPS DATA
-const BACKUPS_DATA = [
-  { date: 'Mar 17, 2025 2:00 AM', size: '2.4 GB', type: 'Auto', status: 'Success', id: 'BK001' },
-  { date: 'Mar 16, 2025 2:00 AM', size: '2.3 GB', type: 'Auto', status: 'Success', id: 'BK002' },
-  { date: 'Mar 15, 2025 2:00 AM', size: '2.3 GB', type: 'Manual', status: 'Success', id: 'BK003' },
-  { date: 'Mar 14, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK004' },
-  { date: 'Mar 13, 2025 2:00 AM', size: '2.2 GB', type: 'Auto', status: 'Success', id: 'BK005' },
-  { date: 'Mar 12, 2025 2:00 AM', size: '2.1 GB', type: 'Auto', status: 'Success', id: 'BK006' }
-];
-
-const SYSTEM_LOGS = [
-  { level: 'INFO', message: 'User admin logged in', time: '2025-03-17 08:00:12', type: 'login' },
-  { level: 'INFO', message: 'Student enrollment: Ama Serwaa', time: '2025-03-17 08:05:33', type: 'enrollment' },
-  { level: 'WARNING', message: 'Failed login attempt', time: '2025-03-17 08:10:45', type: 'security' },
-  { level: 'INFO', message: 'Fee payment recorded - GHS 5,000', time: '2025-03-17 08:30:12', type: 'payment' },
-  { level: 'INFO', message: 'System settings reviewed', time: '2025-03-17 09:00:00', type: 'admin' },
-  { level: 'ERROR', message: 'Backup storage 80% full', time: '2025-03-17 09:15:22', type: 'system' },
-  { level: 'INFO', message: 'Timetable updated for Form 3', time: '2025-03-17 10:00:00', type: 'academic' },
-  { level: 'INFO', message: 'Academic Report generated', time: '2025-03-17 10:30:00', type: 'report' },
-  { level: 'WARNING', message: 'Database query slow - 5.2s', time: '2025-03-17 11:00:00', type: 'performance' },
-  { level: 'INFO', message: 'User Teacher logged in', time: '2025-03-17 11:15:00', type: 'login' }
-];
-
-function backupModule() {
-  const latestBackup = BACKUPS_DATA[0] || { date: 'Never', size: '0 MB' };
-  const backupRows = BACKUPS_DATA.map(b => `
-    <tr class="backup-row" data-date="${b.date.toLowerCase()}" data-size="${b.size.toLowerCase()}">
-      <td>${b.date}</td>
-      <td>${b.size}</td>
-      <td><span class="badge ${b.type === 'Auto' ? 'b-info' : 'b-warning'}">${b.type}</span></td>
-      <td><span class="badge b-success">${b.status}</span></td>
-      <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-xs" onclick="downloadBackup('${b.id}')"><i class="fas fa-download"></i> Download</button></div></td>
-    </tr>`).join('');
-  const systemLogRows = SYSTEM_LOGS.map((log) => {
-    const color = log.level === 'INFO' ? 'b-info' : (log.level === 'WARNING' ? 'b-warning' : 'b-danger');
-    return `<div class="system-log" data-level="${log.level}" data-type="${log.type}" data-message="${log.message.toLowerCase()}" style="display:flex;gap:10px;padding:10px;border-bottom:1px solid var(--gray-100);font-size:11px;align-items:flex-start">
-      <span class="badge ${color}" style="font-size:9px;height:fit-content;white-space:nowrap">${log.level}</span>
-      <div style="flex:1">
-        <div style="font-weight:600;color:var(--gray-700);margin-bottom:4px">${log.message}</div>
-        <div style="color:var(--gray-400)">${log.time}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  return hdr('Backup & System Logs', 'Data backup management and activity logs', 'Backup & Logs') +
-    renderPageTemplate('pages/admin/backup/index.html', {
-      lastBackupDate: latestBackup.date,
-      lastBackupSize: latestBackup.size,
-      backupRows,
-      systemLogRows
-    });
-}
-
-// BACKUP FUNCTIONS
-function performBackup() {
-  showToast('Starting backup process...', 'info');
-  const loader = setTimeout(() => {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: '2-digit' }) + ', ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-    BACKUPS_DATA.unshift({
-      date: dateStr + ' AM',
-      size: Math.random() > 0.5 ? '2.5 GB' : '2.4 GB',
-      type: 'Manual',
-      status: 'Success',
-      id: 'BK' + String(Math.random()).slice(2, 5)
-    });
-
-    showToast('<i class="fas fa-check-circle"></i> Backup completed successfully!', 'success');
-    navTo('backup');
-  }, 2000);
-}
-
-function downloadLatestBackup() {
-  const latest = BACKUPS_DATA[0];
-  if (!latest) return;
-  downloadBackup(latest.id);
-}
-
-function downloadBackup(backupId) {
-  const backup = BACKUPS_DATA.find(b => b.id === backupId);
-  if (!backup) return;
-
-  showToast('Downloading backup: ' + backup.date, 'info');
-  setTimeout(() => {
-    const link = document.createElement('a');
-    link.href = 'data:application/zip;base64,UEsDBAoAAAAAAM8EwFYAAAAAAAAAAAAAAAAJAAAAZGF0YS9QSwECLQAKAAAAAA==';
-    link.download = 'backup_' + backup.id + '.zip';
-    link.click();
-    showToast('Backup downloaded successfully!', 'success');
-  }, 1000);
-}
-
-function syncToCloud() {
-  showToast('Syncing to cloud...', 'info');
-  setTimeout(() => {
-    showToast('? Cloud sync completed! All backups synced to cloud storage.', 'success');
-  }, 2000);
-}
-
-function filterBackups() {
-  const search = document.getElementById('backup-search').value.toLowerCase();
-  document.querySelectorAll('.backup-row').forEach(row => {
-    const date = row.getAttribute('data-date');
-    const size = row.getAttribute('data-size');
-    const matches = date.includes(search) || size.includes(search);
-    row.style.display = matches ? '' : 'none';
-  });
-}
-
-function filterLogs() {
-  const search = document.getElementById('logs-search').value.toLowerCase();
-  const levelFilter = document.getElementById('logs-filter').value;
-  const typeFilter = document.getElementById('logs-type-filter').value;
-
-  document.querySelectorAll('.system-log').forEach(log => {
-    const level = log.getAttribute('data-level');
-    const type = log.getAttribute('data-type');
-    const message = log.getAttribute('data-message');
-
-    const matchesSearch = message.includes(search);
-    const matchesLevel = !levelFilter || level === levelFilter;
-    const matchesType = !typeFilter || type === typeFilter;
-
-    log.style.display = (matchesSearch && matchesLevel && matchesType) ? '' : 'none';
-  });
-}
-
-function exportLogs() {
-  const logs = SYSTEM_LOGS.map(l => `[${l.time}] ${l.level}: ${l.message}`).join('\n');
-  const element = document.createElement('a');
-  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(logs));
-  element.setAttribute('download', 'system_logs_' + new Date().toISOString().split('T')[0] + '.txt');
-  element.style.display = 'none';
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
-  showToast('System logs exported successfully!', 'success');
-}
 
 // PROFILE MODULE
 function profileModule() {

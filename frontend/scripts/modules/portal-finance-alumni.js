@@ -536,7 +536,6 @@ function exportPaymentsCSV(){
 // PARENT DASHBOARD HELPERS
 // -----------------------------------
 const PARENT_CHILDREN_KEY = 'gr_parent_children';
-const PARENT_MESSAGES_KEY = 'gr_parent_messages';
 const PARENT_ASSIGNMENTS_KEY = 'gr_parent_assignments';
 
 function userScopedKey(baseKey) {
@@ -589,48 +588,6 @@ function getParentChildren(){
 }
 
 function saveParentChildren(list){ appMemoryStorage.setItem(userScopedKey(PARENT_CHILDREN_KEY), JSON.stringify(list)); }
-
-function getParentMessages(){
-  try{
-    const key = userScopedKey(PARENT_MESSAGES_KEY);
-    const raw = appMemoryStorage.getItem(key);
-    if(raw) return JSON.parse(raw);
-    const children = getParentChildren();
-    const sample = [
-      {from:'Mr. Amponsah', text:(children[0]?.name || 'Your child') + ' has shown great improvement in Mathematics this term. Excellent student!', time:'9:00 AM', fromParent:false},
-      {from:'Parent', text:'Thank you for the update. We will keep encouraging her!', time:'9:15 AM', fromParent:true}
-    ];
-    appMemoryStorage.setItem(key, JSON.stringify(sample));
-    return sample;
-  }catch(e){return []}
-}
-
-function saveParentMessages(list){ appMemoryStorage.setItem(userScopedKey(PARENT_MESSAGES_KEY), JSON.stringify(list)); }
-
-function sendParentMessage(){
-  const input = document.getElementById('parent-msg-input');
-  if(!input || !input.value.trim()) return;
-  const self = getChatSelf();
-  const contacts = getAvailableChatContacts();
-  const recipient = contacts[0]?.name || 'Admin Office';
-  const messages = getParentMessages();
-  messages.push({from:self.name || 'Parent', text:input.value, time:new Date().toLocaleTimeString().slice(0,5), fromParent:true});
-  saveParentMessages(messages);
-  try{ addMessage({ sender: self.name, senderRole: self.role, recipient, recipientRole: getChatContactMeta(recipient).role, subject: '', text: input.value }); }catch(e){}
-  input.value = '';
-  renderMain();
-  showToast('<i class="fas fa-paper-plane"></i> Message sent', 'success');
-}
-
-function sendTeacherChatButton() {
-  const self = getChatSelf();
-  const input = document.getElementById('teacher-chat-input') || document.querySelector('.chat-inp');
-  const text = input?.value.trim();
-  if (!text) return showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
-  const recipient = currentChat || 'Admin Office';
-  sendChatMessage(self.name, recipient, text);
-  if (input) input.value = '';
-}
 
 function getParentAssignments(){
   try{
@@ -743,51 +700,6 @@ function viewPaymentHistory(studentId){
     </div>
   `;
   window.scrollTo(0, 0);
-}
-
-function openParentMessenger(){
-  const childClasses = getParentChildren().map(child => child.class);
-  const visibleTeacherIds = new Set();
-  classesData.forEach(c => {
-    if (childClasses.includes(c.name) && c.teacher_id) visibleTeacherIds.add(c.teacher_id);
-  });
-  subjectsData.forEach(s => {
-    childClasses.forEach(className => {
-      if (subjectAppliesToClass(s, className) && s.teacher_id) visibleTeacherIds.add(s.teacher_id);
-    });
-  });
-  const teacherOptions = teachersData
-    .filter(t => visibleTeacherIds.has(t.teacher_id))
-    .map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)} (${escapeHtml(t.subject)})</option>`)
-    .join('');
-  const el = document.getElementById('main-content');
-  if (!el) return;
-  currentMod = 'dashboard';
-  el.innerHTML = hdr('Send Message to Teacher', 'Contact a teacher connected to your child', 'Dashboard') + `
-    <div class="card" style="max-width:720px">
-      <div class="f-field"><label>Select Teacher</label><select id="msg-teacher-select" style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%">
-        <option value="">Choose a teacher...</option>
-        ${teacherOptions}
-      </select></div>
-      <div class="f-field"><label>Message</label><textarea id="msg-text-area" placeholder="Write your message here..." style="padding:8px;border:1px solid var(--gray-200);border-radius:6px;width:100%;min-height:120px;font-family:Arial"></textarea></div>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn btn-primary" style="flex:1" onclick="sendParentTeacherMessage()">Send</button>
-        <button class="btn btn-secondary" style="flex:1" onclick="navTo('dashboard')">Cancel</button>
-      </div>
-    </div>
-  `;
-  window.scrollTo(0, 0);
-}
-
-function sendParentTeacherMessage(){
-  const teacher = document.getElementById('msg-teacher-select').value;
-  const text = document.getElementById('msg-text-area').value;
-  if(!teacher || !text.trim()) { showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error'); return; }
-  const messages = getParentMessages();
-  messages.push({from:'Parent', text:text.trim(), time:new Date().toLocaleTimeString().slice(0,5), fromParent:true});
-  saveParentMessages(messages);
-  navTo('dashboard');
-  showToast(`<i class="fas fa-paper-plane"></i> Message sent to ${teacher}`, 'success');
 }
 
 // -----------------------------------

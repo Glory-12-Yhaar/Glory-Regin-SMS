@@ -193,72 +193,6 @@ function showNewsArticle(title, content, article = {}) {
   openModal(modal);
 }
 
-// -----------------------------------
-// MESSAGING & CHAT DATA STORAGE
-// -----------------------------------
-let currentChat = null;  // Track current conversation
-const MESSAGES_KEY = 'gr_all_messages';
-let allMessages = [];
-
-function saveAllMessages() {
-  try { appMemoryStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages)); } catch(e){}
-}
-
-function addMessage({ sender, senderRole, recipient, recipientRole, subject='', text='' }){
-  const now = new Date();
-  const id = (allMessages.length ? Math.max(...allMessages.map(m=>m.id||0)) : 0) + 1;
-  const msg = {
-    id,
-    sender,
-    senderRole,
-    recipient,
-    recipientRole: String(recipientRole || '').toLowerCase(),
-    subject,
-    text,
-    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    date: now.toLocaleDateString(),
-    read: false
-  };
-  allMessages.push(msg);
-  saveAllMessages();
-  notifyMessageRecipient(msg);
-  return msg;
-}
-
-// Load messages from storage or fall back to sample data
-try{
-  const raw = appMemoryStorage.getItem(MESSAGES_KEY);
-  if(raw) allMessages = JSON.parse(raw);
-}catch(e){ allMessages = []; }
-if(!allMessages || allMessages.length === 0){
-  allMessages = [
-    { id: 1, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Ama, great work on your last test! You scored 88/100.', time: '9:00 AM', date: 'Mar 20' },
-    { id: 2, sender: 'Ama Osei', senderRole: 'student', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Test Score', text: 'Thank you sir! I will work harder for the next exam.', time: '9:15 AM', date: 'Mar 20' },
-    { id: 3, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Ama Osei', recipientRole: 'student', subject: 'Test Score', text: 'That\'s the spirit! Focus on Chapter 6 for the next exam.', time: '9:17 AM', date: 'Mar 20' },
-    { id: 4, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Hello Sir, how is Ama doing in your class?', time: '2:30 PM', date: 'Mar 19' },
-    { id: 5, sender: 'Mr. Amponsah', senderRole: 'teacher', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Progress Update', text: 'She is doing very well! Her test scores are excellent.', time: '3:45 PM', date: 'Mar 19' },
-    { id: 6, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Mr. Amponsah', recipientRole: 'teacher', subject: 'Progress Update', text: 'Thank you for the update! We really appreciate your support.', time: '4:00 PM', date: 'Mar 19' },
-    { id: 7, sender: 'Parent Serwaa', senderRole: 'parent', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Fee Payment', text: 'Good morning, I want to inquire about the school fees payment.', time: '8:15 AM', date: 'Mar 20' },
-    { id: 8, sender: 'Admin Office', senderRole: 'admin', recipient: 'Parent Serwaa', recipientRole: 'parent', subject: 'Fee Payment', text: 'The fees are due by the end of this month. Please visit the office with your receipt.', time: '9:30 AM', date: 'Mar 20' },
-    { id: 9, sender: 'Mrs. Asante', senderRole: 'teacher', recipient: 'Admin Office', recipientRole: 'admin', subject: 'Exam Schedule', text: 'When will the final exams start?', time: '10:00 AM', date: 'Mar 20' },
-    { id: 10, sender: 'Admin Office', senderRole: 'admin', recipient: 'Mrs. Asante', recipientRole: 'teacher', subject: 'Exam Schedule', text: 'Exams start on April 5th. Detailed schedule will be shared by Friday.', time: '10:45 AM', date: 'Mar 20' }
-  ];
-  saveAllMessages();
-}
-allMessages = allMessages.map(m => ({
-  ...m,
-  recipientRole: String(m.recipientRole || '').toLowerCase(),
-  senderRole: String(m.senderRole || '').toLowerCase(),
-  read: typeof m.read === 'boolean' ? m.read : true
-}));
-saveAllMessages();
-
-function getUnreadCount(userName, otherName){
-  return allMessages.filter(m=>m.sender===otherName && m.recipient===userName && !m.read).length;
-}
-
-let messageChats = {};  // Dynamic - will be populated based on current user conversations
-
 // CONTACT MESSAGES STORAGE
 let contactMessages = [];
 
@@ -861,9 +795,9 @@ function viewGeneralPaymentHistory() {
   showToast('<i class="fas fa-history"></i> Opening full payment history...', 'info');
 }
 
-function openMessagingFromTeacherShortcut(teacherId) {
-  navTo('messaging');
-  showToast('<i class="fas fa-envelope"></i> Opening messaging interface...', 'info');
+function openTeacherShortcut(teacherId) {
+  navTo('teachers');
+  showToast('<i class="fas fa-chalkboard-teacher"></i> Opening teacher details...', 'info');
 }
 
 function viewAssignmentDetails(assignmentId) {
@@ -1164,20 +1098,6 @@ function createNewAssignment() {
   saveAssignments(assignments);
   showToast(`<i class="fas fa-check-circle"></i> Assignment "${title}" created for ${className}!`, 'success');
   navTo('dashboard');
-}
-
-function sendLegacyChatMessage() {
-  const input = document.querySelector('.chat-inp');
-  const message = input?.value.trim();
-
-  if (!message) {
-    showToast('<i class="fas fa-times-circle"></i> Please type a message', 'error');
-    return;
-  }
-
-  showToast('<i class="fas fa-check-circle"></i> Message sent!', 'success');
-  input.value = '';
-  renderMain();
 }
 
 // -----------------------------------
@@ -1863,8 +1783,6 @@ function updatePassword() {
   showToast('<i class="fas fa-check-circle"></i> Password updated!', 'success');
 }
 
-// Send chat message
-
 // Create/Edit record
 function createRecord(type) {
   const title = type.charAt(0).toUpperCase() + type.slice(1);
@@ -2104,11 +2022,6 @@ function initButtonHandlers() {
     }
   });
 
-  // Chat send buttons
-  document.querySelectorAll('.chat-send').forEach(btn => {
-    btn.onclick = function () { sendMessage(this); };
-  });
-
   // Generic save buttons
   document.querySelectorAll('.btn').forEach(btn => {
     const text = btn.innerHTML;
@@ -2161,7 +2074,7 @@ function initButtonHandlers() {
         btn.onclick = function () { deleteRecord(1, 'Record'); };
       }
       if (text.includes('Message')) {
-        btn.onclick = function () { navTo('messaging'); };
+        btn.onclick = function () { navTo('contact'); };
       }
       if (text.includes('Grade')) {
         btn.onclick = function () { navTo('exams'); };

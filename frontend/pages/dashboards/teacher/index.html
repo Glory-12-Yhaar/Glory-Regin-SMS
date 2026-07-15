@@ -38,13 +38,7 @@
     </div>
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-comments"></i> Messages</span><span class="card-act" onclick="navTo('messaging')">Open Chat</span></div>
-    <div class="chat-msgs">
-      {{messageRows}}
-    </div>
-    <div class="chat-input-row">
-      <textarea id="teacher-chat-input" class="chat-inp" placeholder="Type your message..." onkeydown="handleChatTextareaKey(event, 'Mr. Amponsah', 'Admin Office', 'teacher-chat-input')"></textarea>
-      <button class="chat-send" onclick="sendTeacherChatButton()"><i class="fa-regular fa-paper-plane"></i></button>
-    </div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Notices</span><span class="card-act" onclick="navTo('notices')">Open Notices</span></div>
+    {{noticeRows}}
   </div>
 </div>
