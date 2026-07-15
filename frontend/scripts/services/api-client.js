@@ -633,9 +633,9 @@ async function syncAllDataFromBackend() {
                 id: parseInt(a.id, 10),
                 title: a.title,
                 icon: a.icon || '📰',
-                date: a.publish_date,
+                date: a.date || a.publish_date || '',
                 category: a.category,
-                desc: a.summary || '',
+                desc: a.desc || a.summary || '',
                 content: a.content || '',
                 status: a.status || 'Published'
             })));
@@ -1042,7 +1042,7 @@ apiOverrides.publishNews = async function() {
         return;
     }
 
-    const data = { title, icon, publish_date: date, category, summary: desc, content, status };
+    const data = { title, icon, date, category, desc, content, status };
     const res = await API.news.create(data);
     if (res && res.success) {
         showToast('<i class="fas fa-check-circle"></i> Article published successfully!', 'success');
@@ -1068,7 +1068,7 @@ apiOverrides.saveArticleChanges = async function(articleId) {
         return;
     }
 
-    const data = { title, icon, publish_date: date, category, summary: desc, content, status };
+    const data = { title, icon, date, category, desc, content, status };
     const res = await API.news.update(articleId, data);
     if (res && res.success) {
         showToast('<i class="fas fa-check-circle"></i> Article updated successfully!', 'success');
@@ -1795,3 +1795,21 @@ apiOverrides.viewArchivedTeachers = async function() {
 
 // Run overrides immediately as script is loaded after script.js
 window.applyApiClientOverrides();
+
+if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles)) {
+    API.news.list().then(res => {
+        if (res && res.success && Array.isArray(res.data)) {
+            window.newsArticles.splice(0, window.newsArticles.length, ...res.data.map(a => ({
+                id: parseInt(a.id, 10),
+                title: a.title || '',
+                icon: a.icon || '<i class="fas fa-newspaper"></i>',
+                date: a.date || '',
+                category: a.category || 'General',
+                desc: a.desc || '',
+                content: a.content || '',
+                status: a.status || 'Published'
+            })));
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public news:', e));
+}

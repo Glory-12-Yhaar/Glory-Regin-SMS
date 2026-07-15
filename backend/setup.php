@@ -543,6 +543,7 @@ CREATE TABLE news_articles (
   category VARCHAR(120) DEFAULT NULL,
   date DATE DEFAULT NULL,
   `desc` TEXT DEFAULT NULL,
+  content LONGTEXT DEFAULT NULL,
   status ENUM('Published','Draft') NOT NULL DEFAULT 'Published',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -771,8 +772,8 @@ SQL,
         ['Academic Excellence Starts Here','A caring school community built for curiosity, discipline, and confidence.','assets/images/student.jpeg','Active',2],
         ['Dedicated Teachers, Strong Values','Learning experiences shaped by committed educators and family partnership.','assets/images/teacher.jpeg','Active',3],
     ]);
-    insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,status) VALUES (?,?,?,?,?,?)", [
-        ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','Published'],
+    insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,content,status) VALUES (?,?,?,?,?,?,?)", [
+        ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','The Glory Reign Preparatory School digital campus portal now connects key academic, finance, communication, and public website records directly to the school database. News and blog updates published here are shared with the public website while drafts remain available only to administrators.','Published'],
     ]);
     insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?)", [
         ['2025','Class of 2025 Graduation','#1e3a8a','Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],

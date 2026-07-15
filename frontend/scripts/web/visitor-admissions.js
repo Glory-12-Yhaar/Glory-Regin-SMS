@@ -2,6 +2,8 @@
 // -----------------------------------
 // VISITOR HOME
 // -----------------------------------
+let publicNewsSyncStarted = false;
+
 function getHeroSlides() {
   return Object.values(window.cachedHeroSlides || {})
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || Number(b.id || 0) - Number(a.id || 0));
@@ -208,6 +210,7 @@ function startHeroCarousel() {
 }
 
 function visitorHome() {
+  if (!Array.isArray(window.newsArticles)) window.newsArticles = [];
   if ((!window.cachedHeroSlides || !Object.values(window.cachedHeroSlides).length) && typeof API !== 'undefined' && API.heroSlides) {
     API.heroSlides.list().then(res => {
       if (res && res.success && Array.isArray(res.data)) {
@@ -235,6 +238,26 @@ function visitorHome() {
         if (currentRole === 'Visitor' && typeof renderMain === 'function') renderMain();
       }
     }).catch(() => {});
+  }
+  if (!publicNewsSyncStarted && (!window.newsArticles || !window.newsArticles.length) && typeof API !== 'undefined' && API.news) {
+    publicNewsSyncStarted = true;
+    API.news.list().then(res => {
+      if (res && res.success && Array.isArray(res.data) && Array.isArray(window.newsArticles)) {
+        window.newsArticles.splice(0, window.newsArticles.length, ...res.data.map(article => ({
+          id: parseInt(article.id, 10),
+          title: article.title || '',
+          icon: article.icon || '<i class="fas fa-newspaper"></i>',
+          date: article.date || '',
+          category: article.category || 'General',
+          desc: article.desc || '',
+          content: article.content || '',
+          status: article.status || 'Published'
+        })));
+        if (currentRole === 'Visitor' && typeof renderMain === 'function') renderMain();
+      }
+    }).catch(() => {
+      publicNewsSyncStarted = false;
+    });
   }
   setTimeout(startHeroCarousel, 0);
   const sourceArticles = (typeof newsArticles === 'undefined') ? [] : newsArticles;
@@ -341,7 +364,7 @@ function visitorHome() {
   </section>
   <section id="news-section" class="public-section">
     <div class="section-title"><h2>News</h2><p>Latest stories from Glory Reign Preparatory School.</p></div>
-    <div class="g3">${publishedArticles.map(article => `<div class="card"><div class="news-card-icon">${article.icon}</div><h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${escapeHtml(article.title)}</h3><p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:10px">${escapeHtml(article.desc)}</p><button class="btn btn-secondary btn-xs" onclick="showNewsArticleById(${article.id})">Read More</button></div>`).join('')}</div>
+    <div class="g3">${publishedArticles.map(article => `<div class="card"><div class="news-card-icon">${article.icon}</div><h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:8px">${escapeHtml(article.title)}</h3><p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:10px">${escapeHtml(article.desc)}</p><button class="btn btn-secondary btn-xs" onclick="showNewsArticleById(${article.id})">Read More</button></div>`).join('') || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No published news articles yet.</div>'}</div>
   </section>
   <section id="contact-section" class="public-section">
     <div class="section-title"><h2>Contact</h2><p>Reach the school office for admissions, visits and general enquiries.</p></div>

@@ -479,14 +479,18 @@ CREATE TABLE IF NOT EXISTS `hero_slides` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `news_articles` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `icon` VARCHAR(10),
+  `icon` VARCHAR(100),
   `title` VARCHAR(255) NOT NULL,
-  `category` VARCHAR(100),
+  `category` VARCHAR(120),
   `date` DATE,
   `desc` TEXT,
-  `status` ENUM('Published', 'Draft') DEFAULT 'Published',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+  `content` LONGTEXT,
+  `status` ENUM('Published', 'Draft') NOT NULL DEFAULT 'Published',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_news_date` (`date`),
+  INDEX `idx_news_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- YEARBOOKS

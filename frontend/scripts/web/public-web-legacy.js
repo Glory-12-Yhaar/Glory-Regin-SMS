@@ -122,6 +122,26 @@ async function submitVisitorAdmission() {
 }
 
 function visitorNews() {
+  if (!newsArticles.length && typeof API !== 'undefined' && API.news && !window.publicNewsListSyncStarted) {
+    window.publicNewsListSyncStarted = true;
+    API.news.list().then(res => {
+      if (res && res.success && Array.isArray(res.data)) {
+        newsArticles.splice(0, newsArticles.length, ...res.data.map(article => ({
+          id: parseInt(article.id, 10),
+          title: article.title || '',
+          icon: article.icon || '<i class="fas fa-newspaper"></i>',
+          date: article.date || '',
+          category: article.category || 'General',
+          desc: article.desc || '',
+          content: article.content || '',
+          status: article.status || 'Published'
+        })));
+        if (currentRole === 'Visitor' && currentMod === 'news' && typeof renderMain === 'function') renderMain();
+      }
+    }).catch(() => {
+      window.publicNewsListSyncStarted = false;
+    });
+  }
   const articlesHTML = newsArticles
     .filter(article => article.status === 'Published')
     .map(article => `
@@ -137,7 +157,7 @@ function visitorNews() {
 
   return `${hdr('News & Blog', 'Latest news, events and stories from Glory Reign Preparatory School', 'News')}
   <div class="g3">
-    ${articlesHTML}
+    ${articlesHTML || '<div class="card" style="text-align:center;color:var(--gray-400);padding:24px">No published news articles yet.</div>'}
   </div>`;
 }
 
@@ -243,16 +263,9 @@ let messageChats = {};  // Dynamic - will be populated based on current user con
 let contactMessages = [];
 
 
-// NEWS & BLOG ARTICLES STORAGE
-
-var newsArticles = [
-  { id: 1, icon: '<i class="fas fa-trophy"></i>', title: 'Students Win National Science Competition', date: 'Mar 15, 2025', desc: 'Our students achieved outstanding results at the national competition.', content: 'Our brilliant students from Forms 2 and 3 participated in the National Science Competition held in Accra last week. They demonstrated exceptional knowledge and critical thinking skills, winning three awards across different categories. Congratulations to the Science Department and all participating students!', category: 'Student Achievement', status: 'Published' },
-  { id: 2, icon: '<i class="fas fa-book"></i>', title: 'New Library Wing Inaugurated', date: 'Mar 10, 2025', desc: 'State-of-the-art library facility now open to all students.', content: 'Our brand new library wing, featuring over 5,000 new volumes and modern study spaces, was officially inaugurated by the Minister of Education. The facility includes computer labs, reading rooms, and a digital archive. Students now have access to one of the most comprehensive library systems in the region.', category: 'Infrastructure', status: 'Published' },
-  { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Top BECE Results 2024', date: 'Feb 28, 2025', desc: 'Excellence Academy secures best results in the region.', content: 'We are proud to announce that our students achieved the highest BECE pass rate in the region for 2024. With a 98% pass rate and over 60 distinctions, our students have set a new benchmark for academic excellence. Special recognition goes to the teaching staff and parents for their unwavering support.', category: 'Academic', status: 'Published' },
-  { id: 4, icon: '<i class="fas fa-leaf"></i>', title: 'Tree Planting Initiative', date: 'Feb 20, 2025', desc: 'School launches environmental conservation program.', content: 'In celebration of Environment Day, Glory Reign Preparatory School launched a tree-planting initiative with students and staff planting over 500 trees around the campus. This initiative is part of our commitment to environmental sustainability and creating a greener campus for future generations.', category: 'Community', status: 'Published' },
-  { id: 5, icon: '<i class="fas fa-theater-masks"></i>', title: 'Annual Cultural Day Celebrated', date: 'Feb 14, 2025', desc: 'Students showcase diverse talents at packed auditorium.', content: 'The annual cultural day was a spectacular showcase of the diverse talents within our school community. Students performed traditional dances, musical pieces, and theatrical performances representing different cultures. Parents and staff filled the auditorium to capacity, celebrating our rich cultural heritage.', category: 'Events', status: 'Published' },
-  { id: 6, icon: '<i class="fas fa-laptop"></i>', title: 'ICT Lab Upgrade Complete', date: 'Jan 30, 2025', desc: 'New computers and software installed in Information Technology lab.', content: 'Our Information Technology laboratory has been upgraded with 40 new computers, high-speed internet connectivity, and the latest software packages. This upgrade will enable students to gain practical skills in coding, graphic design, and digital media production. The lab is now equipped to meet international standards.', category: 'Infrastructure', status: 'Published' }
-];
+// NEWS & BLOG ARTICLES CACHE
+var newsArticles = window.newsArticles || [];
+window.newsArticles = newsArticles;
 
 // NEWS MANAGEMENT MODULE
 function newsModule() {
@@ -279,7 +292,7 @@ function newsModule() {
   return hdr('News & Blog Management', 'Create, edit and publish school news and blog posts', 'News') + `
   <div class="g21">
     <div>
-      <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-newspaper"></i> Published Articles (${newsArticles.length})</div>
+      <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:16px"><i class="fas fa-newspaper"></i> Articles (${newsArticles.length})</div>
       ${articlesHTML}
     </div>
     <div class="card" style="height:fit-content;position:sticky;top:100px">
@@ -332,7 +345,7 @@ function newsModule() {
   </div>`;
 }
 
-function publishNews() {
+async function publishNews() {
   const title = document.getElementById('blogTitle')?.value?.trim() || '';
   const icon = document.getElementById('blogIcon')?.value?.trim() || '';
   const date = document.getElementById('blogDate')?.value || '';
@@ -351,21 +364,20 @@ function publishNews() {
     return;
   }
 
-  const newArticle = {
-    id: Math.max(...newsArticles.map(a => a.id), 0) + 1,
-    icon: icon,
-    title: title,
-    date: date,
-    desc: desc,
-    content: content,
-    category: category,
-    status: status
-  };
+  if (typeof API === 'undefined' || !API.news) {
+    showToast('News backend is not available. Article was not saved.', 'error');
+    return;
+  }
 
-  newsArticles.unshift(newArticle);
-  showToast('<i class="fas fa-check-circle"></i> Article published successfully!', 'success');
-  clearNewsForm();
-  renderMain('news');
+  const res = await API.news.create({ title, icon, date, category, desc, content, status });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Article published successfully!', 'success');
+    clearNewsForm();
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    renderMain('news');
+  } else {
+    showToast(res?.message || 'Failed to publish article', 'error');
+  }
 }
 
 function clearNewsForm() {
@@ -440,10 +452,7 @@ function editArticleModal(articleId) {
   openModal(modal);
 }
 
-function saveArticleChanges(articleId) {
-  const article = newsArticles.find(a => a.id === articleId);
-  if (!article) return;
-
+async function saveArticleChanges(articleId) {
   const title = document.getElementById('editTitle')?.value?.trim() || '';
   const icon = document.getElementById('editIcon')?.value?.trim() || '';
   const date = document.getElementById('editDate')?.value || '';
@@ -457,38 +466,65 @@ function saveArticleChanges(articleId) {
     return;
   }
 
-  article.title = title;
-  article.icon = icon;
-  article.date = date;
-  article.category = category;
-  article.desc = desc;
-  article.content = content;
-  article.status = status;
+  if (typeof API === 'undefined' || !API.news) {
+    showToast('News backend is not available. Article was not saved.', 'error');
+    return;
+  }
 
-  showToast('<i class="fas fa-check-circle"></i> Article updated successfully!', 'success');
-  closeModal();
-  renderMain('news');
-}
-
-function deleteArticle(articleId) {
-  if (!confirm('<i class="fas fa-trash"></i> Are you sure you want to delete this article? This action cannot be undone.')) return;
-
-  const index = newsArticles.findIndex(a => a.id === articleId);
-  if (index > -1) {
-    const deletedTitle = newsArticles[index].title;
-    newsArticles.splice(index, 1);
-    showToast('<i class="fas fa-check-circle"></i> Article deleted successfully!', 'success');
+  const res = await API.news.update(articleId, { title, icon, date, category, desc, content, status });
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Article updated successfully!', 'success');
+    closeModal();
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     renderMain('news');
+  } else {
+    showToast(res?.message || 'Failed to update article', 'error');
   }
 }
 
-function saveDraft() {
-  const title = document.getElementById('blogTitle')?.value || '';
+async function deleteArticle(articleId) {
+  if (!confirm('<i class="fas fa-trash"></i> Are you sure you want to delete this article? This action cannot be undone.')) return;
+
+  if (typeof API === 'undefined' || !API.news) {
+    showToast('News backend is not available. Article was not deleted.', 'error');
+    return;
+  }
+
+  const res = await API.news.delete(articleId);
+  if (res && res.success) {
+    showToast('<i class="fas fa-check-circle"></i> Article deleted successfully!', 'success');
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    renderMain('news');
+  } else {
+    showToast(res?.message || 'Failed to delete article', 'error');
+  }
+}
+
+async function saveDraft() {
+  const title = document.getElementById('blogTitle')?.value?.trim() || '';
+  const icon = document.getElementById('blogIcon')?.value?.trim() || '<i class="fas fa-newspaper"></i>';
+  const date = document.getElementById('blogDate')?.value || new Date().toISOString().slice(0, 10);
+  const category = document.getElementById('blogCategory')?.value || 'General';
+  const desc = document.getElementById('blogDesc')?.value?.trim() || '';
+  const content = document.getElementById('blogContent')?.value?.trim() || '';
   if (!title) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please enter a title', 'warning');
     return;
   }
-  showToast('<i class="fas fa-save"></i> Draft saved successfully!', 'success');
+  if (typeof API === 'undefined' || !API.news) {
+    showToast('News backend is not available. Draft was not saved.', 'error');
+    return;
+  }
+
+  const res = await API.news.create({ title, icon, date, category, desc, content, status: 'Draft' });
+  if (res && res.success) {
+    showToast('<i class="fas fa-save"></i> Draft saved successfully!', 'success');
+    clearNewsForm();
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+    renderMain('news');
+  } else {
+    showToast(res?.message || 'Failed to save draft', 'error');
+  }
 }
 
 function sendContactMessage() {
