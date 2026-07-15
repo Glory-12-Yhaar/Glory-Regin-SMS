@@ -545,12 +545,15 @@ CREATE TABLE yearbooks (
   year VARCHAR(10) NOT NULL UNIQUE,
   title VARCHAR(255) NOT NULL,
   cover_img VARCHAR(255) DEFAULT '#1e3a8a',
+  pdf_url VARCHAR(255) DEFAULT NULL,
   status ENUM('Published','Draft') NOT NULL DEFAULT 'Draft',
   total_grads INT NOT NULL DEFAULT 0,
   total_photos INT NOT NULL DEFAULT 0,
   data LONGTEXT DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_yearbooks_status_year (status, year),
+  INDEX idx_yearbooks_year (year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
     ];
@@ -774,8 +777,8 @@ SQL,
     insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,content,status) VALUES (?,?,?,?,?,?,?)", [
         ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','The Glory Reign Preparatory School digital campus portal now connects key academic, finance, communication, and public website records directly to the school database. News and blog updates published here are shared with the public website while drafts remain available only to administrators.','Published'],
     ]);
-    insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?)", [
-        ['2025','Class of 2025 Graduation','#1e3a8a','Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],
+    insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,pdf_url,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?,?)", [
+        ['2025','Class of 2025 Graduation','#1e3a8a',null,'Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],
     ]);
     ok('Seeded academic, finance, content, and portal data.');
 

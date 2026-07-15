@@ -495,12 +495,16 @@ CREATE TABLE IF NOT EXISTS `yearbooks` (
   `year` VARCHAR(10) UNIQUE NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `cover_img` VARCHAR(255) DEFAULT '#1e3a8a',
+  `pdf_url` VARCHAR(255) DEFAULT NULL,
   `status` ENUM('Published', 'Draft') DEFAULT 'Draft',
   `total_grads` INT DEFAULT 0,
   `total_photos` INT DEFAULT 0,
   `data` LONGTEXT,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_yearbooks_status_year` (`status`, `year`),
+  INDEX `idx_yearbooks_year` (`year`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- ADDITIONAL RELATIONSHIPS

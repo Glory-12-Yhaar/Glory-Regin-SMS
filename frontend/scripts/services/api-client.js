@@ -9,6 +9,16 @@ const API_BASE = (() => {
     return baseDir.replace(/\/frontend\/?$/, '') + '/backend/api';
 })();
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    }[char]));
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────
 async function apiRequest(endpoint, method = 'GET', body = null) {
     const opts = {
@@ -216,8 +226,9 @@ const API = {
 
     // ── Yearbook ─────────────────────────────────────────────
     yearbook: {
-        list:   ()          => apiRequest('/yearbook/index.php'),
+        list:   (params = {}) => apiRequest('/yearbook/index.php?' + new URLSearchParams(params)),
         save:   (data)      => apiRequest('/yearbook/index.php', 'POST', data),
+        delete: (year)      => apiRequest('/yearbook/index.php?' + new URLSearchParams({ year }), 'DELETE'),
     },
 };
 
@@ -810,18 +821,29 @@ async function syncAllDataFromBackend() {
 
     // 10. Yearbook
     try {
-        const res = await API.yearbook.list();
+        const params = currentRole === 'Visitor' ? { public: 1 } : {};
+        const res = await API.yearbook.list(params);
         if (res && res.success && res.data) {
+            const rows = Array.isArray(res.data) ? res.data : Object.values(res.data);
             const formatted = {};
-            res.data.forEach(row => {
+            rows.forEach(row => {
+                const layout = typeof row.layout === 'string'
+                    ? JSON.parse(row.layout || '{}')
+                    : (row.layout || {});
                 formatted[row.year] = {
                     year: row.year,
                     title: row.title,
                     status: row.status,
-                    totalGrads: parseInt(row.total_graduates || 0, 10),
-                    totalPhotos: parseInt(row.total_photos || 0, 10),
-                    coverImg: row.cover_image || '#1e3a8a',
-                    ...(typeof row.layout === 'string' ? JSON.parse(row.layout) : row.layout || {})
+                    totalGrads: parseInt(row.totalGrads ?? row.total_grads ?? row.total_graduates ?? 0, 10),
+                    totalPhotos: parseInt(row.totalPhotos ?? row.total_photos ?? 0, 10),
+                    coverImg: row.coverImg || row.cover_img || row.cover_image || '#1e3a8a',
+                    pdfUrl: row.pdfUrl || row.pdf_url || '',
+                    classes: row.classes || layout.classes || {},
+                    teachers: row.teachers || layout.teachers || [],
+                    leaders: row.leaders || layout.leaders || [],
+                    achievements: row.achievements || layout.achievements || [],
+                    events: row.events || layout.events || [],
+                    tributes: row.tributes || layout.tributes || []
                 };
             });
             for (let k in YEARBOOK_DATA) delete YEARBOOK_DATA[k];
@@ -1233,7 +1255,8 @@ apiOverrides.deleteAllMessages = async function() {
 };
 
 apiOverrides.adminYearbookModule = function() {
-    const ybs = Object.values(YEARBOOK_DATA);
+    const ybs = Object.values(YEARBOOK_DATA)
+        .sort((a, b) => String(b.year || '').localeCompare(String(a.year || '')));
     const rows = ybs.map(yb => `
       <tr>
         <td><strong>${escapeHtml(yb.year)}</strong></td>
@@ -1244,8 +1267,8 @@ apiOverrides.adminYearbookModule = function() {
         <td>
           <div style="display:flex;gap:6px">
             <button class="btn btn-secondary btn-xs" onclick="openYearbook('${yb.year}')">Preview</button>
-            <button class="btn btn-secondary btn-xs" onclick="showToast('Edit mode enabled via database. Check back soon!', 'info')">Edit Content</button>
             ${yb.status === 'Draft' ? `<button class="btn btn-primary btn-xs" onclick="publishYearbook('${yb.year}')">Publish</button>` : ''}
+            <button class="btn btn-danger btn-xs" onclick="deleteYearbook('${yb.year}')">Delete</button>
           </div>
         </td>
       </tr>
@@ -1273,6 +1296,7 @@ apiOverrides.openCreateYearbookModal = function() {
         <div class="f-field" style="margin-top:20px"><label>Academic Year</label><input type="text" id="new-yb-year" placeholder="e.g. 2028"></div>
         <div class="f-field"><label>Yearbook Title</label><input type="text" id="new-yb-title" placeholder="Class of 2028 Yearbook"></div>
         <div class="f-field"><label>Cover Color Theme</label><input type="color" id="new-yb-theme" value="#1e3a8a" style="padding:0;height:40px;width:100%"></div>
+        <div class="f-field"><label>PDF URL</label><input type="text" id="new-yb-pdf" placeholder="assets/yearbooks/class-of-2028.pdf"></div>
         <div style="display:flex;gap:10px;margin-top:24px">
           <button class="btn btn-primary" style="flex:1" onclick="submitCreateYearbookForm()">Create</button>
           <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -1285,21 +1309,23 @@ apiOverrides.submitCreateYearbookForm = async function() {
     const year = document.getElementById('new-yb-year')?.value?.trim();
     const title = document.getElementById('new-yb-title')?.value?.trim();
     const theme = document.getElementById('new-yb-theme')?.value;
+    const pdfUrl = document.getElementById('new-yb-pdf')?.value?.trim();
     if (!year || !title) { showToast('Please enter both year and title', 'error'); return; }
     
     const res = await API.yearbook.save({
         year,
         title,
-        cover_image: theme,
+        coverImg: theme,
+        pdfUrl,
         status: 'Draft',
-        total_graduates: 0,
-        total_photos: 0,
-        layout: {
-            classes: [],
+        totalGrads: 0,
+        totalPhotos: 0,
+        classes: {},
             teachers: [],
+        leaders: [],
+        achievements: [],
             events: [],
             tributes: []
-        }
     });
     if (res && res.success) {
         showToast('Yearbook initialized successfully!', 'success');
@@ -1317,16 +1343,17 @@ apiOverrides.publishYearbook = async function(year) {
     const res = await API.yearbook.save({
         year: yb.year,
         title: yb.title,
-        cover_image: yb.coverImg,
+        coverImg: yb.coverImg,
+        pdfUrl: yb.pdfUrl || '',
         status: 'Published',
-        total_graduates: yb.totalGrads,
-        total_photos: yb.totalPhotos,
-        layout: {
-            classes: yb.classes || [],
-            teachers: yb.teachers || [],
-            events: yb.events || [],
-            tributes: yb.tributes || []
-        }
+        totalGrads: yb.totalGrads,
+        totalPhotos: yb.totalPhotos,
+        classes: yb.classes || {},
+        teachers: yb.teachers || [],
+        leaders: yb.leaders || [],
+        achievements: yb.achievements || [],
+        events: yb.events || [],
+        tributes: yb.tributes || []
     });
     if (res && res.success) {
         showToast('Yearbook published successfully!', 'success');
@@ -1334,6 +1361,18 @@ apiOverrides.publishYearbook = async function(year) {
         renderMain();
     } else {
         showToast(res?.message || 'Failed to publish yearbook', 'error');
+    }
+};
+
+apiOverrides.deleteYearbook = async function(year) {
+    if (!confirm(`Delete yearbook ${year}? This cannot be undone.`)) return;
+    const res = await API.yearbook.delete(year);
+    if (res && res.success) {
+        showToast('Yearbook deleted successfully!', 'success');
+        await syncAllDataFromBackend();
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to delete yearbook', 'error');
     }
 };
 
