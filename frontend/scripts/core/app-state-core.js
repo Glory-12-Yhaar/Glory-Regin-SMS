@@ -1909,11 +1909,11 @@ function renderMain() {
   }
   // Initialize parent dashboard
   if (m === 'dashboard' && r === 'Parent') {
-    setTimeout(() => { try{ getParentChildren(); getParentMessages(); getParentAssignments(); } catch(e){} }, 80);
+    setTimeout(() => { try{ getParentChildren(); getParentAssignments(); } catch(e){} }, 80);
   }
   // Initialize teacher dashboard
   if (m === 'dashboard' && r === 'Teacher') {
-    setTimeout(() => { try{ getAssignments(); getTeacherMessages(); } catch(e){} }, 80);
+    setTimeout(() => { try{ getAssignments(); } catch(e){} }, 80);
   }
   // Initialize student dashboard
   if (m === 'dashboard' && r === 'Student') {

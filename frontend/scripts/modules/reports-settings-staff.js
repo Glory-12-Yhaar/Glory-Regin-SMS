@@ -1853,8 +1853,14 @@ function getReportsDashboardInsights() {
   const avgSba = scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.sba, 0) / scoreRows.length) : 0;
   const avgAcademic = Math.round(Number(analytics.avgPerformance || 0)) || (scoreRows.length ? Math.round(scoreRows.reduce((sum, r) => sum + r.total, 0) / scoreRows.length) : 0);
   const passRate = scoreRows.length ? Math.round(scoreRows.filter(r => r.total >= 50).length / scoreRows.length * 100) : 0;
-  const finance = getFinanceSummary();
-  const feesCollection = finance.totalCount ? Math.round(finance.paidCount / finance.totalCount * 100) : 0;
+  const finance = typeof getFinanceSummary === 'function'
+    ? getFinanceSummary()
+    : { totalCount: 0, paidCount: 0 };
+  const totalDue = Number(finance.totalFeesDue ?? 0);
+  const outstanding = Number(finance.totalOutstanding ?? 0);
+  const feesCollection = totalDue > 0
+    ? Math.round(Math.max(0, totalDue - outstanding) / totalDue * 100)
+    : (finance.totalCount ? Math.round(finance.paidCount / finance.totalCount * 100) : 0);
   const topStudent = (analytics.topPerformers || [])[0] || null;
   return {
     students,

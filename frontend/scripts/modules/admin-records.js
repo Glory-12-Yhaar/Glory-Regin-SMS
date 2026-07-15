@@ -972,14 +972,14 @@ function studentsModule() {
     });
 }
 
-// Message a teacher (for students only)
-function messageTeacher(teacherId, teacherName) {
+// Removed internal teacher messaging flow.
+function removedTeacherMessage(teacherId, teacherName) {
   const teacher = teachersData.find(t => t.teacher_id === teacherId);
   if (!teacher) return;
 
-  let html = hdr('Message ' + teacherName, 'Send a message to your teacher', 'Teachers') + `
+  let html = hdr('Teacher Profile', 'View teacher information', 'Teachers') + `
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-envelope"></i> Send Message to ${teacherName}</span></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Teacher Details</span></div>
     <div style="margin-bottom:16px;padding:12px;background:var(--blue-xpale);border-radius:var(--radius);border:1px solid var(--blue-light)">
       <div style="font-size:11px;color:var(--gray-600);margin-bottom:4px"><i class="fas fa-info-circle"></i> Teacher Info</div>
       <div style="font-size:12px;color:var(--blue-dark)">
@@ -990,14 +990,14 @@ function messageTeacher(teacherId, teacherName) {
     <div class="form-grid">
       <div class="form-field" style="grid-column:1/-1">
         <label>Subject *</label>
-        <input type="text" id="msg-subject" placeholder="e.g., Question about Mathematics assignment">
+        <input type="text" id="removed-teacher-subject" placeholder="Teacher detail">
       </div>
       <div class="form-field" style="grid-column:1/-1">
-        <label>Message *</label>
-        <textarea id="msg-content" placeholder="Type your message here..." style="min-height:200px;resize:vertical"></textarea>
+        <label>Note</label>
+        <textarea id="removed-teacher-note" placeholder="Internal teacher detail removed" style="min-height:200px;resize:vertical"></textarea>
       </div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
-        <button class="btn btn-primary" style="flex:1" onclick="sendTeacherMessage('${teacherId}', '${teacherName}')"><i class="fas fa-paper-plane"></i> Send Message</button>
+        <button class="btn btn-primary" style="flex:1" onclick="navTo('teachers')"><i class="fas fa-arrow-left"></i> Back to Teachers</button>
         <button class="btn btn-secondary" style="flex:1" onclick="navTo('teachers')">Cancel</button>
       </div>
     </div>
@@ -1006,10 +1006,10 @@ function messageTeacher(teacherId, teacherName) {
   document.getElementById('main-content').innerHTML = html;
 }
 
-// Send message to teacher (placeholder function)
-function sendTeacherMessage(teacherId, teacherName) {
-  const subject = document.getElementById('msg-subject').value.trim();
-  const content = document.getElementById('msg-content').value.trim();
+// Removed internal teacher messaging submit flow.
+function removedSendTeacherMessage(teacherId, teacherName) {
+  const subject = '';
+  const content = '';
 
   if (!subject || !content) {
     showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error', 3000);
@@ -1017,7 +1017,7 @@ function sendTeacherMessage(teacherId, teacherName) {
   }
 
   try{ addMessage({ sender: currentRole || 'Visitor', senderRole: (currentRole||'visitor').toLowerCase(), recipient: teacherName, recipientRole: 'teacher', subject, text: content }); }catch(e){}
-  showToast('<i class="fas fa-check-circle"></i> Message sent to ' + teacherName + '!<br/>Your teacher will respond soon.', 'success', 3000);
+  showToast('<i class="fas fa-info-circle"></i> Internal teacher communication has been removed.', 'info', 3000);
   setTimeout(() => navTo('teachers'), 1500);
 }
 
@@ -1541,11 +1541,10 @@ function teachersModule() {
       <div style="font-size:10px;color:var(--gray-400);margin-bottom:12px"><i class="fas fa-calendar-alt"></i> ${t.schedule}</div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-secondary btn-xs" style="flex:1" onclick="viewTeacherProfile('${t.teacher_id}')">View Profile</button>
-        <button class="btn btn-primary btn-xs" style="flex:1" onclick="messageTeacher('${t.teacher_id}', '${t.name}')"><i class="fas fa-envelope"></i> Message</button>
       </div>
     </div>`).join('');
 
-  return hdr(isParent ? 'Messages with Teachers' : 'Teachers Module', isParent ? 'Communicate directly with your childrens teachers' : 'View teacher profiles and subject assignments', 'Teachers') +
+  return hdr('Teachers Module', 'View teacher profiles and subject assignments', 'Teachers') +
     renderPageTemplate('pages/admin/teachers/index.html', { roleNotice, teacherCards });
 }
 
