@@ -3887,12 +3887,14 @@ const assignmentsData = [];
 const feesData = [];
 const paymentsData = [];
 const eventsData = [];
+const noticesData = [];
 window.examsData = examsData;
 window.gradesData = gradesData;
 window.assignmentsData = assignmentsData;
 window.feesData = feesData;
 window.paymentsData = paymentsData;
 window.eventsData = eventsData;
+window.noticesData = noticesData;
 window.reportsAnalyticsData = null;
 window.financeReportData = null;
 

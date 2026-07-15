@@ -431,11 +431,13 @@ CREATE TABLE notices (
   notice_date DATE DEFAULT NULL,
   message TEXT DEFAULT NULL,
   priority ENUM('Normal','Important','Urgent') NOT NULL DEFAULT 'Normal',
+  status ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
   attachment VARCHAR(255) DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_notices_date (notice_date),
-  INDEX idx_notices_audience (audience)
+  INDEX idx_notices_audience (audience),
+  INDEX idx_notices_status_date (status, notice_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
@@ -527,8 +529,10 @@ CREATE TABLE hero_slides (
   caption TEXT DEFAULT NULL,
   image LONGTEXT NOT NULL,
   status ENUM('Active','Draft') NOT NULL DEFAULT 'Active',
+  sort_order INT NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_hero_status (status)
+  INDEX idx_hero_status (status),
+  INDEX idx_hero_sort (status, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
@@ -539,6 +543,7 @@ CREATE TABLE news_articles (
   category VARCHAR(120) DEFAULT NULL,
   date DATE DEFAULT NULL,
   `desc` TEXT DEFAULT NULL,
+  content LONGTEXT DEFAULT NULL,
   status ENUM('Published','Draft') NOT NULL DEFAULT 'Published',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -695,9 +700,9 @@ SQL,
         ['PTA Meeting','2026-08-28','14:00:00',0,'School Hall','Parents','Parents and Teachers Association meeting.','Published',1],
         ['Sports Day','2026-09-05','08:00:00',1,'Sports Field','All','Annual inter-house sports competition.','Published',1],
     ]);
-    insertRows($pdo, "INSERT INTO notices (icon,title,audience,posted_by,notice_date,message,priority,attachment) VALUES (?,?,?,?,?,?,?,?)", [
-        ['<i class=\"fas fa-file-alt\"></i>','End of Term Examination Timetable','All','Admin','2025-03-10','The end of term examination timetable is now available.','Important',null],
-        ['<i class=\"fas fa-money-bill\"></i>','Fees Payment Deadline','Parents','Accountant','2025-03-08','All outstanding fees must be paid by March 15th.','Urgent',null],
+    insertRows($pdo, "INSERT INTO notices (icon,title,audience,posted_by,notice_date,message,priority,status,attachment) VALUES (?,?,?,?,?,?,?,?,?)", [
+        ['<i class=\"fas fa-file-alt\"></i>','End of Term Examination Timetable','All','Admin','2026-08-10','The end of term examination timetable is now available.','Important','Published',null],
+        ['<i class=\"fas fa-money-bill\"></i>','Fees Payment Deadline','Parents','Accountant','2026-08-08','All outstanding fees must be paid by August 15th.','Urgent','Published',null],
     ]);
     ok('Seeded events and notices.');
 
@@ -762,11 +767,13 @@ SQL,
         ['Yaa Asantewaa','2015-08-20','Female','Primary 2','Akua Asantewaa','0245555678','akua@gmail.com','Wa','Methodist Primary','Approved','Excellent exam performance'],
     ]);
 
-    insertRows($pdo, "INSERT INTO hero_slides (title,caption,image,status) VALUES (?,?,?,?)", [
-        ['Glory Reign Preparatory School','Nurturing minds, building character, and shaping futures.','assets/images/Hero.jpeg','Active'],
+    insertRows($pdo, "INSERT INTO hero_slides (title,caption,image,status,sort_order) VALUES (?,?,?,?,?)", [
+        ['Glory Reign Preparatory School','Nurturing minds, building character, and shaping futures.','assets/images/Hero.jpeg','Active',1],
+        ['Academic Excellence Starts Here','A caring school community built for curiosity, discipline, and confidence.','assets/images/student.jpeg','Active',2],
+        ['Dedicated Teachers, Strong Values','Learning experiences shaped by committed educators and family partnership.','assets/images/teacher.jpeg','Active',3],
     ]);
-    insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,status) VALUES (?,?,?,?,?,?)", [
-        ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','Published'],
+    insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,content,status) VALUES (?,?,?,?,?,?,?)", [
+        ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','The Glory Reign Preparatory School digital campus portal now connects key academic, finance, communication, and public website records directly to the school database. News and blog updates published here are shared with the public website while drafts remain available only to administrators.','Published'],
     ]);
     insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?)", [
         ['2025','Class of 2025 Graduation','#1e3a8a','Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],

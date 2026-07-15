@@ -208,6 +208,7 @@ const API = {
         list:   ()          => apiRequest('/hero_slides/index.php'),
         create: (data)      => apiRequest('/hero_slides/index.php', 'POST', data),
         setActive: (id)     => apiRequest('/hero_slides/index.php', 'POST', { action: 'set_active', id }),
+        setDraft: (id)      => apiRequest('/hero_slides/index.php', 'POST', { action: 'set_draft', id }),
         delete: (id)        => apiRequest('/hero_slides/index.php?id=' + id, 'DELETE')
     },
 
@@ -567,6 +568,28 @@ async function syncAllDataFromBackend() {
         }
     } catch (e) { console.error("Error syncing events:", e); }
 
+    try {
+        const res = await API.notices.list({ limit: 500 });
+        if (res && res.success && res.data && Array.isArray(window.noticesData)) {
+            noticesData.splice(0, noticesData.length, ...res.data.map(n => ({
+                id: parseInt(n.id, 10),
+                icon: n.icon || '<i class="fas fa-bullhorn"></i>',
+                title: n.title || '',
+                audience: n.audience || 'All',
+                posted_by: n.posted_by || '',
+                postedBy: n.posted_by || '',
+                notice_date: n.notice_date || '',
+                date: n.notice_date || '',
+                message: n.message || '',
+                priority: n.priority || 'Normal',
+                status: n.status || 'Published',
+                attachment: n.attachment || '',
+                created_at: n.created_at || '',
+                updated_at: n.updated_at || ''
+            })));
+        }
+    } catch (e) { console.error("Error syncing notices:", e); }
+
     // 5. Admissions
     try {
         const res = await API.admissions.list({ limit: 200 });
@@ -626,9 +649,9 @@ async function syncAllDataFromBackend() {
                 id: parseInt(a.id, 10),
                 title: a.title,
                 icon: a.icon || '📰',
-                date: a.publish_date,
+                date: a.date || a.publish_date || '',
                 category: a.category,
-                desc: a.summary || '',
+                desc: a.desc || a.summary || '',
                 content: a.content || '',
                 status: a.status || 'Published'
             })));
@@ -927,7 +950,7 @@ apiOverrides.deleteTimetable = async function() {
 // ── HERO SLIDES ACTIONS OVERRIDES ───────────────────────
 apiOverrides.getHeroSlides = function() {
     const slides = Object.values(window.cachedHeroSlides || []);
-    return slides.sort((a,b) => (b.status === 'Active') - (a.status === 'Active'));
+    return slides.sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0) || Number(b.id || 0) - Number(a.id || 0));
 };
 
 saveHeroSlides = () => {};
@@ -935,6 +958,8 @@ saveHeroSlides = () => {};
 apiOverrides.uploadHeroSlide = async function() {
     const title = document.getElementById('hero-slide-title')?.value?.trim() || 'Glory Reign Preparatory School';
     const caption = document.getElementById('hero-slide-caption')?.value?.trim() || 'Nurturing minds, building character, and shaping futures.';
+    const status = document.getElementById('hero-slide-status')?.value || 'Active';
+    const sortOrder = parseInt(document.getElementById('hero-slide-order')?.value || '0', 10);
     const file = document.getElementById('hero-slide-file')?.files?.[0];
 
     if (!file) {
@@ -949,7 +974,8 @@ apiOverrides.uploadHeroSlide = async function() {
             title,
             caption,
             image: base64Img,
-            status: 'Draft'
+            status,
+            sort_order: sortOrder
         });
         if (res && res.success) {
             showToast('<i class="fas fa-check-circle"></i> Hero slide uploaded', 'success');
@@ -972,7 +998,7 @@ apiOverrides.uploadHeroSlide = async function() {
 apiOverrides.setHeroSlideActive = async function(slideId) {
     const res = await API.heroSlides.setActive(slideId);
     if (res && res.success) {
-        showToast('<i class="fas fa-check-circle"></i> Hero slide activated', 'success');
+        showToast('<i class="fas fa-check-circle"></i> Hero slide published', 'success');
         const slidesRes = await API.heroSlides.list();
         if (slidesRes && slidesRes.success && slidesRes.data) {
             window.cachedHeroSlides = slidesRes.data;
@@ -980,6 +1006,20 @@ apiOverrides.setHeroSlideActive = async function(slideId) {
         renderMain();
     } else {
         showToast(res?.message || 'Failed to activate slide', 'error');
+    }
+};
+
+apiOverrides.setHeroSlideDraft = async function(slideId) {
+    const res = await API.heroSlides.setDraft(slideId);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Hero slide moved to draft', 'success');
+        const slidesRes = await API.heroSlides.list();
+        if (slidesRes && slidesRes.success && slidesRes.data) {
+            window.cachedHeroSlides = slidesRes.data;
+        }
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to draft slide', 'error');
     }
 };
 
@@ -1018,7 +1058,7 @@ apiOverrides.publishNews = async function() {
         return;
     }
 
-    const data = { title, icon, publish_date: date, category, summary: desc, content, status };
+    const data = { title, icon, date, category, desc, content, status };
     const res = await API.news.create(data);
     if (res && res.success) {
         showToast('<i class="fas fa-check-circle"></i> Article published successfully!', 'success');
@@ -1044,7 +1084,7 @@ apiOverrides.saveArticleChanges = async function(articleId) {
         return;
     }
 
-    const data = { title, icon, publish_date: date, category, summary: desc, content, status };
+    const data = { title, icon, date, category, desc, content, status };
     const res = await API.news.update(articleId, data);
     if (res && res.success) {
         showToast('<i class="fas fa-check-circle"></i> Article updated successfully!', 'success');
@@ -1771,3 +1811,21 @@ apiOverrides.viewArchivedTeachers = async function() {
 
 // Run overrides immediately as script is loaded after script.js
 window.applyApiClientOverrides();
+
+if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles)) {
+    API.news.list().then(res => {
+        if (res && res.success && Array.isArray(res.data)) {
+            window.newsArticles.splice(0, window.newsArticles.length, ...res.data.map(a => ({
+                id: parseInt(a.id, 10),
+                title: a.title || '',
+                icon: a.icon || '<i class="fas fa-newspaper"></i>',
+                date: a.date || '',
+                category: a.category || 'General',
+                desc: a.desc || '',
+                content: a.content || '',
+                status: a.status || 'Published'
+            })));
+            if (typeof renderMain === 'function') renderMain();
+        }
+    }).catch(e => console.error('Error syncing public news:', e));
+}

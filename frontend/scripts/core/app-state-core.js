@@ -798,7 +798,7 @@ function getModuleBadgeCount(moduleId) {
     if (moduleId === 'students') return getActiveStudents(enrolledStudents).length;
     if (moduleId === 'teachers') return getActiveTeachers(teachersData).length;
     if (moduleId === 'parents') return parentsData.length;
-    if (moduleId === 'notices') return (typeof NOTICES_DATA !== 'undefined' ? NOTICES_DATA.length : (typeof notices !== 'undefined' ? notices.length : 0));
+    if (moduleId === 'notices') return Array.isArray(window.noticesData) ? window.noticesData.filter(n => (n.status || 'Published') === 'Published').length : 0;
     if (moduleId === 'users') return (typeof getUsers === 'function' ? getUsers().length : 0);
   } catch (e) {
     return 0;
@@ -1687,6 +1687,7 @@ function renderPublicNavbar() {
         <a class="nav-link" onclick="publicNavToSection('admission-section');closePublicMenu()"><i class="fas fa-file-alt"></i> Admissions</a>
         <a class="nav-link" onclick="publicNavToSection('gallery-section');closePublicMenu()"><i class="fas fa-image"></i> Gallery</a>
         <a class="nav-link" onclick="publicNavToSection('events-section');closePublicMenu()"><i class="fas fa-calendar-alt"></i> Events</a>
+        <a class="nav-link" onclick="publicNavToSection('notices-section');closePublicMenu()"><i class="fas fa-bullhorn"></i> Notices</a>
         <a class="nav-link" onclick="publicNavToSection('news-section');closePublicMenu()"><i class="fas fa-newspaper"></i> News</a>
         <a class="nav-link" onclick="publicNavToSection('contact-section');closePublicMenu()"><i class="fas fa-phone"></i> Contact</a>
       </div>

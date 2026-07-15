@@ -335,8 +335,13 @@ CREATE TABLE IF NOT EXISTS `notices` (
   `notice_date` DATE,
   `message` TEXT,
   `priority` ENUM('Normal','Important','Urgent') DEFAULT 'Normal',
+  `status` ENUM('Published','Draft','Archived') NOT NULL DEFAULT 'Published',
   `attachment` VARCHAR(255),
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_notices_date` (`notice_date`),
+  INDEX `idx_notices_audience` (`audience`),
+  INDEX `idx_notices_status_date` (`status`, `notice_date`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -463,7 +468,10 @@ CREATE TABLE IF NOT EXISTS `hero_slides` (
   `caption` TEXT,
   `image` LONGTEXT NOT NULL,
   `status` ENUM('Active', 'Draft') DEFAULT 'Active',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_hero_status` (`status`),
+  INDEX `idx_hero_sort` (`status`, `sort_order`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────
@@ -471,14 +479,18 @@ CREATE TABLE IF NOT EXISTS `hero_slides` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `news_articles` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `icon` VARCHAR(10),
+  `icon` VARCHAR(100),
   `title` VARCHAR(255) NOT NULL,
-  `category` VARCHAR(100),
+  `category` VARCHAR(120),
   `date` DATE,
   `desc` TEXT,
-  `status` ENUM('Published', 'Draft') DEFAULT 'Published',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+  `content` LONGTEXT,
+  `status` ENUM('Published', 'Draft') NOT NULL DEFAULT 'Published',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_news_date` (`date`),
+  INDEX `idx_news_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- YEARBOOKS
