@@ -8,6 +8,7 @@
 require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/user-provisioning.php';
 
 $user   = requireAuth();
 $db     = getDB();
@@ -102,6 +103,9 @@ if ($method === 'POST') {
             $body['avatar']            ?? strtoupper(substr($body['name'], 0, 2)),
         ]);
         $staffId = $db->lastInsertId();
+        $accountRole = $body['category'] === 'Teaching' ? 'Teacher' : (($body['position'] ?? '') === 'Accountant' ? 'Accountant' : 'Admin');
+        $account = provisionUserAccount($db, $code, htmlspecialchars(trim($body['name']), ENT_QUOTES), $body['email'], $accountRole, $body['password'] ?? null);
+        $db->prepare('UPDATE staff SET user_id = ? WHERE id = ?')->execute([$account['id'], $staffId]);
 
         if ($body['category'] === 'Teaching') {
             $stmtTeacher = $db->prepare(
@@ -119,7 +123,7 @@ if ($method === 'POST') {
         }
 
         $db->commit();
-        jsonResponse(['success' => true, 'message' => 'Staff created', 'id' => $staffId, 'staff_code' => $code], 201);
+        jsonResponse(['success' => true, 'message' => 'Staff and user account created', 'id' => $staffId, 'staff_code' => $code, 'account' => $account], 201);
     } catch (PDOException $e) {
         $db->rollBack();
         jsonResponse(['success' => false, 'message' => 'Failed to create staff: ' . $e->getMessage()], 500);

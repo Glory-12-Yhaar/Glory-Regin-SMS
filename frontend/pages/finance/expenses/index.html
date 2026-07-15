@@ -4,7 +4,7 @@
 
 <div class="g21">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Expense Records</span><button class="btn btn-primary btn-sm">+ Add Expense</button></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Expense Records</span><button class="btn btn-primary btn-sm" onclick="navTo('expense_new')">+ Add Expense</button></div>
     <table class="tbl">
       <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Approved By</th><th>Status</th></tr></thead>
       <tbody>
@@ -13,17 +13,9 @@
     </table>
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Add Expense</span></div>
-    <div class="f-field" style="margin-bottom:12px"><label>Description</label><input placeholder="Expense description..."></div>
-    <div class="f-row">
-      <div class="f-field"><label>Category</label><select><option>Utilities</option><option>Admin</option><option>Salaries</option><option>Facilities</option></select></div>
-      <div class="f-field"><label>Amount (GHS)</label><input type="number" placeholder="0.00"></div>
-    </div>
-    <div class="f-row">
-      <div class="f-field"><label>Date</label><input type="date"></div>
-      <div class="f-field"><label>Approved By</label><input placeholder="Approver name..."></div>
-    </div>
-    <div class="f-field" style="margin-bottom:14px"><label>Notes</label><textarea placeholder="Additional notes..."></textarea></div>
-    <button class="btn btn-primary" style="width:100%">Record Expense</button>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bolt"></i> Expense Actions</span></div>
+    <p style="font-size:12px;color:var(--gray-600);line-height:1.7">Record operating costs on a dedicated page with validation and database storage.</p>
+    <button class="btn btn-primary" style="width:100%" onclick="navTo('expense_new')"><i class="fas fa-plus"></i> Record New Expense</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="navTo('balance')"><i class="fas fa-balance-scale"></i> View Balance Sheet</button>
   </div>
 </div>

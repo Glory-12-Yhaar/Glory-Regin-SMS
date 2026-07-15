@@ -2,9 +2,9 @@
   <h1><i class="fas fa-graduation-cap"></i> Welcome, {{alumniName}}</h1>
   <p>Stay connected with your alma mater, reconnect with classmates, and give back to Glory Reign Preparatory School</p>
   <div class="hero-btns">
-    <button class="hero-btn-gold" onclick="openAlumniDirectory()"><i class="fas fa-users"></i> Browse Directory</button>
-    <button class="hero-btn-outline" onclick="openAlumniJobs()"><i class="fas fa-briefcase"></i> Job Listings</button>
-    <button class="hero-btn-outline" onclick="openDonationHub()"><i class="fas fa-hand-holding-heart"></i> Donate</button>
+    <button class="hero-btn-gold" onclick="navTo('directory')"><i class="fas fa-user-plus"></i> Connect with Alumni</button>
+    <button class="hero-btn-outline" onclick="navTo('jobs')"><i class="fas fa-briefcase"></i> Job Listings</button>
+    <button class="hero-btn-outline" onclick="navTo('donations')"><i class="fas fa-hand-holding-heart"></i> Donate</button>
   </div>
 </div>
 
@@ -14,22 +14,42 @@
 
 <div class="g2 mb20">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Announcements</span><span class="card-act" onclick="showAllAnnouncements()">View All</span></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-user-check"></i> Profile Completion</span><span class="badge b-info">{{profilePct}}%</span></div>
+    <div class="prog-bar"><div class="prog-fill pf-blue" style="width:{{profilePct}}%"></div></div>
+    <p style="font-size:11px;color:var(--gray-500);margin:10px 0 0">Keep your contact and career information current so classmates can find you.</p>
+    <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="navTo('profile')">Update Profile</button>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bolt"></i> Quick Links</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-primary" onclick="navTo('directory')"><i class="fas fa-user-plus"></i> Connect</button>
+      <button class="btn btn-secondary" onclick="navTo('community')">Community</button>
+      <button class="btn btn-secondary" onclick="navTo('messaging')">Messages</button>
+      <button class="btn btn-secondary" onclick="navTo('yearbook')">Digital Yearbook</button>
+      <button class="btn btn-secondary" onclick="navTo('gallery')">Gallery</button>
+      <button class="btn btn-secondary" onclick="navTo('notices')">Notices</button>
+    </div>
+  </div>
+</div>
+
+<div class="g2 mb20">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Announcements</span><span class="card-act" onclick="navTo('notices')">View All</span></div>
     {{announcementRows}}
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-hand-holding-heart"></i> Donation Campaigns</span><span class="card-act" onclick="openDonationHub()">Donate</span></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-hand-holding-heart"></i> Donation Campaigns</span><span class="card-act" onclick="navTo('donations')">Donate</span></div>
     {{campaignRows}}
   </div>
 </div>
 
 <div class="g2 mb20">
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span><span class="card-act" onclick="viewAllEvents()">Calendar</span></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span><span class="card-act" onclick="navTo('events')">Calendar</span></div>
     {{eventRows}}
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-gift"></i> Recent Donors</span><span class="card-act" onclick="viewDonationHistory()">History</span></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-gift"></i> Recent Donations</span><span class="card-act" onclick="navTo('donations')">History</span></div>
     {{donorRows}}
   </div>
 </div>

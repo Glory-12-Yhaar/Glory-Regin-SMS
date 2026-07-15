@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../config/user-provisioning.php';
 
 $user   = requireAuth();
 $db     = getDB();
@@ -69,6 +70,9 @@ if ($method === 'PUT') {
     if (!$student) jsonResponse(['success' => false, 'message' => 'Student not found'], 404);
 
     $body = getRequestBody();
+    $linked = $db->prepare('SELECT user_id FROM students WHERE id = ?');
+    $linked->execute([$id]);
+    updateProvisionedPassword($db, ($uid = $linked->fetchColumn()) ? (int)$uid : null, $body);
     $fields = [];
     $params = [];
 

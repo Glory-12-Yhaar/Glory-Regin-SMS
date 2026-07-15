@@ -814,12 +814,18 @@ const MENUS = {
         { id: 'timetable', ic: '<i class="fas fa-calendar"></i>', lbl: 'Timetable' },
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
         { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exams & Reports' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
       ]
     },
     {
       g: 'Finance', items: [
         { id: 'fees', ic: '<i class="fas fa-money-bill"></i>', lbl: 'Fees / Payments' },
+        { id: 'feestructure', ic: '<i class="fas fa-building"></i>', lbl: 'Fee Structure' },
+        { id: 'payments', ic: '<i class="fas fa-money-bill-wave"></i>', lbl: 'Record Payment' },
+        { id: 'expenses', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Expenses' },
+        { id: 'salary', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Salary / Payroll' },
+        { id: 'receipts', ic: '<i class="fas fa-file-invoice"></i>', lbl: 'Invoices & Receipts' },
+        { id: 'scholarships', ic: '<i class="fas fa-gift"></i>', lbl: 'Scholarships' },
+        { id: 'debtors', ic: '<i class="fas fa-users-slash"></i>', lbl: 'Debtors' },
       ]
     },
     {
@@ -855,7 +861,6 @@ const MENUS = {
     {
       g: 'Academics', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignment / Homework' },
         { id: 'materials', ic: '<i class="fas fa-cloud-upload-alt"></i>', lbl: 'Upload Learning Materials' },
       ]
     },
@@ -886,7 +891,6 @@ const MENUS = {
     {
       g: 'Academic', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
         { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exam Results' },
         { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Card' },
       ]
@@ -911,7 +915,6 @@ const MENUS = {
       g: 'Academics', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance Tracking' },
         { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Cards / Results' },
-        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignment Tracking' },
       ]
     },
     {
@@ -932,7 +935,7 @@ const MENUS = {
   Accountant: [
     {
       g: 'Main', items: [
-        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'accountant_overview', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
         { id: 'fees', ic: '<i class="fas fa-credit-card"></i>', lbl: 'Student Fees' },
         { id: 'payments', ic: '<i class="fas fa-money-bill-wave"></i>', lbl: 'Payments' },
         { id: 'expenses', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Expenses' },
@@ -940,6 +943,7 @@ const MENUS = {
     },
     {
       g: 'Payroll & Structure', items: [
+        { id: 'feestructure', ic: '<i class="fas fa-building"></i>', lbl: 'Fee Structure' },
         { id: 'salary', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Salary / Payroll' },
         { id: 'receipts', ic: '<i class="fas fa-file-invoice"></i>', lbl: 'Invoice & Receipts' },
       ]
@@ -964,18 +968,18 @@ const MENUS = {
   Alumni: [
     {
       g: 'Main', items: [
-        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'alumni_overview', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
         { id: 'profile', ic: '<i class="fas fa-user"></i>', lbl: 'Alumni Profile' },
         { id: 'directory', ic: '<i class="fas fa-address-book"></i>', lbl: 'Alumni Directory' },
       ]
     },
     {
       g: 'Community', items: [
+        { id: 'community', ic: '<i class="fas fa-people-group"></i>', lbl: 'Community' },
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Reunions' },
         { id: 'donations', ic: '<i class="fas fa-handshake"></i>', lbl: 'Donations' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
         { id: 'jobs', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Job Board' },
-        { id: 'certificates', ic: '<i class="fas fa-certificate"></i>', lbl: 'Certificates Request' },
         { id: 'gallery', ic: '<i class="fas fa-images"></i>', lbl: 'Gallery' },
         { id: 'yearbook', ic: '<i class="fas fa-book-open"></i>', lbl: 'Digital Yearbook' },
       ]
@@ -1000,6 +1004,7 @@ const MENUS = {
 function getAllowedModuleIdsForRole(role = currentRole) {
   const menuIds = (MENUS[role] || [])
     .flatMap(section => section.items.map(item => item.id));
+  if (role === 'Accountant') menuIds.push('expense_new', 'receipt_new', 'payroll_process', 'balance');
   return new Set(['dashboard', ...menuIds]);
 }
 
@@ -1137,7 +1142,8 @@ function backToRoles() {
 function doLogin() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('app-shell').classList.add('active');
-  document.getElementById('role-fab').style.display = getSessionUser() ? 'none' : 'flex';
+  const roleFab = document.getElementById('role-fab');
+  if (roleFab) roleFab.style.display = getSessionUser() ? 'none' : 'flex';
   closeModal();
   switchRole(loginRole);
 }
@@ -1148,8 +1154,8 @@ function logout() {
     setSessionUser(null);
     document.getElementById('app-shell').classList.remove('active');
     document.getElementById('login-page').style.display = 'flex';
-    document.getElementById('role-fab').style.display = 'none';
-    document.getElementById('role-switcher').classList.remove('open');
+    document.getElementById('role-fab')?.style.setProperty('display', 'none');
+    document.getElementById('role-switcher')?.classList.remove('open');
   }
 }
 function showStaffLoginModal() {
@@ -1333,8 +1339,17 @@ function getVisibleNotifications() {
   const self = { name: sessionUser?.name || '', role: String(currentRole || sessionUser?.role || '').toLowerCase() };
   const role = String(self.role || currentRole || '').toLowerCase();
   return APP_NOTIFICATIONS.filter(n => {
-    if (!n.recipient && !n.recipientRole) return true;
-    return (n.recipient && n.recipient === self.name) || (n.recipientRole && String(n.recipientRole).toLowerCase() === role);
+    const hasTarget = n.recipient || n.recipientUsername || n.recipientRole || (Array.isArray(n.recipientRoles) && n.recipientRoles.length);
+    if (!hasTarget) return false;
+    const nameMatch = n.recipient && normalizeIdentity(n.recipient) === normalizeIdentity(self.name);
+    const usernameMatch = n.recipientUsername && normalizeIdentity(n.recipientUsername) === normalizeIdentity(user?.username);
+    const singleRoleMatch = n.recipientRole && String(n.recipientRole).toLowerCase() === role;
+    const roleMatch = Array.isArray(n.recipientRoles) && n.recipientRoles.some(targetRole => String(targetRole).toLowerCase() === role);
+    const hasDirectTarget = Boolean(n.recipient || n.recipientUsername);
+    const hasRoleTarget = Boolean(n.recipientRole || (Array.isArray(n.recipientRoles) && n.recipientRoles.length));
+    if (hasDirectTarget && !(nameMatch || usernameMatch)) return false;
+    if (hasRoleTarget && !(singleRoleMatch || roleMatch)) return false;
+    return true;
   });
 }
 
@@ -1358,7 +1373,9 @@ function addAppNotification(notification) {
     action: notification.action || 'View',
     actionLink: notification.actionLink || 'dashboard',
     recipient: notification.recipient || '',
-    recipientRole: notification.recipientRole || ''
+    recipientRole: notification.recipientRole || '',
+    recipientUsername: notification.recipientUsername || '',
+    recipientRoles: Array.isArray(notification.recipientRoles) ? notification.recipientRoles : []
   });
   saveAppNotifications();
   updateNotificationBadge();
@@ -1505,11 +1522,17 @@ function getSavedNavigationState() {
   return null;
 }
 
-function toggleRS() { document.getElementById('role-switcher').classList.toggle('open') }
+function toggleRS() { document.getElementById('role-switcher')?.classList.toggle('open') }
 function switchRole(role, preferredMod) {
   const sessionUser = getSessionUser();
+  const authenticatedRole = normalizeRoleName(sessionUser?.role);
+  if (sessionUser && authenticatedRole && role !== authenticatedRole) {
+    document.getElementById('role-switcher')?.classList.remove('open');
+    showToast(`You are signed in as ${authenticatedRole}. Sign out to use another account.`, 'warning');
+    role = authenticatedRole;
+  }
   currentRole = role;
-  document.getElementById('role-switcher').classList.remove('open');
+  document.getElementById('role-switcher')?.classList.remove('open');
   document.getElementById('top-role').textContent = role.toUpperCase();
   const topAvatar = document.getElementById('top-av');
   if (topAvatar) topAvatar.textContent = sessionUser?.name ? getInitials(sessionUser.name, role) : (AV_INIT[role] || 'US');
@@ -1541,6 +1564,9 @@ function switchRole(role, preferredMod) {
   setTimeout(initializeSelectEnhancements, 10);
 }
 function navTo(id, keepTopbarSearch = false) {
+  const activeRole = normalizeRoleName(getSessionUser()?.role || currentRole);
+  if (id === 'dashboard' && activeRole === 'Accountant') id = 'accountant_overview';
+  if (id === 'dashboard' && activeRole === 'Alumni') id = 'alumni_overview';
   if (!keepTopbarSearch) {
     const topInput = document.getElementById('topbar-search-input');
     if (topInput) topInput.value = '';
@@ -1824,7 +1850,7 @@ function renderSidebar() {
       h += `<div class="sb-item${it.id === currentMod ? ' active' : ''}" onclick="navTo('${it.id}')">
         <span class="si">${it.ic}</span>
         <span class="sl">${it.lbl}</span>
-        ${it.badge ? `<span class="sb-badge">${typeof it.badge === 'function' ? it.badge() : it.badge}</span>` : ''}
+        ${it.id === 'messaging' && typeof internalUnreadCount === 'function' && internalUnreadCount() ? `<span class="sb-badge">${internalUnreadCount()}</span>` : (it.badge ? `<span class="sb-badge">${typeof it.badge === 'function' ? it.badge() : it.badge}</span>` : '')}
       </div>`;
     });
     h += `</div><div class="sb-divider"></div>`;
@@ -1837,6 +1863,8 @@ function renderSidebar() {
 // -----------------------------------
 function renderMain() {
   const el = document.getElementById('main-content');
+  const sessionRole = normalizeRoleName(getSessionUser()?.role);
+  if (sessionRole && sessionRole !== 'Visitor') currentRole = sessionRole;
   const r = currentRole, m = currentMod;
   if (!canAccessModule(m, r)) {
     el.innerHTML = accessDeniedModule(m);
@@ -1845,6 +1873,8 @@ function renderMain() {
 
   const map = {
     dashboard: () => ({ Admin: adminDash, Teacher: teacherDash, Student: studentDash, Parent: parentDash, Accountant: accountDash, Alumni: alumniDash, Visitor: visitorHome }[r] || adminDash)(),
+    accountant_overview: () => accountDash(),
+    alumni_overview: () => alumniDash(),
     students: () => studentsModule(),
     teachers: () => currentRole === 'Admin' ? teachersManagementModule() : teachersModule(),
     parents: () => parentsModule(),
@@ -1855,7 +1885,6 @@ function renderMain() {
     grades: () => gradesModule(),
     exams: () => examsModule(),
     admissions: () => admissionsModule(),
-    assignments: () => assignmentsModule(),
     fees: () => feesModule(),
     payments: () => paymentsModule(),
     events: () => eventsModule(),
@@ -1869,7 +1898,7 @@ function renderMain() {
     alumni: () => alumniModule(),
     alumni_pub: () => alumniPubModule(),
     settings: () => settingsModule(),
-    profile: () => profileModule(),
+    profile: () => currentRole === 'Alumni' ? alumniProfileModule() : profileModule(),
     yearbook: () => yearbookModule(),
     yearbook_admin: () => adminYearbookModule(),
     reportcards: () => reportCardsModule(),
@@ -1877,23 +1906,28 @@ function renderMain() {
     sba: () => sbaModule(),
     children: () => childrenModule(),
     salary: () => salaryModule(),
-    feestructure: () => feeStructModule(),
+    feestructure: () => sharedFeeStructModule(),
     scholarships: () => scholarshipsModule(),
     debtors: () => debtorsModule(),
     receipts: () => receiptsModule(),
     balance: () => balanceSheetModule(),
     expenses: () => expensesModule(),
+    expense_new: () => expenseCreateModule(),
+    receipt_new: () => receiptCreateModule(),
+    payroll_process: () => payrollProcessModule(),
     directory: () => alumniDirectory(),
     donations: () => donationsModule(),
+    community: () => alumniCommunityModule(),
     jobs: () => jobBoardModule(),
-    certificates: () => certificatesModule(),
     about: () => visitorAbout(),
     admission: () => visitorAdmission(),
     contact: () => visitorContact(),
     gallery: () => currentRole === 'Visitor' ? visitorGallery() : galleryModule(),
     transport: () => transportModule(),
   };
-  el.innerHTML = (map[m] || map.dashboard)();
+  const moduleHtml = (map[m] || map.dashboard)();
+  const isDashboardOverview = m === 'dashboard' || m === 'accountant_overview' || m === 'alumni_overview';
+  el.innerHTML = moduleHtml + (isDashboardOverview && r !== 'Visitor' && typeof messagingDashboardCard === 'function' ? messagingDashboardCard() : '');
 
   // Initialize calendar if events module
   if (m === 'events') {
@@ -1904,7 +1938,7 @@ function renderMain() {
     setTimeout(() => { try{ initMaterialsUI(); }catch(e){} }, 80);
   }
   // Initialize recent payments rendering when Accountant views dashboard
-  if (m === 'dashboard' && r === 'Accountant') {
+  if ((m === 'dashboard' || m === 'accountant_overview') && r === 'Accountant') {
     setTimeout(() => { try{ renderRecentPaymentsTable(); } catch(e){} }, 80);
   }
   // Initialize parent dashboard

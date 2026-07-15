@@ -822,6 +822,37 @@ html,body{
 .g12{display:grid;grid-template-columns:1fr 2fr;gap:18px}
 .mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
 
+/* Assignments: prevent table/form intrinsic widths from expanding the page. */
+.assignments-layout{
+  grid-template-columns:minmax(0,2fr) minmax(320px,1fr);
+  align-items:start;
+}
+.assignments-layout > *,
+.assignment-form-card .f-row > *,
+.assignment-form-card .f-field{
+  min-width:0;
+}
+.assignment-form-card input,
+.assignment-form-card select,
+.assignment-form-card textarea{
+  width:100%;
+  max-width:100%;
+}
+.assignments-list-card .table-wrapper{
+  max-width:100%;
+}
+.assignments-table{
+  min-width:760px;
+}
+.fee-structure-amount{
+  width:140px;
+  max-width:100%;
+  padding:8px 10px;
+  border:1px solid var(--gray-300);
+  border-radius:8px;
+  font:inherit;
+}
+
 /* TABLE */
 .tbl{
   width:100%;

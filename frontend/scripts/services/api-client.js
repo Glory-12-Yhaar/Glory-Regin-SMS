@@ -87,6 +87,9 @@ const API = {
         create:      (data)        => apiRequest('/fees/index.php',    'POST', data),
         payments:    (params = {}) => apiRequest('/fees/payment.php?' + new URLSearchParams(params)),
         recordPayment: (data)      => apiRequest('/fees/payment.php',  'POST', data),
+        structure:   (params = {}) => apiRequest('/fees/structure.php?' + new URLSearchParams(params)),
+        saveStructure: (data)      => apiRequest('/fees/structure.php', 'POST', data),
+        deleteStructure: (id)      => apiRequest('/fees/structure.php?id=' + id, 'DELETE'),
     },
 
     // ── Events ───────────────────────────────────────────────
@@ -158,6 +161,10 @@ const API = {
     dashboard: () => apiRequest('/reports/dashboard.php'),
     analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
     financeReport: (params = {}) => apiRequest('/reports/finance.php?' + new URLSearchParams(params)),
+    expenses: {
+        list:   ()     => apiRequest('/expenses/index.php'),
+        create: (data) => apiRequest('/expenses/index.php', 'POST', data),
+    },
 
     exams: {
         list:   (params = {}) => apiRequest('/exams/index.php?' + new URLSearchParams(params)),
@@ -501,6 +508,8 @@ async function syncAllDataFromBackend() {
             parentsData.splice(0, parentsData.length, ...res.data.map(p => ({
                 parent_id: 'P' + String(p.id).padStart(3, '0'),
                 id: p.id,
+                user_id: p.user_id,
+                username: p.username || '',
                 name: p.name,
                 contact_person: p.contact_person || p.name,
                 gender: p.gender || 'Not provided',
@@ -517,6 +526,19 @@ async function syncAllDataFromBackend() {
     } catch (e) { console.error("Error syncing parents:", e); }
 
     // 4b. Fees and payments
+    window.feeStructureData = Array.isArray(window.feeStructureData) ? window.feeStructureData : [];
+    if (['Admin', 'Accountant'].includes(window.currentRole || currentRole)) {
+        try {
+            const res = await API.fees.structure();
+            if (res && res.success && Array.isArray(res.data)) {
+                window.feeStructureData.splice(0, window.feeStructureData.length, ...res.data.map(row => ({
+                    id: parseInt(row.id, 10), classId: parseInt(row.class_id, 10), className: row.class_name || '',
+                    term: row.term || '', academicYear: row.academic_year || '', amount: parseFloat(row.amount || 0)
+                })));
+            }
+        } catch (e) { console.error("Error syncing fee structure:", e); }
+    }
+
     try {
         const res = await API.fees.list({ limit: 500 });
         if (res && res.success && res.data && Array.isArray(window.feesData)) {

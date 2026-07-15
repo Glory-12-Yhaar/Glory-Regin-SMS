@@ -793,6 +793,7 @@ function editStudent(studentId) {
         <label>Parent Phone</label>
         <input type="tel" id="edit-std-parent-phone" value="${student.parent_phone || ''}">
       </div>
+      <div class="form-field" style="grid-column:1/-1"><label>New Login Password</label><input type="password" id="edit-std-password" minlength="6" placeholder="Leave blank to keep the current password"></div>
       <div style="grid-column:1/-1;display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="saveStudentChanges('${studentId}')"><i class="fas fa-save"></i> Save Changes</button>
         <button class="btn btn-secondary" style="flex:1" onclick="viewStudent('${studentId}')">Cancel</button>
@@ -818,7 +819,8 @@ async function saveStudentChanges(studentId) {
     status: document.getElementById('edit-std-status')?.value || student.status,
     address: document.getElementById('edit-std-address')?.value || '',
     guardian_name: document.getElementById('edit-std-parent-name')?.value || '',
-    guardian_phone: document.getElementById('edit-std-parent-phone')?.value || ''
+    guardian_phone: document.getElementById('edit-std-parent-phone')?.value || '',
+    password: document.getElementById('edit-std-password')?.value || undefined
   });
   if (!res || !res.success) {
     showToast(res?.message || 'Failed to update student', 'error');
@@ -2883,9 +2885,9 @@ function timetableModule() {
     <button class="btn btn-secondary" onclick="printTimetable()"><i class="fas fa-print"></i> Print</button>
     <button class="btn btn-secondary" onclick="exportTimetablePDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
     <div style="flex:1"></div>
-    <div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(147,51,234,.08));border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--blue-dark)">
+    ${currentRole === 'Student' ? '' : `<div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(147,51,234,.08));border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--blue-dark)">
       <i class="fas fa-eye"></i> Viewing: <strong>${selectedClass}</strong> (Read Only)
-    </div>
+    </div>`}
   </div>`}
 
   ${classTabsHtml}
@@ -3196,7 +3198,7 @@ async function deleteTimetable() {
     const termEl = document.getElementById('tt-term-select');
     const term = termEl ? termEl.value : 'Term 1, 2025';
     if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
-    if (!confirm('Delete timetable for ' + cls + ' Â· ' + term + '?')) return;
+    if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
 
     const res = await API.timetable.delete(cls, term);
     if (res && res.success) {
@@ -3628,7 +3630,7 @@ function examsModule() {
 
   return hdr(isStudent ? 'Exam Results' : 'Exams & Report Cards', isAdmin ? 'Manage examinations, grading and report generation' : 'View exam information for your permitted classes', 'Exams') + `
   <div class="mod-tabs">
-    ${['Exam Schedule', 'Report Cards', 'Results Analysis'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchExamTab(${i})">${t}</div>`).join('')}
+    ${(isStudent ? ['Exam Schedule', 'Report Cards'] : ['Exam Schedule', 'Report Cards', 'Results Analysis']).map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchExamTab(${i})">${t}</div>`).join('')}
   </div>
   
   <!-- TAB 1: EXAM SCHEDULE -->
@@ -3706,7 +3708,7 @@ function examsModule() {
     </div>
   </div>
   
-  <!-- TAB 3: RESULTS ANALYSIS -->
+  ${isStudent ? '' : `<!-- TAB 3: RESULTS ANALYSIS -->
   <div id="exam-tab-2" class="exam-tab-content" style="display:none">
     <div class="card mb20">
       <div class="card-hdr">
@@ -3749,7 +3751,7 @@ function examsModule() {
         </ul>
       </div>
     </div>
-  </div>
+  </div>`}
   `;
 }
 

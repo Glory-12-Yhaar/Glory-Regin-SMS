@@ -1,0 +1,18 @@
+<div class="g21">
+  <div class="card">
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-user"></i> Personal & Alumni Information</span></div>
+    <div class="f-row"><div class="f-field"><label>Full Name</label><input id="alumni-profile-name" value="{{name}}"></div><div class="f-field"><label>Old Student ID</label><input id="alumni-profile-student-id" value="{{studentId}}"></div></div>
+    <div class="f-row"><div class="f-field"><label>Gender</label><select id="alumni-profile-gender"><option>{{gender}}</option><option>Female</option><option>Male</option><option>Prefer not to say</option></select></div><div class="f-field"><label>Date of Birth</label><input id="alumni-profile-dob" type="date" value="{{dob}}"></div></div>
+    <div class="f-row"><div class="f-field"><label>Graduation Year</label><input id="alumni-profile-year" type="number" value="{{gradYear}}"></div><div class="f-field"><label>Class / Programme</label><input id="alumni-profile-class" value="{{className}}"></div></div>
+    <div class="f-row"><div class="f-field"><label>Occupation</label><input id="alumni-profile-profession" value="{{profession}}"></div><div class="f-field"><label>Company</label><input id="alumni-profile-company" value="{{company}}"></div></div>
+    <div class="f-row"><div class="f-field"><label>Email</label><input id="alumni-profile-email" type="email" value="{{email}}"></div><div class="f-field"><label>Phone</label><input id="alumni-profile-phone" value="{{phone}}"></div></div>
+    <div class="f-row"><div class="f-field"><label>Country</label><input id="alumni-profile-country" value="{{country}}"></div><div class="f-field"><label>Home Address</label><input id="alumni-profile-address" value="{{address}}"></div></div>
+    <div class="f-row"><div class="f-field"><label>LinkedIn</label><input id="alumni-profile-linkedin" value="{{linkedin}}"></div><div class="f-field"><label>Other Social Link</label><input id="alumni-profile-social" value="{{social}}"></div></div>
+    <div class="f-field"><label>Profile Picture</label><input id="alumni-profile-picture" type="file" accept="image/*"></div>
+    <button class="btn btn-primary" onclick="saveAlumniProfile()"><i class="fas fa-save"></i> Save Profile</button>
+  </div>
+  <div>
+    <div class="card mb16"><div class="card-hdr"><span class="card-title"><i class="fas fa-id-badge"></i> Profile Summary</span></div><div style="text-align:center"><div class="av av-xl av-teal" style="margin:0 auto 12px">{{initials}}</div><strong>{{name}}</strong><div style="font-size:12px;color:var(--gray-500)">Class of {{gradYear}}</div></div></div>
+    <div class="card"><div class="card-hdr"><span class="card-title"><i class="fas fa-lock"></i> Account Security</span></div><p style="font-size:12px;color:var(--gray-600)">Use your account password settings to keep alumni information secure.</p><button class="btn btn-secondary" style="width:100%" onclick="showToast('Open the password section from account settings.', 'info')">Change Password</button></div>
+  </div>
+</div>

@@ -1,4 +1,7 @@
-﻿
+// Shared report-card score store. Keep it on window so report generation,
+// printing, and dashboard navigation all use the same records.
+const studentScores = window.studentScores || (window.studentScores = Object.create(null));
+
 // Report-card-specific grading thresholds.
 function calculateReportGrade(score) {
   if (score >= 90) return 'A';
@@ -31,6 +34,13 @@ function processStudentScores(studentId) {
   ensureReportCardScores();
   const student = studentScores[studentId];
   if (!student) return null;
+  if (!Array.isArray(student.scores) || !student.scores.length) {
+    const enrolled = enrolledStudents.find(record => String(record.student_id) === String(studentId) || normalizeIdentity(record.name) === normalizeIdentity(student.name));
+    student.scores = buildGeneratedReportScores(enrolled || {
+      name: student.name,
+      student_class: student.class || 'Not Assigned'
+    });
+  }
 
   const processed = {
     ...student,
@@ -105,11 +115,40 @@ function getReportCardEntriesForRole() {
   if (currentRole === 'Student') {
     const currentStudent = getCurrentStudentRecord();
     entries = entries.filter(([id, data]) => id === currentStudent.student_id || data.name === currentStudent.name);
+    if (!entries.length && currentStudent.student_id && currentStudent.name !== 'No linked student') {
+      const id = currentStudent.student_id;
+      studentScores[id] = {
+        name: currentStudent.name,
+        class: currentStudent.student_class || 'Not Assigned',
+        classTeacher: getClassTeacherName(currentStudent.student_class),
+        stream: classesData.find(c => c.name === currentStudent.student_class)?.stream || 'General',
+        picture: getInitials(currentStudent.name, 'ST').slice(0, 1),
+        attendance: parseFloat(currentStudent.attendance) || 0,
+        term: '1st', year: '2024/2025', scores: buildGeneratedReportScores(currentStudent, 0)
+      };
+      entries = [[id, studentScores[id]]];
+    }
   } else if (currentRole === 'Parent') {
     const children = getParentChildren();
-    const childNames = new Set(children.map(c => c.name));
-    const childIds = new Set(children.map(c => c.studentId));
-    entries = entries.filter(([id, data]) => childIds.has(id) || childNames.has(data.name));
+    const childNames = new Set(children.map(c => normalizeIdentity(c.name)));
+    const childIds = new Set(children.map(c => String(c.studentId || c.id || '')));
+    entries = entries.filter(([id, data]) => childIds.has(String(id)) || childNames.has(normalizeIdentity(data.name)));
+    children.forEach((child, index) => {
+      const exists = entries.some(([id, data]) => childIds.has(String(id)) && String(id) === String(child.studentId || child.id) || normalizeIdentity(data.name) === normalizeIdentity(child.name));
+      if (exists || !child.name) return;
+      const enrolled = enrolledStudents.find(student => String(student.student_id) === String(child.studentId) || normalizeIdentity(student.name) === normalizeIdentity(child.name));
+      const source = enrolled || { student_id: child.studentId || child.id, name: child.name, student_class: child.class, attendance: child.attendance };
+      const id = String(source.student_id || child.studentId || child.id || `CHILD-${index + 1}`);
+      studentScores[id] = {
+        name: source.name,
+        class: source.student_class || child.class || 'Not Assigned',
+        classTeacher: getClassTeacherName(source.student_class || child.class),
+        stream: classesData.find(c => c.name === (source.student_class || child.class))?.stream || 'General',
+        picture: getInitials(source.name, 'ST').slice(0, 1), attendance: parseFloat(source.attendance) || 0,
+        term: '1st', year: '2024/2025', scores: buildGeneratedReportScores(source, index)
+      };
+      entries.push([id, studentScores[id]]);
+    });
   } else if (currentRole === 'Teacher') {
     const assignedClassNames = getAssignedClassNamesForTeacher();
     entries = entries.filter(([_, data]) => assignedClassNames.includes(data.class));
@@ -178,10 +217,31 @@ function getReportRemark(grade) {
   return 'Needs Improvement';
 }
 
+function getReportCardSchoolContext() {
+  const school = (typeof SETTINGS_DATA !== 'undefined' && SETTINGS_DATA.schoolInfo) ? SETTINGS_DATA.schoolInfo : {};
+  const academic = (typeof SETTINGS_DATA !== 'undefined' && SETTINGS_DATA.academic) ? SETTINGS_DATA.academic : {};
+  const rawTerm = academic.currentTerm || 'Term 1';
+  const termNumber = String(rawTerm).match(/\d+/)?.[0];
+  const term = termNumber === '1' ? '1st Term' : termNumber === '2' ? '2nd Term' : termNumber === '3' ? '3rd Term' : rawTerm;
+  const configuredLogo = school.schoolLogo || 'Logo.png';
+  const logo = /^(data:|https?:|assets\/)/i.test(configuredLogo) ? configuredLogo : `assets/images/${configuredLogo}`;
+  return {
+    name: school.schoolName || 'Glory Reign Preparatory School',
+    address: school.address || '',
+    phone: school.phone || '',
+    email: school.email || '',
+    motto: school.schoolMotto || '',
+    logo,
+    term,
+    academicYear: academic.academicYear || 'Current Academic Year'
+  };
+}
+
 // Generate report card HTML
 function generateReportCard(studentId) {
   const student = processStudentScores(studentId);
   if (!student) return '<div class="card"><p>Student not found</p></div>';
+  const school = getReportCardSchoolContext();
 
   const maxMarks = student.processedScores.length * 100;
   const { enrolled, admission } = getReportStudentRecord(studentId, student.name);
@@ -260,11 +320,12 @@ function generateReportCard(studentId) {
   <div class="report-card-container paper-style" data-report-student-id="${escapeAttr(studentId)}">
     <div class="rc-paper">
       <div class="rc-title">
-        <div style="text-align:center"><img src="assets/images/Logo.png" alt="Logo" style="width:58px;height:58px;object-fit:contain"><div style="font-size:9px">School Logo</div></div>
+        <div style="text-align:center"><img src="${escapeAttr(school.logo)}" alt="${escapeAttr(school.name)} logo" style="width:58px;height:58px;object-fit:contain"><div style="font-size:9px">School Logo</div></div>
         <div>
-          <div class="rc-school">Glory Reign Preparatory School</div>
-          <div class="rc-subline">Terminal Report Card Â· ${student.term} Term Â· ${student.year}</div>
-          <div class="rc-subline">P.O. Box AN 1234, Accra North Â· Tel: +233-123-456-789</div>
+          <div class="rc-school">${escapeHtml(school.name)}</div>
+          ${school.motto ? `<div class="rc-subline">${escapeHtml(school.motto)}</div>` : ''}
+          <div class="rc-subline">Terminal Report Card · ${escapeHtml(school.term)} · ${escapeHtml(school.academicYear)}</div>
+          <div class="rc-subline">${escapeHtml(school.address)}${school.phone ? ` · Tel: ${escapeHtml(school.phone)}` : ''}${school.email ? ` · ${escapeHtml(school.email)}` : ''}</div>
         </div>
         <div class="rc-photo">${photoHTML}<span>Student Photo</span></div>
       </div>
@@ -301,7 +362,7 @@ function generateReportCard(studentId) {
             <td></td>
             <td></td>
             <td class="rc-total">${student.totalMarks}</td>
-            <td colspan="3">Average: ${student.average}% Â· Overall Grade: ${student.grade} Â· Max: ${maxMarks}</td>
+            <td colspan="3">Average: ${student.average}% · Overall Grade: ${student.grade} · Max: ${maxMarks}</td>
           </tr>
         </tbody>
       </table>
@@ -331,11 +392,11 @@ function generateReportCard(studentId) {
         </div>
         <div class="rc-box">
           <h4>School Fees / Next Term</h4>
-          <div class="rc-line"><span>Arrears from Last Term</span><strong>GHâ‚µ ${arrears.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Fees Paid</span><strong>GHâ‚µ ${paidFees.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Balance Fee</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
-          <div class="rc-line"><span>Books / PTA / Other</span><strong>GHâ‚µ 0</strong></div>
-          <div class="rc-line"><span>Total</span><strong>GHâ‚µ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Arrears from Last Term</span><strong>GH₵ ${arrears.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Fees Paid</span><strong>GH₵ ${paidFees.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Balance Fee</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
+          <div class="rc-line"><span>Books / PTA / Other</span><strong>GH₵ 0</strong></div>
+          <div class="rc-line"><span>Total</span><strong>GH₵ ${balance.toLocaleString()}</strong></div>
         </div>
       </div>
 
@@ -413,12 +474,15 @@ function printReportCardPaper(studentId) {
 
 function reportCardsModule() {
   const visibleScores = getReportCardEntriesForRole();
+  const defaultReportId = ['Student', 'Parent'].includes(currentRole) ? visibleScores[0]?.[0] : '';
 
   const title = currentRole === 'Student' ? 'My Report Card' : currentRole === 'Parent' ? 'Children Report Cards' : 'Report Cards';
   const subtitle = currentRole === 'Admin' ? 'View and generate student report cards' : 'View permitted report cards only';
+  const showStudentSelector = !['Student', 'Parent'].includes(currentRole);
 
   return hdr(title, subtitle, 'Report Cards') + `
-  <div class="g21 mb20">
+  <div class="${showStudentSelector ? 'g21' : ''} mb20">
+    ${showStudentSelector ? `
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Select Student Report Card</span></div>
       <div class="f-row">
@@ -426,7 +490,7 @@ function reportCardsModule() {
           <label>Select Student</label>
           <select id="student-select" onchange="if(this.value) showReportCard(this.value)" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
             <option value="">Choose a student...</option>
-            ${visibleScores.map(([id, data]) => `<option value="${id}">${data.name} (${data.class})</option>`).join('')}
+            ${visibleScores.map(([id, data], index) => `<option value="${id}" ${defaultReportId && index === 0 ? 'selected' : ''}>${data.name} (${data.class})</option>`).join('')}
           </select>
         </div>
         <div class="f-field">
@@ -444,6 +508,7 @@ function reportCardsModule() {
         </p>
       </div>
     </div>
+    ` : ''}
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Student Report Summary</span></div>
       <table class="tbl">
@@ -467,7 +532,7 @@ function reportCardsModule() {
       </table>
     </div>
   </div>
-  <div id="student-report-container" style="margin-top:30px"></div>`;
+  <div id="student-report-container" style="margin-top:30px">${defaultReportId ? generateReportCard(defaultReportId) : ''}</div>`;
 }
 
 // ASSIGNMENTS MODULE
@@ -539,10 +604,10 @@ function assignmentsModule() {
   const createButtonHTML = (isTeacher || isAdmin) ? `<button class="btn btn-primary btn-sm" onclick="openCreateAssignmentForm()">+ New Assignment</button>` : '';
 
   let html = hdr('Assignments Module', isTeacher ? 'Assignments for your assigned classes' : isStudent ? 'Your class assignments' : 'Create and manage class assignments', 'Assignments') + `
-  <div class="g21">
-    <div class="card">
+  <div class="g21 assignments-layout">
+    <div class="card assignments-list-card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> ${isStudent ? 'My Assignments' : 'All Assignments'}</span>${createButtonHTML}</div>
-      <table class="tbl">
+      <div class="table-wrapper"><table class="tbl assignments-table">
         <thead><tr><th>Title</th><th>Subject</th>${!isStudent ? '<th>Class</th>' : ''}<th>Due Date</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>`;
 
@@ -571,14 +636,14 @@ function assignmentsModule() {
     });
   }
 
-  html += `</tbody></table></div>`;
+  html += `</tbody></table></div></div>`;
 
   // Create Assignment Form
   if (isTeacher || isAdmin) {
     const classChoices = isTeacher ? classesData.filter(c => teacherClassNames.includes(c.name)) : classesData;
     const subjectChoices = isTeacher ? getVisibleSubjectsForRole(subjectsData) : subjectsData;
     html += `
-    <div class="card">
+    <div class="card assignment-form-card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> Create New Assignment</span></div>
       <form id="create-assignment-form" onsubmit="createAssignment(event)">
         <div class="f-field" style="margin-bottom:12px">
@@ -963,7 +1028,7 @@ function getPaymentRecords() {
 }
 
 function formatMoney(amount) {
-  return 'GHÃ¢â€šÂµ' + Number(amount || 0).toLocaleString();
+  return 'GH₵' + Number(amount || 0).toLocaleString();
 }
 
 function feeStatusClass(status) {
@@ -1138,7 +1203,7 @@ function feesModule() {
   }
 
   // Admin/Accountant view: Show all students fees
-  const recordPaymentBtn = isAccountant ? `<button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button>` : '';
+  const recordPaymentBtn = (isAdmin || isAccountant) ? `<button class="btn btn-gold btn-sm" onclick="navTo('payments')">+ Record Payment</button>` : '';
   const feeRecords = getFeeRecords();
   const totalDue = feeRecords.reduce((sum, f) => sum + Number(f.amountDue || 0), 0);
   const totalPaid = feeRecords.reduce((sum, f) => sum + Number(f.amountPaid || 0), 0);
@@ -1161,10 +1226,10 @@ function feesModule() {
       </tr>`;
   }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:18px">No fee records found.</td></tr>';
   const structureRows = classesData.map(c => {
-    const fee = feeRecords.find(f => f.className === c.name);
+    const fee = (window.feeStructureData || []).find(f => Number(f.classId) === Number(c.id));
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)">
       <span style="font-size:13px;font-weight:600">${escapeHtml(c.name)}</span>
-      <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">${fee ? formatMoney(fee.amountDue) : 'Not set'}</span>
+      <span style="font-size:16px;font-weight:800;color:var(--blue-dark)">${fee ? formatMoney(fee.amount) : 'Not set'}</span>
     </div>`;
   }).join('') || '<div style="padding:12px;color:var(--gray-400)">No class fee structure found.</div>';
 
@@ -1299,7 +1364,7 @@ function paymentsModule() {
       <form onsubmit="recordPayment(event)">
         <div class="f-row">
           <div class="f-field"><label>Student</label><select id="pay-student" required>${studentOptions}</select></div>
-          <div class="f-field"><label>Method</label><select id="pay-method" required><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+          <div class="f-field"><label>Method</label><select id="pay-method" required><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Cheque</option><option>Paystack</option></select></div>
         </div>
         <div class="f-row">
           <div class="f-field"><label>Amount Paying</label><input type="number" id="pay-amount" placeholder="0.00" min="1" step="0.01" required></div>
@@ -1350,12 +1415,18 @@ async function recordPayment(event) {
   const date = document.getElementById('pay-date').value;
   const method = document.getElementById('pay-method').value;
   const remarks = document.getElementById('pay-remarks').value;
-  const receiptNo = document.getElementById('pay-receipt').value.trim();
+  let receiptNo = document.getElementById('pay-receipt').value.trim();
   const receivedBy = document.getElementById('pay-received-by').value.trim();
 
   if (!studentId || !amount || amount <= 0 || !term || !academicYear || !date) {
     showToast('<i class="fas fa-times-circle"></i> Please fill in all required fields correctly', 'error');
     return;
+  }
+
+  if (method === 'Paystack') {
+    const transaction = await openPaystackCheckout(amount);
+    if (!transaction) return;
+    receiptNo = transaction.reference || transaction.trxref || receiptNo;
   }
 
   const res = await API.fees.recordPayment({
@@ -1378,6 +1449,28 @@ async function recordPayment(event) {
   showToast(`<i class="fas fa-check-circle"></i> Payment processed. Receipt ${res.receipt_no} issued`, 'success');
   event.target.reset();
   setTimeout(() => navTo('fees'), 800);
+}
+
+const PAYSTACK_PUBLIC_KEY = 'pk_live_3ea0367bf3251d4990bd3a9d6e513103ad62df0e';
+function openPaystackCheckout(amount) {
+  return new Promise(resolve => {
+    if (typeof PaystackPop === 'undefined') {
+      showToast('Paystack could not load. Check your connection and try again.', 'error');
+      return resolve(null);
+    }
+    const user = getSessionUser() || {};
+    const reference = 'GRPS-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+    new PaystackPop().newTransaction({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user.email || 'payments@gloryreign.edu.gh',
+      amount: Math.round(Number(amount) * 100),
+      currency: 'GHS',
+      reference,
+      onSuccess: transaction => resolve(transaction || { reference }),
+      onCancel: () => { showToast('Paystack payment cancelled', 'info'); resolve(null); },
+      onError: error => { showToast(error?.message || 'Paystack payment failed', 'error'); resolve(null); }
+    });
+  });
 }
 
 
@@ -1690,7 +1783,7 @@ function contactMessagesModule() {
             <h4 style="font-size:13px;font-weight:700;color:var(--gray-800)">${msg.name}</h4>
             ${msg.read ? '' : '<span class="badge b-success" style="font-size:10px">New</span>'}
           </div>
-          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> Â· ${msg.date} at ${msg.time}</div>
+          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> · ${msg.date} at ${msg.time}</div>
         </div>
         <button class="btn btn-icon danger" onclick="deleteContactMessage(${msg.id})"><i class="fas fa-trash"></i></button>
       </div>
@@ -1711,7 +1804,7 @@ function contactMessagesModule() {
       <button class="btn btn-secondary btn-sm" onclick="markAllAsRead()">Mark All Read</button>
       <button class="btn btn-secondary btn-sm" onclick="deleteAllMessages()" style="color:var(--danger)">Delete All</button>
     </div>
-    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages Â· ${unreadCount} unread</div>
+    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages · ${unreadCount} unread</div>
   </div>
   ${messagesHTML}`;
 }
@@ -1958,7 +2051,7 @@ function reportsModule() {
     const pending = payments.filter(p => p.status === 'Pending').length;
     return hdr('Financial Reports', 'Revenue, collections, outstanding fees, and payroll summaries', 'Reports') + `
     <div class="stats-row">
-      ${statCard('<i class="fas fa-money-bill"></i>', 'GHâ‚µ' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
+      ${statCard('<i class="fas fa-money-bill"></i>', 'GH₵' + Number(collected).toLocaleString(), 'Collected', 'Recorded payments', 'up', 'si-blue')}
       ${statCard('<i class="fas fa-hourglass-half"></i>', pending, 'Pending Accounts', 'Need follow-up', pending ? 'dn' : 'up', pending ? 'si-red' : 'si-green')}
       ${statCard('<i class="fas fa-receipt"></i>', payments.length, 'Receipts', 'Generated records', 'neu', 'si-gold')}
       ${statCard('<i class="fas fa-briefcase"></i>', 'Payroll', 'Next Run', 'Month end', 'neu', 'si-purple')}
@@ -2234,7 +2327,7 @@ function generateReportPDF(reportType) {
   }
 
   html += '</div><div class="footer"><p>This report was automatically generated by Glory Reign School Management System</p>';
-  html += '<p>Â© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
+  html += '<p>© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const link = document.createElement('a');
@@ -4107,7 +4200,7 @@ function renderSessionProfile(container, sessionUser) {
         <div class="av av-xl av-${color}" style="font-size:26px">${getInitials(name, role)}</div>
         <div style="flex:1">
           <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${escapeHtml(name)}</div>
-          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' Â· @' + escapeHtml(username) : ''}</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' · @' + escapeHtml(username) : ''}</div>
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-success">${escapeHtml(displayUser.status || 'Active')}</span><span class="badge b-info">${escapeHtml(role)}</span></div>
         </div>
       </div>
@@ -4182,8 +4275,14 @@ async function loadProfileFromAPI() {
   if (u.role === 'Parent') {
     // Load linked children
     const pRes = await API.parents.list({ search: '' });
-    const parentRecord = pRes?.data?.find(p => p.id === u.id);
-    const children = parentRecord?.children || [];
+    const parentRecord = pRes?.data?.find(p => String(p.user_id) === String(u.id));
+    const children = Array.isArray(parentRecord?.children)
+      ? parentRecord.children
+      : (typeof getParentChildren === 'function' ? getParentChildren().map(child => ({
+          student_name: child.name,
+          class_name: child.class,
+          student_code: child.studentId
+        })) : []);
 
     childrenSection = `
     <div class="card" style="margin-top:20px">
@@ -4197,11 +4296,11 @@ async function loadProfileFromAPI() {
           ${children.map(c => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px">
-              <div class="av av-sm av-blue">${c.student_name.slice(0,2).toUpperCase()}</div>
-              <strong>${c.student_name}</strong>
+              <div class="av av-sm av-blue">${escapeHtml(c.student_name.slice(0,2).toUpperCase())}</div>
+              <strong>${escapeHtml(c.student_name)}</strong>
             </div></td>
-            <td>${c.class_name || 'â€”'}</td>
-            <td style="color:var(--gray-500);font-size:12px">${c.student_code}</td>
+            <td>${escapeHtml(c.class_name || '—')}</td>
+            <td style="color:var(--gray-500);font-size:12px">${escapeHtml(c.student_code || '—')}</td>
           </tr>`).join('')}
         </tbody>
       </table>` : `
@@ -4241,7 +4340,7 @@ async function loadProfileFromAPI() {
           <div class="av av-xl av-${color}" style="font-size:26px">${initials}</div>
           <div style="flex:1">
             <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${u.name}</div>
-            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} Â· @${u.username}</div>
+            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} · @${u.username}</div>
             <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
               <span class="badge b-${u.status === 'Active' ? 'success' : 'danger'}">${u.status}</span>
               <span class="badge b-info">${u.role}</span>

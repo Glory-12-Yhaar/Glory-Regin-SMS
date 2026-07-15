@@ -12,15 +12,21 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-requireRole(['Admin', 'Teacher']);
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
+$sessionUser = requireRole($method === 'GET' ? ['Admin', 'Teacher', 'Parent'] : ['Admin', 'Teacher']);
 
 // ── GET: list parents with their children ─────────────────────
 if ($method === 'GET') {
     $search = $_GET['search'] ?? '';
     $params = [];
     $where  = "u.role = 'Parent' AND u.status = 'Active'";
+
+    // Parent accounts must only ever receive their own linked student records.
+    if (($sessionUser['role'] ?? '') === 'Parent') {
+        $where .= " AND u.id = ?";
+        $params[] = (int)$sessionUser['id'];
+    }
 
     if ($search) {
         $where   .= " AND (u.name LIKE ? OR u.email LIKE ? OR u.username LIKE ?)";

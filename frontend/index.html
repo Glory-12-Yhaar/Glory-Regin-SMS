@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Glory Reign Preparatory School</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link href="styles/style.css?v=20260708-payments-spacing" rel="stylesheet">
+<link href="styles/style.css?v=20260714-portal-fixes" rel="stylesheet">
+<link href="styles/internal-messaging.css?v=20260715-message-row-gap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://js.paystack.co/v2/inline.js"></script>
 </head>
 <body>
 
@@ -73,32 +75,20 @@
   </footer>
 </div>
 
-<!-- ROLE FAB -->
-<button class="role-fab" id="role-fab" onclick="toggleRS()" title="Switch Role"><i class="fas fa-user"></i></button>
-<div class="role-switcher" id="role-switcher">
-  <div class="rs-title">Switch Role</div>
-  <div class="rs-item" onclick="switchRole('Admin')"><div class="rs-dot" style="background:#1a56db"></div>Admin</div>
-  <div class="rs-item" onclick="switchRole('Teacher')"><div class="rs-dot" style="background:#10b981"></div>Teacher</div>
-  <div class="rs-item" onclick="switchRole('Student')"><div class="rs-dot" style="background:#8b5cf6"></div>Student</div>
-  <div class="rs-item" onclick="switchRole('Parent')"><div class="rs-dot" style="background:#f59e0b"></div>Parent</div>
-  <div class="rs-item" onclick="switchRole('Accountant')"><div class="rs-dot" style="background:#ef4444"></div>Accountant</div>
-  <div class="rs-item" onclick="switchRole('Alumni')"><div class="rs-dot" style="background:#06b6d4"></div>Alumni</div>
-  <div class="rs-item" onclick="switchRole('Visitor')"><div class="rs-dot" style="background:#6b7280"></div>Visitor</div>
-</div>
-
   <script src="scripts/core/improvements.js"></script>
   <script src="scripts/modules/enhanced-student-management.js"></script>
   <script src="scripts/dashboards/analytics-dashboard.js"></script>
   <script src="scripts/services/template-loader.js"></script>
-  <script src="scripts/core/app-state-core.js?v=20260708-reminder-summary"></script>
-  <script src="scripts/dashboards/role-dashboards.js?v=20260708-reminder-summary"></script>
+  <script src="scripts/core/app-state-core.js?v=20260715-remove-role-fab"></script>
+  <script src="scripts/dashboards/role-dashboards.js?v=20260715-alumni-connect"></script>
   <script src="scripts/web/visitor-admissions.js?v=20260708-reminder-summary"></script>
-  <script src="scripts/modules/admin-records.js?v=20260708-reminder-summary"></script>
-  <script src="scripts/modules/reports-settings-staff.js?v=20260708-reminder-summary"></script>
-  <script src="scripts/modules/portal-finance-alumni.js?v=20260708-reminder-summary"></script>
-  <script src="scripts/web/public-web-legacy.js?v=20260708-reminder-summary"></script>
+  <script src="scripts/modules/admin-records.js?v=20260714-portal-fixes"></script>
+  <script src="scripts/modules/reports-settings-staff.js?v=20260715-report-card-school-data"></script>
+  <script src="scripts/modules/portal-finance-alumni.js?v=20260715-alumni-no-certificates"></script>
+  <script src="scripts/web/public-web-legacy.js?v=20260715-remove-role-fab"></script>
   <!-- PHP Backend API Client — must load after script.js -->
-  <script src="scripts/services/api-client.js?v=20260711-2200"></script>
+  <script src="scripts/services/api-client.js?v=20260715-alumni-modules"></script>
+  <script src="scripts/modules/internal-messaging.js?v=20260715-internal-messaging"></script>
 
 </body>
 

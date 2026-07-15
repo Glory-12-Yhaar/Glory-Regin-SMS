@@ -1,0 +1,23 @@
+<div class="g21">
+  <div>
+    <div class="card mb20">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-pen"></i> Share an Update</span></div>
+      <div class="f-field"><textarea id="community-post-text" maxlength="800" placeholder="Share news, a memory, opportunity, or question with the alumni community..."></textarea></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <select id="community-post-group" class="select-sm"><option>All Alumni</option><option>Class Group</option><option>Careers & Mentorship</option><option>School Memories</option></select>
+        <button class="btn btn-primary" onclick="publishAlumniPost()"><i class="fas fa-paper-plane"></i> Post Update</button>
+      </div>
+    </div>
+    <div id="alumni-community-feed">{{postRows}}</div>
+  </div>
+  <div>
+    <div class="card mb16">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-users"></i> Groups</span></div>
+      {{groupRows}}
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Community Guidelines</span></div>
+      <p style="font-size:12px;color:var(--gray-600);line-height:1.7">Be respectful, protect personal information, and keep posts useful to the alumni community.</p>
+    </div>
+  </div>
+</div>
