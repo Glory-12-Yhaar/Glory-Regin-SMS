@@ -2,32 +2,18 @@
 // -----------------------------------
 // VISITOR HOME
 // -----------------------------------
-const HERO_SLIDES_KEY = 'gr_hero_slides';
-
 function getHeroSlides() {
-  try {
-    const saved = appMemoryStorage.getItem(HERO_SLIDES_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch (e) {}
-  return [
-    {
-      id: 1,
-      title: 'Glory Reign Preparatory School',
-      caption: 'Nurturing minds, building character, and shaping futures.',
-      image: 'assets/images/Hero.jpeg',
-      status: 'Active',
-      created: '2026-07-06'
-    }
-  ];
-}
-
-function saveHeroSlides(slides) {
-  appMemoryStorage.setItem(HERO_SLIDES_KEY, JSON.stringify(slides));
+  return Object.values(window.cachedHeroSlides || {})
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || Number(b.id || 0) - Number(a.id || 0));
 }
 
 function getActiveHeroSlide() {
-  const slides = getHeroSlides();
+  const slides = getPublishedHeroSlides();
   return slides.find(slide => slide.status === 'Active') || slides[0] || null;
+}
+
+function getPublishedHeroSlides() {
+  return getHeroSlides().filter(slide => (slide.status || 'Active') === 'Active');
 }
 
 function heroSlidesModule() {
@@ -40,11 +26,13 @@ function heroSlidesModule() {
         <div style="font-size:12px;color:var(--gray-500);line-height:1.5">${escapeHtml(slide.caption || '')}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
           <span class="badge b-${slide.status === 'Active' ? 'success' : 'warning'}">${escapeHtml(slide.status || 'Draft')}</span>
-          <span class="badge b-info">${escapeHtml(slide.created || '')}</span>
+          <span class="badge b-info">${escapeHtml(slide.created_at || slide.created || '')}</span>
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-        <button class="btn btn-secondary btn-xs" onclick="setHeroSlideActive(${slide.id})"><i class="fas fa-check"></i> Use</button>
+        ${slide.status === 'Active'
+          ? `<button class="btn btn-secondary btn-xs" onclick="setHeroSlideDraft(${slide.id})"><i class="fas fa-eye-slash"></i> Draft</button>`
+          : `<button class="btn btn-secondary btn-xs" onclick="setHeroSlideActive(${slide.id})"><i class="fas fa-check"></i> Publish</button>`}
         <button class="btn btn-danger btn-xs" onclick="deleteHeroSlide(${slide.id})"><i class="fas fa-trash"></i> Delete</button>
       </div>
     </div>
@@ -60,6 +48,10 @@ function heroSlidesModule() {
       <div class="card-hdr"><span class="card-title"><i class="fas fa-upload"></i> Upload Hero Image</span></div>
       <div class="f-field" style="margin-bottom:12px"><label>Slide Title</label><input id="hero-slide-title" placeholder="Homepage headline"></div>
       <div class="f-field" style="margin-bottom:12px"><label>Caption</label><textarea id="hero-slide-caption" style="min-height:80px" placeholder="Short welcome message"></textarea></div>
+      <div class="f-row">
+        <div class="f-field"><label>Status</label><select id="hero-slide-status"><option value="Active">Publish</option><option value="Draft">Draft</option></select></div>
+        <div class="f-field"><label>Order</label><input id="hero-slide-order" type="number" value="${slides.length + 1}" min="0"></div>
+      </div>
       <div class="f-field" style="margin-bottom:12px"><label>Background Image</label><input id="hero-slide-file" type="file" accept="image/*"></div>
       <button class="btn btn-primary" style="width:100%" onclick="uploadHeroSlide()"><i class="fas fa-cloud-upload-alt"></i> Upload Slide</button>
     </div>
@@ -123,9 +115,11 @@ function initDashboardInteractivity() {
   });
 }
 
-function uploadHeroSlide() {
+async function uploadHeroSlide() {
   const title = document.getElementById('hero-slide-title')?.value?.trim() || 'Glory Reign Preparatory School';
   const caption = document.getElementById('hero-slide-caption')?.value?.trim() || 'Nurturing minds, building character, and shaping futures.';
+  const status = document.getElementById('hero-slide-status')?.value || 'Active';
+  const sortOrder = parseInt(document.getElementById('hero-slide-order')?.value || '0', 10);
   const file = document.getElementById('hero-slide-file')?.files?.[0];
   if (!file) {
     showToast('<i class="fas fa-exclamation-triangle"></i> Please choose an image to upload', 'warning');
@@ -136,40 +130,92 @@ function uploadHeroSlide() {
     return;
   }
   const reader = new FileReader();
-  reader.onload = function (event) {
-    const slides = getHeroSlides().map(slide => ({ ...slide, status: 'Draft' }));
-    slides.unshift({
-      id: Date.now(),
+  reader.onload = async function (event) {
+    const res = await API.heroSlides.create({
       title,
       caption,
       image: event.target.result,
-      status: 'Active',
-      created: new Date().toISOString().split('T')[0]
+      status,
+      sort_order: sortOrder
     });
-    saveHeroSlides(slides);
+    if (!res || !res.success) {
+      showToast(res?.message || 'Failed to upload slide', 'error');
+      return;
+    }
+    if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
     showToast('<i class="fas fa-check-circle"></i> Hero slide uploaded', 'success');
     renderMain();
   };
   reader.readAsDataURL(file);
 }
 
-function setHeroSlideActive(slideId) {
-  const slides = getHeroSlides().map(slide => ({ ...slide, status: slide.id === slideId ? 'Active' : 'Draft' }));
-  saveHeroSlides(slides);
-  showToast('<i class="fas fa-check-circle"></i> Homepage hero updated', 'success');
+async function setHeroSlideActive(slideId) {
+  const res = await API.heroSlides.setActive(slideId);
+  if (!res || !res.success) return showToast(res?.message || 'Failed to publish slide', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast('<i class="fas fa-check-circle"></i> Hero slide published', 'success');
   renderMain();
 }
 
-function deleteHeroSlide(slideId) {
+async function setHeroSlideDraft(slideId) {
+  const res = await API.heroSlides.setDraft(slideId);
+  if (!res || !res.success) return showToast(res?.message || 'Failed to draft slide', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast('<i class="fas fa-check-circle"></i> Hero slide moved to draft', 'success');
+  renderMain();
+}
+
+async function deleteHeroSlide(slideId) {
   if (!confirm('Delete this hero background image?')) return;
-  const slides = getHeroSlides().filter(slide => slide.id !== slideId);
-  if (slides.length && !slides.some(slide => slide.status === 'Active')) slides[0].status = 'Active';
-  saveHeroSlides(slides);
+  const res = await API.heroSlides.delete(slideId);
+  if (!res || !res.success) return showToast(res?.message || 'Failed to delete slide', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Hero slide deleted', 'success');
   renderMain();
 }
 
+let heroCarouselIndex = 0;
+let heroCarouselTimer = null;
+
+function setHeroCarouselSlide(index) {
+  const root = document.querySelector('[data-hero-carousel]');
+  if (!root) return;
+  const slides = Array.from(root.querySelectorAll('[data-hero-slide]'));
+  const copies = Array.from(root.querySelectorAll('[data-hero-copy]'));
+  const dots = Array.from(root.querySelectorAll('.hero-carousel-dot'));
+  if (!slides.length) return;
+  heroCarouselIndex = ((index % slides.length) + slides.length) % slides.length;
+  slides.forEach((slide, i) => slide.classList.toggle('active', i === heroCarouselIndex));
+  copies.forEach((copy, i) => copy.classList.toggle('active', i === heroCarouselIndex));
+  dots.forEach((dot, i) => dot.classList.toggle('active', i === heroCarouselIndex));
+}
+
+function changeHeroSlide(delta) {
+  setHeroCarouselSlide(heroCarouselIndex + delta);
+  startHeroCarousel();
+}
+
+function goToHeroSlide(index) {
+  setHeroCarouselSlide(index);
+  startHeroCarousel();
+}
+
+function startHeroCarousel() {
+  if (heroCarouselTimer) clearInterval(heroCarouselTimer);
+  const root = document.querySelector('[data-hero-carousel]');
+  if (!root || root.querySelectorAll('[data-hero-slide]').length < 2) return;
+  heroCarouselTimer = setInterval(() => setHeroCarouselSlide(heroCarouselIndex + 1), 6500);
+}
+
 function visitorHome() {
+  if ((!window.cachedHeroSlides || !Object.values(window.cachedHeroSlides).length) && typeof API !== 'undefined' && API.heroSlides) {
+    API.heroSlides.list().then(res => {
+      if (res && res.success && Array.isArray(res.data)) {
+        window.cachedHeroSlides = res.data;
+        if (currentRole === 'Visitor' && typeof renderMain === 'function') renderMain();
+      }
+    }).catch(() => {});
+  }
   if ((!window.noticesData || !window.noticesData.length) && typeof API !== 'undefined' && API.notices) {
     API.notices.list({ limit: 6 }).then(res => {
       if (res && res.success && Array.isArray(res.data) && Array.isArray(window.noticesData)) {
@@ -190,14 +236,21 @@ function visitorHome() {
       }
     }).catch(() => {});
   }
-  const hero = getActiveHeroSlide();
-  const heroStyle = hero?.image ? ` style="background-image:linear-gradient(135deg,rgba(10,34,64,.82),rgba(26,86,219,.62)),url('${escapeAttr(hero.image)}')"` : '';
+  setTimeout(startHeroCarousel, 0);
   const sourceArticles = (typeof newsArticles === 'undefined') ? [] : newsArticles;
   const publishedArticles = sourceArticles.filter(article => article.status === 'Published').slice(0, 3);
   const schoolInfo = (typeof SETTINGS_DATA === 'undefined') ? {} : (SETTINGS_DATA.schoolInfo || {});
   const schoolPhone = schoolInfo.phone || '0243611971 / 0205096091';
   const schoolEmail = schoolInfo.email || SCHOOL_EMAIL;
   const schoolAddress = schoolInfo.address || 'P.O. Box 42, Jirapa, Upper West Region, Ghana';
+  const heroSlides = getPublishedHeroSlides();
+  const carouselSlides = (heroSlides.length ? heroSlides : [{
+    id: 0,
+    title: 'Glory Reign Preparatory School',
+    caption: 'Nurturing minds, building character, and shaping futures since 1985. A premier educational institution in Ghana known for academic excellence and holistic development.',
+    image: 'assets/images/Hero.jpeg',
+    status: 'Active'
+  }]).slice(0, 10);
   const publicEvents = (typeof getUpcomingEvents === 'function' ? getUpcomingEvents() : []).slice(0, 3);
   const publicNotices = (typeof getNoticesData === 'function' ? getNoticesData() : (window.noticesData || []).filter(n => (n.status || 'Published') === 'Published')).slice(0, 3);
   const eventCards = publicEvents.map(ev => {
@@ -231,14 +284,22 @@ function visitorHome() {
     </div>
   </div>`).join('');
   return `<section id="home-section" class="public-section">
-  <div class="visitor-hero visitor-hero-photo"${heroStyle}>
-    <h1>${escapeHtml(hero?.title || 'Glory Reign Preparatory School')}</h1>
-    <p>${escapeHtml(hero?.caption || 'Nurturing minds, building character, and shaping futures since 1985. A premier educational institution in Ghana known for academic excellence and holistic development.')}</p>
-    <div class="hero-btns">
-      <button class="hero-btn-gold" onclick="publicNavToSection('admission-section')">Apply for Admission</button>
-      <button class="hero-btn-outline" onclick="publicNavToSection('about-section')">Learn More About Us</button>
-      <button class="hero-btn-outline" onclick="logout()"><i class="fas fa-lock"></i> Login to Portal</button>
+  <div class="visitor-hero visitor-hero-photo visitor-hero-carousel" data-hero-carousel="1">
+    ${carouselSlides.map((slide, index) => `<div class="hero-carousel-slide ${index === 0 ? 'active' : ''}" data-hero-slide="${index}" style="background-image:linear-gradient(135deg,rgba(10,34,64,.82),rgba(26,86,219,.62)),url('${escapeAttr(slide.image)}')"></div>`).join('')}
+    <div class="hero-carousel-content">
+      ${carouselSlides.map((slide, index) => `<div class="hero-carousel-copy ${index === 0 ? 'active' : ''}" data-hero-copy="${index}">
+        <h1>${escapeHtml(slide.title || 'Glory Reign Preparatory School')}</h1>
+        <p>${escapeHtml(slide.caption || '')}</p>
+      </div>`).join('')}
+      <div class="hero-btns">
+        <button class="hero-btn-gold" onclick="publicNavToSection('admission-section')">Apply for Admission</button>
+        <button class="hero-btn-outline" onclick="publicNavToSection('about-section')">Learn More About Us</button>
+        <button class="hero-btn-outline" onclick="logout()"><i class="fas fa-lock"></i> Login to Portal</button>
+      </div>
     </div>
+    ${carouselSlides.length > 1 ? `<button class="hero-carousel-nav hero-carousel-prev" onclick="changeHeroSlide(-1)" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+    <button class="hero-carousel-nav hero-carousel-next" onclick="changeHeroSlide(1)" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
+    <div class="hero-carousel-dots">${carouselSlides.map((_, index) => `<button class="hero-carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToHeroSlide(${index})" aria-label="Go to slide ${index + 1}"></button>`).join('')}</div>` : ''}
   </div>
   </section>
   <div class="stats-row mb24">

@@ -529,8 +529,10 @@ CREATE TABLE hero_slides (
   caption TEXT DEFAULT NULL,
   image LONGTEXT NOT NULL,
   status ENUM('Active','Draft') NOT NULL DEFAULT 'Active',
+  sort_order INT NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_hero_status (status)
+  INDEX idx_hero_status (status),
+  INDEX idx_hero_sort (status, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
         <<<'SQL'
@@ -764,8 +766,10 @@ SQL,
         ['Yaa Asantewaa','2015-08-20','Female','Primary 2','Akua Asantewaa','0245555678','akua@gmail.com','Wa','Methodist Primary','Approved','Excellent exam performance'],
     ]);
 
-    insertRows($pdo, "INSERT INTO hero_slides (title,caption,image,status) VALUES (?,?,?,?)", [
-        ['Glory Reign Preparatory School','Nurturing minds, building character, and shaping futures.','assets/images/Hero.jpeg','Active'],
+    insertRows($pdo, "INSERT INTO hero_slides (title,caption,image,status,sort_order) VALUES (?,?,?,?,?)", [
+        ['Glory Reign Preparatory School','Nurturing minds, building character, and shaping futures.','assets/images/Hero.jpeg','Active',1],
+        ['Academic Excellence Starts Here','A caring school community built for curiosity, discipline, and confidence.','assets/images/student.jpeg','Active',2],
+        ['Dedicated Teachers, Strong Values','Learning experiences shaped by committed educators and family partnership.','assets/images/teacher.jpeg','Active',3],
     ]);
     insertRows($pdo, "INSERT INTO news_articles (icon,title,category,date,`desc`,status) VALUES (?,?,?,?,?,?)", [
         ['<i class=\"fas fa-newspaper\"></i>','Glory Reign Launches Digital Campus Portal','Announcements','2025-03-01','Our new persistent database-backed campus portal is live.','Published'],

@@ -468,7 +468,10 @@ CREATE TABLE IF NOT EXISTS `hero_slides` (
   `caption` TEXT,
   `image` LONGTEXT NOT NULL,
   `status` ENUM('Active', 'Draft') DEFAULT 'Active',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_hero_status` (`status`),
+  INDEX `idx_hero_sort` (`status`, `sort_order`)
 ) ENGINE=InnoDB;
 
 -- ───────────────────────────────────────────

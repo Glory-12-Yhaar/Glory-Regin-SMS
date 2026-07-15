@@ -205,6 +205,7 @@ const API = {
         list:   ()          => apiRequest('/hero_slides/index.php'),
         create: (data)      => apiRequest('/hero_slides/index.php', 'POST', data),
         setActive: (id)     => apiRequest('/hero_slides/index.php', 'POST', { action: 'set_active', id }),
+        setDraft: (id)      => apiRequest('/hero_slides/index.php', 'POST', { action: 'set_draft', id }),
         delete: (id)        => apiRequest('/hero_slides/index.php?id=' + id, 'DELETE')
     },
 
@@ -933,7 +934,7 @@ apiOverrides.deleteTimetable = async function() {
 // ── HERO SLIDES ACTIONS OVERRIDES ───────────────────────
 apiOverrides.getHeroSlides = function() {
     const slides = Object.values(window.cachedHeroSlides || []);
-    return slides.sort((a,b) => (b.status === 'Active') - (a.status === 'Active'));
+    return slides.sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0) || Number(b.id || 0) - Number(a.id || 0));
 };
 
 saveHeroSlides = () => {};
@@ -941,6 +942,8 @@ saveHeroSlides = () => {};
 apiOverrides.uploadHeroSlide = async function() {
     const title = document.getElementById('hero-slide-title')?.value?.trim() || 'Glory Reign Preparatory School';
     const caption = document.getElementById('hero-slide-caption')?.value?.trim() || 'Nurturing minds, building character, and shaping futures.';
+    const status = document.getElementById('hero-slide-status')?.value || 'Active';
+    const sortOrder = parseInt(document.getElementById('hero-slide-order')?.value || '0', 10);
     const file = document.getElementById('hero-slide-file')?.files?.[0];
 
     if (!file) {
@@ -955,7 +958,8 @@ apiOverrides.uploadHeroSlide = async function() {
             title,
             caption,
             image: base64Img,
-            status: 'Draft'
+            status,
+            sort_order: sortOrder
         });
         if (res && res.success) {
             showToast('<i class="fas fa-check-circle"></i> Hero slide uploaded', 'success');
@@ -978,7 +982,7 @@ apiOverrides.uploadHeroSlide = async function() {
 apiOverrides.setHeroSlideActive = async function(slideId) {
     const res = await API.heroSlides.setActive(slideId);
     if (res && res.success) {
-        showToast('<i class="fas fa-check-circle"></i> Hero slide activated', 'success');
+        showToast('<i class="fas fa-check-circle"></i> Hero slide published', 'success');
         const slidesRes = await API.heroSlides.list();
         if (slidesRes && slidesRes.success && slidesRes.data) {
             window.cachedHeroSlides = slidesRes.data;
@@ -986,6 +990,20 @@ apiOverrides.setHeroSlideActive = async function(slideId) {
         renderMain();
     } else {
         showToast(res?.message || 'Failed to activate slide', 'error');
+    }
+};
+
+apiOverrides.setHeroSlideDraft = async function(slideId) {
+    const res = await API.heroSlides.setDraft(slideId);
+    if (res && res.success) {
+        showToast('<i class="fas fa-check-circle"></i> Hero slide moved to draft', 'success');
+        const slidesRes = await API.heroSlides.list();
+        if (slidesRes && slidesRes.success && slidesRes.data) {
+            window.cachedHeroSlides = slidesRes.data;
+        }
+        renderMain();
+    } else {
+        showToast(res?.message || 'Failed to draft slide', 'error');
     }
 };
 
