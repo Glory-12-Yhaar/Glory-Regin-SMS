@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-requireAuth();
+$user = requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -69,19 +69,76 @@ function fetchSubject(PDO $db, int $id): array|false {
     return $stmt->fetch();
 }
 
+function getTeacherSubjectScope(PDO $db, array $user): array {
+    $stmt = $db->prepare(
+        "SELECT s.id AS staff_id, t.class_assigned
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.category = 'Teaching'
+           AND (
+             s.user_id = ?
+             OR LOWER(s.email) = LOWER(?)
+             OR LOWER(s.name) = LOWER(?)
+           )
+         ORDER BY s.user_id = ? DESC, s.id ASC
+         LIMIT 1"
+    );
+    $stmt->execute([
+        $user['id'] ?? 0,
+        $user['email'] ?? '',
+        $user['name'] ?? '',
+        $user['id'] ?? 0,
+    ]);
+    $teacher = $stmt->fetch();
+    if (!$teacher) {
+        return ['staff_id' => 0, 'class_assigned' => ''];
+    }
+
+    return [
+        'staff_id' => (int)$teacher['staff_id'],
+        'class_assigned' => (string)($teacher['class_assigned'] ?? ''),
+    ];
+}
+
+function canTeacherAccessSubject(PDO $db, array $scope, int $subjectId): bool {
+    if (!$scope['staff_id']) return false;
+    $stmt = $db->prepare(
+        "SELECT COUNT(*)
+         FROM subjects sub
+         WHERE sub.id = ?
+           AND sub.teacher_id = ?"
+    );
+    $stmt->execute([$subjectId, $scope['staff_id']]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
 if ($method === 'GET') {
+    $isTeacher = ($user['role'] ?? '') === 'Teacher';
+    $teacherScope = $isTeacher ? getTeacherSubjectScope($db, $user) : null;
+
     if ($id) {
+        if ($isTeacher && !canTeacherAccessSubject($db, $teacherScope, $id)) {
+            jsonResponse(['success' => false, 'message' => 'Subject not found'], 404);
+        }
         $subject = fetchSubject($db, $id);
         if (!$subject) jsonResponse(['success' => false, 'message' => 'Subject not found'], 404);
         jsonResponse(['success' => true, 'data' => $subject]);
     } else {
-        $stmt = $db->query(
-            "SELECT sub.*, s.name AS teacher_name, c.name AS class_name 
-             FROM subjects sub 
-             LEFT JOIN staff s ON s.id = sub.teacher_id 
-             LEFT JOIN classes c ON c.id = sub.class_id
-             ORDER BY sub.name ASC"
-        );
+        $sql = "SELECT sub.*, s.name AS teacher_name, c.name AS class_name 
+                FROM subjects sub 
+                LEFT JOIN staff s ON s.id = sub.teacher_id 
+                LEFT JOIN classes c ON c.id = sub.class_id";
+        $params = [];
+        if ($isTeacher) {
+            if (!$teacherScope['staff_id']) {
+                jsonResponse(['success' => true, 'data' => []]);
+            }
+            $sql .= " WHERE sub.teacher_id = ?";
+            $params = [$teacherScope['staff_id']];
+        }
+        $sql .= " ORDER BY sub.name ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
         jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
     }
 }

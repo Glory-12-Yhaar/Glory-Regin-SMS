@@ -710,7 +710,7 @@ function viewAdmissionDetail(admId) {
 function viewStudent(studentId) {
   const student = enrolledStudents.find(s => s.student_id === studentId);
   if (!student) return;
-  if (currentRole === 'Teacher' && !getAssignedClassNamesForTeacher().includes(student.student_class)) {
+  if (!canAccessStudent(student)) {
     showToast('You can only view students in your assigned classes', 'error');
     return;
   }
@@ -2321,6 +2321,11 @@ function getCurrentTeacherProfile() {
 }
 
 function getAssignedClassNamesForTeacher() {
+  const dashboardClasses = window.dashboardReportData?.teacher?.classes;
+  if (Array.isArray(dashboardClasses)) {
+    return dashboardClasses.map(c => c.name).filter(Boolean);
+  }
+
   const teacherId = getCurrentTeacherId();
   const assigned = new Set();
   classesData.forEach(c => {
@@ -2335,8 +2340,21 @@ function getAssignedClassNamesForTeacher() {
   return Array.from(assigned);
 }
 
+function getAssignedClassIdsForTeacher() {
+  const dashboardClasses = window.dashboardReportData?.teacher?.classes;
+  if (Array.isArray(dashboardClasses)) {
+    return new Set(dashboardClasses.map(c => String(c.id)).filter(Boolean));
+  }
+  return new Set();
+}
+
 function getVisibleClassesForRole(classes) {
   if (currentRole !== 'Teacher') return classes;
+  const dashboardClasses = window.dashboardReportData?.teacher?.classes;
+  if (Array.isArray(dashboardClasses)) {
+    const assignedIds = getAssignedClassIdsForTeacher();
+    return classes.filter(c => assignedIds.has(String(c.id)));
+  }
   const assignedClassNames = getAssignedClassNamesForTeacher();
   return classes.filter(c => assignedClassNames.includes(c.name));
 }
@@ -2344,13 +2362,28 @@ function getVisibleClassesForRole(classes) {
 function canAccessClass(classData) {
   if (currentRole === 'Admin') return true;
   if (currentRole !== 'Teacher') return true;
+  const dashboardClasses = window.dashboardReportData?.teacher?.classes;
+  if (Array.isArray(dashboardClasses)) {
+    return getAssignedClassIdsForTeacher().has(String(classData.id));
+  }
   return getAssignedClassNamesForTeacher().includes(classData.name);
 }
 
 function getVisibleStudentsForRole(students) {
   if (currentRole !== 'Teacher') return students;
+  const dashboardStudents = window.dashboardReportData?.teacher?.students;
+  if (Array.isArray(dashboardStudents)) {
+    const allowedIds = new Set(dashboardStudents.map(s => String(s.id)).filter(Boolean));
+    return students.filter(s => allowedIds.has(String(s.id)));
+  }
   const assignedClassNames = getAssignedClassNamesForTeacher();
   return students.filter(s => assignedClassNames.includes(s.student_class));
+}
+
+function canAccessStudent(student) {
+  if (currentRole === 'Admin') return true;
+  if (currentRole !== 'Teacher') return true;
+  return getVisibleStudentsForRole(enrolledStudents).some(s => String(s.id) === String(student.id));
 }
 
 function getCurrentStudentRecord() {
@@ -2429,6 +2462,11 @@ function subjectAppliesToClass(subject, className) {
 
 function getVisibleSubjectsForRole(subjects) {
   if (currentRole === 'Teacher') {
+    const dashboardSubjects = window.dashboardReportData?.teacher?.subjects;
+    if (Array.isArray(dashboardSubjects)) {
+      const allowedIds = new Set(dashboardSubjects.map(s => String(s.id)).filter(Boolean));
+      return subjects.filter(s => allowedIds.has(String(s.id)));
+    }
     const teacherId = getCurrentTeacherId();
     return subjects.filter(s => s.teacher_id === teacherId);
   }
@@ -2439,6 +2477,12 @@ function getVisibleSubjectsForRole(subjects) {
   }
 
   return subjects;
+}
+
+function canAccessSubject(subject) {
+  if (currentRole === 'Admin') return true;
+  if (currentRole !== 'Teacher') return true;
+  return getVisibleSubjectsForRole(subjectsData).some(s => String(s.id) === String(subject.id));
 }
 
 function toggleSubjectMenu(event) {
@@ -2638,6 +2682,10 @@ async function submitSubjectForm() {
 function viewSubject(subjectId) {
   const subject = subjectsData.find(s => s.subject_id === subjectId);
   if (!subject) return;
+  if (!canAccessSubject(subject)) {
+    showToast('You can only view assigned subjects', 'error');
+    return;
+  }
 
   const view = `
   <div style="background:white;border-radius:8px;padding:20px;max-width:600px">

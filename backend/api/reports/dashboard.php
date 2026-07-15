@@ -18,6 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $role = $user['role'];
 $data = [];
 
+function getTeacherDashboardProfile(PDO $db, array $user): ?array {
+    $stmt = $db->prepare(
+        "SELECT s.id AS staff_id, s.staff_code, s.name, s.email, s.phone, s.department, s.position,
+                s.status, t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.category = 'Teaching'
+           AND (
+             s.user_id = ?
+             OR LOWER(s.email) = LOWER(?)
+             OR LOWER(s.name) = LOWER(?)
+           )
+         ORDER BY s.user_id = ? DESC, s.id ASC
+         LIMIT 1"
+    );
+    $stmt->execute([
+        $user['id'] ?? 0,
+        $user['email'] ?? '',
+        $user['name'] ?? '',
+        $user['id'] ?? 0,
+    ]);
+    $profile = $stmt->fetch();
+    return $profile ?: null;
+}
+
 if (in_array($role, ['Admin', 'Teacher'])) {
     // Student counts per class
     $data['total_students'] = (int)$db->query("SELECT COUNT(*) FROM students WHERE status = 'Active'")->fetchColumn();
@@ -72,6 +97,137 @@ if (in_array($role, ['Admin', 'Teacher'])) {
         ];
     }
     $data['monthly_enrollment_attendance'] = $monthly;
+}
+
+if ($role === 'Teacher') {
+    $teacher = getTeacherDashboardProfile($db, $user);
+    $teacherData = [
+        'profile' => $teacher,
+        'classes' => [],
+        'subjects' => [],
+        'students' => [],
+        'assignments' => [],
+        'schedule' => [],
+        'notices' => [],
+        'stats' => [
+            'classes_count' => 0,
+            'subjects_count' => 0,
+            'students_count' => 0,
+            'attendance_average' => 0,
+            'active_assignments' => 0,
+        ],
+    ];
+
+    if ($teacher) {
+        $staffId = (int)$teacher['staff_id'];
+
+        $classStmt = $db->prepare(
+            "SELECT c.id, c.name, c.level, c.stream, c.teacher_id, c.capacity,
+                    COALESCE(ROUND(AVG(st.attendance), 1), 0) AS attendance_avg,
+                    COUNT(st.id) AS student_count
+             FROM classes c
+             LEFT JOIN students st ON st.class_id = c.id AND st.status = 'Active'
+             WHERE c.teacher_id = ?
+                OR c.name = ?
+                OR EXISTS (
+                    SELECT 1 FROM subjects sub
+                    WHERE sub.class_id = c.id AND sub.teacher_id = ?
+                )
+             GROUP BY c.id, c.name, c.level, c.stream, c.teacher_id, c.capacity
+             ORDER BY c.name ASC"
+        );
+        $classStmt->execute([$staffId, $teacher['class_assigned'] ?? '', $staffId]);
+        $classes = $classStmt->fetchAll();
+        $teacherData['classes'] = $classes;
+        $classIds = array_map(fn($row) => (int)$row['id'], $classes);
+
+        $subjectStmt = $db->prepare(
+            "SELECT sub.id, sub.name, sub.type, sub.classes, sub.hours, sub.description,
+                    c.id AS class_id, c.name AS class_name
+             FROM subjects sub
+             LEFT JOIN classes c ON c.id = sub.class_id
+             WHERE sub.teacher_id = ?
+             ORDER BY c.name ASC, sub.name ASC"
+        );
+        $subjectStmt->execute([$staffId]);
+        $teacherData['subjects'] = $subjectStmt->fetchAll();
+
+        if (!empty($classIds)) {
+            $placeholders = implode(',', array_fill(0, count($classIds), '?'));
+            $studentStmt = $db->prepare(
+                "SELECT s.id, s.student_code, s.name, s.gender, s.attendance, s.status,
+                        c.name AS class_name
+                 FROM students s
+                 LEFT JOIN classes c ON c.id = s.class_id
+                 WHERE s.status = 'Active' AND s.class_id IN ($placeholders)
+                 ORDER BY c.name ASC, s.name ASC"
+            );
+            $studentStmt->execute($classIds);
+            $teacherData['students'] = $studentStmt->fetchAll();
+        }
+
+        $classFilter = !empty($classIds) ? " OR a.class_id IN (" . implode(',', array_fill(0, count($classIds), '?')) . ")" : "";
+        $assignmentParams = array_merge([$staffId], $classIds);
+        $assignmentStmt = $db->prepare(
+            "SELECT a.id, a.title, a.subject, a.class_id, a.teacher_id, a.due_date, a.created_date,
+                    a.max_score, a.status, a.instructions, a.attachment, c.name AS class_name,
+                    (SELECT COUNT(*) FROM assignment_submissions sub WHERE sub.assignment_id = a.id) AS submitted_count,
+                    (SELECT COUNT(*) FROM students st WHERE st.class_id = a.class_id AND st.status = 'Active') AS total_students
+             FROM assignments a
+             LEFT JOIN classes c ON c.id = a.class_id
+             WHERE a.teacher_id = ?$classFilter
+             ORDER BY a.due_date ASC, a.id DESC
+             LIMIT 6"
+        );
+        $assignmentStmt->execute($assignmentParams);
+        $teacherData['assignments'] = $assignmentStmt->fetchAll();
+
+        $scheduleClassFilter = !empty($classIds) ? " OR t.class_id IN (" . implode(',', array_fill(0, count($classIds), '?')) . ")" : "";
+        $scheduleParams = array_merge([$staffId], $classIds);
+        $scheduleStmt = $db->prepare(
+            "SELECT t.id, t.period_label, t.subject, t.day_of_week, t.start_time, t.end_time,
+                    t.room, t.term, c.name AS class_name
+             FROM timetable t
+             INNER JOIN classes c ON c.id = t.class_id
+             WHERE t.teacher_id = ?$scheduleClassFilter
+             ORDER BY FIELD(t.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday'),
+                      t.start_time ASC, t.id ASC
+             LIMIT 8"
+        );
+        $scheduleStmt->execute($scheduleParams);
+        $teacherData['schedule'] = $scheduleStmt->fetchAll();
+
+        $activeClassFilter = !empty($classIds) ? " OR class_id IN (" . implode(',', array_fill(0, count($classIds), '?')) . ")" : "";
+        $activeAssignmentStmt = $db->prepare(
+            "SELECT COUNT(*) FROM assignments WHERE status = 'Active' AND (teacher_id = ?$activeClassFilter)"
+        );
+        $activeAssignmentStmt->execute($assignmentParams);
+        $activeAssignmentsCount = (int)$activeAssignmentStmt->fetchColumn();
+
+        $noticeStmt = $db->prepare(
+            "SELECT id, icon, title, audience, posted_by, notice_date, message, priority, status, attachment
+             FROM notices
+             WHERE status = 'Published'
+               AND audience IN ('All', 'Teachers', 'Staff')
+             ORDER BY notice_date DESC, id DESC
+             LIMIT 4"
+        );
+        $noticeStmt->execute();
+        $teacherData['notices'] = $noticeStmt->fetchAll();
+
+        $attendanceValues = array_map(fn($row) => (float)($row['attendance_avg'] ?? 0), $classes);
+        $attendanceValues = array_values(array_filter($attendanceValues, fn($value) => $value > 0));
+
+        $teacherData['stats'] = [
+            'classes_count' => count($classes),
+            'subjects_count' => count($teacherData['subjects']),
+            'students_count' => count($teacherData['students']),
+            'attendance_average' => $attendanceValues ? round(array_sum($attendanceValues) / count($attendanceValues), 1) : 0,
+            'active_assignments' => $activeAssignmentsCount,
+        ];
+    }
+
+    $data['teacher'] = $teacherData;
 }
 
 if (in_array($role, ['Admin', 'Accountant'])) {

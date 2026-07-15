@@ -228,52 +228,84 @@ async function fetchAdminDashboardData() {
 // -----------------------------------
 // TEACHER DASHBOARD
 // -----------------------------------
+function getTeacherDashboardData() {
+  return window.dashboardReportData?.teacher || null;
+}
+
+function getTeacherDashboardList(teacherDashboard, key) {
+  return Array.isArray(teacherDashboard?.[key]) ? teacherDashboard[key] : [];
+}
+
+function formatTeacherScheduleTime(row) {
+  if (row.period_label) return row.period_label;
+  const start = String(row.start_time || '').slice(0, 5);
+  const end = String(row.end_time || '').slice(0, 5);
+  return start && end ? `${start}-${end}` : start || 'Scheduled';
+}
+
+function getTeacherScheduleStatus(row) {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = days[new Date().getDay()];
+  if (row.day_of_week !== today) return row.day_of_week || 'Upcoming';
+  const now = new Date();
+  const todayIso = now.toISOString().slice(0, 10);
+  const start = row.start_time ? new Date(`${todayIso}T${String(row.start_time).slice(0, 8)}`) : null;
+  const end = row.end_time ? new Date(`${todayIso}T${String(row.end_time).slice(0, 8)}`) : null;
+  if (start && end && now >= start && now <= end) return 'Now';
+  if (start && now < start) return 'Upcoming';
+  return 'Done';
+}
+
 function teacherDash() {
-  const teacher = getCurrentTeacherProfile() || { name: 'Teacher', department: 'Academics', subject: 'Assigned Subjects' };
-  const myClasses = getVisibleClassesForRole(classesData);
-  const myClassNames = myClasses.map(c => c.name);
-  const myStudents = getVisibleStudentsForRole(enrolledStudents);
-  const mySubjects = getVisibleSubjectsForRole(subjectsData);
-  const attendanceAverage = myClasses.length
-    ? Math.round(myClasses.reduce((sum, c) => sum + parseFloat(c.attendance), 0) / myClasses.length)
-    : 0;
-  const teacherAssignments = getDashboardAssignments().filter(a => myClassNames.includes(a.className || a.class));
-  const scheduleRows = mySubjects.slice(0, 5).map((s, i) => [
-    ['7:30-8:20', '8:20-9:10', '10:00-10:50', '11:00-11:50', '13:30-14:20'][i] || '14:20-15:10',
-    s.name,
-    myClassNames[i % Math.max(myClassNames.length, 1)] || s.classes,
-    'Room ' + String(8 + i).padStart(2, '0'),
-    i < 1 ? 'Done' : i === 1 ? 'Up Next' : 'Upcoming'
-  ]);
-  const attendanceStudents = myStudents.slice(0, 8);
+  const teacherDashboard = getTeacherDashboardData();
+  const profile = teacherDashboard?.profile || null;
+  const teacher = profile || { name: 'Teacher', department: 'Academics', subject: 'Assigned Subjects' };
+  const myClasses = getTeacherDashboardList(teacherDashboard, 'classes');
+  const myClassNames = myClasses.map(c => c.name).filter(Boolean);
+  const myStudents = getTeacherDashboardList(teacherDashboard, 'students');
+  const mySubjects = getTeacherDashboardList(teacherDashboard, 'subjects');
+  const stats = teacherDashboard?.stats || {};
+  const attendanceAverage = Math.round(Number(stats.attendance_average ?? 0)) || (myClasses.length
+    ? Math.round(myClasses.reduce((sum, c) => sum + parseFloat(c.attendance || c.attendance_avg || 0), 0) / myClasses.length)
+    : 0);
+  const teacherAssignments = getTeacherDashboardList(teacherDashboard, 'assignments');
+  const scheduleRows = getTeacherDashboardList(teacherDashboard, 'schedule');
+  const teacherNotices = getTeacherDashboardList(teacherDashboard, 'notices');
 
   const statsCards = [
-    statCard('<i class="fas fa-building"></i>', myClasses.length, 'My Classes', 'Assigned only', 'neu', 'si-blue', true, 'navTo("classes")'),
-    statCard('<i class="fas fa-graduation-cap"></i>', myStudents.length, 'My Students', 'Assigned classes', 'neu', 'si-green', true, 'navTo("students")'),
-    statCard('<i class="fas fa-book"></i>', mySubjects.length, 'My Subjects', teacher.subject, 'neu', 'si-gold', true, 'navTo("subjects")'),
+    statCard('<i class="fas fa-building"></i>', stats.classes_count ?? myClasses.length, 'My Classes', 'Assigned only', 'neu', 'si-blue', true, 'navTo("classes")'),
+    statCard('<i class="fas fa-graduation-cap"></i>', stats.students_count ?? myStudents.length, 'My Students', 'Assigned classes', 'neu', 'si-green', true, 'navTo("students")'),
+    statCard('<i class="fas fa-book"></i>', stats.subjects_count ?? mySubjects.length, 'My Subjects', teacher.subject || 'Assigned subjects', 'neu', 'si-gold', true, 'navTo("subjects")'),
     statCard('<i class="fas fa-check-circle"></i>', attendanceAverage + '%', 'Attendance Rate', 'My classes', 'up', 'si-purple', true, 'navTo("attendance")')
   ].join('');
-  const scheduleRowsHtml = scheduleRows.map(([t, s, c, r, st]) => `
-          <tr style="cursor:pointer" onclick="viewScheduleDetail('${t}', '${s}', '${c}')">
-            <td style="color:var(--blue-main);font-weight:600">${t}</td>
-            <td>${s}</td><td>${c}</td><td style="color:var(--gray-500)">${r}</td>
-            <td><span class="badge ${st === 'Done' ? 'b-success' : st === 'Up Next' ? 'b-warning' : 'b-info'}">${st}</span></td>
-          </tr>`).join('');
+  const scheduleRowsHtml = scheduleRows.length ? scheduleRows.map(row => {
+    const time = formatTeacherScheduleTime(row);
+    const status = getTeacherScheduleStatus(row);
+    const badge = status === 'Done' ? 'b-success' : status === 'Now' ? 'b-warning' : 'b-info';
+    return `
+          <tr style="cursor:pointer" onclick="viewScheduleDetail('${escapeAttr(time)}', '${escapeAttr(row.subject || '')}', '${escapeAttr(row.class_name || '')}')">
+            <td style="color:var(--blue-main);font-weight:600">${escapeHtml(time)}</td>
+            <td>${escapeHtml(row.subject || '-')}</td><td>${escapeHtml(row.class_name || '-')}</td><td style="color:var(--gray-500)">${escapeHtml(row.room || '-')}</td>
+            <td><span class="badge ${badge}">${escapeHtml(status)}</span></td>
+          </tr>`;
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:22px">No timetable records found for your assigned classes.</td></tr>';
   const assignmentCards = teacherAssignments.length ? teacherAssignments.slice(0, 4).map(a => {
-        const submitted = parseInt(a.submittedCount || 0, 10);
-        const total = parseInt(a.totalStudents || 0, 10) || myStudents.filter(s => s.student_class === (a.className || a.class)).length || 1;
+        const submitted = parseInt(a.submittedCount ?? a.submitted_count ?? 0, 10);
+        const assignmentClass = a.className || a.class || a.class_name || '';
+        const total = parseInt(a.totalStudents ?? a.total_students ?? 0, 10) || myStudents.filter(s => (s.student_class || s.class_name) === assignmentClass).length || 1;
+        const dueDate = a.dueDate || a.due_date;
         return `
       <div style="margin-bottom:16px;cursor:pointer;padding:8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='transparent'" onclick="viewAssignmentSubmissions('${escapeHtml(a.title)}')">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
           <span style="font-size:13px;font-weight:600">${escapeHtml(a.title)}</span>
-          <span class="badge b-info">${escapeHtml(formatDashboardDueDate(a.dueDate))}</span>
+          <span class="badge b-info">${escapeHtml(formatDashboardDueDate(dueDate))}</span>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} · ${submitted}/${total} submitted</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(assignmentClass || 'Unassigned class')} &middot; ${submitted}/${total} submitted</div>
         <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(submitted / total * 100)}%"></div></div>
       </div>`}).join('') : '<div style="padding:20px;color:var(--gray-400);text-align:center">No assignments for your assigned classes yet.</div>';
-  const noticeRows = noticesData.slice(0, 4).map(n => `<div style="padding:10px 0;border-bottom:1px solid var(--gray-100)"><div style="font-size:13px;font-weight:600">${escapeHtml(n.title || 'Notice')}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(n.date || n.notice_date || '')}</div></div>`).join('') || '<div style="padding:20px;color:var(--gray-400);text-align:center">No notices available.</div>';
+  const noticeRows = teacherNotices.slice(0, 4).map(n => `<div style="padding:10px 0;border-bottom:1px solid var(--gray-100)"><div style="font-size:13px;font-weight:600">${escapeHtml(n.title || 'Notice')}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(n.date || n.notice_date || '')}</div></div>`).join('') || '<div style="padding:20px;color:var(--gray-400);text-align:center">No notices available.</div>';
 
-  return hdr('Teacher Dashboard', 'Welcome, ' + teacher.name + ' · ' + teacher.department + ' · ' + (myClassNames.join(', ') || 'No assigned class') + ' · ' + getCurrentDateString()) +
+  return hdr('Teacher Dashboard', 'Welcome, ' + escapeHtml(teacher.name) + ' &middot; ' + escapeHtml(teacher.department || 'Academics') + ' &middot; ' + escapeHtml(myClassNames.join(', ') || 'No assigned class') + ' &middot; ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/teacher/index.html', {
       statsCards,
       scheduleRows: scheduleRowsHtml,
