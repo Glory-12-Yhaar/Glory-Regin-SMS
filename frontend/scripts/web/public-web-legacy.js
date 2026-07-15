@@ -700,14 +700,22 @@ const TRANSPORT_DATA = [
 ];
 
 function transportModule() {
+  const linkedChildNames = new Set(
+    (typeof getParentChildren === 'function' ? getParentChildren() : [])
+      .map(child => normalizeIdentity(child.name))
+  );
+  const assignedBuses = TRANSPORT_DATA.filter(bus => linkedChildNames.has(normalizeIdentity(bus.student)));
+  const trackedBuses = assignedBuses.filter(bus => bus.gpsTracking);
+  const availableDrivers = new Set(assignedBuses.map(bus => bus.driver)).size;
+  const allAssignedBusesActive = assignedBuses.length > 0 && assignedBuses.every(bus => bus.status === 'Active');
   let html = hdr('Transport Tracking', 'Monitor school bus schedules and real-time location tracking', 'Transport');
   
   html += `
   <div class="stats-row" style="margin-bottom:20px">
-    ${statCard('<i class="fas fa-bus"></i>', '${TRANSPORT_DATA.length}', 'Assigned Buses', 'All active', 'neu', 'si-blue')}
-    ${statCard('<i class="fas fa-map-marker-alt"></i>', '${TRANSPORT_DATA.filter(t=>t.gpsTracking).length}', 'GPS Tracking', 'Real-time', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-user-tie"></i>', '${TRANSPORT_DATA.length}', 'Drivers Available', 'All verified', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-check-circle"></i>', '100%', 'Safety Rating', 'Excellent', 'up', 'si-green')}
+    ${statCard('<i class="fas fa-bus"></i>', assignedBuses.length, 'Assigned Buses', allAssignedBusesActive ? 'All active' : assignedBuses.length ? 'Check status' : 'None assigned', allAssignedBusesActive ? 'up' : 'neu', 'si-blue')}
+    ${statCard('<i class="fas fa-map-marker-alt"></i>', trackedBuses.length, 'GPS Tracking', trackedBuses.length ? 'Real-time' : 'Unavailable', trackedBuses.length ? 'up' : 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-user-tie"></i>', availableDrivers, 'Drivers Available', availableDrivers ? 'All verified' : 'None assigned', 'neu', 'si-gold')}
+    ${statCard('<i class="fas fa-check-circle"></i>', assignedBuses.length ? '100%' : 'N/A', 'Safety Rating', assignedBuses.length ? 'Excellent' : 'No assigned buses', assignedBuses.length ? 'up' : 'neu', 'si-green')}
   </div>
 
   <div class="g2" style="margin-bottom:20px">
@@ -717,14 +725,14 @@ function transportModule() {
         <button class="btn btn-secondary btn-sm" onclick="refreshTransportData()" style="cursor:pointer"><i class="fas fa-sync"></i> Refresh</button>
       </div>
       <div style="max-height:500px;overflow-y:auto">
-        ${TRANSPORT_DATA.map(bus => `
+        ${assignedBuses.map(bus => `
         <div style="padding:16px;border:1.5px solid var(--gray-200);border-radius:12px;margin-bottom:12px;background:var(--gray-50)">
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
             <div>
-              <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${bus.student}</div>
-              <div style="font-size:12px;color:var(--gray-500)">Bus ${bus.bus} · Route: ${bus.route}</div>
+              <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(bus.student)}</div>
+              <div style="font-size:12px;color:var(--gray-500)">${escapeHtml(bus.bus)} · Route: ${escapeHtml(bus.route)}</div>
             </div>
-            <span class="badge b-success"><i class="fas fa-circle" style="color:#10b981;font-size:8px;margin-right:4px"></i>${bus.status}</span>
+            <span class="badge ${bus.status === 'Active' ? 'b-success' : 'b-warning'}"><i class="fas fa-circle" style="font-size:8px;margin-right:4px"></i>${escapeHtml(bus.status)}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
             <div style="padding:10px;background:white;border-radius:8px">
@@ -739,7 +747,7 @@ function transportModule() {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
             <div style="padding:10px;background:white;border-radius:8px">
               <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:4px">Driver</div>
-              <div style="font-size:13px;font-weight:600;color:var(--gray-800)">${bus.driver}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--gray-800)">${escapeHtml(bus.driver)}</div>
             </div>
             <div style="padding:10px;background:white;border-radius:8px">
               <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:4px">Contact</div>
@@ -749,7 +757,7 @@ function transportModule() {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
             <div style="padding:10px;background:white;border-radius:8px">
               <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:4px">Current Location</div>
-              <div style="font-size:12px;font-weight:600;color:var(--green)">${bus.currentLocation}</div>
+              <div style="font-size:12px;font-weight:600;color:var(--green)">${escapeHtml(bus.currentLocation)}</div>
             </div>
             <div style="padding:10px;background:white;border-radius:8px">
               <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:4px">Scheduled Stops</div>
@@ -762,7 +770,7 @@ function transportModule() {
             <button class="btn btn-info btn-sm" onclick="busDetails(${bus.id})" style="flex:1;cursor:pointer"><i class="fas fa-info-circle"></i> Details</button>
           </div>
         </div>
-        `).join('')}
+        `).join('') || '<div style="padding:28px;text-align:center;color:var(--gray-500)">No bus assignment is linked to your children.</div>'}
       </div>
     </div>
     <div class="card">
@@ -770,16 +778,16 @@ function transportModule() {
       <table class="tbl" style="font-size:12px">
         <thead><tr><th>Bus</th><th>Route</th><th>Driver</th><th>Stops</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>
-          ${TRANSPORT_DATA.map(bus => `
+          ${assignedBuses.map(bus => `
           <tr>
-            <td><strong>${bus.bus}</strong></td>
-            <td>${bus.route}</td>
-            <td>${bus.driver}</td>
+            <td><strong>${escapeHtml(bus.bus)}</strong></td>
+            <td>${escapeHtml(bus.route)}</td>
+            <td>${escapeHtml(bus.driver)}</td>
             <td>${bus.stops}</td>
-            <td><span class="badge b-success">Active</span></td>
-            <td><button class="btn btn-secondary btn-xs" onclick="editRoute(${bus.id})" style="cursor:pointer">Edit</button></td>
+            <td><span class="badge ${bus.status === 'Active' ? 'b-success' : 'b-warning'}">${escapeHtml(bus.status)}</span></td>
+            <td><button class="btn btn-secondary btn-xs" onclick="busDetails(${bus.id})" style="cursor:pointer">Details</button></td>
           </tr>
-          `).join('')}
+          `).join('') || '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--gray-500)">No assigned route available.</td></tr>'}
         </tbody>
       </table>
       <div style="margin-top:12px;padding:12px;background:var(--blue-xpale);border-radius:8px">
@@ -2262,7 +2270,7 @@ function initButtonHandlers() {
 // -----------------------------------
 // INIT
 // -----------------------------------
-document.getElementById('role-fab').style.display = 'none';
+document.getElementById('role-fab')?.style.setProperty('display', 'none');
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function () {

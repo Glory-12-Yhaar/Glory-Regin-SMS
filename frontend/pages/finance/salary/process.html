@@ -1,0 +1,10 @@
+<div class="card" style="max-width:820px">
+  <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> {{period}} Payroll Batch</span></div>
+  <p style="font-size:13px;color:var(--gray-600);line-height:1.7">Review the current payroll totals before processing this batch.</p>
+  <div class="stats-row">{{statsCards}}</div>
+  <div style="background:var(--gold-xlight);border:1px solid var(--gold-light);border-radius:8px;padding:14px;margin:18px 0">{{departmentRows}}</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-primary" onclick="confirmPayrollBatch()"><i class="fas fa-check"></i> Confirm Process</button>
+    <button class="btn btn-secondary" onclick="navTo('salary')">Cancel</button>
+  </div>
+</div>

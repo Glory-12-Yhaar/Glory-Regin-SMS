@@ -1,0 +1,18 @@
+<div class="card" style="max-width:760px">
+  <div class="card-hdr"><span class="card-title"><i class="fas fa-plus-circle"></i> Expense Details</span></div>
+  <form onsubmit="submitExpense(event)">
+    <div class="f-field" style="margin-bottom:12px"><label>Description *</label><input id="expense-description" required maxlength="255" placeholder="What was purchased or paid for?"></div>
+    <div class="f-row">
+      <div class="f-field"><label>Category *</label><select id="expense-category" required><option value="">Select category</option><option>Utilities</option><option>Administration</option><option>Facilities</option><option>Transport</option><option>Learning Materials</option><option>Other</option></select></div>
+      <div class="f-field"><label>Amount (GHS) *</label><input id="expense-amount" type="number" min="0.01" step="0.01" required placeholder="0.00"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-field"><label>Expense Date *</label><input id="expense-date" type="date" required value="{{today}}"></div>
+      <div class="f-field"><label>Recorded By</label><input value="{{recordedBy}}" disabled></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Record Expense</button>
+      <button class="btn btn-secondary" type="button" onclick="navTo('expenses')">Cancel</button>
+    </div>
+  </form>
+</div>

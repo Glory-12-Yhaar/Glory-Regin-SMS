@@ -287,7 +287,7 @@ function visitorHome() {
         </div>
         <div>
           <h3 style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:6px">${escapeHtml(ev.title)}</h3>
-          <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:8px">${escapeHtml(time)} Â· ${escapeHtml(ev.audience || 'All')}</p>
+          <p style="font-size:12px;color:var(--gray-500);line-height:1.6;margin-bottom:8px">${escapeHtml(time)} · ${escapeHtml(ev.audience || 'All')}</p>
           <p style="font-size:12px;color:var(--gray-600);line-height:1.6;margin:0">${escapeHtml(ev.description || '')}</p>
         </div>
       </div>

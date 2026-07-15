@@ -1,4 +1,4 @@
-﻿// ADMIN DASHBOARD
+// ADMIN DASHBOARD
 // -----------------------------------
 function getCurrentDateString() {
   const now = new Date();
@@ -117,7 +117,7 @@ function adminDash() {
         </div>`).join('');
   const ringCircumference = Math.PI * 100;
 
-  return hdr('Admin Dashboard', 'Welcome back, Administrator Â· ' + getCurrentDateString()) +
+  return hdr('Admin Dashboard', 'Welcome back, Administrator · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/admin/index.html', {
       statsCards,
       enrollmentBars,
@@ -268,16 +268,16 @@ function teacherDash() {
           <span style="font-size:13px;font-weight:600">${escapeHtml(a.title)}</span>
           <span class="badge b-info">${escapeHtml(formatDashboardDueDate(a.dueDate))}</span>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} Â· ${submitted}/${total} submitted</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(a.class)} · ${submitted}/${total} submitted</div>
         <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(submitted / total * 100)}%"></div></div>
       </div>`}).join('') : '<div style="padding:20px;color:var(--gray-400);text-align:center">No assignments for your assigned classes yet.</div>';
   const messageRows = getTeacherMessages().map(m => `
         <div class="chat-msg ${m.fromTeacher ? 'me' : ''}">
           <div class="av av-sm av-${m.fromTeacher ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
-          <div><div class="chat-bubble ${m.fromTeacher ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromTeacher ? 'me' : ''}">${m.fromTeacher ? 'You' : escapeHtml(m.from)} Â· ${m.time}</div></div>
+          <div><div class="chat-bubble ${m.fromTeacher ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromTeacher ? 'me' : ''}">${m.fromTeacher ? 'You' : escapeHtml(m.from)} · ${m.time}</div></div>
         </div>`).join('');
 
-  return hdr('Teacher Dashboard', 'Welcome, ' + teacher.name + ' Â· ' + teacher.department + ' Â· ' + (myClassNames.join(', ') || 'No assigned class') + ' Â· ' + getCurrentDateString()) +
+  return hdr('Teacher Dashboard', 'Welcome, ' + teacher.name + ' · ' + teacher.department + ' · ' + (myClassNames.join(', ') || 'No assigned class') + ' · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/teacher/index.html', {
       statsCards,
       scheduleRows: scheduleRowsHtml,
@@ -431,7 +431,7 @@ function studentDash() {
   const timetableRows = [['7:30', 'Mathematics', 'Rm 14', 'Mr. Amponsah'], ['8:20', 'English', 'Rm 02', 'Mrs. Asante'], ['10:00', 'Science', 'Lab 1', 'Mr. Oduro'], ['11:00', 'ICT', 'Lab 2', 'Ms. Frimpong'], ['13:30', 'History', 'Rm 08', 'Mr. Boateng']].map(([t, s, r, tc]) => `
       <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer" onclick="viewScheduleDetail('${t}', '${s}', '${studentClass}')">
         <div style="font-size:11px;color:var(--blue-main);font-weight:700;min-width:42px">${t}</div>
-        <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} Â· ${tc}</div></div>
+        <div><div style="font-size:12.5px;font-weight:600">${s}</div><div style="font-size:10px;color:var(--gray-400)">${r} · ${tc}</div></div>
       </div>`).join('');
   const studentNotices = (typeof getNoticesData === 'function' ? getNoticesData() : (window.noticesData || []))
     .filter(n => ['All', 'Students'].includes(n.audience || 'All'))
@@ -439,10 +439,10 @@ function studentDash() {
   const noticeRows = studentNotices.length ? studentNotices.map(n => `
       <div class="notice-item" style="padding:10px 0">
         <div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px">${n.icon || '<i class="fas fa-bullhorn"></i>'}</div>
-        <div class="notice-content"><h4>${escapeHtml(n.title || '')}</h4><p>${escapeHtml(n.notice_date || n.date || '')} Â· ${escapeHtml(n.priority || 'Normal')}</p></div>
+        <div class="notice-content"><h4>${escapeHtml(n.title || '')}</h4><p>${escapeHtml(n.notice_date || n.date || '')} · ${escapeHtml(n.priority || 'Normal')}</p></div>
       </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No notices for students.</div>';
 
-  return hdr('Student Dashboard', 'Welcome, ' + studentName + ' Â· ' + studentClass + ' Â· ID No: ' + studentId + ' Â· ' + getCurrentDateString()) +
+  return hdr('Student Dashboard', 'Welcome, ' + studentName + ' · ' + studentClass + ' · ID No: ' + studentId + ' · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/student/index.html', {
       avatarColor: student.avatar_color || 'blue',
       studentInitials,
@@ -566,7 +566,7 @@ function parentDash() {
     <div class="av av-lg av-${s.color}">${(s.name||' ')[0]}</div>
     <div style="flex:1">
       <div style="font-size:15px;font-weight:700;color:var(--blue-dark)">${escapeHtml(s.name)}</div>
-      <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(s.class)} Â· ${s.studentId}</div>
+      <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(s.class)} · ${s.studentId}</div>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
         <span class="badge b-success">${s.attendance}% Attendance</span>
         <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">Fees ${s.feeStatus}</span>
@@ -578,7 +578,7 @@ function parentDash() {
   const messages = getParentMessages();
   const messageHtml = messages.length === 0 ? '<div style="text-align:center;color:var(--gray-400);padding:20px"><i class="fas fa-inbox" style="font-size:32px;margin-bottom:8px;display:block"></i> No messages yet</div>' : messages.map(m=>`<div class="chat-msg ${m.fromParent ? 'me' : ''}">
     <div class="av av-sm av-${m.fromParent ? 'blue' : 'green'}">${(m.from||' ')[0]}</div>
-    <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} Â· ${m.time}</div></div>
+    <div><div class="chat-bubble ${m.fromParent ? 'me-bubble' : 'them'}">${escapeHtml(m.text)}</div><div class="chat-meta ${m.fromParent ? 'me' : ''}">${escapeHtml(m.from)} · ${m.time}</div></div>
   </div>`).join('');
   const assignments = getDashboardAssignments().flatMap(a => students
     .filter(child => child.class === (a.className || a.class))
@@ -605,7 +605,7 @@ function parentDash() {
   ].join('');
   const feeCards = students.map(s=>`<div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:12px;font-weight:600">${escapeHtml(s.name)} Â· ${escapeHtml(s.class)}</div>
+          <div style="font-size:12px;font-weight:600">${escapeHtml(s.name)} · ${escapeHtml(s.class)}</div>
           <span class="badge ${s.feeStatus==='Paid' ? 'b-success' : s.feeStatus==='Partial' ? 'b-warning' : 'b-danger'}">${s.feeStatus}</span>
         </div>
         <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">GH₵ ${Number(s.feeAmount||0).toLocaleString()}</div>
@@ -621,11 +621,11 @@ function parentDash() {
           <span style="font-size:9px;color:var(--blue-main);font-weight:700">${escapeHtml(parts.month)}</span>
           <span style="font-size:18px;font-weight:800;color:var(--blue-dark)">${escapeHtml(parts.day)}</span>
         </div>
-        <div><div style="font-size:12.5px;font-weight:600">${escapeHtml(ev.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(time)} Â· ${escapeHtml(ev.audience || 'All')}</div></div>
+        <div><div style="font-size:12.5px;font-weight:600">${escapeHtml(ev.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(time)} · ${escapeHtml(ev.audience || 'All')}</div></div>
       </div>`;
   }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:16px">No upcoming school events.</div>';
 
-  return hdr('Parent Dashboard', 'Welcome, ' + (parentUser?.name || 'Parent') + ' Â· Parent of ' + students.length + ' student' + (students.length === 1 ? '' : 's') + ' Â· ' + getCurrentDateString()) +
+  return hdr('Parent Dashboard', 'Welcome, ' + (parentUser?.name || 'Parent') + ' · Parent of ' + students.length + ' student' + (students.length === 1 ? '' : 's') + ' · ' + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/parent/index.html', {
       statsCards,
       childrenStats,
@@ -642,7 +642,23 @@ function parentDash() {
 function accountDash() {
   const sessionUser = getSessionUser();
   const accountantName = sessionUser?.name || 'Accountant';
-  const finance = getFinanceSummary();
+  const rawFinance = typeof getFinanceSummary === 'function' ? (getFinanceSummary() || {}) : {};
+  const payments = Array.isArray(rawFinance.payments)
+    ? rawFinance.payments
+    : (typeof getPayments === 'function' ? (getPayments() || []) : []);
+  const collected = Number(rawFinance.collected ?? rawFinance.totalIncome ?? 0);
+  const outstanding = Number(rawFinance.outstanding ?? rawFinance.totalOutstanding ?? 0);
+  const expenses = Number(rawFinance.expenses ?? rawFinance.totalExpenditure ?? 0);
+  const finance = {
+    term: rawFinance.term || 'Current Term',
+    academicYear: rawFinance.academicYear || rawFinance.academic_year || '',
+    payments,
+    collected,
+    outstanding,
+    expenses,
+    net: Number(rawFinance.net ?? rawFinance.netSurplus ?? (collected - expenses)),
+    pendingCount: Number(rawFinance.pendingCount ?? payments.filter(payment => payment.status === 'Pending').length)
+  };
   const financePeriod = [finance.term, finance.academicYear].filter(Boolean).join(' ') || 'Current Period';
   const target = Math.max(finance.collected + finance.outstanding, 1);
   const collectedPct = Math.round(finance.collected / target * 100);
@@ -679,16 +695,16 @@ function accountDash() {
         <span class="badge b-warning">${escapeHtml(financePeriod)}</span>
       </div>`).join('');
 
-  return hdr('Accountant Dashboard', `Financial Overview for ${accountantName} Â· ${financePeriod} Â· ` + getCurrentDateString()) +
+  return hdr('Accountant Dashboard', `Financial Overview for ${accountantName} · ${financePeriod} · ` + getCurrentDateString()) +
     renderPageTemplate('pages/dashboards/accountant/index.html', {
       statsCards,
       collectedAmount: Number(finance.collected).toLocaleString(),
       targetAmount: Number(target).toLocaleString(),
       collectedPct,
-      debtorNotice: debtorReminderNoticePanel(2, true),
+      debtorNotice: typeof debtorReminderNoticePanel === 'function' ? debtorReminderNoticePanel(2, true) : '',
       revenueRows,
       payrollRows,
-      calendar: mini_cal()
+      calendar: typeof mini_cal === 'function' ? mini_cal() : ''
     });
 }
 
@@ -701,13 +717,15 @@ function alumniDash() {
   const donations = getAlumniDonations();
   const registrations = getAlumniEventRegistrations();
   const alumniEvents = getAlumniEvents();
+  const profileFields = ['name', 'gradYear', 'profession', 'location', 'email', 'phone', 'bio'];
+  const profilePct = Math.round(profileFields.filter(field => String(currentAlumni[field] || '').trim()).length / profileFields.length * 100);
   const totalDonated = donations.filter(d=>d.status==='Completed').reduce((sum,d)=>sum + (d.amount||0), 0);
   const recentDonations = donations.slice(-3).reverse();
   
   const statsCards = [
-    statCard('<i class="fas fa-medal"></i>', '1,240', 'Total Alumni', 'Network growing', 'up', 'si-blue'),
+    statCard('<i class="fas fa-medal"></i>', String(alumni.length), 'Alumni Directory', 'Registered profiles', 'up', 'si-blue', true, 'navTo("directory")'),
     statCard('<i class="fas fa-calendar-alt"></i>', String(alumniEvents.length), 'Upcoming Events', 'From calendar', 'neu', 'si-gold'),
-    statCard('<i class="fas fa-briefcase"></i>', '28', 'Job Listings', 'Posted by alumni', 'up', 'si-green'),
+    statCard('<i class="fas fa-briefcase"></i>', '4', 'Job Listings', 'Posted by alumni', 'up', 'si-green', true, 'navTo("jobs")'),
     statCard('<i class="fas fa-hand-holding-heart"></i>', 'GH₵' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
   ].join('');
   const announcementRows = getAlumniAnnouncements().slice(0,2).map(a => `
@@ -760,6 +778,7 @@ function alumniDash() {
 
   return renderPageTemplate('pages/dashboards/alumni/index.html', {
     alumniName: escapeHtml(currentAlumni.name || 'Alumni'),
+    profilePct,
     statsCards,
     announcementRows,
     campaignRows,

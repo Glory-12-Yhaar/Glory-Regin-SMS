@@ -102,7 +102,11 @@ const API = {
     messages: {
         inbox: (params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type: 'inbox', ...params })),
         sent:  (params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type: 'sent',  ...params })),
+        folder:(type, params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ type, ...params })),
+        recipients:(params = {}) => apiRequest('/messages/index.php?' + new URLSearchParams({ action: 'recipients', ...params })),
         send:  (data)        => apiRequest('/messages/index.php',  'POST', data),
+        update:(id, action)  => apiRequest('/messages/index.php?id=' + id, 'PUT', { action }),
+        delete:(id)          => apiRequest('/messages/index.php?id=' + id, 'DELETE'),
     },
 
     // ── Assignments ──────────────────────────────────────────
@@ -157,6 +161,10 @@ const API = {
     dashboard: () => apiRequest('/reports/dashboard.php'),
     analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
     financeReport: (params = {}) => apiRequest('/reports/finance.php?' + new URLSearchParams(params)),
+    expenses: {
+        list:   ()     => apiRequest('/expenses/index.php'),
+        create: (data) => apiRequest('/expenses/index.php', 'POST', data),
+    },
 
     exams: {
         list:   (params = {}) => apiRequest('/exams/index.php?' + new URLSearchParams(params)),
@@ -463,6 +471,8 @@ async function syncAllDataFromBackend() {
             parentsData.splice(0, parentsData.length, ...res.data.map(p => ({
                 parent_id: 'P' + String(p.id).padStart(3, '0'),
                 id: p.id,
+                user_id: p.user_id,
+                username: p.username || '',
                 name: p.name,
                 contact_person: p.contact_person || p.name,
                 gender: p.gender || 'Not provided',
@@ -1811,6 +1821,36 @@ apiOverrides.viewArchivedTeachers = async function() {
 
 // Run overrides immediately as script is loaded after script.js
 window.applyApiClientOverrides();
+
+async function restoreAuthenticatedPortalSession() {
+    try {
+        const response = await fetch(API_BASE + '/auth/me.php', {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!response.ok) return false;
+        const result = await response.json();
+        if (!result?.success || !result.user) return false;
+
+        if (typeof setSessionUser === 'function') setSessionUser(result.user);
+        else window.SESSION_USER = result.user;
+        loginRole = normalizeRoleName(result.user.role);
+        doLogin();
+        await syncAllDataFromBackend();
+        if (typeof renderMain === 'function') renderMain();
+        return true;
+    } catch (error) {
+        console.error('Unable to restore portal session:', error);
+        return false;
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', restoreAuthenticatedPortalSession, { once: true });
+} else {
+    restoreAuthenticatedPortalSession();
+}
 
 if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles)) {
     API.news.list().then(res => {

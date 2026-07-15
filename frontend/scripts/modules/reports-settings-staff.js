@@ -1,4 +1,7 @@
-﻿
+// Shared report-card score store. Keep it on window so report generation,
+// printing, and dashboard navigation all use the same records.
+const studentScores = window.studentScores || (window.studentScores = Object.create(null));
+
 // Report-card-specific grading thresholds.
 function calculateReportGrade(score) {
   if (score >= 90) return 'A';
@@ -31,6 +34,13 @@ function processStudentScores(studentId) {
   ensureReportCardScores();
   const student = studentScores[studentId];
   if (!student) return null;
+  if (!Array.isArray(student.scores) || !student.scores.length) {
+    const enrolled = enrolledStudents.find(record => String(record.student_id) === String(studentId) || normalizeIdentity(record.name) === normalizeIdentity(student.name));
+    student.scores = buildGeneratedReportScores(enrolled || {
+      name: student.name,
+      student_class: student.class || 'Not Assigned'
+    });
+  }
 
   const processed = {
     ...student,
@@ -105,11 +115,40 @@ function getReportCardEntriesForRole() {
   if (currentRole === 'Student') {
     const currentStudent = getCurrentStudentRecord();
     entries = entries.filter(([id, data]) => id === currentStudent.student_id || data.name === currentStudent.name);
+    if (!entries.length && currentStudent.student_id && currentStudent.name !== 'No linked student') {
+      const id = currentStudent.student_id;
+      studentScores[id] = {
+        name: currentStudent.name,
+        class: currentStudent.student_class || 'Not Assigned',
+        classTeacher: getClassTeacherName(currentStudent.student_class),
+        stream: classesData.find(c => c.name === currentStudent.student_class)?.stream || 'General',
+        picture: getInitials(currentStudent.name, 'ST').slice(0, 1),
+        attendance: parseFloat(currentStudent.attendance) || 0,
+        term: '1st', year: '2024/2025', scores: buildGeneratedReportScores(currentStudent, 0)
+      };
+      entries = [[id, studentScores[id]]];
+    }
   } else if (currentRole === 'Parent') {
     const children = getParentChildren();
-    const childNames = new Set(children.map(c => c.name));
-    const childIds = new Set(children.map(c => c.studentId));
-    entries = entries.filter(([id, data]) => childIds.has(id) || childNames.has(data.name));
+    const childNames = new Set(children.map(c => normalizeIdentity(c.name)));
+    const childIds = new Set(children.map(c => String(c.studentId || c.id || '')));
+    entries = entries.filter(([id, data]) => childIds.has(String(id)) || childNames.has(normalizeIdentity(data.name)));
+    children.forEach((child, index) => {
+      const exists = entries.some(([id, data]) => childIds.has(String(id)) && String(id) === String(child.studentId || child.id) || normalizeIdentity(data.name) === normalizeIdentity(child.name));
+      if (exists || !child.name) return;
+      const enrolled = enrolledStudents.find(student => String(student.student_id) === String(child.studentId) || normalizeIdentity(student.name) === normalizeIdentity(child.name));
+      const source = enrolled || { student_id: child.studentId || child.id, name: child.name, student_class: child.class, attendance: child.attendance };
+      const id = String(source.student_id || child.studentId || child.id || `CHILD-${index + 1}`);
+      studentScores[id] = {
+        name: source.name,
+        class: source.student_class || child.class || 'Not Assigned',
+        classTeacher: getClassTeacherName(source.student_class || child.class),
+        stream: classesData.find(c => c.name === (source.student_class || child.class))?.stream || 'General',
+        picture: getInitials(source.name, 'ST').slice(0, 1), attendance: parseFloat(source.attendance) || 0,
+        term: '1st', year: '2024/2025', scores: buildGeneratedReportScores(source, index)
+      };
+      entries.push([id, studentScores[id]]);
+    });
   } else if (currentRole === 'Teacher') {
     const assignedClassNames = getAssignedClassNamesForTeacher();
     entries = entries.filter(([_, data]) => assignedClassNames.includes(data.class));
@@ -178,10 +217,31 @@ function getReportRemark(grade) {
   return 'Needs Improvement';
 }
 
+function getReportCardSchoolContext() {
+  const school = (typeof SETTINGS_DATA !== 'undefined' && SETTINGS_DATA.schoolInfo) ? SETTINGS_DATA.schoolInfo : {};
+  const academic = (typeof SETTINGS_DATA !== 'undefined' && SETTINGS_DATA.academic) ? SETTINGS_DATA.academic : {};
+  const rawTerm = academic.currentTerm || 'Term 1';
+  const termNumber = String(rawTerm).match(/\d+/)?.[0];
+  const term = termNumber === '1' ? '1st Term' : termNumber === '2' ? '2nd Term' : termNumber === '3' ? '3rd Term' : rawTerm;
+  const configuredLogo = school.schoolLogo || 'Logo.png';
+  const logo = /^(data:|https?:|assets\/)/i.test(configuredLogo) ? configuredLogo : `assets/images/${configuredLogo}`;
+  return {
+    name: school.schoolName || 'Glory Reign Preparatory School',
+    address: school.address || '',
+    phone: school.phone || '',
+    email: school.email || '',
+    motto: school.schoolMotto || '',
+    logo,
+    term,
+    academicYear: academic.academicYear || 'Current Academic Year'
+  };
+}
+
 // Generate report card HTML
 function generateReportCard(studentId) {
   const student = processStudentScores(studentId);
   if (!student) return '<div class="card"><p>Student not found</p></div>';
+  const school = getReportCardSchoolContext();
 
   const maxMarks = student.processedScores.length * 100;
   const { enrolled, admission } = getReportStudentRecord(studentId, student.name);
@@ -260,11 +320,12 @@ function generateReportCard(studentId) {
   <div class="report-card-container paper-style" data-report-student-id="${escapeAttr(studentId)}">
     <div class="rc-paper">
       <div class="rc-title">
-        <div style="text-align:center"><img src="assets/images/Logo.png" alt="Logo" style="width:58px;height:58px;object-fit:contain"><div style="font-size:9px">School Logo</div></div>
+        <div style="text-align:center"><img src="${escapeAttr(school.logo)}" alt="${escapeAttr(school.name)} logo" style="width:58px;height:58px;object-fit:contain"><div style="font-size:9px">School Logo</div></div>
         <div>
-          <div class="rc-school">Glory Reign Preparatory School</div>
-          <div class="rc-subline">Terminal Report Card Â· ${student.term} Term Â· ${student.year}</div>
-          <div class="rc-subline">P.O. Box AN 1234, Accra North Â· Tel: +233-123-456-789</div>
+          <div class="rc-school">${escapeHtml(school.name)}</div>
+          ${school.motto ? `<div class="rc-subline">${escapeHtml(school.motto)}</div>` : ''}
+          <div class="rc-subline">Terminal Report Card · ${escapeHtml(school.term)} · ${escapeHtml(school.academicYear)}</div>
+          <div class="rc-subline">${escapeHtml(school.address)}${school.phone ? ` · Tel: ${escapeHtml(school.phone)}` : ''}${school.email ? ` · ${escapeHtml(school.email)}` : ''}</div>
         </div>
         <div class="rc-photo">${photoHTML}<span>Student Photo</span></div>
       </div>
@@ -301,7 +362,7 @@ function generateReportCard(studentId) {
             <td></td>
             <td></td>
             <td class="rc-total">${student.totalMarks}</td>
-            <td colspan="3">Average: ${student.average}% Â· Overall Grade: ${student.grade} Â· Max: ${maxMarks}</td>
+            <td colspan="3">Average: ${student.average}% · Overall Grade: ${student.grade} · Max: ${maxMarks}</td>
           </tr>
         </tbody>
       </table>
@@ -413,12 +474,15 @@ function printReportCardPaper(studentId) {
 
 function reportCardsModule() {
   const visibleScores = getReportCardEntriesForRole();
+  const defaultReportId = ['Student', 'Parent'].includes(currentRole) ? visibleScores[0]?.[0] : '';
 
   const title = currentRole === 'Student' ? 'My Report Card' : currentRole === 'Parent' ? 'Children Report Cards' : 'Report Cards';
   const subtitle = currentRole === 'Admin' ? 'View and generate student report cards' : 'View permitted report cards only';
+  const showStudentSelector = !['Student', 'Parent'].includes(currentRole);
 
   return hdr(title, subtitle, 'Report Cards') + `
-  <div class="g21 mb20">
+  <div class="${showStudentSelector ? 'g21' : ''} mb20">
+    ${showStudentSelector ? `
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Select Student Report Card</span></div>
       <div class="f-row">
@@ -426,7 +490,7 @@ function reportCardsModule() {
           <label>Select Student</label>
           <select id="student-select" onchange="if(this.value) showReportCard(this.value)" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
             <option value="">Choose a student...</option>
-            ${visibleScores.map(([id, data]) => `<option value="${id}">${data.name} (${data.class})</option>`).join('')}
+            ${visibleScores.map(([id, data], index) => `<option value="${id}" ${defaultReportId && index === 0 ? 'selected' : ''}>${data.name} (${data.class})</option>`).join('')}
           </select>
         </div>
         <div class="f-field">
@@ -444,6 +508,7 @@ function reportCardsModule() {
         </p>
       </div>
     </div>
+    ` : ''}
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Student Report Summary</span></div>
       <table class="tbl">
@@ -467,7 +532,7 @@ function reportCardsModule() {
       </table>
     </div>
   </div>
-  <div id="student-report-container" style="margin-top:30px"></div>`;
+  <div id="student-report-container" style="margin-top:30px">${defaultReportId ? generateReportCard(defaultReportId) : ''}</div>`;
 }
 
 // ASSIGNMENTS MODULE
@@ -1795,7 +1860,10 @@ function getAvailableChatContacts() {
     const cls = getCurrentStudentRecord().student_class;
     const classInfo = classesData.find(c => c.name === cls);
     const teachers = teachersData.filter(t => t.teacher_id === classInfo?.teacher_id || (classInfo?.subjects || []).includes(t.subject));
-    return teachers.length ? teachers : teachersData.slice(0, 3);
+    const availableTeachers = teachers.length ? teachers : teachersData.slice(0, 3);
+    return availableTeachers.filter((teacher, index, list) =>
+      teacher.name && list.findIndex(item => normalizeIdentity(item.name) === normalizeIdentity(teacher.name)) === index
+    );
   }
   if (currentRole === 'Parent') {
     return getParentTeacherContacts();
@@ -1888,7 +1956,7 @@ function renderRoleChatModule(title, subtitle) {
         <div class="av av-sm av-${avatar}">${getInitials(msg.sender, 'U').slice(0, 1)}</div>
         <div>
           <div class="chat-bubble${isSender ? ' me-bubble' : ' them'}">${escapeHtml(msg.text)}</div>
-          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} Â· ${escapeHtml(msg.time || '')}</div>
+          <div class="chat-meta${isSender ? ' me' : ''}" style="${isSender ? 'text-align:right' : ''}">${isSender ? 'You' : escapeHtml(msg.sender)} · ${escapeHtml(msg.time || '')}</div>
         </div>
       </div>`;
   }).join('');
@@ -1907,12 +1975,12 @@ function renderRoleChatModule(title, subtitle) {
             <div class="av av-sm av-${currentContact.avatar || 'blue'}">${getInitials(currentChat, 'C').slice(0, 1)}</div>
             <div>
               <div style="font-size:13px;font-weight:700">${escapeHtml(currentContact.name || currentChat)}</div>
-              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} Â· ${escapeHtml(currentContact.status || 'Available')}</div>
+              <div style="font-size:11px;color:var(--gray-400)">${escapeHtml(currentContact.role || 'Contact')} · ${escapeHtml(currentContact.status || 'Available')}</div>
             </div>
             <div style="margin-left:auto;display:flex;gap:8px">
               ${currentRole === 'Parent' && currentContact.role === 'Teacher' ? `<button class="btn btn-secondary btn-xs" onclick="viewTeacherProfileByName('${escapeAttr(currentChat)}')"><i class="fas fa-user"></i> Profile</button>` : ''}
-              <button class="btn btn-secondary btn-xs" onclick="markConversationRead('${escapeAttr(self.name)}','${escapeAttr(currentChat)}')">Mark Read</button>
-              <button class="btn btn-danger btn-xs" onclick="deleteConversation('${escapeAttr(self.name)}','${escapeAttr(currentChat)}')"><i class="fas fa-trash"></i></button>
+              ${getUnreadCount(self.name, currentChat) > 0 ? `<button class="btn btn-secondary btn-xs" onclick="markConversationRead('${escapeAttr(self.name)}','${escapeAttr(currentChat)}')">Mark Read</button>` : ''}
+              ${chatMessages.length ? `<button class="btn btn-danger btn-xs" onclick="deleteConversation('${escapeAttr(self.name)}','${escapeAttr(currentChat)}')"><i class="fas fa-trash"></i></button>` : ''}
             </div>
           </div>
           <div class="chat-msgs" style="flex:1;overflow-y:auto;padding-right:8px">${messagesHTML || '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:13px">No messages yet. Send the first message.</div>'}</div>
@@ -2092,7 +2160,7 @@ function contactMessagesModule() {
             <h4 style="font-size:13px;font-weight:700;color:var(--gray-800)">${msg.name}</h4>
             ${msg.read ? '' : '<span class="badge b-success" style="font-size:10px">New</span>'}
           </div>
-          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> Â· ${msg.date} at ${msg.time}</div>
+          <div style="font-size:11px;color:var(--gray-500)"><strong>${msg.email}</strong> · ${msg.date} at ${msg.time}</div>
         </div>
         <button class="btn btn-icon danger" onclick="deleteContactMessage(${msg.id})"><i class="fas fa-trash"></i></button>
       </div>
@@ -2113,7 +2181,7 @@ function contactMessagesModule() {
       <button class="btn btn-secondary btn-sm" onclick="markAllAsRead()">Mark All Read</button>
       <button class="btn btn-secondary btn-sm" onclick="deleteAllMessages()" style="color:var(--danger)">Delete All</button>
     </div>
-    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages Â· ${unreadCount} unread</div>
+    <div style="font-size:12px;color:var(--gray-500)">${contactMessages.length} messages · ${unreadCount} unread</div>
   </div>
   ${messagesHTML}`;
 }
@@ -2538,7 +2606,7 @@ function generateReportPDF(reportType) {
   }
 
   html += '</div><div class="footer"><p>This report was automatically generated by Glory Reign School Management System</p>';
-  html += '<p>Â© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
+  html += '<p>© 2026 Glory Reign Preparatory School. All rights reserved.</p></div></body></html>';
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const link = document.createElement('a');
@@ -4444,7 +4512,7 @@ function renderSessionProfile(container, sessionUser) {
         <div class="av av-xl av-${color}" style="font-size:26px">${getInitials(name, role)}</div>
         <div style="flex:1">
           <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${escapeHtml(name)}</div>
-          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' Â· @' + escapeHtml(username) : ''}</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${escapeHtml(role)}${username ? ' · @' + escapeHtml(username) : ''}</div>
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-success">${escapeHtml(displayUser.status || 'Active')}</span><span class="badge b-info">${escapeHtml(role)}</span></div>
         </div>
       </div>
@@ -4519,8 +4587,14 @@ async function loadProfileFromAPI() {
   if (u.role === 'Parent') {
     // Load linked children
     const pRes = await API.parents.list({ search: '' });
-    const parentRecord = pRes?.data?.find(p => p.id === u.id);
-    const children = parentRecord?.children || [];
+    const parentRecord = pRes?.data?.find(p => String(p.user_id) === String(u.id));
+    const children = Array.isArray(parentRecord?.children)
+      ? parentRecord.children
+      : (typeof getParentChildren === 'function' ? getParentChildren().map(child => ({
+          student_name: child.name,
+          class_name: child.class,
+          student_code: child.studentId
+        })) : []);
 
     childrenSection = `
     <div class="card" style="margin-top:20px">
@@ -4534,11 +4608,11 @@ async function loadProfileFromAPI() {
           ${children.map(c => `
           <tr>
             <td><div style="display:flex;align-items:center;gap:8px">
-              <div class="av av-sm av-blue">${c.student_name.slice(0,2).toUpperCase()}</div>
-              <strong>${c.student_name}</strong>
+              <div class="av av-sm av-blue">${escapeHtml(c.student_name.slice(0,2).toUpperCase())}</div>
+              <strong>${escapeHtml(c.student_name)}</strong>
             </div></td>
-            <td>${c.class_name || 'â€”'}</td>
-            <td style="color:var(--gray-500);font-size:12px">${c.student_code}</td>
+            <td>${escapeHtml(c.class_name || '—')}</td>
+            <td style="color:var(--gray-500);font-size:12px">${escapeHtml(c.student_code || '—')}</td>
           </tr>`).join('')}
         </tbody>
       </table>` : `
@@ -4578,7 +4652,7 @@ async function loadProfileFromAPI() {
           <div class="av av-xl av-${color}" style="font-size:26px">${initials}</div>
           <div style="flex:1">
             <div style="font-size:20px;font-weight:800;color:var(--blue-dark)">${u.name}</div>
-            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} Â· @${u.username}</div>
+            <div style="font-size:12px;color:var(--gray-400);margin-top:2px">${u.role} · @${u.username}</div>
             <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
               <span class="badge b-${u.status === 'Active' ? 'success' : 'danger'}">${u.status}</span>
               <span class="badge b-info">${u.role}</span>

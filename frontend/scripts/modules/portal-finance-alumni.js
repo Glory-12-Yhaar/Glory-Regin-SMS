@@ -1,4 +1,4 @@
-﻿// LEARNING MATERIALS MODULE
+// LEARNING MATERIALS MODULE
 function learningMaterialsModule() {
   return hdr('Learning Materials', 'Upload and manage educational resources for students', 'Materials') + `
   <div class="g21">
@@ -546,16 +546,35 @@ function userScopedKey(baseKey) {
 
 function getParentProfileForSession() {
   const user = getSessionUser();
-  const identity = [user?.username, user?.email, user?.name].map(normalizeIdentity).filter(Boolean);
+  if (!user) return null;
+  const userId = String(user.id || user.user_id || '');
+  const identity = [user.username, user.email, user.name].map(normalizeIdentity).filter(Boolean);
   return parentsData.find(parent => {
-    const haystack = [parent.parent_id, parent.email, parent.name, parent.contact_person, parent.phone].map(normalizeIdentity);
-    return identity.some(id => haystack.includes(id) || haystack.some(v => v.includes(id) || id.includes(v)));
+    if (userId && String(parent.user_id || '') === userId) return true;
+    const haystack = [parent.username, parent.email, parent.name, parent.contact_person].map(normalizeIdentity).filter(Boolean);
+    return identity.some(id => haystack.includes(id));
   }) || null;
 }
 
 function getParentChildrenFromProfile() {
   const parent = getParentProfileForSession();
-  if (!parent?.children) return [];
+  if (!parent) return [];
+  if (Array.isArray(parent.child_records)) {
+    return parent.child_records.map((record, index) => {
+      const enrolled = enrolledStudents.find(s => String(s.id) === String(record.student_id));
+      return {
+        id: record.student_id,
+        name: record.student_name,
+        studentId: record.student_code || enrolled?.student_id || 'CHILD-' + String(index + 1).padStart(3, '0'),
+        class: record.class_name || enrolled?.student_class || 'Not Assigned',
+        attendance: parseFloat(enrolled?.attendance) || 0,
+        feeStatus: record.fees_status || enrolled?.fees_status || 'Pending',
+        feeAmount: enrolled?.feeAmount || 0,
+        color: enrolled?.avatar_color || ['blue', 'purple', 'green'][index % 3]
+      };
+    }).filter(child => child.name);
+  }
+  if (!parent.children || parent.children === 'None') return [];
   return parent.children.split(',').map((entry, index) => {
     const match = entry.trim().match(/^(.+?)\s*\((.+?)\)$/);
     const name = match ? match[1].trim() : entry.trim();
@@ -576,15 +595,9 @@ function getParentChildrenFromProfile() {
 function getParentChildren(){
   try{
     const key = userScopedKey(PARENT_CHILDREN_KEY);
-    const raw = appMemoryStorage.getItem(key);
-    if(raw) return JSON.parse(raw);
     const profileChildren = getParentChildrenFromProfile();
-    const sample = profileChildren.length ? profileChildren : [
-      {name:'Ama Serwaa', studentId:'2024-0042', class:'JHS 1', attendance:96, feeStatus:'Paid', feeAmount:2400, color:'blue'},
-      {name:'Kweku Serwaa', studentId:'2024-0143', class:'Basic 3', attendance:91, feeStatus:'Paid', feeAmount:2200, color:'purple'}
-    ];
-    appMemoryStorage.setItem(key, JSON.stringify(sample));
-    return sample;
+    appMemoryStorage.setItem(key, JSON.stringify(profileChildren));
+    return profileChildren;
   }catch(e){return []}
 }
 
@@ -797,6 +810,72 @@ const ALUMNI_LIST_KEY = 'gr_alumni_list';
 const ALUMNI_DONATIONS_KEY = 'gr_alumni_donations';
 const ALUMNI_EVENTS_KEY = 'gr_alumni_events';
 const ALUMNI_REGISTRATIONS_KEY = 'gr_alumni_registrations';
+const ALUMNI_COMMUNITY_KEY = 'gr_alumni_community_posts';
+
+function getAlumniCommunityPosts() {
+  try {
+    const saved = JSON.parse(appMemoryStorage.getItem(ALUMNI_COMMUNITY_KEY) || 'null');
+    if (Array.isArray(saved)) return saved;
+  } catch (e) {}
+  return [
+    { id: 1, author: 'Abena Owusu', group: 'Careers & Mentorship', text: 'Happy to mentor recent graduates interested in software engineering.', time: '2 hours ago', likes: 8, comments: 2 },
+    { id: 2, author: 'Kwabena Asare', group: 'All Alumni', text: 'Registration for the annual homecoming health screening is now open.', time: 'Yesterday', likes: 14, comments: 4 }
+  ];
+}
+
+function saveAlumniCommunityPosts(posts) {
+  appMemoryStorage.setItem(ALUMNI_COMMUNITY_KEY, JSON.stringify(posts));
+}
+
+function alumniCommunityModule() {
+  const posts = getAlumniCommunityPosts();
+  const postRows = posts.map(post => `<div class="card mb16">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+      <div class="av av-sm av-blue">${escapeHtml((post.author || 'A')[0])}</div>
+      <div><strong>${escapeHtml(post.author)}</strong><div style="font-size:10px;color:var(--gray-400)">${escapeHtml(post.group)} · ${escapeHtml(post.time)}</div></div>
+    </div>
+    <p style="font-size:13px;color:var(--gray-700);line-height:1.7">${escapeHtml(post.text)}</p>
+    <div style="display:flex;gap:8px;border-top:1px solid var(--gray-100);padding-top:10px">
+      <button class="btn btn-secondary btn-xs" onclick="likeAlumniPost(${post.id})"><i class="fas fa-thumbs-up"></i> ${Number(post.likes || 0)}</button>
+      <button class="btn btn-secondary btn-xs" onclick="commentOnAlumniPost(${post.id})"><i class="fas fa-comment"></i> ${Number(post.comments || 0)}</button>
+    </div>
+  </div>`).join('') || '<div class="card" style="text-align:center;color:var(--gray-400)">No community posts yet.</div>';
+  const groups = [['Class Groups', 'Reconnect by graduation year'], ['Careers & Mentorship', 'Jobs, referrals, and guidance'], ['School Memories', 'Photos and stories']];
+  const groupRows = groups.map(([name, detail]) => `<div style="padding:10px 0;border-bottom:1px solid var(--gray-100)"><strong style="font-size:12px">${name}</strong><div style="font-size:10px;color:var(--gray-400)">${detail}</div></div>`).join('');
+  return hdr('Alumni Community', 'Connect, share updates, and join alumni groups', 'Community') +
+    renderPageTemplate('pages/alumni/community/index.html', { postRows, groupRows });
+}
+
+function publishAlumniPost() {
+  const input = document.getElementById('community-post-text');
+  const text = input?.value.trim();
+  if (!text) return showToast('Write an update before posting.', 'warning');
+  const profile = getCurrentAlumniProfile();
+  const posts = getAlumniCommunityPosts();
+  posts.unshift({ id: Date.now(), author: profile.name, group: document.getElementById('community-post-group')?.value || 'All Alumni', text, time: 'Just now', likes: 0, comments: 0 });
+  saveAlumniCommunityPosts(posts);
+  showToast('Your update was published.', 'success');
+  renderMain();
+}
+
+function likeAlumniPost(postId) {
+  const posts = getAlumniCommunityPosts();
+  const post = posts.find(item => Number(item.id) === Number(postId));
+  if (post) post.likes = Number(post.likes || 0) + 1;
+  saveAlumniCommunityPosts(posts);
+  renderMain();
+}
+
+function commentOnAlumniPost(postId) {
+  const comment = prompt('Write a comment:');
+  if (!comment?.trim()) return;
+  const posts = getAlumniCommunityPosts();
+  const post = posts.find(item => Number(item.id) === Number(postId));
+  if (post) post.comments = Number(post.comments || 0) + 1;
+  saveAlumniCommunityPosts(posts);
+  showToast('Comment added.', 'success');
+  renderMain();
+}
 
 function getAlumniList(){
   try{
@@ -904,7 +983,7 @@ function openAlumniDirectory(){
           <div class="av av-lg av-${a.avatar}">${(a.name||' ')[0]}</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
-            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} Â· Class of ${a.gradYear}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} · Class of ${a.gradYear}</div>
             <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
             <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
           </div>
@@ -930,7 +1009,7 @@ function filterAlumniDirectory(){
     <div class="av av-lg av-${a.avatar}">${(a.name||' ')[0]}</div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(a.name)}</div>
-      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} Â· Class of ${a.gradYear}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:2px">${escapeHtml(a.profession)} · Class of ${a.gradYear}</div>
       <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(a.location)}</div>
       <div style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic">"${escapeHtml(a.bio)}"</div>
     </div>
@@ -960,7 +1039,7 @@ function openAlumniJobs(){
           <div style="display:flex;justify-content:space-between;align-items:start">
             <div>
               <div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(j.title)}</div>
-              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(j.company)} Â· ${escapeHtml(j.location)}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(j.company)} · ${escapeHtml(j.location)}</div>
               <div style="display:flex;gap:8px;margin-top:8px">
                 <span class="badge b-info">${j.type}</span>
                 <span style="font-size:11px;color:var(--gray-400)">${j.posted}</span>
@@ -1166,15 +1245,18 @@ function showAllAnnouncements(){
 
 
 function childrenModule() {
+  const children = getParentChildren();
   return hdr('My Children', 'Monitor your children\'s school activities', 'My Children') + `
   <div class="g2">
-    ${[['Ama Serwaa', 'JHS 1', '2024-0042', ['96% Attendance', 'Fees: Paid', 'Rank: 3/40'], 'blue'], ['Kweku Serwaa', 'Basic 3', '2024-0143', ['91% Attendance', 'Fees: Paid', 'Rank: 8/38'], 'purple']].map(([n, c, r, stats, av]) => `
+    ${children.map(child => {
+      const stats = [`${child.attendance}% Attendance`, `Fees: ${child.feeStatus}`];
+      return `
     <div class="card">
       <div style="display:flex;gap:16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1.5px solid var(--gray-200)">
-        <div class="av av-xl av-${av}">${n[0]}</div>
+        <div class="av av-xl av-${child.color}">${escapeHtml((child.name || ' ')[0])}</div>
         <div>
-          <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${n}</div>
-          <div style="font-size:12px;color:var(--gray-400)">${c} Â· Roll: ${r}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${escapeHtml(child.name)}</div>
+          <div style="font-size:12px;color:var(--gray-400)">${escapeHtml(child.class)} · Roll: ${escapeHtml(child.studentId)}</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
@@ -1185,8 +1267,48 @@ function childrenModule() {
         <button class="btn btn-primary btn-sm" style="flex:1" onclick="navTo('attendance')"><i class="fas fa-check-circle"></i> Attendance</button>
         <button class="btn btn-secondary btn-sm" style="flex:1" onclick="navTo('assignments')"><i class="fas fa-clipboard-list"></i> Assignments</button>
       </div>
-    </div>`).join('')}
+    </div>`; }).join('') || '<div class="card" style="text-align:center;color:var(--gray-500);grid-column:1/-1">No children are linked to this parent account.</div>'}
   </div>`;
+}
+
+function alumniProfileModule() {
+  const profile = getCurrentAlumniProfile();
+  const value = field => escapeHtml(profile[field] || '');
+  return hdr('Alumni Profile', 'Keep your personal, education, and career details current', 'Profile') +
+    renderPageTemplate('pages/alumni/profile/index.html', {
+      name: value('name'), studentId: value('studentId'), gender: value('gender') || 'Prefer not to say', dob: value('dob'),
+      gradYear: value('gradYear'), className: value('className'), profession: value('profession'), company: value('company'),
+      email: value('email'), phone: value('phone'), country: value('country') || 'Ghana', address: value('address'),
+      linkedin: value('linkedin'), social: value('social'), initials: escapeHtml(getInitials(profile.name, 'AL'))
+    });
+}
+
+function saveAlumniProfile() {
+  const profile = {
+    ...getCurrentAlumniProfile(),
+    name: document.getElementById('alumni-profile-name')?.value.trim(),
+    studentId: document.getElementById('alumni-profile-student-id')?.value.trim(),
+    gender: document.getElementById('alumni-profile-gender')?.value,
+    dob: document.getElementById('alumni-profile-dob')?.value,
+    gradYear: Number(document.getElementById('alumni-profile-year')?.value || 0),
+    className: document.getElementById('alumni-profile-class')?.value.trim(),
+    profession: document.getElementById('alumni-profile-profession')?.value.trim(),
+    company: document.getElementById('alumni-profile-company')?.value.trim(),
+    email: document.getElementById('alumni-profile-email')?.value.trim(),
+    phone: document.getElementById('alumni-profile-phone')?.value.trim(),
+    country: document.getElementById('alumni-profile-country')?.value.trim(),
+    address: document.getElementById('alumni-profile-address')?.value.trim(),
+    linkedin: document.getElementById('alumni-profile-linkedin')?.value.trim(),
+    social: document.getElementById('alumni-profile-social')?.value.trim()
+  };
+  const list = getAlumniList();
+  const index = list.findIndex(item => String(item.id) === String(profile.id));
+  if (index >= 0) list[index] = profile; else list.push(profile);
+  appMemoryStorage.setItem(ALUMNI_LIST_KEY, JSON.stringify(list));
+  const user = getSessionUser();
+  if (user) setSessionUser({ ...user, name: profile.name, email: profile.email, phone: profile.phone, address: profile.address });
+  showToast('Alumni profile updated.', 'success');
+  renderMain();
 }
 
 // SALARY MODULE
@@ -1279,6 +1401,25 @@ function processAllPayroll() {
   openPayrollProcessPage();
 }
 
+function payrollProcessModule() {
+  const payrollRows = buildPayrollRows();
+  const finance = getFinanceSummary();
+  const period = [finance.term, finance.academicYear].filter(Boolean).join(' ') || 'Current Period';
+  const total = payrollRows.reduce((sum, row) => sum + Number(row.net || 0), 0);
+  const teaching = payrollRows.filter(row => String(row.role || '').toLowerCase().includes('teacher')).length;
+  const administration = payrollRows.filter(row => /admin|account/i.test(String(row.role || ''))).length;
+  const support = Math.max(0, payrollRows.length - teaching - administration);
+  const statsCards = [
+    statCard('<i class="fas fa-users"></i>', payrollRows.length, 'Staff Included', 'Current batch', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-money-bill"></i>', money(total), 'Payroll Total', period, 'neu', 'si-gold'),
+    statCard('<i class="fas fa-calendar"></i>', period, 'Payroll Period', 'Ready to process', 'up', 'si-green')
+  ].join('');
+  const departmentRows = [['Teaching staff', teaching], ['Administration', administration], ['Support staff', support]]
+    .map(([label, count]) => `<div style="display:flex;justify-content:space-between;font-size:13px;margin:6px 0"><span>${label}</span><strong>${count}</strong></div>`).join('');
+  return hdr('Process Payroll', 'Review and confirm the current payroll batch', 'Payroll') +
+    renderPageTemplate('pages/finance/salary/process.html', { period: escapeHtml(period), statsCards, departmentRows });
+}
+
 function openPayrollProcessPage() {
   currentMod = 'salary';
   const el = document.getElementById('main-content');
@@ -1342,7 +1483,7 @@ function openPayslipPage(name, role, grade, netPay) {
     <div class="card" style="max-width:680px">
       <div style="text-align:center;margin-bottom:18px">
         <h3 style="margin:0;color:var(--blue-dark)">Glory Reign Preparatory School</h3>
-        <div style="font-size:12px;color:var(--gray-500)">Staff Payslip Â· ${escapeHtml(financePeriod)}</div>
+        <div style="font-size:12px;color:var(--gray-500)">Staff Payslip · ${escapeHtml(financePeriod)}</div>
       </div>
       <div style="border:1.5px solid var(--gray-200);border-radius:8px;padding:16px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Staff</span><strong>${escapeHtml(name)}</strong></div>
@@ -1762,8 +1903,8 @@ function eventsModule() {
           <div>
             <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:600">${escapeHtml(event.title)}</h3>
             <p style="margin:0 0 6px 0;font-size:14px;color:var(--gray-600)"><strong>${timeStr}</strong></p>
-            <p style="margin:0 0 8px 0;font-size:13px;color:var(--gray-600)"><i class="fas fa-map-pin"></i> ${escapeHtml(formattedDate)} Â· ${escapeHtml(event.location || event.audience || 'School Campus')}</p>
-            ${isTeacherOrAdmin ? `<p style="margin:0 0 8px 0;font-size:12px;color:var(--gray-500)">Audience: ${escapeHtml(event.audience || 'All')} Â· Status: ${escapeHtml(event.status || 'Published')}</p>` : ''}
+            <p style="margin:0 0 8px 0;font-size:13px;color:var(--gray-600)"><i class="fas fa-map-pin"></i> ${escapeHtml(formattedDate)} · ${escapeHtml(event.location || event.audience || 'School Campus')}</p>
+            ${isTeacherOrAdmin ? `<p style="margin:0 0 8px 0;font-size:12px;color:var(--gray-500)">Audience: ${escapeHtml(event.audience || 'All')} · Status: ${escapeHtml(event.status || 'Published')}</p>` : ''}
             <p style="margin:0;font-size:13px;color:var(--gray-700)">${escapeHtml(event.description || '')}</p>
           </div>
           ${isTeacherOrAdmin ? `<div style="display:flex;gap:4px;min-width:fit-content">
@@ -1782,7 +1923,7 @@ function eventsModule() {
       <div id="calendar-nav" style="display:flex;gap:8px;align-items:center">
         <button class="btn btn-secondary btn-xs" onclick="prevMonth()" style="padding:6px 10px">â€¹</button>
         <span id="calendar-month" style="font-weight:600;min-width:150px;text-align:center"></span>
-        <button class="btn btn-secondary btn-xs" onclick="nextMonth()" style="padding:6px 10px">â€º</button>
+        <button class="btn btn-secondary btn-xs" onclick="nextMonth()" style="padding:6px 10px">›</button>
       </div>
     </div>
     <div style="padding:16px">
@@ -1971,7 +2112,7 @@ function viewEvent(eventId) {
       <div style="padding:20px">
         <div style="margin-bottom:16px">
           <h4 style="margin:0 0 8px 0;font-size:12px;font-weight:700;color:var(--gray-600);text-transform:uppercase">Date & Time</h4>
-          <p style="margin:0;font-size:15px">${escapeHtml(formattedDate)} Â· ${escapeHtml(timeStr)}</p>
+          <p style="margin:0;font-size:15px">${escapeHtml(formattedDate)} · ${escapeHtml(timeStr)}</p>
         </div>
         
         <div style="margin-bottom:16px">
@@ -2140,6 +2281,35 @@ function receiptsModule() {
   const receiptRows = getPayments().filter(p => p.receipt).slice(0, 10);
   return hdr('Invoice & Receipts', 'Generate and manage invoices and payment receipts', 'Invoice & Receipts') +
     renderPageTemplate('pages/finance/receipts/index.html', { receiptRows: renderReceiptRows(receiptRows) });
+}
+
+function receiptCreateModule() {
+  const studentOptions = getActiveStudents(enrolledStudents).map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.student_id || '')}) - ${escapeHtml(s.student_class || '')}</option>`).join('');
+  return hdr('Issue New Receipt', 'Record a verified student payment and generate its receipt', 'Receipts') +
+    renderPageTemplate('pages/finance/receipts/create.html', { studentOptions });
+}
+
+async function submitReceiptPayment(event) {
+  event.preventDefault();
+  const studentId = Number(document.getElementById('new-receipt-student')?.value || 0);
+  const amount = Number(document.getElementById('new-receipt-amount')?.value || 0);
+  const method = document.getElementById('new-receipt-method')?.value || 'Cash';
+  const term = document.getElementById('new-receipt-term')?.value || '1st Term';
+  const academicYear = document.getElementById('new-receipt-year')?.value || '2024/2025';
+  if (!studentId || amount <= 0) return showToast('Select a student and enter a valid amount.', 'warning');
+  const res = await API.fees.recordPayment({
+    student_id: studentId,
+    amount,
+    term,
+    academic_year: academicYear,
+    payment_date: new Date().toISOString().slice(0, 10),
+    method,
+    received_by: getSessionUser()?.name || 'Accountant'
+  });
+  if (!res?.success) return showToast(res?.message || 'Receipt could not be issued', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast('<i class="fas fa-check-circle"></i> Payment recorded and receipt issued', 'success');
+  navTo('receipts');
 }
 
 function renderReceiptRows(rows) {
@@ -2316,7 +2486,7 @@ function debtorReminderNoticePanel(limit = 3, compact = false) {
           <div style="flex:1">
             <div style="font-size:13px;font-weight:800;color:var(--blue-dark)">${escapeHtml(r.channel || 'Reminder')} sent to ${escapeHtml(r.parent || 'Parent')}</div>
             ${compact ? '' : `<div style="font-size:12px;color:var(--gray-600);line-height:1.5;margin-top:3px">${escapeHtml(r.message || '')}</div>`}
-            <div style="font-size:11px;color:var(--gray-400);margin-top:6px">${escapeHtml(r.contact || '')} Â· GH₵ ${Number(r.balance || 0).toLocaleString()} Â· ${formatReminderTime(r.sentAt)}</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:6px">${escapeHtml(r.contact || '')} · GH₵ ${Number(r.balance || 0).toLocaleString()} · ${formatReminderTime(r.sentAt)}</div>
           </div>
         </div>`).join('') : '<div style="padding:18px;color:var(--gray-400);font-size:13px">No reminder notifications yet.</div>'}
     </div>`;
@@ -2434,7 +2604,7 @@ function openDebtorReminderPage(debtorId) {
     <div class="card" style="max-width:760px">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-bell"></i> ${escapeHtml(debtor.parent)}</span></div>
       <div class="g2" style="margin-bottom:16px">
-        <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">STUDENT</div><strong>${escapeHtml(debtor.student)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(debtor.className)} Â· ${debtor.days} days overdue</div></div>
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">STUDENT</div><strong>${escapeHtml(debtor.student)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">${escapeHtml(debtor.className)} · ${debtor.days} days overdue</div></div>
         <div style="background:var(--gold-xlight);padding:14px;border-radius:8px"><div style="font-size:10px;color:var(--gray-500);font-weight:700">CONTACT</div><strong>${escapeHtml(debtor.contact)}</strong><div style="font-size:12px;color:var(--gray-500);margin-top:4px">Balance: GH₵ ${Number(debtor.balance).toLocaleString()}</div></div>
       </div>
       <div class="f-field" style="margin-bottom:14px"><label>Reminder Message</label><textarea id="debtor-reminder-message" style="min-height:130px">${escapeHtml(message)}</textarea></div>
@@ -2596,6 +2766,30 @@ function expensesModule() {
     renderPageTemplate('pages/finance/expenses/index.html', { statsCards, expenseRows });
 }
 
+function expenseCreateModule() {
+  return hdr('Record Expense', 'Add a verified school operating expense', 'Expenses') +
+    renderPageTemplate('pages/finance/expenses/create.html', {
+      today: new Date().toISOString().slice(0, 10),
+      recordedBy: escapeHtml(getSessionUser()?.name || 'Accountant')
+    });
+}
+
+async function submitExpense(event) {
+  event.preventDefault();
+  const data = {
+    description: document.getElementById('expense-description')?.value.trim(),
+    category: document.getElementById('expense-category')?.value,
+    amount: Number(document.getElementById('expense-amount')?.value || 0),
+    expense_date: document.getElementById('expense-date')?.value
+  };
+  if (!data.description || !data.category || data.amount <= 0 || !data.expense_date) return showToast('Complete all required expense fields.', 'warning');
+  const res = await API.expenses.create(data);
+  if (!res?.success) return showToast(res?.message || 'Expense could not be recorded', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
+  showToast('<i class="fas fa-check-circle"></i> Expense recorded successfully', 'success');
+  navTo('expenses');
+}
+
 // BALANCE SHEET
 function balanceSheetModule() {
   const finance = getFinanceSummary();
@@ -2647,8 +2841,8 @@ function balanceSheetModule() {
 
 // ALUMNI DIRECTORY
 function alumniDirectory() {
-  return `<div class="toolbar">
-    <button class="btn btn-primary" onclick="toggleAddAlumniForm()"><i class="fas fa-plus"></i> Add Alumni</button>
+  return hdr('Alumni Directory', 'Search profiles and reconnect with classmates', 'Directory') + `<div class="toolbar">
+    ${currentRole === 'Admin' ? '<button class="btn btn-primary" onclick="toggleAddAlumniForm()"><i class="fas fa-plus"></i> Add Alumni</button>' : ''}
     <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="alumni-search" placeholder="Search alumni..." onkeyup="filterAlumni()"></div>
     <select id="alumni-year-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Years</option><option value="2021">Class of 2021</option><option value="2020">Class of 2020</option><option value="2019">Class of 2019</option><option value="2018">Class of 2018</option><option value="2017">Class of 2017</option><option value="2016">Class of 2016</option><option value="2015">Class of 2015</option><option value="2014">Class of 2014</option><option value="2013">Class of 2013</option><option value="2012">Class of 2012</option></select>
     <select id="alumni-profession-filter" class="select-sm" onchange="filterAlumni()"><option value="">All Professions</option><option value="Software Engineer">Engineering</option><option value="Medical Doctor">Medicine</option><option value="Lawyer">Law</option><option value="Teacher">Education</option><option value="Nurse">Healthcare</option><option value="Business">Business</option></select>
@@ -2662,7 +2856,7 @@ function alumniDirectory() {
         <div class="form-field"><label>Full Name *</label><input type="text" id="alumni-name" placeholder="Full name"></div>
         <div class="form-field"><label>Class Year *</label><input type="number" id="alumni-year" placeholder="2020" min="1985" max="2024"></div>
         <div class="form-field"><label>Profession *</label><input type="text" id="alumni-profession" placeholder="e.g., Software Engineer"></div>
-        <div class="form-field"><label>Location *</label><input type="text" id="alumni-location" placeholder="City Â· Organization"></div>
+        <div class="form-field"><label>Location *</label><input type="text" id="alumni-location" placeholder="City · Organization"></div>
         <div class="form-field"><label>Email *</label><input type="email" id="alumni-email" placeholder="email@example.com"></div>
         <div class="form-field"><label>Phone *</label><input type="tel" id="alumni-phone" placeholder="+233 XXX XXX XXXX"></div>
         <div class="form-field"><label>Instagram Handle</label><input type="text" id="alumni-instagram" placeholder="@username"></div>
@@ -2706,7 +2900,7 @@ function donationsModule() {
     ${statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Active Campaigns', 'Current drives', 'neu', 'si-purple')}
   </div>
   <div class="card">
-    <div class="card-hdr"><span class="card-title"><i class="fas fa-handshake"></i> Donation Records</span><button class="btn btn-primary btn-sm">+ Record Donation</button></div>
+    <div class="card-hdr"><span class="card-title"><i class="fas fa-handshake"></i> Donation Records</span><button class="btn btn-primary btn-sm" onclick="openDonationHub()">Make Donation</button></div>
     <table class="tbl">
       <thead><tr><th>Donor</th><th>Class</th><th>Amount</th><th>Campaign</th><th>Date</th><th>Status</th></tr></thead>
       <tbody>
@@ -2727,13 +2921,13 @@ function donationsModule() {
 function jobBoardModule() {
   return hdr('Job Board', 'Career opportunities from the alumni network', 'Job Board') + `
   <div class="toolbar">
-    <button class="btn btn-primary">+ Post Job</button>
-    <div class="search-bar"><span><i class="fas fa-search"></i></span><input placeholder="Search jobs..."></div>
+    <button class="btn btn-primary" onclick="postNewJob()">+ Post Job</button>
+    <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="job-board-search" placeholder="Search jobs..." oninput="filterJobBoard()"></div>
     <select class="select-sm"><option>All Industries</option><option>Tech</option><option>Health</option><option>Education</option></select>
   </div>
   <div style="display:flex;flex-direction:column;gap:14px">
-    ${[['Software Developer Intern', 'Accra Â· Remote possible', '0â€“2 years', 'Technology', 'GH₵1,500/mo', 'Today', 'Abena Owusu (Class 2018)'], ['Medical Resident', 'Korle Bu Teaching Hospital, Accra', 'Graduate', 'Healthcare', 'Competitive', '2 days ago', 'Kwabena Asare (Class 2016)'], ['Junior Secondary School Teacher', 'Kumasi Â· Full Time', 'PGDE required', 'Education', 'GH₵2,800/mo', '1 week ago', 'Esi Mensah (Class 2020)'], ['Civil Engineering Graduate Trainee', 'Takoradi Â· Full Time', '0â€“2 years', 'Engineering', 'GH₵4,000/mo', '2 weeks ago', 'Kofi Antwi (Class 2014)']].map(([t, l, exp, ind, sal, d, poster]) => `
-    <div class="card">
+    ${[['Software Developer Intern', 'Accra · Remote possible', '0â€“2 years', 'Technology', 'GH₵1,500/mo', 'Today', 'Abena Owusu (Class 2018)'], ['Medical Resident', 'Korle Bu Teaching Hospital, Accra', 'Graduate', 'Healthcare', 'Competitive', '2 days ago', 'Kwabena Asare (Class 2016)'], ['Junior Secondary School Teacher', 'Kumasi · Full Time', 'PGDE required', 'Education', 'GH₵2,800/mo', '1 week ago', 'Esi Mensah (Class 2020)'], ['Civil Engineering Graduate Trainee', 'Takoradi · Full Time', '0â€“2 years', 'Engineering', 'GH₵4,000/mo', '2 weeks ago', 'Kofi Antwi (Class 2014)']].map(([t, l, exp, ind, sal, d, poster]) => `
+    <div class="card alumni-job-card" data-search="${escapeAttr((t + ' ' + l + ' ' + ind + ' ' + poster).toLowerCase())}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
         <div style="flex:1">
           <div style="font-size:15px;font-weight:800;color:var(--blue-dark);margin-bottom:8px">${t}</div>
@@ -2743,10 +2937,10 @@ function jobBoardModule() {
             <span class="badge b-success"><i class="fas fa-money-bill"></i> ${sal}</span>
             <span class="badge b-warning">${ind}</span>
           </div>
-          <div style="font-size:11px;color:var(--gray-400)">Posted by ${poster} Â· ${d}</div>
+          <div style="font-size:11px;color:var(--gray-400)">Posted by ${poster} · ${d}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button class="btn btn-secondary btn-sm">Details</button>
+          <button class="btn btn-secondary btn-sm" onclick="showToast('${escapeAttr(t)} - ${escapeAttr(l)} - ${escapeAttr(exp)}', 'info')">Details</button>
           <button class="btn btn-primary btn-sm" onclick="applyJob(this)">Apply</button>
         </div>
       </div>
@@ -2759,6 +2953,13 @@ function applyJob(btn) {
   btn.className = 'btn btn-outline btn-sm';
   btn.disabled = true;
   showToast('<i class="fas fa-file-upload"></i> Application Submitted Successfully!', 'success');
+}
+
+function filterJobBoard() {
+  const query = (document.getElementById('job-board-search')?.value || '').toLowerCase();
+  document.querySelectorAll('.alumni-job-card').forEach(card => {
+    card.style.display = card.dataset.search.includes(query) ? '' : 'none';
+  });
 }
 
 // CERTIFICATES MODULE
@@ -2781,13 +2982,27 @@ function certificatesModule() {
     </div>
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-plus"></i> New Request</span></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Certificate Type</label><select><option>WASSCE Result Slip</option><option>Transcript</option><option>Character Reference</option><option>Graduation Certificate</option></select></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Purpose / Reason</label><input placeholder="e.g. Job application, University admission..."></div>
-      <div class="f-field" style="margin-bottom:12px"><label>Urgency</label><select><option>Normal (5-7 business days)</option><option>Urgent (2-3 business days)</option></select></div>
-      <div class="f-field" style="margin-bottom:14px"><label>Additional Notes</label><textarea placeholder="Any special instructions..."></textarea></div>
-      <button class="btn btn-primary" style="width:100%">Submit Request</button>
+      <div class="f-field" style="margin-bottom:12px"><label>Certificate Type</label><select id="certificate-type"><option>Academic Transcript</option><option>Leaving Certificate</option><option>Recommendation Letter</option><option>Character Certificate</option><option>Confirmation Letter</option><option>Result Slip</option><option>Duplicate Certificate</option></select></div>
+      <div class="f-field" style="margin-bottom:12px"><label>Purpose / Reason</label><input id="certificate-purpose" placeholder="e.g. Job application, University admission..."></div>
+      <div class="f-field" style="margin-bottom:12px"><label>Urgency</label><select id="certificate-urgency"><option>Normal (5-7 business days)</option><option>Urgent (2-3 business days)</option></select></div>
+      <div class="f-field" style="margin-bottom:14px"><label>Additional Notes</label><textarea id="certificate-notes" placeholder="Any special instructions..."></textarea></div>
+      <button class="btn btn-primary" style="width:100%" onclick="submitAlumniCertificateRequest()">Submit Request</button>
     </div>
   </div>`;
+}
+
+function submitAlumniCertificateRequest() {
+  const type = document.getElementById('certificate-type')?.value;
+  const purpose = document.getElementById('certificate-purpose')?.value.trim();
+  if (!type || !purpose) return showToast('Select a document and enter its purpose.', 'warning');
+  const key = 'gr_alumni_certificate_requests';
+  let requests = [];
+  try { requests = JSON.parse(appMemoryStorage.getItem(key) || '[]'); } catch (e) {}
+  requests.unshift({ type, purpose, date: new Date().toISOString(), status: 'Submitted', urgency: document.getElementById('certificate-urgency')?.value, notes: document.getElementById('certificate-notes')?.value.trim() });
+  appMemoryStorage.setItem(key, JSON.stringify(requests));
+  showToast('Certificate request submitted successfully.', 'success');
+  document.getElementById('certificate-purpose').value = '';
+  document.getElementById('certificate-notes').value = '';
 }
 
 // ALUMNI PUBLIC MODULE

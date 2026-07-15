@@ -940,6 +940,7 @@ const MENUS = {
     },
     {
       g: 'Communication', items: [
+        { id: 'messaging', ic: '<i class="fas fa-envelope"></i>', lbl: 'Messages' },
         { id: 'teachers', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages with Teachers' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices / Announcements' },
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Calendar' },
@@ -950,7 +951,7 @@ const MENUS = {
   Accountant: [
     {
       g: 'Main', items: [
-        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'accountant_overview', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
         { id: 'fees', ic: '<i class="fas fa-credit-card"></i>', lbl: 'Student Fees' },
         { id: 'payments', ic: '<i class="fas fa-money-bill-wave"></i>', lbl: 'Payments' },
         { id: 'expenses', ic: '<i class="fas fa-chart-line"></i>', lbl: 'Expenses' },
@@ -984,19 +985,19 @@ const MENUS = {
   Alumni: [
     {
       g: 'Main', items: [
-        { id: 'dashboard', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
+        { id: 'alumni_overview', ic: '<i class="fas fa-chart-pie"></i>', lbl: 'Dashboard Overview' },
         { id: 'profile', ic: '<i class="fas fa-user"></i>', lbl: 'Alumni Profile' },
         { id: 'directory', ic: '<i class="fas fa-address-book"></i>', lbl: 'Alumni Directory' },
       ]
     },
     {
       g: 'Community', items: [
+        { id: 'community', ic: '<i class="fas fa-people-group"></i>', lbl: 'Community' },
         { id: 'events', ic: '<i class="fas fa-calendar-alt"></i>', lbl: 'Events / Reunions' },
         { id: 'donations', ic: '<i class="fas fa-handshake"></i>', lbl: 'Donations' },
         { id: 'messaging', ic: '<i class="fas fa-comments"></i>', lbl: 'Messages' },
         { id: 'notices', ic: '<i class="fas fa-bullhorn"></i>', lbl: 'Notices' },
         { id: 'jobs', ic: '<i class="fas fa-briefcase"></i>', lbl: 'Job Board' },
-        { id: 'certificates', ic: '<i class="fas fa-certificate"></i>', lbl: 'Certificates Request' },
         { id: 'gallery', ic: '<i class="fas fa-images"></i>', lbl: 'Gallery' },
         { id: 'yearbook', ic: '<i class="fas fa-book-open"></i>', lbl: 'Digital Yearbook' },
       ]
@@ -1021,6 +1022,7 @@ const MENUS = {
 function getAllowedModuleIdsForRole(role = currentRole) {
   const menuIds = (MENUS[role] || [])
     .flatMap(section => section.items.map(item => item.id));
+  if (role === 'Accountant') menuIds.push('expense_new', 'receipt_new', 'payroll_process', 'balance');
   return new Set(['dashboard', ...menuIds]);
 }
 
@@ -1158,7 +1160,8 @@ function backToRoles() {
 function doLogin() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('app-shell').classList.add('active');
-  document.getElementById('role-fab').style.display = getSessionUser() ? 'none' : 'flex';
+  const roleFab = document.getElementById('role-fab');
+  if (roleFab) roleFab.style.display = getSessionUser() ? 'none' : 'flex';
   closeModal();
   switchRole(loginRole);
 }
@@ -1169,8 +1172,8 @@ function logout() {
     setSessionUser(null);
     document.getElementById('app-shell').classList.remove('active');
     document.getElementById('login-page').style.display = 'flex';
-    document.getElementById('role-fab').style.display = 'none';
-    document.getElementById('role-switcher').classList.remove('open');
+    document.getElementById('role-fab')?.style.setProperty('display', 'none');
+    document.getElementById('role-switcher')?.classList.remove('open');
   }
 }
 function showStaffLoginModal() {
@@ -1340,11 +1343,11 @@ function downloadIDCard(studentName, studentID) {
 }
 
 let APP_NOTIFICATIONS = [
-  { id: 1, icon: '<i class="fas fa-clipboard-list"></i>', title: 'Assignment Update', msg: 'New assignment posted', time: '2m ago', read: false, fullMsg: 'A new assignment has been posted. Open the assignments module to view the current database records and due dates.', action: 'View Assignment', actionLink: 'assignments' },
-  { id: 2, icon: '<i class="fas fa-check-circle"></i>', title: 'Grade Posted', msg: 'Your essay - Grade A', time: '1h ago', read: false, fullMsg: 'Your essay submission for English has been graded. Grade: A (92%). Ms. Mensah left detailed feedback on your excellent arguments and structure.', action: 'View Feedback', actionLink: 'grades' },
-  { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Admission Update', msg: 'New student enrolled', time: '3h ago', read: true, fullMsg: 'A new student has been successfully enrolled in Basic 1. You may need to update class lists and materials. Check Admin > Admissions for details.', action: 'View Details', actionLink: 'admissions' },
-  { id: 4, icon: '<i class="fas fa-comments"></i>', title: 'New Message', msg: 'Message from Ms. Mensah', time: '5h ago', read: true, fullMsg: 'Ms. Mensah: Hi! Can you please schedule a meeting with the parents of Ama Serwaa to discuss her performance? Let me know your availability.', action: 'Reply', actionLink: 'messaging' },
-  { id: 5, icon: '<i class="fas fa-exclamation-triangle"></i>', title: 'Fee Reminder', msg: '5 students pending fees', time: '1d ago', read: true, fullMsg: 'There are currently 5 students with pending fee payments. Total outstanding: GH₵4,800. Please follow up with parents or view the fees module for details.', action: 'View Fees', actionLink: 'fees' }
+  { id: 1, icon: '<i class="fas fa-clipboard-list"></i>', title: 'Assignment Update', msg: 'New assignment posted', time: '2m ago', read: false, fullMsg: 'A new assignment has been posted. Open assignments to view its due date.', action: 'View Assignment', actionLink: 'assignments', recipientUsername: 'ama.serwaa', recipientRoles: ['Student'] },
+  { id: 2, icon: '<i class="fas fa-check-circle"></i>', title: 'Grade Posted', msg: 'Your essay - Grade A', time: '1h ago', read: false, fullMsg: 'Your English essay has been graded. Grade: A (92%).', action: 'View Report', actionLink: 'reportcards', recipientUsername: 'ama.serwaa', recipientRoles: ['Student'] },
+  { id: 3, icon: '<i class="fas fa-graduation-cap"></i>', title: 'Admission Update', msg: 'New student enrolled', time: '3h ago', read: true, fullMsg: 'A new student has been successfully enrolled in Basic 1.', action: 'View Details', actionLink: 'admissions', recipientRoles: ['Admin'] },
+  { id: 4, icon: '<i class="fas fa-comments"></i>', title: 'New Message', msg: 'Message from Ms. Mensah', time: '5h ago', read: true, fullMsg: 'Ms. Mensah sent a message regarding Ama Serwaa.', action: 'Reply', actionLink: 'teachers', recipientUsername: 'serwaa.parent', recipientRoles: ['Parent'] },
+  { id: 5, icon: '<i class="fas fa-exclamation-triangle"></i>', title: 'Fee Reminder', msg: '5 students pending fees', time: '1d ago', read: true, fullMsg: 'There are currently 5 students with pending fee payments.', action: 'View Fees', actionLink: 'fees', recipientRoles: ['Admin', 'Accountant'] }
 ];
 
 function saveAppNotifications() {
@@ -1352,10 +1355,20 @@ function saveAppNotifications() {
 
 function getVisibleNotifications() {
   const self = typeof getChatSelf === 'function' ? getChatSelf() : { name: '', role: String(currentRole || '').toLowerCase() };
+  const user = getSessionUser();
   const role = String(self.role || currentRole || '').toLowerCase();
   return APP_NOTIFICATIONS.filter(n => {
-    if (!n.recipient && !n.recipientRole) return true;
-    return (n.recipient && n.recipient === self.name) || (n.recipientRole && String(n.recipientRole).toLowerCase() === role);
+    const hasTarget = n.recipient || n.recipientUsername || n.recipientRole || (Array.isArray(n.recipientRoles) && n.recipientRoles.length);
+    if (!hasTarget) return false;
+    const nameMatch = n.recipient && normalizeIdentity(n.recipient) === normalizeIdentity(self.name);
+    const usernameMatch = n.recipientUsername && normalizeIdentity(n.recipientUsername) === normalizeIdentity(user?.username);
+    const singleRoleMatch = n.recipientRole && String(n.recipientRole).toLowerCase() === role;
+    const roleMatch = Array.isArray(n.recipientRoles) && n.recipientRoles.some(targetRole => String(targetRole).toLowerCase() === role);
+    const hasDirectTarget = Boolean(n.recipient || n.recipientUsername);
+    const hasRoleTarget = Boolean(n.recipientRole || (Array.isArray(n.recipientRoles) && n.recipientRoles.length));
+    if (hasDirectTarget && !(nameMatch || usernameMatch)) return false;
+    if (hasRoleTarget && !(singleRoleMatch || roleMatch)) return false;
+    return true;
   });
 }
 
@@ -1380,7 +1393,9 @@ function addAppNotification(notification) {
     actionLink: notification.actionLink || 'dashboard',
     chatWith: notification.chatWith || '',
     recipient: notification.recipient || '',
-    recipientRole: notification.recipientRole || ''
+    recipientRole: notification.recipientRole || '',
+    recipientUsername: notification.recipientUsername || '',
+    recipientRoles: Array.isArray(notification.recipientRoles) ? notification.recipientRoles : []
   });
   saveAppNotifications();
   updateNotificationBadge();
@@ -1545,7 +1560,7 @@ function getSavedNavigationState() {
   return null;
 }
 
-function toggleRS() { document.getElementById('role-switcher').classList.toggle('open') }
+function toggleRS() { document.getElementById('role-switcher')?.classList.toggle('open') }
 function switchRole(role, preferredMod) {
   const sessionUser = getSessionUser();
   const authenticatedRole = normalizeRoleName(sessionUser?.role);
@@ -1555,7 +1570,7 @@ function switchRole(role, preferredMod) {
     role = authenticatedRole;
   }
   currentRole = role;
-  document.getElementById('role-switcher').classList.remove('open');
+  document.getElementById('role-switcher')?.classList.remove('open');
   document.getElementById('top-role').textContent = role.toUpperCase();
   const topAvatar = document.getElementById('top-av');
   if (topAvatar) topAvatar.textContent = sessionUser?.name ? getInitials(sessionUser.name, role) : (AV_INIT[role] || 'US');
@@ -1587,6 +1602,9 @@ function switchRole(role, preferredMod) {
   setTimeout(initializeSelectEnhancements, 10);
 }
 function navTo(id, keepTopbarSearch = false) {
+  const activeRole = normalizeRoleName(getSessionUser()?.role || currentRole);
+  if (id === 'dashboard' && activeRole === 'Accountant') id = 'accountant_overview';
+  if (id === 'dashboard' && activeRole === 'Alumni') id = 'alumni_overview';
   if (!keepTopbarSearch) {
     const topInput = document.getElementById('topbar-search-input');
     if (topInput) topInput.value = '';
@@ -1870,7 +1888,7 @@ function renderSidebar() {
       h += `<div class="sb-item${it.id === currentMod ? ' active' : ''}" onclick="navTo('${it.id}')">
         <span class="si">${it.ic}</span>
         <span class="sl">${it.lbl}</span>
-        ${it.badge ? `<span class="sb-badge">${typeof it.badge === 'function' ? it.badge() : it.badge}</span>` : ''}
+        ${it.id === 'messaging' && typeof internalUnreadCount === 'function' && internalUnreadCount() ? `<span class="sb-badge">${internalUnreadCount()}</span>` : (it.badge ? `<span class="sb-badge">${typeof it.badge === 'function' ? it.badge() : it.badge}</span>` : '')}
       </div>`;
     });
     h += `</div><div class="sb-divider"></div>`;
@@ -1883,6 +1901,8 @@ function renderSidebar() {
 // -----------------------------------
 function renderMain() {
   const el = document.getElementById('main-content');
+  const sessionRole = normalizeRoleName(getSessionUser()?.role);
+  if (sessionRole && sessionRole !== 'Visitor') currentRole = sessionRole;
   const r = currentRole, m = currentMod;
   if (!canAccessModule(m, r)) {
     el.innerHTML = accessDeniedModule(m);
@@ -1891,6 +1911,8 @@ function renderMain() {
 
   const map = {
     dashboard: () => ({ Admin: adminDash, Teacher: teacherDash, Student: studentDash, Parent: parentDash, Accountant: accountDash, Alumni: alumniDash, Visitor: visitorHome }[r] || adminDash)(),
+    accountant_overview: () => accountDash(),
+    alumni_overview: () => alumniDash(),
     students: () => studentsModule(),
     teachers: () => currentRole === 'Admin' ? teachersManagementModule() : teachersModule(),
     parents: () => parentsModule(),
@@ -1917,7 +1939,7 @@ function renderMain() {
     alumni_pub: () => alumniPubModule(),
     backup: () => backupModule(),
     settings: () => settingsModule(),
-    profile: () => profileModule(),
+    profile: () => currentRole === 'Alumni' ? alumniProfileModule() : profileModule(),
     yearbook: () => yearbookModule(),
     yearbook_admin: () => adminYearbookModule(),
     reportcards: () => reportCardsModule(),
@@ -1931,17 +1953,22 @@ function renderMain() {
     receipts: () => receiptsModule(),
     balance: () => balanceSheetModule(),
     expenses: () => expensesModule(),
+    expense_new: () => expenseCreateModule(),
+    receipt_new: () => receiptCreateModule(),
+    payroll_process: () => payrollProcessModule(),
     directory: () => alumniDirectory(),
     donations: () => donationsModule(),
+    community: () => alumniCommunityModule(),
     jobs: () => jobBoardModule(),
-    certificates: () => certificatesModule(),
     about: () => visitorAbout(),
     admission: () => visitorAdmission(),
     contact: () => visitorContact(),
     gallery: () => currentRole === 'Visitor' ? visitorGallery() : galleryModule(),
     transport: () => transportModule(),
   };
-  el.innerHTML = (map[m] || map.dashboard)();
+  const moduleHtml = (map[m] || map.dashboard)();
+  const isDashboardOverview = m === 'dashboard' || m === 'accountant_overview' || m === 'alumni_overview';
+  el.innerHTML = moduleHtml + (isDashboardOverview && r !== 'Visitor' && typeof messagingDashboardCard === 'function' ? messagingDashboardCard() : '');
 
   // Initialize calendar if events module
   if (m === 'events') {
@@ -1952,7 +1979,7 @@ function renderMain() {
     setTimeout(() => { try{ initMaterialsUI(); }catch(e){} }, 80);
   }
   // Initialize recent payments rendering when Accountant views dashboard
-  if (m === 'dashboard' && r === 'Accountant') {
+  if ((m === 'dashboard' || m === 'accountant_overview') && r === 'Accountant') {
     setTimeout(() => { try{ renderRecentPaymentsTable(); } catch(e){} }, 80);
   }
   // Initialize parent dashboard

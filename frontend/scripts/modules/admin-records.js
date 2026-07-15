@@ -2887,9 +2887,9 @@ function timetableModule() {
     <button class="btn btn-secondary" onclick="printTimetable()"><i class="fas fa-print"></i> Print</button>
     <button class="btn btn-secondary" onclick="exportTimetablePDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
     <div style="flex:1"></div>
-    <div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(147,51,234,.08));border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--blue-dark)">
+    ${currentRole === 'Student' ? '' : `<div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(147,51,234,.08));border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--blue-dark)">
       <i class="fas fa-eye"></i> Viewing: <strong>${selectedClass}</strong> (Read Only)
-    </div>
+    </div>`}
   </div>`}
 
   ${classTabsHtml}
@@ -3200,7 +3200,7 @@ async function deleteTimetable() {
     const termEl = document.getElementById('tt-term-select');
     const term = termEl ? termEl.value : 'Term 1, 2025';
     if (!timetablesData[cls] || !timetablesData[cls][term]) { showToast('No timetable to delete', 'warning'); return; }
-    if (!confirm('Delete timetable for ' + cls + ' Â· ' + term + '?')) return;
+    if (!confirm('Delete timetable for ' + cls + ' · ' + term + '?')) return;
 
     const res = await API.timetable.delete(cls, term);
     if (res && res.success) {
@@ -3632,7 +3632,7 @@ function examsModule() {
 
   return hdr(isStudent ? 'Exam Results' : 'Exams & Report Cards', isAdmin ? 'Manage examinations, grading and report generation' : 'View exam information for your permitted classes', 'Exams') + `
   <div class="mod-tabs">
-    ${['Exam Schedule', 'Report Cards', 'Results Analysis'].map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchExamTab(${i})">${t}</div>`).join('')}
+    ${(isStudent ? ['Exam Schedule', 'Report Cards'] : ['Exam Schedule', 'Report Cards', 'Results Analysis']).map((t, i) => `<div class="mod-tab ${i === 0 ? 'active' : ''}" onclick="switchExamTab(${i})">${t}</div>`).join('')}
   </div>
   
   <!-- TAB 1: EXAM SCHEDULE -->
@@ -3710,7 +3710,7 @@ function examsModule() {
     </div>
   </div>
   
-  <!-- TAB 3: RESULTS ANALYSIS -->
+  ${isStudent ? '' : `<!-- TAB 3: RESULTS ANALYSIS -->
   <div id="exam-tab-2" class="exam-tab-content" style="display:none">
     <div class="card mb20">
       <div class="card-hdr">
@@ -3753,7 +3753,7 @@ function examsModule() {
         </ul>
       </div>
     </div>
-  </div>
+  </div>`}
   `;
 }
 

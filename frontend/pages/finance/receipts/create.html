@@ -1,0 +1,18 @@
+<div class="card" style="max-width:760px">
+  <div class="card-hdr"><span class="card-title"><i class="fas fa-receipt"></i> Receipt Details</span></div>
+  <form onsubmit="submitReceiptPayment(event)">
+    <div class="f-field"><label>Student *</label><select id="new-receipt-student" required><option value="">Select a student</option>{{studentOptions}}</select></div>
+    <div class="f-row">
+      <div class="f-field"><label>Amount (GHS) *</label><input id="new-receipt-amount" type="number" min="1" step="0.01" required placeholder="0.00"></div>
+      <div class="f-field"><label>Payment Method *</label><select id="new-receipt-method" required><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+    </div>
+    <div class="f-row">
+      <div class="f-field"><label>Term *</label><select id="new-receipt-term" required><option>1st Term</option><option>2nd Term</option><option>3rd Term</option></select></div>
+      <div class="f-field"><label>Academic Year *</label><input id="new-receipt-year" value="2024/2025" required></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> Record Payment & Issue Receipt</button>
+      <button class="btn btn-secondary" type="button" onclick="navTo('receipts')">Cancel</button>
+    </div>
+  </form>
+</div>

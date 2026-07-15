@@ -353,8 +353,15 @@ CREATE TABLE IF NOT EXISTS `messages` (
   `receiver_id` INT NOT NULL,
   `subject` VARCHAR(200),
   `body` TEXT NOT NULL,
+  `status` ENUM('sent','draft') NOT NULL DEFAULT 'sent',
+  `attachment_name` VARCHAR(255),
+  `attachment_data` LONGTEXT,
   `sent_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `read_at` DATETIME,
+  `sender_archived` TINYINT(1) NOT NULL DEFAULT 0,
+  `receiver_archived` TINYINT(1) NOT NULL DEFAULT 0,
+  `sender_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+  `receiver_deleted` TINYINT(1) NOT NULL DEFAULT 0,
   FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB;

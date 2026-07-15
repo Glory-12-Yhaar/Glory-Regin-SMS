@@ -38,9 +38,9 @@
       <div class="card-hdr"><span class="card-title"><i class="fas fa-bolt"></i> Quick Actions</span></div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-primary" onclick="navTo('payments')"><i class="fas fa-money-bill"></i> Record Cash Payment</button>
-        <button class="btn btn-secondary" onclick="openReceiptIssuePage()"><i class="fas fa-receipt"></i> Issue Receipt</button>
+        <button class="btn btn-secondary" onclick="navTo('receipt_new')"><i class="fas fa-receipt"></i> Issue Receipt</button>
         <button class="btn btn-gold" onclick="navTo('reports')"><i class="fas fa-chart-line"></i> Financial Report</button>
-        <button class="btn btn-secondary" onclick="navTo('expenses')"><i class="fas fa-chart-line"></i> Add Expense</button>
+        <button class="btn btn-secondary" onclick="navTo('expense_new')"><i class="fas fa-plus-circle"></i> Add Expense</button>
       </div>
     </div>
   </div>
@@ -54,7 +54,7 @@
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-briefcase"></i> Payroll Status</span></div>
     {{payrollRows}}
-    <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px" onclick="navTo('salary')">Process Payroll</button>
+    <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px" onclick="navTo('payroll_process')">Process Payroll</button>
   </div>
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Calendar</span></div>
