@@ -17,6 +17,20 @@ if ($method === 'GET') {
     $params = [];
     $viewer = currentUser();
 
+    if (($viewer['role'] ?? '') === 'Teacher') {
+        $where[] = "((status = 'Published' AND audience IN ('All','Teachers','Staff')) OR created_by = ?)";
+        $params[] = (int)$viewer['id'];
+    }
+
+    if ($viewer && !in_array($viewer['role'] ?? '', ['Admin', 'Teacher'], true)) {
+        $audienceByRole = ['Parent' => 'Parents', 'Student' => 'Students', 'Alumni' => 'Alumni', 'Accountant' => 'Staff'];
+        $roleAudience = $audienceByRole[$viewer['role']] ?? 'Public';
+        $where[] = "audience IN ('All', ?, 'Public')";
+        $params[] = $roleAudience;
+    } elseif (!$viewer) {
+        $where[] = "audience IN ('All', 'Public')";
+    }
+
     if (!empty($_GET['audience'])) {
         $where[]  = "(audience = ? OR audience = 'All')";
         $params[] = $_GET['audience'];
@@ -37,7 +51,7 @@ if ($method === 'GET') {
          LIMIT " . max(1, min(500, (int)($_GET['limit'] ?? 200)))
     );
     $stmt->execute($params);
-    jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
+    $rows=$stmt->fetchAll();foreach($rows as &$row){$row['can_edit']=($viewer['role']??'')==='Admin'||(int)($row['created_by']??0)===(int)($viewer['id']??0);}unset($row);jsonResponse(['success' => true, 'data' => $rows]);
 }
 
 if ($method === 'POST') {
@@ -69,9 +83,10 @@ if ($method === 'POST') {
 
 // ── PUT (update) ──────────────────────────────────────────────
 if ($method === 'PUT') {
-    requireRole(['Admin', 'Teacher']);
+    $user=requireRole(['Admin', 'Teacher']);
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) jsonResponse(['success' => false, 'message' => 'id required'], 422);
+    if(($user['role']??'')==='Teacher'){$own=$db->prepare('SELECT COUNT(*) FROM events WHERE id=? AND created_by=?');$own->execute([$id,$user['id']]);if(!(int)$own->fetchColumn())jsonResponse(['success'=>false,'message'=>'Event not found'],404);}
     $body = getRequestBody();
     if (isset($body['status']) && !in_array($body['status'], ['Published', 'Draft', 'Cancelled'], true)) {
         jsonResponse(['success' => false, 'message' => 'Invalid event status'], 422);
@@ -91,9 +106,10 @@ if ($method === 'PUT') {
 
 // ── DELETE ────────────────────────────────────────────────────
 if ($method === 'DELETE') {
-    requireRole(['Admin', 'Teacher']);
+    $user=requireRole(['Admin', 'Teacher']);
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) jsonResponse(['success' => false, 'message' => 'id required'], 422);
+    if(($user['role']??'')==='Teacher'){$own=$db->prepare('SELECT COUNT(*) FROM events WHERE id=? AND created_by=?');$own->execute([$id,$user['id']]);if(!(int)$own->fetchColumn())jsonResponse(['success'=>false,'message'=>'Event not found'],404);}
     $db->prepare("DELETE FROM events WHERE id = ?")->execute([$id]);
     jsonResponse(['success' => true, 'message' => 'Event deleted']);
 }

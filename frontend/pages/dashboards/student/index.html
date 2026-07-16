@@ -4,7 +4,7 @@
     <div class="profile-info">
       <h3 class="profile-name">{{studentName}}</h3>
       <p class="profile-id">ID: {{studentId}}</p>
-      <p class="profile-class">{{studentClass}} - General</p>
+      <p class="profile-class">{{studentClass}} - {{studentStream}}</p>
     </div>
   </div>
   <button class="profile-idcard-btn" onclick="showStudentIDCard()" title="View ID Card">
@@ -43,13 +43,6 @@
   </div>
   <div class="card" style="cursor:pointer" onclick="navTo('fees')">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-money-bill"></i> Fees Status</span></div>
-    <div class="fee-hero" style="margin-bottom:12px">
-      <h3>Term 1, 2025</h3>
-      <div class="amount">GHS 2,400</div>
-      <div class="sub">Fully Paid - March 15, 2025</div>
-    </div>
-    <div style="font-size:12px;color:var(--gray-600);text-align:center;padding:8px 0">
-      <span class="badge b-success" style="font-size:12px;padding:6px 16px"><i class="fas fa-check-circle"></i> All Fees Cleared</span>
-    </div>
+    {{feeSummary}}
   </div>
 </div>

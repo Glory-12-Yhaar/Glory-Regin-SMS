@@ -10,7 +10,7 @@
 declare(strict_types=1);
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'glory_regin_school');
+define('DB_NAME', 'glory_reign_school');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
@@ -558,6 +558,86 @@ CREATE TABLE yearbooks (
   INDEX idx_yearbooks_year (year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL,
+        <<<'SQL'
+CREATE TABLE scholarships (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT NOT NULL,
+  grant_type VARCHAR(120) NOT NULL,
+  discount_value VARCHAR(120) NOT NULL,
+  status ENUM('Active','Pending Review','Inactive') NOT NULL DEFAULT 'Active',
+  remarks TEXT DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  INDEX idx_scholarships_student (student_id),
+  INDEX idx_scholarships_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL,
+        <<<'SQL'
+CREATE TABLE donation_campaigns (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT DEFAULT NULL,
+  goal DECIMAL(12,2) NOT NULL DEFAULT 0,
+  status ENUM('Active','Closed','Archived') NOT NULL DEFAULT 'Active',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_dc_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL,
+        <<<'SQL'
+CREATE TABLE donations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  campaign_id INT DEFAULT NULL,
+  donor_name VARCHAR(150) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  method VARCHAR(80) DEFAULT 'Card',
+  status ENUM('Completed','Pending','Refunded') NOT NULL DEFAULT 'Completed',
+  user_id INT DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (campaign_id) REFERENCES donation_campaigns(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_donations_campaign (campaign_id),
+  INDEX idx_donations_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL,
+        <<<'SQL'
+CREATE TABLE job_postings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  company VARCHAR(180) DEFAULT NULL,
+  location VARCHAR(180) DEFAULT NULL,
+  job_type ENUM('Full-time','Part-time','Contract','Internship','Remote') NOT NULL DEFAULT 'Full-time',
+  industry VARCHAR(120) DEFAULT NULL,
+  salary_range VARCHAR(120) DEFAULT NULL,
+  experience VARCHAR(120) DEFAULT NULL,
+  description TEXT DEFAULT NULL,
+  status ENUM('Open','Closed') NOT NULL DEFAULT 'Open',
+  posted_by_name VARCHAR(150) DEFAULT NULL,
+  posted_by_class VARCHAR(80) DEFAULT NULL,
+  user_id INT DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_jobs_status (status),
+  INDEX idx_jobs_industry (industry)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL,
+        <<<'SQL'
+CREATE TABLE gallery_albums (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  category VARCHAR(120) DEFAULT NULL,
+  year VARCHAR(10) DEFAULT NULL,
+  item_count INT NOT NULL DEFAULT 0,
+  icon VARCHAR(80) DEFAULT 'fa-images',
+  bg_color VARCHAR(120) DEFAULT 'linear-gradient(135deg, #3b82f6, #1e3a5f)',
+  cover_img VARCHAR(255) DEFAULT NULL,
+  status ENUM('Published','Draft') NOT NULL DEFAULT 'Published',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_gallery_category (category),
+  INDEX idx_gallery_year (year)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL,
     ];
 
     execStatements($pdo, $ddl, 'DDL');
@@ -783,13 +863,45 @@ SQL,
     insertRows($pdo, "INSERT INTO yearbooks (year,title,cover_img,pdf_url,status,total_grads,total_photos,data) VALUES (?,?,?,?,?,?,?,?)", [
         ['2025','Class of 2025 Graduation','#1e3a8a',null,'Published',52,120,'{"classes":[],"teachers":[],"leaders":[],"achievements":[],"events":[],"tributes":[]}'],
     ]);
-    ok('Seeded academic, finance, content, and portal data.');
+    insertRows($pdo, "INSERT INTO scholarships (student_id, grant_type, discount_value, status, remarks) VALUES (?,?,?,?,?)", [
+        [3, 'Academic Scholarship', '100% Tuition', 'Active', 'Excellent academic results'],
+        [1, 'Sibling Discount', '20% Tuition', 'Active', 'Ama Serwaa sibling waiver'],
+        [5, 'Staff Dependent', '50% Tuition', 'Active', 'Staff Dependent discount'],
+        [2, 'Sports Bursary', '50% Full Fee', 'Pending Review', 'Awaiting sports certificate validation'],
+    ]);
+    insertRows($pdo, "INSERT INTO donation_campaigns (title, goal, description) VALUES (?,?,?)", [
+        ['New Science Lab Equipment', 50000.00, 'Upgrade our science lab with modern equipment'],
+        ['2026 Scholarship Fund', 20000.00, 'Help deserving students with financial aid'],
+        ['Campus WiFi Upgrade', 30000.00, 'High-speed internet for all campus buildings'],
+    ]);
+    insertRows($pdo, "INSERT INTO donations (campaign_id, donor_name, amount, method, status) VALUES (?,?,?,?,?)", [
+        [1, 'Abena Owusu',   5000.00, 'Card',         'Completed'],
+        [2, 'Kwabena Asare', 10000.00,'Bank Transfer', 'Completed'],
+        [1, 'Anonymous',     2000.00, 'Card',          'Completed'],
+        [null,'Kofi Antwi',  3500.00, 'Mobile Money',  'Completed'],
+    ]);
+    insertRows($pdo, "INSERT INTO job_postings (title, company, location, job_type, industry, salary_range, experience, description, status, posted_by_name, posted_by_class) VALUES (?,?,?,?,?,?,?,?,?,?,?)", [
+        ['Software Developer Intern','TechHub Solutions','Accra · Remote possible','Internship','Technology','GH₵1,500/mo','0-2 years','Exciting internship for fresh computer science graduates.','Open','Abena Owusu','Class 2018'],
+        ['Medical Resident','Korle-Bu Hospital','Korle Bu Teaching Hospital, Accra','Full-time','Healthcare','Competitive','Graduate','Resident role in pediatrics department.','Open','Kwabena Asare','Class 2016'],
+        ['Junior Secondary School Teacher','Education Plus','Kumasi · Full Time','Full-time','Education','GH₵2,800/mo','PGDE required','Teach JHS 1-3 science students.','Open','Esi Mensah','Class 2020'],
+        ['Civil Engineering Graduate Trainee','BuildCo Ghana','Takoradi · Full Time','Full-time','Engineering','GH₵4,000/mo','0-2 years','Graduate trainee role on coastal road projects.','Open','Kofi Antwi','Class 2014'],
+    ]);
+    insertRows($pdo, "INSERT INTO gallery_albums (title, category, year, item_count, icon, bg_color, status) VALUES (?,?,?,?,?,?,?)", [
+        ['Class of 2024 Graduation','Graduations','2024',124,'fa-graduation-cap','linear-gradient(135deg, #3b82f6, #1e3a5f)','Published'],
+        ['Alumni Reunion Dinner','Reunions','2023',85,'fa-glass-cheers','linear-gradient(135deg, #f59e0b, #d97706)','Published'],
+        ['Inter-House Sports Meet','Sports','2024',210,'fa-running','linear-gradient(135deg, #10b981, #047857)','Published'],
+        ['10th Anniversary Gala','School Events','2022',150,'fa-star','linear-gradient(135deg, #8b5cf6, #5b21b6)','Published'],
+        ['Class of 2018 Get-together','Reunions','2023',42,'fa-users','linear-gradient(135deg, #ef4444, #b91c1c)','Published'],
+        ['Science Fair Exhibition','School Events','2023',68,'fa-flask','linear-gradient(135deg, #06b6d4, #0369a1)','Published'],
+    ]);
+    ok('Seeded academic, finance, content, and portal data, plus scholarships, donations, jobs, and gallery albums.');
 
     $tables = [
         'users','staff','classes','subjects','students','parents','parent_student','teachers',
         'student_scores','exams','assignments','assignment_submissions','fees','fee_structure','payments',
         'expenses','salary','attendance','timetable','events','notices','contact_messages',
-        'alumni','settings','admissions','hero_slides','news_articles','yearbooks'
+        'alumni','settings','admissions','hero_slides','news_articles','yearbooks',
+        'scholarships', 'donation_campaigns', 'donations', 'job_postings', 'gallery_albums'
     ];
     foreach ($tables as $table) {
         $counts[$table] = (int)$pdo->query("SELECT COUNT(*) FROM `$table`")->fetchColumn();

@@ -411,6 +411,9 @@ function getAdmissionsCounts() {
 
 function admissionsModule() {
   const counts = getAdmissionsCounts();
+  const classOptions = classesData.length
+    ? classesData.map(c => `<option value="${escapeAttr(c.name)}">${escapeHtml(c.name)}</option>`).join('')
+    : '<option value="" disabled>No classes configured</option>';
   const statsCards = [
     statCard('<i class="fas fa-clipboard-list"></i>', String(counts.total || 0), 'Total Applications', 'This academic year', 'neu', 'si-blue'),
     statCard('<i class="fas fa-check-circle"></i>', String(counts.Approved || 0), 'Approved', 'Ready for enrollment', 'up', 'si-green'),
@@ -422,7 +425,7 @@ function admissionsModule() {
   const rejectedRows = admissionsData.filter(a => a.status === 'Rejected').map((a, i) => '<tr style="cursor:pointer" onclick="viewAdmissionDetail(\'' + a.adm_id + '\')"><td style="color:var(--gray-400)">' + ((i + 1)) + '</td><td style="font-weight:600;color:var(--blue-dark)">' + a.adm_id + '</td><td>' + a.name + '</td><td><span class="badge b-secondary">' + a.class_applying + '</span></td><td><span class="badge b-danger"><i class=\"fas fa-times-circle\"></i> Rejected</span></td><td style="font-size:11px;color:var(--gray-500)">' + a.created + '</td></tr>').join('') || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray-400)">No rejected applications found</td></tr>';
 
   return hdr('Admissions Module', 'Process new student admissions and generate student IDs', 'Admissions') +
-    renderPageTemplate('pages/admin/admissions/index.html', { statsCards, pendingRows, approvedRows, rejectedRows });
+    renderPageTemplate('pages/admin/admissions/index.html', { statsCards, pendingRows, approvedRows, rejectedRows, classOptions });
 }
 
 function toggleAdmForm() {

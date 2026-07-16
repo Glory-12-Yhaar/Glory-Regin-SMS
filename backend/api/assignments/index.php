@@ -34,10 +34,22 @@ function normalizeAssignmentStatus(?string $status): string {
     }
     return $status;
 }
+function assignmentTeacherId(PDO $db,array $user):int{$s=$db->prepare("SELECT id FROM staff WHERE category='Teaching' AND (user_id=? OR LOWER(email)=LOWER(?) OR LOWER(name)=LOWER(?)) ORDER BY user_id=? DESC LIMIT 1");$s->execute([$user['id'],$user['email']??'',$user['name']??'',$user['id']]);return(int)($s->fetchColumn()?:0);}
+function teacherCanAssign(PDO $db,int $teacherId,int $classId,string $subject):bool{$s=$db->prepare("SELECT COUNT(*) FROM subjects WHERE teacher_id=? AND class_id=? AND LOWER(name)=LOWER(?)");$s->execute([$teacherId,$classId,$subject]);return(int)$s->fetchColumn()>0;}
 
 if ($method === 'GET') {
     $where  = ['1=1'];
     $params = [];
+    if (($user['role'] ?? '') === 'Teacher') { $tid=assignmentTeacherId($db,$user); if(!$tid)jsonResponse(['success'=>true,'data'=>[]]); $where[]='a.teacher_id = ?';$params[]=$tid; }
+    if (($user['role'] ?? '') === 'Student') {
+        $studentStmt = $db->prepare("SELECT id, class_id FROM students WHERE user_id = ? AND status = 'Active' LIMIT 1");
+        $studentStmt->execute([$user['id']]);
+        $studentScope = $studentStmt->fetch();
+        $studentClassId = (int)($studentScope['class_id'] ?? 0);
+        if (!$studentClassId) jsonResponse(['success' => true, 'data' => []]);
+        $where[] = 'a.class_id = ?';
+        $params[] = $studentClassId;
+    }
 
     if (!empty($_GET['class_id'])) { $where[] = 'a.class_id = ?'; $params[] = (int)$_GET['class_id']; }
     if (!empty($_GET['teacher_id'])) { $where[] = 'a.teacher_id = ?'; $params[] = (int)$_GET['teacher_id']; }
@@ -57,7 +69,19 @@ if ($method === 'GET') {
          ORDER BY a.due_date ASC, a.id DESC"
     );
     $stmt->execute($params);
-    jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
+    $rows = $stmt->fetchAll();
+    if (($user['role'] ?? '') === 'Student') {
+        $studentId = (int)($studentScope['id'] ?? 0);
+        foreach ($rows as &$row) {
+            $submittedIds = array_filter(array_map('intval', explode(',', (string)($row['submitted_student_ids'] ?? ''))));
+            $submitted = in_array($studentId, $submittedIds, true);
+            $row['submitted_count'] = $submitted ? 1 : 0;
+            $row['total_students'] = 1;
+            $row['submitted_student_ids'] = $submitted ? (string)$studentId : null;
+        }
+        unset($row);
+    }
+    jsonResponse(['success' => true, 'data' => $rows]);
 }
 
 if ($method === 'POST') {
@@ -69,13 +93,14 @@ if ($method === 'POST') {
     }
 
     $classId = (int)$body['class_id'];
-    $teacherId = isset($body['teacher_id']) && $body['teacher_id'] !== '' ? (int)$body['teacher_id'] : null;
+    $teacherId = ($user['role'] ?? '') === 'Teacher' ? assignmentTeacherId($db,$user) : (isset($body['teacher_id']) && $body['teacher_id'] !== '' ? (int)$body['teacher_id'] : null);
     if (!assignmentClassExists($db, $classId)) {
         jsonResponse(['success' => false, 'message' => 'Selected class does not exist'], 422);
     }
     if (!assignmentTeacherExists($db, $teacherId)) {
         jsonResponse(['success' => false, 'message' => 'Selected teacher does not exist or is not active'], 422);
     }
+    if (($user['role'] ?? '') === 'Teacher' && !teacherCanAssign($db,$teacherId,$classId,(string)($body['subject']??''))) jsonResponse(['success'=>false,'message'=>'Class and subject must be assigned to you'],403);
 
     $maxScore = (int)($body['max_score'] ?? 100);
     if ($maxScore <= 0 || $maxScore > 1000) {

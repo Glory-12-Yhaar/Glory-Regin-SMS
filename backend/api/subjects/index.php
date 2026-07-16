@@ -114,7 +114,14 @@ function canTeacherAccessSubject(PDO $db, array $scope, int $subjectId): bool {
 
 if ($method === 'GET') {
     $isTeacher = ($user['role'] ?? '') === 'Teacher';
+    $isStudent = ($user['role'] ?? '') === 'Student';
     $teacherScope = $isTeacher ? getTeacherSubjectScope($db, $user) : null;
+    $studentClassId = 0;
+    if ($isStudent) {
+        $studentStmt = $db->prepare("SELECT class_id FROM students WHERE user_id = ? AND status = 'Active' LIMIT 1");
+        $studentStmt->execute([$user['id']]);
+        $studentClassId = (int)($studentStmt->fetchColumn() ?: 0);
+    }
 
     if ($id) {
         if ($isTeacher && !canTeacherAccessSubject($db, $teacherScope, $id)) {
@@ -122,6 +129,9 @@ if ($method === 'GET') {
         }
         $subject = fetchSubject($db, $id);
         if (!$subject) jsonResponse(['success' => false, 'message' => 'Subject not found'], 404);
+        if ($isStudent && (!$studentClassId || (int)$subject['class_id'] !== $studentClassId)) {
+            jsonResponse(['success' => false, 'message' => 'Subject not found'], 404);
+        }
         jsonResponse(['success' => true, 'data' => $subject]);
     } else {
         $sql = "SELECT sub.*, s.name AS teacher_name, c.name AS class_name 
@@ -135,6 +145,10 @@ if ($method === 'GET') {
             }
             $sql .= " WHERE sub.teacher_id = ?";
             $params = [$teacherScope['staff_id']];
+        } elseif ($isStudent) {
+            if (!$studentClassId) jsonResponse(['success' => true, 'data' => []]);
+            $sql .= " WHERE sub.class_id = ?";
+            $params = [$studentClassId];
         }
         $sql .= " ORDER BY sub.name ASC";
         $stmt = $db->prepare($sql);

@@ -109,7 +109,7 @@ if ($method === 'GET') {
     $totalCount = (int)$total->fetchColumn();
 
     $stmt = $db->prepare(
-        "SELECT s.id, s.student_code, s.name, s.gender, s.dob, s.attendance, s.status,
+        "SELECT s.id, s.student_code, s.name, s.gender, s.dob, s.attendance, s.status, s.created_at,
                 s.stream, s.class_id, s.address, s.photo, c.name AS class_name, c.class_teacher,
                 COALESCE((
                     SELECT f.status

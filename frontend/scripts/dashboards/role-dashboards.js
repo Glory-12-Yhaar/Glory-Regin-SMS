@@ -259,15 +259,15 @@ function getTeacherScheduleStatus(row) {
 function teacherDash() {
   const teacherDashboard = getTeacherDashboardData();
   const profile = teacherDashboard?.profile || null;
-  const teacher = profile || { name: 'Teacher', department: 'Academics', subject: 'Assigned Subjects' };
+  const teacher = profile || {};
   const myClasses = getTeacherDashboardList(teacherDashboard, 'classes');
   const myClassNames = myClasses.map(c => c.name).filter(Boolean);
   const myStudents = getTeacherDashboardList(teacherDashboard, 'students');
   const mySubjects = getTeacherDashboardList(teacherDashboard, 'subjects');
   const stats = teacherDashboard?.stats || {};
-  const attendanceAverage = Math.round(Number(stats.attendance_average ?? 0)) || (myClasses.length
-    ? Math.round(myClasses.reduce((sum, c) => sum + parseFloat(c.attendance || c.attendance_avg || 0), 0) / myClasses.length)
-    : 0);
+  const attendanceAverage = stats.attendance_average === null || stats.attendance_average === undefined
+    ? null
+    : Number(stats.attendance_average);
   const teacherAssignments = getTeacherDashboardList(teacherDashboard, 'assignments');
   const scheduleRows = getTeacherDashboardList(teacherDashboard, 'schedule');
   const teacherNotices = getTeacherDashboardList(teacherDashboard, 'notices');
@@ -275,8 +275,8 @@ function teacherDash() {
   const statsCards = [
     statCard('<i class="fas fa-building"></i>', stats.classes_count ?? myClasses.length, 'My Classes', 'Assigned only', 'neu', 'si-blue', true, 'navTo("classes")'),
     statCard('<i class="fas fa-graduation-cap"></i>', stats.students_count ?? myStudents.length, 'My Students', 'Assigned classes', 'neu', 'si-green', true, 'navTo("students")'),
-    statCard('<i class="fas fa-book"></i>', stats.subjects_count ?? mySubjects.length, 'My Subjects', teacher.subject || 'Assigned subjects', 'neu', 'si-gold', true, 'navTo("subjects")'),
-    statCard('<i class="fas fa-check-circle"></i>', attendanceAverage + '%', 'Attendance Rate', 'My classes', 'up', 'si-purple', true, 'navTo("attendance")')
+    statCard('<i class="fas fa-book"></i>', stats.subjects_count ?? mySubjects.length, 'My Subjects', mySubjects.length ? 'Assigned subjects' : 'No subjects assigned', 'neu', 'si-gold', true, 'navTo("subjects")'),
+    statCard('<i class="fas fa-check-circle"></i>', attendanceAverage === null ? 'N/A' : attendanceAverage.toFixed(1) + '%', 'Attendance Rate', myClasses.length ? 'Assigned classes' : 'No classes assigned', attendanceAverage === null ? 'neu' : 'up', 'si-purple', true, 'navTo("attendance")')
   ].join('');
   const scheduleRowsHtml = scheduleRows.length ? scheduleRows.map(row => {
     const time = formatTeacherScheduleTime(row);
@@ -292,7 +292,7 @@ function teacherDash() {
   const assignmentCards = teacherAssignments.length ? teacherAssignments.slice(0, 4).map(a => {
         const submitted = parseInt(a.submittedCount ?? a.submitted_count ?? 0, 10);
         const assignmentClass = a.className || a.class || a.class_name || '';
-        const total = parseInt(a.totalStudents ?? a.total_students ?? 0, 10) || myStudents.filter(s => (s.student_class || s.class_name) === assignmentClass).length || 1;
+        const total = parseInt(a.totalStudents ?? a.total_students ?? 0, 10) || 0;
         const dueDate = a.dueDate || a.due_date;
         return `
       <div style="margin-bottom:16px;cursor:pointer;padding:8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='transparent'" onclick="viewAssignmentSubmissions('${escapeHtml(a.title)}')">
@@ -301,16 +301,25 @@ function teacherDash() {
           <span class="badge b-info">${escapeHtml(formatDashboardDueDate(dueDate))}</span>
         </div>
         <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">${escapeHtml(assignmentClass || 'Unassigned class')} &middot; ${submitted}/${total} submitted</div>
-        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${Math.round(submitted / total * 100)}%"></div></div>
+        <div class="prog-bar"><div class="prog-fill pf-gold" style="width:${total > 0 ? Math.min(100, Math.round(submitted / total * 100)) : 0}%"></div></div>
       </div>`}).join('') : '<div style="padding:20px;color:var(--gray-400);text-align:center">No assignments for your assigned classes yet.</div>';
   const noticeRows = teacherNotices.slice(0, 4).map(n => `<div style="padding:10px 0;border-bottom:1px solid var(--gray-100)"><div style="font-size:13px;font-weight:600">${escapeHtml(n.title || 'Notice')}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(n.date || n.notice_date || '')}</div></div>`).join('') || '<div style="padding:20px;color:var(--gray-400);text-align:center">No notices available.</div>';
 
-  return hdr('Teacher Dashboard', 'Welcome, ' + escapeHtml(teacher.name) + ' &middot; ' + escapeHtml(teacher.department || 'Academics') + ' &middot; ' + escapeHtml(myClassNames.join(', ') || 'No assigned class') + ' &middot; ' + getCurrentDateString()) +
+  const classTeacherClass = myClasses.find(c => String(c.teacher_id) === String(teacher.staff_id))?.name
+    || (teacher.class_assigned && myClassNames.includes(teacher.class_assigned) ? teacher.class_assigned : '');
+  const attendancePanel = classTeacherClass
+    ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px;background:var(--gray-50);border-radius:8px"><div><div style="font-weight:700;color:var(--blue-dark);font-size:14px">${escapeHtml(classTeacherClass)}</div><div style="font-size:12px;color:var(--gray-500);margin-top:4px">Record today's attendance from the Attendance Module.</div></div><button class="btn btn-primary btn-sm" onclick="navTo('attendance')"><i class="fas fa-clipboard-check"></i> Mark Attendance</button></div>`
+    : '<div style="padding:18px;text-align:center;color:var(--gray-500);background:var(--gray-50);border-radius:8px">No class-teacher assignment is recorded for this account.</div>';
+  const profileNotice = profile ? '' : '<div class="card mb20" style="border-left:4px solid var(--gold);color:var(--gray-600)"><i class="fas fa-triangle-exclamation"></i> This login is not linked to an active teaching staff record. Ask an administrator to link the user account to the staff profile.</div>';
+  const headingParts = [teacher.name, teacher.department, myClassNames.join(', ')].filter(Boolean);
+
+  return hdr('Teacher Dashboard', headingParts.length ? 'Welcome, ' + headingParts.map(escapeHtml).join(' &middot; ') + ' &middot; ' + getCurrentDateString() : 'Your teaching overview') +
     renderPageTemplate('pages/dashboards/teacher/index.html', {
       statsCards,
+      profileNotice,
       scheduleRows: scheduleRowsHtml,
       assignmentCards,
-      primaryClass: myClassNames[0] || 'Assigned Class',
+      attendancePanel,
       noticeRows
     });
 }
@@ -319,34 +328,85 @@ function teacherDash() {
 // STUDENT DASHBOARD
 // -----------------------------------
 
+function getStudentPerformanceIndex() {
+  const studentIndex = {};
+  const backendStudents = Array.isArray(enrolledStudents) ? enrolledStudents : [];
+  const backendGrades = Array.isArray(gradesData) ? gradesData : [];
+
+  backendStudents.forEach(student => {
+    const studentName = student.name;
+    if (!studentName) return;
+
+    const scores = {};
+    backendGrades
+      .filter(record => String(record.student_id || '') === String(student.id) || String(record.studentName || record.student_name || '') === studentName)
+      .forEach(record => {
+        const subject = record.subject || record.subject_name || '';
+        if (!subject) return;
+        const classScore = Number(record.classScore ?? record.class_score ?? 0);
+        const examScore = Number(record.examScore ?? record.exam_score ?? 0);
+        const total = Number(record.totalScore ?? (classScore + examScore));
+        scores[subject] = {
+          classScore,
+          examScore,
+          total,
+          grade: record.grade || (typeof calculateGrade === 'function' ? calculateGrade(total) : 'F')
+        };
+      });
+
+    studentIndex[studentName] = {
+      name: studentName,
+      class: student.student_class || student.class || 'Not Assigned',
+      attendance: Number(student.attendance || 0),
+      scores
+    };
+  });
+
+  if (typeof STUDENTS_DATA === 'object' && STUDENTS_DATA) {
+    Object.entries(STUDENTS_DATA).forEach(([name, data]) => {
+      if (!studentIndex[name]) {
+        studentIndex[name] = {
+          name,
+          class: data.class || 'Not Assigned',
+          attendance: Number(data.attendance || 0),
+          scores: data.scores || {}
+        };
+      }
+    });
+  }
+
+  return studentIndex;
+}
+
+function getStudentPerformanceProfile(studentName) {
+  const index = getStudentPerformanceIndex();
+  if (!studentName) return null;
+  return index[studentName] || index[getCurrentStudentRecord()?.name] || null;
+}
+
 // Calculate class standing based on student performance
 function calculateClassStanding(studentName) {
-  const student = STUDENTS_DATA[studentName];
+  const student = getStudentPerformanceProfile(studentName);
   if (!student) return { standing: 'Good Standing', rank: 'Current record', trend: 'neu' };
 
-  // Calculate total score for the student
   function getTotalScore(scores) {
-    return Object.values(scores).reduce((sum, { classScore, examScore }) => sum + classScore + examScore, 0);
+    return Object.values(scores || {}).reduce((sum, { classScore, examScore }) => sum + Number(classScore || 0) + Number(examScore || 0), 0);
   }
 
   const studentTotal = getTotalScore(student.scores);
-  const studentClass = student.class;
-
-  // Get all students in the same class and their scores
-  const classmates = Object.entries(STUDENTS_DATA)
-    .filter(([_, data]) => data.class === studentClass)
-    .map(([name, data]) => ({
-      name,
+  const studentClass = student.class || 'Not Assigned';
+  const classmates = Object.values(getStudentPerformanceIndex())
+    .filter(data => data.class === studentClass)
+    .map(data => ({
+      name: data.name,
       total: getTotalScore(data.scores)
     }))
-    .sort((a, b) => b.total - a.total); // Sort descending (highest first)
+    .sort((a, b) => b.total - a.total);
 
-  // Find student's rank
   const studentRank = classmates.findIndex(c => c.name === studentName) + 1;
-  const totalStudents = classmates.length;
+  const totalStudents = classmates.length || 1;
   const percentile = Math.round((studentRank / totalStudents) * 100);
 
-  // Determine standing based on percentile
   let standing = 'Average';
   let trend = 'neu';
 
@@ -376,13 +436,21 @@ function calculateClassStanding(studentName) {
 
 // Get number of subjects for a student's class
 function getStudentSubjectsCount(studentClass) {
-  return SUBJECTS_BY_CLASS[studentClass] ? SUBJECTS_BY_CLASS[studentClass].length : 0;
+  const className = studentClass || '';
+  if (Array.isArray(subjectsData) && subjectsData.length) {
+    const matching = subjectsData.filter(subject => {
+      const subjectClass = subject.class_name || subject.classes || subject.className || '';
+      return subjectClass === className || (Array.isArray(subject.classes) ? subject.classes.includes(className) : false);
+    });
+    if (matching.length) return matching.length;
+  }
+  return SUBJECTS_BY_CLASS[className] ? SUBJECTS_BY_CLASS[className].length : 0;
 }
 
 // Get student's attendance percentage
 function getStudentAttendance(studentName) {
-  const student = STUDENTS_DATA[studentName];
-  if (student) return student.attendance;
+  const student = getStudentPerformanceProfile(studentName);
+  if (student) return Number(student.attendance) || 0;
   const currentStudent = getCurrentStudentRecord();
   return parseFloat(currentStudent.attendance) || 0;
 }
@@ -418,7 +486,52 @@ function getPendingTasksCount() {
     .length;
 }
 
+function studentDatabaseDash() {
+  const overview = window.dashboardReportData || {};
+  const student = overview.student || getCurrentStudentRecord();
+  const studentName = student.name || 'Student';
+  const studentClass = student.class_name || student.student_class || 'Not assigned';
+  const studentId = student.student_code || student.student_id || '';
+  const subjects = Array.isArray(overview.subjects) ? overview.subjects : [];
+  const scores = Array.isArray(overview.scores) ? overview.scores : [];
+  const assignments = Array.isArray(overview.assignments) ? overview.assignments : [];
+  const timetable = Array.isArray(overview.today_timetable) ? overview.today_timetable : [];
+  const notices = Array.isArray(overview.notices) ? overview.notices : [];
+  const attendance = Number(overview.attendance?.rate ?? student.attendance ?? 0);
+  const attendanceTrend = getAttendanceTrend(attendance);
+  const pendingTasks = Number(overview.pending_assignments || 0);
+  const standing = overview.standing || {};
+  const standingLabel = standing.position ? `Position ${standing.position}` : 'Not ranked';
+  const standingDetail = standing.position ? `${standing.position} of ${standing.ranked_students}` : 'No results recorded';
+  const statsCards = [
+    statCard('<i class="fas fa-book"></i>', subjects.length, 'My Subjects', overview.term || 'Current term', 'neu', 'si-blue', true, 'navTo("subjects")'),
+    statCard('<i class="fas fa-check-circle"></i>', `${attendance.toFixed(1)}%`, 'My Attendance', attendanceTrend.description, attendanceTrend.trend, 'si-green', true, 'navTo("attendance")'),
+    statCard('<i class="fas fa-clipboard-list"></i>', pendingTasks, 'Pending Assignments', `${assignments.length} class assignment${assignments.length === 1 ? '' : 's'}`, pendingTasks ? 'dn' : 'up', pendingTasks ? 'si-red' : 'si-green', true, 'navTo("assignments")'),
+    statCard('<i class="fas fa-star"></i>', standingLabel, 'Class Standing', standingDetail, standing.position && standing.position <= 3 ? 'up' : 'neu', 'si-gold', true, 'navTo("reportcards")')
+  ].join('');
+  const assignmentRows = assignments.length ? assignments.map(a => {
+    const status = Number(a.submitted) ? 'Submitted' : (a.status === 'Closed' ? 'Closed' : 'Pending');
+    const due = formatDashboardDueDate(a.due_date);
+    return `<tr style="cursor:pointer" onclick="viewAssignment('${a.id}')"><td style="font-weight:600">${escapeHtml(a.subject || '')}</td><td>${escapeHtml(a.title)}</td><td>${escapeHtml(due)}</td><td><span class="badge ${status === 'Submitted' ? 'b-success' : status === 'Closed' ? 'b-gray' : 'b-warning'}">${status}</span></td></tr>`;
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:14px">No assignments for your class.</td></tr>';
+  const performanceRows = scores.length ? scores.map(score => {
+    const value = Number(score.total || 0);
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${escapeHtml(score.subject)}</span><span style="color:var(--blue-main);font-weight:700">${value.toFixed(1)}%</span></div><div class="prog-bar"><div class="prog-fill ${value >= 90 ? 'pf-green' : value >= 75 ? 'pf-blue' : 'pf-gold'}" style="width:${Math.min(100, value)}%"></div></div></div>`;
+  }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No scores recorded for the current reporting period.</div>';
+  const timetableRows = timetable.length ? timetable.map(row => `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--gray-100)"><div style="font-size:11px;color:var(--blue-main);font-weight:700;min-width:70px">${escapeHtml(formatTeacherScheduleTime(row))}</div><div><div style="font-size:12.5px;font-weight:600">${escapeHtml(row.subject)}</div><div style="font-size:10px;color:var(--gray-400)">${escapeHtml(row.room || 'Room not recorded')} &middot; ${escapeHtml(row.teacher_name || 'Teacher not assigned')}</div></div></div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No timetable entries for today.</div>';
+  const noticeRows = notices.length ? notices.map(n => `<div class="notice-item" style="padding:10px 0"><div class="notice-icon" style="background:var(--blue-xpale);width:38px;height:38px;border-radius:9px">${n.icon || '<i class="fas fa-bullhorn"></i>'}</div><div class="notice-content"><h4>${escapeHtml(n.title || '')}</h4><p>${escapeHtml(n.notice_date || '')} &middot; ${escapeHtml(n.priority || 'Normal')}</p></div></div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:14px">No notices for students.</div>';
+  const fee = overview.fees;
+  const payment = overview.latest_payment;
+  const money = value => `GHS ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const feeSummary = fee ? `<div class="fee-hero" style="margin-bottom:12px"><h3>${escapeHtml(overview.term || '')} ${escapeHtml(overview.academic_year || '')}</h3><div class="amount">${money(fee.balance)}</div><div class="sub">Outstanding balance &middot; Paid ${money(fee.amount_paid)} of ${money(fee.amount_due)}</div></div><div style="text-align:center;padding:8px 0"><span class="badge ${fee.status === 'Paid' ? 'b-success' : fee.status === 'Partial' ? 'b-warning' : 'b-danger'}" style="font-size:12px;padding:6px 16px">${escapeHtml(fee.status || 'Pending')}</span>${payment ? `<div style="font-size:10px;color:var(--gray-400);margin-top:8px">Latest payment: ${escapeHtml(payment.payment_date)} &middot; ${escapeHtml(payment.receipt_no || 'No receipt number')}</div>` : ''}</div>` : '<div style="text-align:center;color:var(--gray-400);padding:20px">No fee record for the current reporting period.</div>';
+  return hdr('Student Dashboard', `Welcome, ${escapeHtml(studentName)} &middot; ${escapeHtml(studentClass)} &middot; ID No: ${escapeHtml(studentId)} &middot; ${getCurrentDateString()}`) + renderPageTemplate('pages/dashboards/student/index.html', {
+    avatarColor: student.avatar_color || 'blue', studentInitials: getInitials(studentName, 'ST'), studentName: escapeHtml(studentName), studentId: escapeHtml(studentId), studentClass: escapeHtml(studentClass), studentStream: escapeHtml(student.stream || 'General'), statsCards, assignmentRows, performanceRows, timetableRows, noticeRows, feeSummary
+  });
+}
+
 function studentDash() {
+  return studentDatabaseDash();
+  /* Legacy fallback retained below temporarily for other shared helpers. */
   const student = getCurrentStudentRecord();
   const studentName = student.name;
   const studentClass = student.student_class;
@@ -501,7 +614,14 @@ function saveAssignments(obj) {
 }
 
 function openGradeEntryModal(studentName) {
-  const subjects = SUBJECTS_BY_CLASS[(STUDENTS_DATA[studentName]||{}).class] || Object.keys(STUDENTS_DATA[studentName]?.scores||{});
+  const student = STUDENTS_DATA?.[studentName] || {};
+  const className = student.class || 'Not Assigned';
+  const subjects = Array.isArray(subjectsData) && subjectsData.length
+    ? subjectsData.filter(subject => {
+        const subjectClass = subject.class_name || subject.classes || subject.className || '';
+        return !subjectClass || subjectClass === className || (Array.isArray(subject.classes) ? subject.classes.includes(className) : false);
+      }).map(subject => subject.name)
+    : (SUBJECTS_BY_CLASS[className] || Object.keys(student.scores || {}));
   const subjOptions = (subjects || []).map(s => `<option value="${s}">${s}</option>`).join('');
   const html = `<div style="max-width:520px">
     <h3>Quick Grade Entry â€” ${studentName}</h3>
@@ -564,7 +684,7 @@ async function addAssignment() {
 // -----------------------------------
 // PARENT DASHBOARD
 // -----------------------------------
-function parentDash() {
+function parentDashLegacy() {
   const parentUser = getSessionUser();
   const students = getParentChildren();
   const childrenStats = students.map(s => `<div style="display:flex;gap:16px;align-items:center;padding:14px;background:var(--gray-50);border-radius:var(--radius-lg);margin-bottom:12px">
@@ -636,6 +756,71 @@ function parentDash() {
 }
 
 // -----------------------------------
+function parentDash() {
+  const user = getSessionUser();
+  const overview = window.dashboardReportData?.parent || {};
+  const children = Array.isArray(overview.children) ? overview.children : [];
+  const assignments = Array.isArray(overview.pending_assignments) ? overview.pending_assignments : [];
+  const events = Array.isArray(overview.events) ? overview.events : [];
+  const stats = overview.stats || {};
+  const period = [overview.term, overview.academic_year].filter(Boolean).join(' · ') || 'Current reporting period';
+  const money = value => `GH&#8373; ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const childrenStats = children.length ? children.map((child, index) => `
+    <div style="display:flex;gap:16px;align-items:center;padding:14px;background:var(--gray-50);border-radius:var(--radius-lg);margin-bottom:12px">
+      <div class="av av-lg av-${['blue', 'purple', 'green'][index % 3]}">${escapeHtml((child.name || ' ')[0])}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700;color:var(--blue-dark)">${escapeHtml(child.name)}</div>
+        <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(child.class_name || 'Not assigned')} · ${escapeHtml(child.student_code || '')}</div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <span class="badge b-success">${Number(child.attendance || 0).toFixed(1)}% Attendance</span>
+          <span class="badge ${child.fee_status === 'Paid' ? 'b-success' : child.fee_status === 'Partial' ? 'b-warning' : 'b-danger'}">Fees ${escapeHtml(child.fee_status || 'Pending')}</span>
+          <span class="badge ${child.report_grade ? 'b-info' : 'b-gray'}">${child.report_grade ? `Report ${escapeHtml(child.report_grade)} · ${Number(child.report_average).toFixed(1)}%` : 'No report scores'}</span>
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="navTo('reportcards')"><i class="fas fa-file"></i> Report</button>
+      <button class="btn btn-info btn-sm" onclick="navTo('attendance')"><i class="fas fa-chart-bar"></i> Attendance</button>
+    </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:20px">No active children are linked to this parent account.</div>';
+
+  const assignmentHtml = assignments.length ? assignments.map(assignment => {
+    const due = formatDashboardDueDate(assignment.due_date);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
+      <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${escapeHtml(assignment.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(assignment.student_name)} · ${escapeHtml(assignment.subject || 'General')}</div></div>
+      <div style="display:flex;gap:6px;align-items:center"><span class="badge ${due === 'Today' || due === 'Overdue' ? 'b-danger' : 'b-info'}">${escapeHtml(due)}</span><span class="badge b-warning">Pending</span></div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:12px">No pending assignments.</div>';
+
+  const attendance = stats.attendance_average === null || stats.attendance_average === undefined ? 'N/A' : `${Number(stats.attendance_average).toFixed(1)}%`;
+  const report = stats.latest_report_grade ? `${escapeHtml(stats.latest_report_grade)} · ${Number(stats.latest_report_average).toFixed(1)}%` : 'No scores';
+  const pendingFees = Number(stats.fees_pending_count || 0);
+  const statsCards = [
+    statCard('<i class="fas fa-child"></i>', Number(stats.children_count || 0), 'My Children', children.length ? 'Active linked records' : 'No linked records', 'neu', 'si-blue'),
+    statCard('<i class="fas fa-check-circle"></i>', attendance, 'Avg Attendance', children.length ? 'Across linked children' : 'No attendance records', 'up', 'si-green'),
+    statCard('<i class="fas fa-file"></i>', report, 'Current Report', period, stats.latest_report_grade ? 'up' : 'neu', 'si-gold'),
+    statCard('<i class="fas fa-money-bill"></i>', pendingFees ? `${pendingFees} Pending` : (children.length ? 'All Paid' : 'No records'), 'Fees Status', `${money(stats.total_fees_balance)} balance`, pendingFees ? 'dn' : 'up', pendingFees ? 'si-red' : 'si-green')
+  ].join('');
+
+  const feeCards = children.length ? children.map(child => `
+    <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:12px;font-weight:600">${escapeHtml(child.name)} · ${escapeHtml(child.class_name || 'Not assigned')}</div><span class="badge ${child.fee_status === 'Paid' ? 'b-success' : child.fee_status === 'Partial' ? 'b-warning' : 'b-danger'}">${escapeHtml(child.fee_status || 'Pending')}</span></div>
+      <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${money(child.balance)} balance</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:4px">Paid ${money(child.amount_paid)} of ${money(child.amount_due)}</div>
+      <button class="btn btn-info btn-xs" style="margin-top:8px" onclick="navTo('fees')"><i class="fas fa-history"></i> Payment History</button>
+    </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:12px">No fee records available.</div>';
+
+  const eventRows = events.length ? events.map(event => {
+    const parts = typeof formatEventDateParts === 'function' ? formatEventDateParts(event.event_date) : { month: '', day: '' };
+    const time = Number(event.all_day) === 1 ? 'All day' : (event.event_time ? String(event.event_time).slice(0, 5) : 'Time not set');
+    return `<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--gray-100)">
+      <div style="min-width:46px;height:46px;background:var(--blue-xpale);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:9px;color:var(--blue-main);font-weight:700">${escapeHtml(parts.month || '')}</span><span style="font-size:18px;font-weight:800;color:var(--blue-dark)">${escapeHtml(parts.day || '')}</span></div>
+      <div><div style="font-size:12.5px;font-weight:600">${escapeHtml(event.title)}</div><div style="font-size:11px;color:var(--gray-400)">${escapeHtml(time)} · ${escapeHtml(event.audience || 'All')}</div></div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;color:var(--gray-400);padding:16px">No upcoming school events.</div>';
+
+  return hdr('Parent Dashboard', `Welcome, ${user?.name || 'Parent'} · Parent of ${children.length} student${children.length === 1 ? '' : 's'} · ${getCurrentDateString()}`) +
+    renderPageTemplate('pages/dashboards/parent/index.html', { statsCards, childrenStats, assignmentHtml, feeCards, eventRows });
+}
+
 // ACCOUNTANT DASHBOARD
 // -----------------------------------
 function accountDash() {

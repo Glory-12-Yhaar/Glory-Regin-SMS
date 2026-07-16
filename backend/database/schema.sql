@@ -13,18 +13,22 @@ SET time_zone = "+00:00";
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_code` VARCHAR(20) UNIQUE NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `username` VARCHAR(50) UNIQUE NOT NULL,
-  `email` VARCHAR(150) UNIQUE NOT NULL,
+  `user_code` VARCHAR(30) UNIQUE NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `username` VARCHAR(80) UNIQUE NOT NULL,
+  `email` VARCHAR(180) UNIQUE NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `role` ENUM('Admin','Teacher','Student','Parent','Accountant','Alumni','Visitor') NOT NULL,
-  `status` ENUM('Active','Inactive','Suspended') DEFAULT 'Active',
-  `avatar` VARCHAR(10),
-  `last_login` DATETIME,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+  `status` ENUM('Active','Inactive','Suspended','Archived') NOT NULL DEFAULT 'Active',
+  `avatar` VARCHAR(20) DEFAULT NULL,
+  `phone` VARCHAR(40) DEFAULT NULL,
+  `address` TEXT DEFAULT NULL,
+  `last_login` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_users_role_status` (`role`, `status`),
+  INDEX `idx_users_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- CLASSES
@@ -37,10 +41,10 @@ CREATE TABLE IF NOT EXISTS `classes` (
   `class_teacher` VARCHAR(150) DEFAULT NULL,
   `capacity` INT NOT NULL DEFAULT 40,
   `stream` VARCHAR(80) NOT NULL DEFAULT 'General',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_classes_level` (`level`)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- SUBJECTS
@@ -68,22 +72,24 @@ CREATE TABLE IF NOT EXISTS `subjects` (
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `students` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `student_code` VARCHAR(20) UNIQUE NOT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `class_id` INT,
-  `stream` VARCHAR(50) DEFAULT 'General',
+  `student_code` VARCHAR(30) UNIQUE NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `class_id` INT DEFAULT NULL,
+  `stream` VARCHAR(80) NOT NULL DEFAULT 'General',
   `gender` ENUM('Male','Female') NOT NULL,
-  `dob` DATE,
-  `address` TEXT,
-  `photo` LONGTEXT,
-  `attendance` DECIMAL(5,2) DEFAULT 0,
-  `status` ENUM('Active','Inactive','Graduated','Withdrawn') DEFAULT 'Active',
-  `user_id` INT,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `dob` DATE DEFAULT NULL,
+  `address` TEXT DEFAULT NULL,
+  `photo` LONGTEXT DEFAULT NULL,
+  `attendance` DECIMAL(5,2) NOT NULL DEFAULT 0,
+  `status` ENUM('Active','Inactive','Suspended','Graduated','Withdrawn') NOT NULL DEFAULT 'Active',
+  `user_id` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE SET NULL,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_students_class_status` (`class_id`, `status`),
+  INDEX `idx_students_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- STUDENT SCORES
@@ -91,14 +97,16 @@ CREATE TABLE IF NOT EXISTS `students` (
 CREATE TABLE IF NOT EXISTS `student_scores` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `student_id` INT NOT NULL,
-  `subject` VARCHAR(100) NOT NULL,
-  `class_score` DECIMAL(5,2) DEFAULT 0,
-  `exam_score` DECIMAL(5,2) DEFAULT 0,
-  `term` ENUM('1st Term','2nd Term','3rd Term') NOT NULL,
+  `subject` VARCHAR(150) NOT NULL,
+  `class_score` DECIMAL(5,2) NOT NULL DEFAULT 0,
+  `exam_score` DECIMAL(5,2) NOT NULL DEFAULT 0,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
   `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `uq_score` (`student_id`, `subject`, `term`, `academic_year`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- STAFF
@@ -138,39 +146,47 @@ CREATE TABLE IF NOT EXISTS `staff` (
 CREATE TABLE IF NOT EXISTS `teachers` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `staff_id` INT NOT NULL UNIQUE,
-  `subject` VARCHAR(100),
-  `class_assigned` VARCHAR(50),
-  `experience` INT DEFAULT 0,
-  `schedule` TEXT,
-  `avatar_color` VARCHAR(30),
+  `subject` VARCHAR(150) DEFAULT NULL,
+  `class_assigned` VARCHAR(80) DEFAULT 'Not Assigned',
+  `experience` INT NOT NULL DEFAULT 0,
+  `schedule` TEXT DEFAULT NULL,
+  `avatar_color` VARCHAR(30) DEFAULT 'blue',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`staff_id`) REFERENCES `staff`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- PARENTS
 -- ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `parents` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `email` VARCHAR(150),
-  `phone` VARCHAR(30),
-  `address` TEXT,
-  `contact_person` VARCHAR(150),
-  `gender` ENUM('Male','Female'),
-  `occupation` VARCHAR(120),
+  `name` VARCHAR(150) NOT NULL,
+  `email` VARCHAR(180) DEFAULT NULL,
+  `phone` VARCHAR(40) DEFAULT NULL,
+  `address` TEXT DEFAULT NULL,
+  `contact_person` VARCHAR(150) DEFAULT NULL,
+  `gender` ENUM('Male','Female') DEFAULT NULL,
+  `occupation` VARCHAR(120) DEFAULT NULL,
   `avatar_color` VARCHAR(30) DEFAULT 'gold',
-  `user_id` INT,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+  `user_id` INT DEFAULT NULL UNIQUE,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_parents_phone` (`phone`),
+  INDEX `idx_parents_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `parent_student` (
   `parent_id` INT NOT NULL,
   `student_id` INT NOT NULL,
+  `relationship` VARCHAR(80) DEFAULT 'Guardian',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`parent_id`,`student_id`),
   FOREIGN KEY (`parent_id`) REFERENCES `parents`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  INDEX `idx_parent_student_student` (`student_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- ASSIGNMENTS
@@ -217,15 +233,15 @@ CREATE TABLE IF NOT EXISTS `assignment_submissions` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `assignment_id` INT NOT NULL,
   `student_id` INT NOT NULL,
-  `submitted_at` DATE,
-  `score` DECIMAL(5,2),
-  `feedback` TEXT,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `submitted_at` DATE DEFAULT NULL,
+  `score` DECIMAL(5,2) DEFAULT NULL,
+  `feedback` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`assignment_id`) REFERENCES `assignments`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
   UNIQUE KEY `uq_submission` (`assignment_id`, `student_id`)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
 -- FEES
@@ -507,9 +523,155 @@ CREATE TABLE IF NOT EXISTS `yearbooks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ───────────────────────────────────────────
+-- SCHOLARSHIPS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `scholarships` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `student_id` INT NOT NULL,
+  `grant_type` VARCHAR(120) NOT NULL,
+  `discount_value` VARCHAR(120) NOT NULL,
+  `status` ENUM('Active','Pending Review','Inactive') NOT NULL DEFAULT 'Active',
+  `remarks` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  INDEX `idx_scholarships_student` (`student_id`),
+  INDEX `idx_scholarships_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
+-- DONATION CAMPAIGNS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `donation_campaigns` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT DEFAULT NULL,
+  `goal` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  `status` ENUM('Active','Closed','Archived') NOT NULL DEFAULT 'Active',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_dc_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
+-- DONATIONS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `donations` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `campaign_id` INT DEFAULT NULL,
+  `donor_name` VARCHAR(150) NOT NULL,
+  `amount` DECIMAL(12,2) NOT NULL,
+  `method` VARCHAR(80) DEFAULT 'Card',
+  `status` ENUM('Completed','Pending','Refunded') NOT NULL DEFAULT 'Completed',
+  `user_id` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`campaign_id`) REFERENCES `donation_campaigns`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_donations_campaign` (`campaign_id`),
+  INDEX `idx_donations_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
+-- JOB POSTINGS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `job_postings` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `company` VARCHAR(180) DEFAULT NULL,
+  `location` VARCHAR(180) DEFAULT NULL,
+  `job_type` ENUM('Full-time','Part-time','Contract','Internship','Remote') NOT NULL DEFAULT 'Full-time',
+  `industry` VARCHAR(120) DEFAULT NULL,
+  `salary_range` VARCHAR(120) DEFAULT NULL,
+  `experience` VARCHAR(120) DEFAULT NULL,
+  `description` TEXT DEFAULT NULL,
+  `status` ENUM('Open','Closed') NOT NULL DEFAULT 'Open',
+  `posted_by_name` VARCHAR(150) DEFAULT NULL,
+  `posted_by_class` VARCHAR(80) DEFAULT NULL,
+  `user_id` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  INDEX `idx_jobs_status` (`status`),
+  INDEX `idx_jobs_industry` (`industry`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
+-- GALLERY ALBUMS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `gallery_albums` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `category` VARCHAR(120) DEFAULT NULL,
+  `year` VARCHAR(10) DEFAULT NULL,
+  `item_count` INT NOT NULL DEFAULT 0,
+  `icon` VARCHAR(80) DEFAULT 'fa-images',
+  `bg_color` VARCHAR(120) DEFAULT 'linear-gradient(135deg, #3b82f6, #1e3a5f)',
+  `cover_img` VARCHAR(255) DEFAULT NULL,
+  `status` ENUM('Published','Draft') NOT NULL DEFAULT 'Published',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_gallery_category` (`category`),
+  INDEX `idx_gallery_year` (`year`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
 -- ADDITIONAL RELATIONSHIPS
 -- ───────────────────────────────────────────
 ALTER TABLE `subjects` ADD CONSTRAINT `fk_subjects_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
 ALTER TABLE `classes` ADD CONSTRAINT `fk_classes_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `staff`(`id`) ON DELETE SET NULL;
+
+-- ───────────────────────────────────────────
+-- GALLERY ITEMS (individual photos per album)
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `gallery_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `album_id` INT NOT NULL,
+  `caption` VARCHAR(255) DEFAULT NULL,
+  `image` LONGTEXT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`album_id`) REFERENCES `gallery_albums`(`id`) ON DELETE CASCADE,
+  INDEX `idx_gallery_items_album` (`album_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
+-- REPORT CARDS
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `report_cards` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `student_id` INT NOT NULL,
+  `class_id` INT DEFAULT NULL,
+  `term` VARCHAR(50) NOT NULL DEFAULT '1st Term',
+  `academic_year` VARCHAR(20) NOT NULL DEFAULT '2024/2025',
+  `total_score` DECIMAL(7,2) DEFAULT 0,
+  `average_score` DECIMAL(5,2) DEFAULT 0,
+  `position` INT DEFAULT NULL,
+  `total_in_class` INT DEFAULT NULL,
+  `attendance_pct` DECIMAL(5,2) DEFAULT 0,
+  `conduct` ENUM('Excellent','Very Good','Good','Fair','Poor') DEFAULT 'Good',
+  `class_teacher_remarks` TEXT DEFAULT NULL,
+  `head_teacher_remarks` TEXT DEFAULT NULL,
+  `promoted` TINYINT(1) DEFAULT NULL,
+  `next_class` VARCHAR(80) DEFAULT NULL,
+  `generated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE SET NULL,
+  UNIQUE KEY `uq_report_card` (`student_id`, `term`, `academic_year`),
+  INDEX `idx_report_term_year` (`term`, `academic_year`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ───────────────────────────────────────────
+-- ALUMNI MESSAGES (internal alumni network)
+-- ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `alumni_messages` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `sender_id` INT NOT NULL,
+  `receiver_id` INT NOT NULL,
+  `subject` VARCHAR(220) DEFAULT '(No Subject)',
+  `body` TEXT NOT NULL,
+  `sent_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` DATETIME DEFAULT NULL,
+  FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  INDEX `idx_alumni_msg_receiver` (`receiver_id`, `sent_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- End of DDL. Seed data is inserted by setup.php.

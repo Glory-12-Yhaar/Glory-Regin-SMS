@@ -62,160 +62,8 @@ const SUBJECTS_BY_CLASS = {
 };
 
 // STUDENT DATA STRUCTURE
-const STUDENTS_DATA = {
-  'Ama Serwaa': {
-    id: '2024-38',
-    class: 'JHS 1',
-    classTeacher: 'Ms. Mensah',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 92,
-    dob: '2010-05-15',
-    gender: 'Female',
-    scores: {
-      'Mathematics': { classScore: 45, examScore: 39 },
-      'English Language': { classScore: 48, examScore: 42 },
-      'Integrated Science': { classScore: 46, examScore: 44 },
-      'Social Studies': { classScore: 44, examScore: 40 },
-      'Coputing': { classScore: 45, examScore: 38 },
-      'French Language': { classScore: 42, examScore: 35 }
-    }
-  },
-  'Kwame Asante': {
-    id: '2024-41',
-    class: 'Basic 6',
-    classTeacher: 'Mr. Boateng Sr.',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 88,
-    dob: '2011-03-22',
-    gender: 'Male',
-    scores: {
-      'Mathematics': { classScore: 35, examScore: 32 },
-      'English Language': { classScore: 42, examScore: 40 },
-      'History': { classScore: 44, examScore: 42 },
-      'Natural Science': { classScore: 40, examScore: 38 },
-      'Computing': { classScore: 38, examScore: 36 },
-      'French Language': { classScore: 35, examScore: 33 }
-    }
-  },
-  'Abena Mensah': {
-    id: '2024-42',
-    class: 'Basic 6',
-    classTeacher: 'Mr. Boateng Sr.',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 95,
-    dob: '2011-07-10',
-    gender: 'Female',
-    scores: {
-      'Mathematics': { classScore: 48, examScore: 43 },
-      'English Language': { classScore: 49, examScore: 45 },
-      'History': { classScore: 47, examScore: 44 },
-      'Natural Science': { classScore: 45, examScore: 42 },
-      'Computing': { classScore: 46, examScore: 41 },
-      'French Language': { classScore: 43, examScore: 40 }
-    }
-  },
-  'Kofi Boateng': {
-    id: '2024-43',
-    class: 'Basic 6',
-    classTeacher: 'Mr. Boateng Sr.',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 81,
-    dob: '2011-09-18',
-    gender: 'Male',
-    scores: {
-      'Mathematics': { classScore: 28, examScore: 25 },
-      'English Language': { classScore: 36, examScore: 34 },
-      'History': { classScore: 38, examScore: 36 },
-      'Natural': { classScore: 35, examScore: 32 },
-      'Computing': { classScore: 32, examScore: 30 },
-      'French Language': { classScore: 30, examScore: 28 }
-    }
-  },
-  'Akosua Darko': {
-    id: '2024-39',
-    class: 'JHS 1',
-    classTeacher: 'Ms. Mensah',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 97,
-    dob: '2010-01-12',
-    gender: 'Female',
-    scores: {
-      'Mathematics': { classScore: 49, examScore: 48 },
-      'English Language': { classScore: 50, examScore: 48 },
-      'Integrated Science': { classScore: 49, examScore: 47 },
-      'Social Studies': { classScore: 48, examScore: 46 },
-      'Computing': { classScore: 48, examScore: 47 },
-      'French Language': { classScore: 45, examScore: 42 }
-    }
-  },
-  'Yaw Mensah': {
-    id: '2024-44',
-    class: 'Basic 5',
-    classTeacher: 'Mrs. Asante',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 90,
-    dob: '2011-11-08',
-    gender: 'Male',
-    scores: {
-      'Mathematics': { classScore: 41, examScore: 39 },
-      'English Language': { classScore: 43, examScore: 41 },
-      'Science': { classScore: 42, examScore: 40 },
-      'Social Studies': { classScore: 41, examScore: 39 },
-      'ICT': { classScore: 40, examScore: 37 },
-      'Physical Education': { classScore: 43, examScore: 41 }
-    }
-  },
-  'Adwoa Frimpong': {
-    id: '2024-45',
-    class: 'Basic 5',
-    classTeacher: 'Mrs. Asante',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 93,
-    dob: '2011-04-20',
-    gender: 'Female',
-    scores: {
-      'Mathematics': { classScore: 45, examScore: 42 },
-      'English Language': { classScore: 46, examScore: 44 },
-      'Science': { classScore: 44, examScore: 42 },
-      'Social Studies': { classScore: 43, examScore: 41 },
-      'ICT': { classScore: 44, examScore: 40 },
-      'Physical Education': { classScore: 45, examScore: 43 }
-    }
-  },
-  'Kweku Ofori': {
-    id: '2024-46',
-    class: 'JHS 2',
-    classTeacher: 'Mr. Owusu',
-    stream: 'General',
-    term: '1st Term',
-    academicYear: '2024/2025',
-    attendance: 79,
-    dob: '2009-12-05',
-    gender: 'Male',
-    scores: {
-      'Mathematics': { classScore: 30, examScore: 28 },
-      'English Language': { classScore: 34, examScore: 32 },
-      'Integrated Science': { classScore: 32, examScore: 30 },
-      'Social Studies': { classScore: 35, examScore: 33 },
-      'ICT': { classScore: 33, examScore: 31 },
-      'French Language': { classScore: 31, examScore: 29 }
-    }
-  }
-};
+// Legacy fallback kept empty: the UI now relies on the synced backend data.
+const STUDENTS_DATA = {};
 
 // ALUMNI DATA STRUCTURE
 var ALUMNI_DATA = {};
@@ -601,10 +449,35 @@ function generateRemark(average) {
 }
 
 function calculateClassPosition(studentName, classVal) {
-  const classStudents = Object.entries(STUDENTS_DATA).filter(([_, data]) => data.class === classVal);
+  const index = {};
+  const backendStudents = Array.isArray(enrolledStudents) ? enrolledStudents : [];
+  const backendGrades = Array.isArray(gradesData) ? gradesData : [];
+
+  backendStudents.forEach(student => {
+    const studentNameValue = student.name;
+    if (!studentNameValue) return;
+    const scores = {};
+    backendGrades
+      .filter(record => String(record.student_id || '') === String(student.id) || String(record.studentName || record.student_name || '') === studentNameValue)
+      .forEach(record => {
+        const subject = record.subject || record.subject_name || '';
+        if (!subject) return;
+        const classScore = Number(record.classScore ?? record.class_score ?? 0);
+        const examScore = Number(record.examScore ?? record.exam_score ?? 0);
+        const total = Number(record.totalScore ?? (classScore + examScore));
+        scores[subject] = { classScore, examScore, total, grade: record.grade || calculateGrade(total) };
+      });
+    index[studentNameValue] = { class: student.student_class || student.class || 'Not Assigned', scores };
+  });
+
+  Object.entries(STUDENTS_DATA || {}).forEach(([name, data]) => {
+    if (!index[name]) index[name] = { class: data.class || 'Not Assigned', scores: data.scores || {} };
+  });
+
+  const classStudents = Object.entries(index).filter(([_, data]) => data.class === classVal);
   const classWithAverages = classStudents.map(([name, data]) => ({
     name,
-    average: calculateAverage(data.scores)
+    average: calculateAverage(data.scores || {})
   }));
 
   classWithAverages.sort((a, b) => b.average - a.average);
@@ -615,11 +488,32 @@ function calculateClassPosition(studentName, classVal) {
 }
 
 function getStudentScoresWithGrades(studentName) {
-  const student = STUDENTS_DATA[studentName];
+  const index = {};
+  const backendStudents = Array.isArray(enrolledStudents) ? enrolledStudents : [];
+  const backendGrades = Array.isArray(gradesData) ? gradesData : [];
+
+  backendStudents.forEach(student => {
+    const studentNameValue = student.name;
+    if (!studentNameValue) return;
+    const scores = {};
+    backendGrades
+      .filter(record => String(record.student_id || '') === String(student.id) || String(record.studentName || record.student_name || '') === studentNameValue)
+      .forEach(record => {
+        const subject = record.subject || record.subject_name || '';
+        if (!subject) return;
+        const classScore = Number(record.classScore ?? record.class_score ?? 0);
+        const examScore = Number(record.examScore ?? record.exam_score ?? 0);
+        const total = Number(record.totalScore ?? (classScore + examScore));
+        scores[subject] = { classScore, examScore, total, grade: record.grade || calculateGrade(total) };
+      });
+    index[studentNameValue] = { scores };
+  });
+
+  const student = index[studentName] || STUDENTS_DATA?.[studentName];
   if (!student) return null;
 
   const subjectScores = {};
-  Object.entries(student.scores).forEach(([subject, scores]) => {
+  Object.entries(student.scores || {}).forEach(([subject, scores]) => {
     const total = calculateTotalScore(scores.classScore, scores.examScore);
     subjectScores[subject] = {
       classScore: scores.classScore,
@@ -818,6 +712,7 @@ const MENUS = {
         { id: 'timetable', ic: '<i class="fas fa-calendar"></i>', lbl: 'Timetable' },
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
         { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exams & Reports' },
+        { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Cards' },
       ]
     },
     {
@@ -866,6 +761,7 @@ const MENUS = {
       g: 'Academics', items: [
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
         { id: 'materials', ic: '<i class="fas fa-cloud-upload-alt"></i>', lbl: 'Upload Learning Materials' },
+        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
       ]
     },
     {
@@ -894,6 +790,7 @@ const MENUS = {
     },
     {
       g: 'Academic', items: [
+        { id: 'assignments', ic: '<i class="fas fa-clipboard-list"></i>', lbl: 'Assignments' },
         { id: 'attendance', ic: '<i class="fas fa-check-circle"></i>', lbl: 'Attendance' },
         { id: 'exams', ic: '<i class="fas fa-file-alt"></i>', lbl: 'Exam Results' },
         { id: 'reportcards', ic: '<i class="fas fa-certificate"></i>', lbl: 'Report Card' },
@@ -1895,6 +1792,7 @@ function renderMain() {
     subjects: () => subjectsModule(),
     timetable: () => timetableModule(),
     attendance: () => attendanceModule(),
+    assignments: () => assignmentsModule(),
     grades: () => gradesModule(),
     exams: () => examsModule(),
     admissions: () => admissionsModule(),

@@ -34,7 +34,8 @@ if ($method === 'GET') {
 }
 
 if ($method === 'PUT') {
-    if (!fetchUser($db, $id)) jsonResponse(['success' => false, 'message' => 'User not found'], 404);
+    $targetUser = fetchUser($db, $id);
+    if (!$targetUser) jsonResponse(['success' => false, 'message' => 'User not found'], 404);
     $body   = getRequestBody();
     $fields = [];
     $params = [];
@@ -63,7 +64,33 @@ if ($method === 'PUT') {
 
     if (empty($fields)) jsonResponse(['success' => false, 'message' => 'No fields to update'], 422);
     $params[] = $id;
-    $db->prepare("UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
+    $db->beginTransaction();
+    try {
+        $db->prepare("UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?")->execute($params);
+        if ($targetUser['role'] === 'Parent') {
+            $parentFields = [];
+            $parentParams = [];
+            foreach (['name', 'email', 'phone', 'address'] as $field) {
+                if (array_key_exists($field, $body)) {
+                    $parentFields[] = "$field = ?";
+                    $parentParams[] = $field === 'name' ? htmlspecialchars(trim($body[$field]), ENT_QUOTES) : $body[$field];
+                }
+            }
+            if ($parentFields) {
+                $parentParams[] = $id;
+                $db->prepare("UPDATE parents SET " . implode(', ', $parentFields) . " WHERE user_id = ?")->execute($parentParams);
+            }
+        }
+        if ($targetUser['role'] === 'Teacher') {
+            $staffFields=[];$staffParams=[];
+            foreach(['name','email','phone','address'] as $field){if(array_key_exists($field,$body)){$staffFields[]="$field = ?";$staffParams[]=$field==='name'?htmlspecialchars(trim($body[$field]),ENT_QUOTES):$body[$field];}}
+            if($staffFields){$staffParams[]=$id;$db->prepare("UPDATE staff SET ".implode(', ',$staffFields)." WHERE user_id = ? AND category = 'Teaching'")->execute($staffParams);}
+        }
+        $db->commit();
+    } catch (Throwable $e) {
+        if ($db->inTransaction()) $db->rollBack();
+        jsonResponse(['success' => false, 'message' => 'Profile update failed'], 500);
+    }
     jsonResponse(['success' => true, 'message' => 'User updated']);
 }
 

@@ -49,7 +49,7 @@ if ($method === 'GET') {
 
     // Attach children for each parent
     $childStmt = $db->prepare(
-        "SELECT ps.parent_id, s.id AS student_id, s.student_code,
+        "SELECT ps.parent_id, ps.relationship, s.id AS student_id, s.student_code,
                 s.name AS student_name, c.name AS class_name,
                 COALESCE((
                     SELECT f.status

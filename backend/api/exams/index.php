@@ -11,7 +11,7 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-requireAuth();
+$user = requireAuth();
 $db = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 $id = (int)($_GET['id'] ?? 0);
@@ -78,10 +78,20 @@ function examPayload(PDO $db, array $body): array {
         $status
     ];
 }
+function teacherExamClassIds(PDO $db,array $user):array{$s=$db->prepare("SELECT s.id,t.class_assigned FROM staff s LEFT JOIN teachers t ON t.staff_id=s.id WHERE s.category='Teaching' AND (s.user_id=? OR LOWER(s.email)=LOWER(?) OR LOWER(s.name)=LOWER(?)) ORDER BY s.user_id=? DESC LIMIT 1");$s->execute([$user['id'],$user['email']??'',$user['name']??'',$user['id']]);$t=$s->fetch();if(!$t)return[];$s=$db->prepare("SELECT DISTINCT c.id FROM classes c WHERE c.teacher_id=? OR c.name=? OR EXISTS(SELECT 1 FROM subjects sub WHERE sub.class_id=c.id AND sub.teacher_id=?)");$s->execute([(int)$t['id'],$t['class_assigned']??'',(int)$t['id']]);return array_map('intval',$s->fetchAll(PDO::FETCH_COLUMN));}
 
 if ($method === 'GET') {
     $where = ['1=1'];
     $params = [];
+    if (($user['role'] ?? '') === 'Teacher') { $ids=teacherExamClassIds($db,$user);if(!$ids)jsonResponse(['success'=>true,'data'=>[]]);$where[]='e.class_id IN ('.implode(',',array_fill(0,count($ids),'?')).')';$params=array_merge($params,$ids); }
+    if (($user['role'] ?? '') === 'Student') {
+        $studentStmt=$db->prepare("SELECT class_id FROM students WHERE user_id=? AND status='Active' LIMIT 1");
+        $studentStmt->execute([$user['id']]);
+        $studentClassId=(int)($studentStmt->fetchColumn()?:0);
+        if(!$studentClassId)jsonResponse(['success'=>true,'data'=>[]]);
+        $where[]='e.class_id = ?';
+        $params[]=$studentClassId;
+    }
     if (!empty($_GET['class_id'])) { $where[] = 'e.class_id = ?'; $params[] = (int)$_GET['class_id']; }
     if (!empty($_GET['term'])) { $where[] = 'e.term = ?'; $params[] = $_GET['term']; }
     if (!empty($_GET['academic_year'])) { $where[] = 'e.academic_year = ?'; $params[] = $_GET['academic_year']; }

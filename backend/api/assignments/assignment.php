@@ -43,8 +43,11 @@ function normalizeAssignmentStatus(?string $status): string {
     }
     return $status;
 }
+function assignmentEditorTeacherId(PDO $db,array $user):int{$s=$db->prepare("SELECT id FROM staff WHERE category='Teaching' AND (user_id=? OR LOWER(email)=LOWER(?) OR LOWER(name)=LOWER(?)) ORDER BY user_id=? DESC LIMIT 1");$s->execute([$user['id'],$user['email']??'',$user['name']??'',$user['id']]);return(int)($s->fetchColumn()?:0);}
+function requireAssignmentOwner(PDO $db,array $user,int $id):void{if(($user['role']??'')!=='Teacher')return;$s=$db->prepare('SELECT teacher_id FROM assignments WHERE id=?');$s->execute([$id]);if((int)$s->fetchColumn()!==assignmentEditorTeacherId($db,$user))jsonResponse(['success'=>false,'message'=>'Assignment not found'],404);}
 
 if ($method === 'GET') {
+    requireAssignmentOwner($db,$user,$id);
     $stmt = $db->prepare(
         "SELECT a.*, c.name AS class_name, s.name AS teacher_name,
                 (SELECT COUNT(*) FROM assignment_submissions sub WHERE sub.assignment_id = a.id) AS submitted_count,
@@ -63,6 +66,7 @@ if ($method === 'GET') {
 if ($method === 'PUT') {
     requireRole(['Admin', 'Teacher']);
     $body = getRequestBody();
+    requireAssignmentOwner($db,$user,$id);
     $fields = []; $params = [];
     if (!assignmentExists($db, $id)) {
         jsonResponse(['success' => false, 'message' => 'Assignment not found'], 404);
@@ -106,6 +110,7 @@ if ($method === 'PUT') {
 
 if ($method === 'DELETE') {
     requireRole(['Admin', 'Teacher']);
+    requireAssignmentOwner($db,$user,$id);
     if (!assignmentExists($db, $id)) {
         jsonResponse(['success' => false, 'message' => 'Assignment not found'], 404);
     }

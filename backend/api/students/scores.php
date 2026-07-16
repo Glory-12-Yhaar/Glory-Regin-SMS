@@ -12,11 +12,14 @@ require_once __DIR__ . '/../middleware/auth.php';
 $user   = requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
+function scoreTeacher(PDO $db,array $u):int{$s=$db->prepare("SELECT id FROM staff WHERE category='Teaching' AND (user_id=? OR LOWER(email)=LOWER(?) OR LOWER(name)=LOWER(?)) ORDER BY user_id=? DESC LIMIT 1");$s->execute([$u['id'],$u['email']??'',$u['name']??'',$u['id']]);return(int)($s->fetchColumn()?:0);}
+function teacherScoreAccess(PDO $db,int $tid,int $studentId,?string $subject=null):bool{$sql="SELECT COUNT(*) FROM students st WHERE st.id=? AND (EXISTS(SELECT 1 FROM classes c WHERE c.id=st.class_id AND c.teacher_id=?) OR EXISTS(SELECT 1 FROM subjects sub WHERE sub.class_id=st.class_id AND sub.teacher_id=?";$p=[$studentId,$tid,$tid];if($subject!==null){$sql.=' AND LOWER(sub.name)=LOWER(?)';$p[]=$subject;}$sql.='))';$s=$db->prepare($sql);$s->execute($p);return(int)$s->fetchColumn()>0;}
 
 // ── GET ───────────────────────────────────────────────────────
 if ($method === 'GET') {
     $studentId = (int)($_GET['student_id'] ?? 0);
     if (!$studentId) jsonResponse(['success' => false, 'message' => 'student_id required'], 422);
+    if (($user['role']??'')==='Teacher'&&!teacherScoreAccess($db,scoreTeacher($db,$user),$studentId))jsonResponse(['success'=>false,'message'=>'Student not found'],404);
 
     $term = $_GET['term']          ?? '1st Term';
     $year = $_GET['academic_year'] ?? '2024/2025';
@@ -44,6 +47,7 @@ if ($method === 'POST') {
     if (!$studentId || empty($scores)) {
         jsonResponse(['success' => false, 'message' => 'student_id and scores are required'], 422);
     }
+    if (($user['role']??'')==='Teacher'){$tid=scoreTeacher($db,$user);foreach($scores as $score){if(!teacherScoreAccess($db,$tid,$studentId,(string)($score['subject']??'')))jsonResponse(['success'=>false,'message'=>'Student and subject must be assigned to you'],403);}}
 
     $studentCheck = $db->prepare("SELECT COUNT(*) FROM students WHERE id = ?");
     $studentCheck->execute([$studentId]);

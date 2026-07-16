@@ -749,7 +749,10 @@ function viewStudent(studentId) {
     <div class="card">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Academic Status</span></div>
       <div class="stats-row" style="grid-template-columns:repeat(2,1fr);gap:12px">
-        ${[['<i class="fas fa-check-circle"></i>', 'Attendance', student.attendance, 'si-green'], ['<i class="fas fa-money-bill"></i>', 'Fees', student.fees_status, 'si-' + ({ Paid: 'green', Pending: 'warning', Partial: 'gold' }[student.fees_status] || 'gray')], ['<i class="fas fa-graduation-cap"></i>', 'Status', student.status, 'si-info'], ['<i class="fas fa-building"></i>', 'Class', student.student_class, 'si-blue']].map(([ic, lbl, val, cls]) => '<div class="stat-card ' + cls + '"><div class="stat-val">' + val + '</div><div class="stat-lbl">' + lbl + '</div></div>').join('')}
+        ${(currentRole === 'Teacher'
+          ? [['Attendance', student.attendance, 'si-green'], ['Status', student.status, 'si-info'], ['Class', student.student_class, 'si-blue']]
+          : [['Attendance', student.attendance, 'si-green'], ['Fees', student.fees_status, 'si-' + ({ Paid: 'green', Pending: 'warning', Partial: 'gold' }[student.fees_status] || 'gray')], ['Status', student.status, 'si-info'], ['Class', student.student_class, 'si-blue']]
+        ).map(([lbl, val, cls]) => '<div class="stat-card ' + cls + '"><div class="stat-val">' + escapeHtml(val || 'Not recorded') + '</div><div class="stat-lbl">' + lbl + '</div></div>').join('')}
       </div>
     </div>
   </div>
@@ -769,7 +772,7 @@ function viewStudent(studentId) {
   </div>
   
   <div style="display:flex;gap:8px;margin-top:20px">
-    <button class="btn btn-primary" onclick="editStudent('${studentId}')"><i class="fas fa-edit"></i> Edit</button>
+    ${currentRole === 'Admin' ? `<button class="btn btn-primary" onclick="editStudent('${escapeAttr(studentId)}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
     <button class="btn btn-secondary" onclick="navTo('students')">Back to Students</button>
   </div>`;
 
@@ -934,11 +937,15 @@ function updateStudentTable(students) {
   const isAdmin = currentRole === 'Admin';
 
   if (students.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400)">No students found</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${currentRole === 'Teacher' ? 9 : 10}" style="text-align:center;padding:30px;color:var(--gray-400)">No students found</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = students.map((s, i) => studentTableRowHtml(s, i, isAdmin)).join('');
+  tbody.innerHTML = students.map((s, i) => currentRole === 'Teacher' ? teacherStudentTableRowHtml(s, i) : studentTableRowHtml(s, i, isAdmin)).join('');
+}
+
+function teacherStudentTableRowHtml(s, i) {
+  return `<tr style="cursor:pointer" onclick="viewStudent('${escapeAttr(s.student_id)}')"><td>${i + 1}</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-${escapeAttr(s.avatar_color || 'blue')}">${escapeHtml((s.name || 'S').slice(0, 1))}</div><strong>${escapeHtml(s.name || '')}</strong></div></td><td>${escapeHtml(s.student_id || '')}</td><td>${escapeHtml(s.student_class || '')}</td><td>${escapeHtml(s.gender || 'Not recorded')}</td><td>${escapeHtml(s.dob || 'Not recorded')}</td><td>${escapeHtml(s.attendance || 'N/A')}</td><td><span class="badge ${s.status === 'Active' ? 'b-success' : 'b-warning'}">${escapeHtml(s.status || '')}</span></td><td><button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();viewStudent('${escapeAttr(s.student_id)}')"><i class="fas fa-eye"></i> View</button></td></tr>`;
 }
 
 function studentTableRowHtml(s, i, isAdmin) {
@@ -998,15 +1005,21 @@ function studentsModule() {
     <button class="btn btn-secondary" onclick="importStudentsCSV()" style="cursor:pointer"><i class="fas fa-upload"></i> Import CSV</button>
     <button class="btn btn-secondary" onclick="exportStudentsData()" style="cursor:pointer"><i class="fas fa-download"></i> Export</button>` : '';
   const roleNotice = !isAdmin ? '<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only students in your assigned classes.</div>' : '';
-  const studentRows = visibleStudents.map((s, i) => studentTableRowHtml(s, i, isAdmin)).join('');
+  const studentRows = currentRole === 'Teacher'
+    ? (visibleStudents.map(teacherStudentTableRowHtml).join('') || '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray-500)">No active students were found in your assigned classes.</td></tr>')
+    : visibleStudents.map((s, i) => studentTableRowHtml(s, i, isAdmin)).join('');
+  const studentTableHeader = currentRole === 'Teacher'
+    ? '<tr><th>#</th><th>Student</th><th>ID No.</th><th>Class</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Status</th><th>Actions</th></tr>'
+    : '<tr><th>#</th><th>Student</th><th>ID No.</th><th>Class</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Fees</th><th>Status</th><th>Actions</th></tr>';
 
   return hdr('Students Module', isAdmin ? 'Manage all student records, enrollment and academic data' : 'Students in your assigned classes', 'Students') +
     renderPageTemplate('pages/admin/students/index.html', {
       adminActions,
       classOptions,
       roleNotice,
+      studentTableHeader,
       studentRows,
-      pagination: paginationHtml()
+      pagination: isAdmin ? paginationHtml() : ''
     });
 }
 
@@ -1497,7 +1510,8 @@ function exportTeachersData() {
 function teachersModule() {
   const isStudent = currentRole === 'Student';
   const isParent = currentRole === 'Parent';
-  const studentClass = isStudent ? 'JHS 1' : null;
+  if (isParent) return parentTeachersModule();
+  const studentClass = isStudent ? getCurrentStudentClass() : null;
 
   // For students, filter teachers to only show:
   // 1. Teachers of subjects they're taking
@@ -1561,6 +1575,16 @@ function teachersModule() {
     filteredTeachers = getActiveTeachers(teachersData).filter(t => visibleTeacherIds.has(t.teacher_id));
   }
 
+  if (isStudent) {
+    const cards = filteredTeachers.map(teacher => {
+      const teacherSubjects = subjectsData.filter(subject => subject.teacher_id === teacher.teacher_id).map(subject => subject.name);
+      const isClassTeacher = classesData.some(cls => cls.name === studentClass && cls.teacher_id === teacher.teacher_id);
+      return `<div class="card"><div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px"><div class="av av-lg av-${teacher.avatar_color || 'blue'}">${escapeHtml(getInitials(teacher.name, 'TC'))}</div><div><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(teacher.name)}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(teacher.position || teacher.department || 'Teaching Staff')}</div>${isClassTeacher ? '<span class="badge b-success" style="margin-top:6px">Class Teacher</span>' : ''}</div></div><div style="font-size:11px;color:var(--gray-500);margin-bottom:8px"><i class="fas fa-book"></i> ${escapeHtml(teacherSubjects.join(', ') || teacher.subject || 'Subject not recorded')}</div>${teacher.email ? `<div style="font-size:11px;color:var(--gray-500);margin-bottom:5px"><i class="fas fa-envelope"></i> ${escapeHtml(teacher.email)}</div>` : ''}${teacher.phone ? `<div style="font-size:11px;color:var(--gray-500)"><i class="fas fa-phone"></i> ${escapeHtml(teacher.phone)}</div>` : ''}</div>`;
+    }).join('') || '<div class="card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-500)">No teachers are assigned to your class subjects.</div>';
+    const notice = `<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> Teachers assigned to ${escapeHtml(studentClass)} and its subjects.</div>`;
+    return hdr('My Teachers', `Teaching staff for ${escapeHtml(studentClass)}`, 'Teachers') + renderPageTemplate('pages/admin/teachers/index.html', { roleNotice: notice, teacherCards: cards });
+  }
+
   const roleNotice = isStudent ? `
     <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px">
       <i class="fas fa-info-circle"></i> Viewing teachers who teach your subjects and your form class teacher
@@ -1584,6 +1608,27 @@ function teachersModule() {
 
   return hdr('Teachers Module', 'View teacher profiles and subject assignments', 'Teachers') +
     renderPageTemplate('pages/admin/teachers/index.html', { roleNotice, teacherCards });
+}
+
+function parentTeachersModule() {
+  const teachers = Array.isArray(window.dashboardReportData?.parent?.teachers) ? window.dashboardReportData.parent.teachers : [];
+  const cards = teachers.map((teacher, index) => `
+    <article class="card">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:14px">
+        <div class="av av-lg av-${['blue', 'gold', 'purple'][index % 3]}">${escapeHtml(getInitials(teacher.name, 'TC'))}</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--blue-dark)">${escapeHtml(teacher.name)}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(teacher.position || teacher.subject || 'Teacher')}</div><span class="badge b-success" style="margin-top:6px">${escapeHtml(teacher.status || 'Active')}</span></div>
+      </div>
+      <div style="display:grid;gap:8px;font-size:12px;margin-bottom:14px">
+        <div><i class="fas fa-book"></i> <strong>Subject:</strong> ${escapeHtml(teacher.subject || 'General')}</div>
+        <div><i class="fas fa-building"></i> <strong>Department:</strong> ${escapeHtml(teacher.department || 'Academic')}</div>
+        <div><i class="fas fa-users"></i> <strong>Class assignment:</strong> ${escapeHtml(teacher.class_assigned || 'Subject teacher')}</div>
+        <div><i class="fas fa-graduation-cap"></i> <strong>Qualifications:</strong> ${escapeHtml(teacher.qualifications || 'Not provided')}</div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${teacher.phone ? `<a class="btn btn-secondary btn-xs" href="tel:${escapeAttr(teacher.phone)}"><i class="fas fa-phone"></i> Call</a>` : ''}${teacher.email ? `<a class="btn btn-primary btn-xs" href="mailto:${escapeAttr(teacher.email)}"><i class="fas fa-envelope"></i> Email</a>` : ''}</div>
+    </article>`).join('');
+  return hdr('Teachers', 'Contact teachers assigned to your linked children', 'Teachers') + `
+    <div style="margin-bottom:16px;padding:12px 14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);font-size:12px;color:var(--blue-dark)"><i class="fas fa-lock"></i> Only class and subject teachers connected to your linked children are shown.</div>
+    <div class="g3">${cards || '<div class="card" style="grid-column:1/-1;text-align:center;color:var(--gray-500);padding:36px">No assigned teacher contacts were found.</div>'}</div>`;
 }
 
 // -----------------------------------
@@ -1827,6 +1872,14 @@ function viewClassStudents(classId) {
 
   // Get students in this class
   const classStudents = getActiveStudents(enrolledStudents).filter(s => s.student_class === classData.name);
+  const classStudentHeader = currentRole === 'Teacher'
+    ? '<tr><th>#</th><th>Student</th><th>ID No.</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Status</th></tr>'
+    : '<tr><th>#</th><th>Student</th><th>ID No.</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Fees</th><th>Status</th></tr>';
+  const classStudentRows = classStudents.length === 0
+    ? `<tr><td colspan="${currentRole === 'Teacher' ? 7 : 8}" style="text-align:center;padding:20px;color:var(--gray-400)">No students in this class yet</td></tr>`
+    : classStudents.map((s, i) => currentRole === 'Teacher'
+      ? `<tr><td>${i + 1}</td><td><strong>${escapeHtml(s.name || '')}</strong></td><td>${escapeHtml(s.student_id || '')}</td><td>${escapeHtml(s.gender || 'Not recorded')}</td><td>${escapeHtml(s.dob || 'Not recorded')}</td><td>${escapeHtml(s.attendance || 'N/A')}</td><td><span class="badge ${s.status === 'Active' ? 'b-success' : 'b-warning'}">${escapeHtml(s.status || '')}</span></td></tr>`
+      : '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + s.avatar_color + '">' + s.name[0] + '</div><strong>' + s.name + '</strong></div></td><td style="font-size:11px;color:var(--gray-400)">' + s.student_id + '</td><td><span class="badge ' + ((s.gender_abbr === 'F') ? 'b-purple' : 'b-info') + '">' + s.gender + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + s.dob + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + (s.attendance) + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + s.fees_status + '</span></td><td><span class="badge b-success">' + s.status + '</span></td></tr>').join('');
 
   let html = hdr('Class Students', 'View all students in ' + classData.name, 'Classes') + `
   <div class="card mb20">
@@ -1854,10 +1907,8 @@ function viewClassStudents(classId) {
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-users"></i> Enrolled Students (${classStudents.length})</span></div>
     <table class="tbl">
-      <thead><tr><th>#</th><th>Student</th><th>ID No.</th><th>Gender</th><th>DOB</th><th>Attendance</th><th>Fees</th><th>Status</th></tr></thead>
-      <tbody>
-        ${classStudents.length === 0 ? '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--gray-400)">No students in this class yet</td></tr>' : classStudents.map((s, i) => '<tr><td style="color:var(--gray-400);font-size:11px">' + (i + 1) + '</td><td><div style="display:flex;align-items:center;gap:9px"><div class="av av-sm av-' + s.avatar_color + '">' + s.name[0] + '</div><strong>' + s.name + '</strong></div></td><td style="font-size:11px;color:var(--gray-400)">' + s.student_id + '</td><td><span class="badge ' + ((s.gender_abbr === 'F') ? 'b-purple' : 'b-info') + '">' + s.gender + '</span></td><td style="font-size:11px;color:var(--gray-500)">' + s.dob + '</td><td style="font-weight:600;color:' + (parseFloat(s.attendance) >= 90 ? 'var(--success)' : 'var(--warning)') + '">' + (s.attendance) + '</td><td><span class="badge ' + (s.fees_status === 'Paid' ? 'b-success' : (s.fees_status === 'Pending' ? 'b-danger' : 'b-warning')) + '">' + s.fees_status + '</span></td><td><span class="badge b-success">' + s.status + '</span></td></tr>').join('')}
-      </tbody>
+      <thead>${classStudentHeader}</thead>
+      <tbody>${classStudentRows}</tbody>
     </table>
   </div>
   
@@ -2212,24 +2263,26 @@ function classesModule() {
   const isAdmin = currentRole === 'Admin';
   const visibleClasses = getVisibleClassesForRole(classesData);
   const totalStudents = visibleClasses.reduce((sum, c) => sum + parseInt(c.students || 0, 10), 0);
-  const avgClassSize = visibleClasses.length ? Math.round(totalStudents / visibleClasses.length) : 0;
+  const avgClassSize = visibleClasses.length ? Math.round(totalStudents / visibleClasses.length) : null;
+  const attendanceValues = visibleClasses.map(c => parseFloat(c.attendance)).filter(Number.isFinite);
+  const averageAttendance = attendanceValues.length ? attendanceValues.reduce((sum, value) => sum + value, 0) / attendanceValues.length : null;
   const statsCards = [
     statCard('<i class="fas fa-building"></i>', visibleClasses.length, isAdmin ? 'Total Classes' : 'My Classes', isAdmin ? 'All levels' : 'Assigned to you', 'neu', 'si-blue'),
     statCard('<i class="fas fa-graduation-cap"></i>', totalStudents, 'Total Students', isAdmin ? 'All classes' : 'My classes', 'neu', 'si-gold'),
-    statCard('<i class="fas fa-chalkboard-user"></i>', visibleClasses.length, 'Class Teachers', isAdmin ? 'One per class' : 'Your assignments', 'neu', 'si-green'),
-    statCard('<i class="fas fa-chart-bar"></i>', avgClassSize, 'Avg Class Size', 'Balanced', 'neu', 'si-purple')
+    statCard('<i class="fas fa-chart-bar"></i>', avgClassSize === null ? 'N/A' : avgClassSize, 'Avg Class Size', visibleClasses.length ? 'Assigned classes' : 'No assigned classes', 'neu', 'si-green'),
+    statCard('<i class="fas fa-check-circle"></i>', averageAttendance === null ? 'N/A' : averageAttendance.toFixed(1) + '%', 'Avg Attendance', visibleClasses.length ? 'Assigned classes' : 'No attendance data', 'neu', 'si-purple')
   ].join('');
   const adminActions = isAdmin ? '<button class="btn btn-primary" onclick="openCreateClass()"><i class="fas fa-plus"></i> Add Class</button>' : '';
   const roleNotice = !isAdmin ? '<div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-info-circle"></i> You are viewing only classes assigned to you.</div>' : '';
   const classCards = visibleClasses.map((c) => `
     <div class="card" style="cursor:pointer" onclick="if(!event.target.closest('button')) viewClassStudents('${c.class_id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${c.name}</div>
+        <div style="font-size:18px;font-weight:800;color:var(--blue-dark)">${escapeHtml(c.name || '')}</div>
       </div>
-      <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${c.teacher}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px"><i class="fas fa-chalkboard-user"></i> ${escapeHtml(c.teacher || 'Not assigned')}</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0">
         <span><i class="fas fa-users"></i> <strong>${parseInt(c.students || 0, 10)}</strong> students</span>
-        <span style="color:var(--success);font-weight:700">${c.attendance}</span>
+        <span style="color:var(--success);font-weight:700">${escapeHtml(c.attendance || 'N/A')}</span>
       </div>
       <div class="prog-bar mb16"><div class="prog-fill pf-blue" style="width:${c.attendance}"></div></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -2238,7 +2291,7 @@ function classesModule() {
         ${isAdmin ? `<button class="btn btn-primary btn-xs" style="flex:1" onclick="manageClass('${c.class_id}')">Manage</button>` : ''}
         ${isAdmin ? `<button class="btn btn-danger btn-xs" style="flex:1" onclick="deleteClass('${c.class_id}')">Delete</button>` : ''}
       </div>
-    </div>`).join('');
+    </div>`).join('') || '<div class="card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-500)">No classes are assigned to this teacher account.</div>';
 
   return hdr('Classes Module', isAdmin ? 'Manage classes and teacher assignments' : 'Your assigned classes', 'Classes') +
     renderPageTemplate('pages/admin/classes/index.html', { statsCards, adminActions, roleNotice, classCards });
@@ -2286,14 +2339,14 @@ function subjectsModule() {
         </div>
         ` : ''}
       </div>
-      <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${s.name}</div>
-      <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px"><i class="fas fa-chalkboard-user"></i> ${s.teacher}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--blue-dark);margin-bottom:4px">${escapeHtml(s.name || '')}</div>
+      <div style="font-size:11px;color:var(--gray-400);margin-bottom:8px"><i class="fas fa-chalkboard-user"></i> ${escapeHtml(s.teacher || 'Not assigned')}</div>
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
         <span class="badge ${s.type === 'Core' ? 'b-success' : s.type === 'Elective' ? 'b-warning' : 'b-info'}">${s.type}</span>
-        <span class="badge b-gray">${s.classes}</span>
+        <span class="badge b-gray">${escapeHtml(s.classes || 'No class assigned')}</span>
       </div>
-      <div style="font-size:11px;color:var(--gray-500)">${s.hours}</div>
-    </div>`).join('');
+      <div style="font-size:11px;color:var(--gray-500)">${escapeHtml(s.hours || 'Hours not recorded')}</div>
+    </div>`).join('') || `<div class="card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-500)">${isStudent ? 'No subjects are assigned to your class.' : 'No subjects are assigned to this teacher account.'}</div>`;
 
   return hdr('Subjects Module', moduleSubtitle, 'Subjects') +
     renderPageTemplate('pages/admin/subjects/index.html', { controlPanel, subjectCards });
@@ -2312,7 +2365,7 @@ function getCurrentTeacherId() {
     const haystack = [t.teacher_id, t.email, t.name, t.subject].map(normalizeIdentity);
     return identity.some(id => haystack.includes(id) || haystack.some(v => v.includes(id) || id.includes(v)));
   });
-  return teacher?.teacher_id || 'T001';
+  return teacher?.teacher_id || null;
 }
 
 function getCurrentTeacherProfile() {
@@ -2391,7 +2444,7 @@ function getCurrentStudentRecord() {
   if (user?.student_id || user?.studentId) {
     const id = user.student_id || user.studentId;
     const found = enrolledStudents.find(s => s.student_id === id);
-    if (found) return { ...found, feeAmount: found.feeAmount || 2400 };
+    if (found) return { ...found, feeAmount: found.feeAmount || 0 };
   }
 
   const identity = [user?.username, user?.email, user?.name].map(normalizeIdentity).filter(Boolean);
@@ -2399,7 +2452,7 @@ function getCurrentStudentRecord() {
     const studentName = normalizeIdentity(s.name);
     return identity.some(id => studentName === id || studentName.includes(id) || id.includes(studentName));
   });
-  if (matched) return { ...matched, feeAmount: matched.feeAmount || 2400 };
+  if (matched) return { ...matched, feeAmount: matched.feeAmount || 0 };
 
   return {
     student_id: '',
@@ -2434,7 +2487,7 @@ function getReadableClassForRole(fallbackClass) {
     const assignedClassNames = getAssignedClassNamesForTeacher();
     const savedClass = window.selectedTimetableClass;
     if (savedClass && assignedClassNames.includes(savedClass)) return savedClass;
-    return assignedClassNames[0] || fallbackClass;
+    return assignedClassNames[0] || '';
   }
   return fallbackClass;
 }
@@ -2917,6 +2970,9 @@ function timetableModule() {
   const isAdmin = currentRole === 'Admin';
   loadTimetablesFromStorage();
 
+  if (currentRole === 'Teacher') return teacherClassTimetableModule();
+  if (currentRole === 'Student') return studentClassTimetableModule();
+
   // Determine class to show
   const allClasses = classesData.map(c => c.name);
   let selectedClass;
@@ -2978,6 +3034,65 @@ function timetableModule() {
   <div id="tt-display-area">${timetableHtml}</div>`;
 }
 
+function studentClassTimetableModule() {
+  const className = getCurrentStudentClass();
+  const terms = Object.keys(timetablesData[className] || {}).filter(Boolean);
+  const selectedTerm = terms.includes(window.selectedTimetableTerm) ? window.selectedTimetableTerm : (terms[0] || '');
+  window.selectedTimetableClass = className;
+  window.selectedTimetableTerm = selectedTerm;
+  return hdr('My Timetable', `Class timetable for ${escapeHtml(className)}`, 'Timetable') + `
+    <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+      ${terms.length ? `<select class="select-sm" onchange="window.selectedTimetableTerm=this.value;renderMain()">${terms.map(term => `<option value="${escapeAttr(term)}" ${term === selectedTerm ? 'selected' : ''}>${escapeHtml(term)}</option>`).join('')}</select>` : ''}
+      <button class="btn btn-secondary" onclick="printTimetable()"><i class="fas fa-print"></i> Print</button>
+      <button class="btn btn-secondary" onclick="exportTimetablePDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+      <div style="flex:1"></div><span class="badge b-info">${escapeHtml(className)}</span>
+    </div>
+    <div id="tt-display-area">${selectedTerm ? getTimetableDisplay(className, selectedTerm) : '<div class="card" style="text-align:center;color:var(--gray-500);padding:40px">No timetable has been published for your class.</div>'}</div>`;
+}
+
+function teacherClassTimetableModule() {
+  const assignedClasses = getVisibleClassesForRole(classesData);
+  const classNames = assignedClasses.map(c => c.name).filter(Boolean);
+  const savedClass = window.selectedTimetableClass;
+  const selectedClass = savedClass && classNames.includes(savedClass) ? savedClass : (classNames[0] || '');
+  window.selectedTimetableClass = selectedClass;
+
+  const availableTerms = selectedClass && timetablesData[selectedClass]
+    ? Object.keys(timetablesData[selectedClass]).filter(Boolean)
+    : [];
+  const savedTerm = window.selectedTimetableTerm;
+  const selectedTerm = savedTerm && availableTerms.includes(savedTerm) ? savedTerm : (availableTerms[0] || '');
+  window.selectedTimetableTerm = selectedTerm;
+
+  const configuredClasses = classNames.filter(name => timetablesData[name] && Object.keys(timetablesData[name]).length > 0).length;
+  const visiblePeriods = selectedClass && selectedTerm ? (timetablesData[selectedClass]?.[selectedTerm]?.length || 0) : 0;
+  const classTabs = classNames.length
+    ? `<div class="tt-class-tabs" id="tt-class-tabs">${classNames.map(name => `<button class="tt-class-tab${name === selectedClass ? ' active' : ''}" onclick="selectTimetableClass('${escapeAttr(name)}')">${escapeHtml(name)}</button>`).join('')}</div>`
+    : '';
+  const termOptions = availableTerms.length
+    ? availableTerms.map(term => `<option value="${escapeAttr(term)}" ${term === selectedTerm ? 'selected' : ''}>${escapeHtml(term)}</option>`).join('')
+    : '<option value="">No timetable term available</option>';
+  const display = selectedClass && selectedTerm
+    ? getTimetableDisplay(selectedClass, selectedTerm)
+    : '<div class="card" style="text-align:center;padding:50px 24px;color:var(--gray-500)"><i class="fas fa-calendar-xmark" style="font-size:42px;color:var(--gray-300);margin-bottom:14px"></i><div>No timetable has been recorded for your assigned classes.</div></div>';
+
+  return hdr('Class Timetable', 'Database schedules for your assigned classes', 'Timetable') + `
+    <div class="stats-row">
+      ${statCard('<i class="fas fa-building"></i>', classNames.length, 'Assigned Classes', 'Teacher scope', 'neu', 'si-blue')}
+      ${statCard('<i class="fas fa-calendar-check"></i>', configuredClasses, 'With Timetable', 'Recorded schedules', 'neu', 'si-green')}
+      ${statCard('<i class="fas fa-clock"></i>', visiblePeriods, 'Schedule Rows', selectedTerm || 'No selected term', 'neu', 'si-gold')}
+      ${statCard('<i class="fas fa-eye"></i>', 'Read Only', 'Access', 'Assigned classes only', 'neu', 'si-purple')}
+    </div>
+    <div style="margin-bottom:18px;padding:14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);color:var(--blue-dark);font-size:12px"><i class="fas fa-lock"></i> Only timetables for classes linked to your class or subject assignments are available.</div>
+    <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+      <select id="tt-term-select" class="select-sm" onchange="saveTTTerm();refreshTimetableView()" ${availableTerms.length ? '' : 'disabled'}>${termOptions}</select>
+      <button class="btn btn-secondary" onclick="printTimetable()" ${selectedTerm ? '' : 'disabled'}><i class="fas fa-print"></i> Print</button>
+      <button class="btn btn-secondary" onclick="exportTimetablePDF()" ${selectedTerm ? '' : 'disabled'}><i class="fas fa-file-export"></i> Export</button>
+    </div>
+    ${classTabs}
+    <div id="tt-display-area">${display}</div>`;
+}
+
 // -- backend-backed timetable state --
 function loadTimetablesFromStorage() {
 }
@@ -2989,6 +3104,12 @@ function saveTTTerm() {
 }
 function selectTimetableClass(className) {
   window.selectedTimetableClass = className;
+  const terms = timetablesData[className] ? Object.keys(timetablesData[className]).filter(Boolean) : [];
+  if (!terms.includes(window.selectedTimetableTerm)) window.selectedTimetableTerm = terms[0] || '';
+  if (currentRole === 'Teacher') {
+    renderMain();
+    return;
+  }
   document.querySelectorAll('.tt-class-tab').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.trim() === className);
   });
@@ -2998,8 +3119,8 @@ function refreshTimetableView() {
   const el = document.getElementById('tt-term-select');
   const term = el ? el.value : (window.selectedTimetableTerm || 'Term 1, 2025');
   const cls = currentRole === 'Admin'
-    ? (window.selectedTimetableClass || classesData[0].name)
-    : getReadableClassForRole('Basic 2');
+    ? (window.selectedTimetableClass || classesData[0]?.name || '')
+    : getReadableClassForRole('');
   const area = document.getElementById('tt-display-area');
   if (area) area.innerHTML = getTimetableDisplay(cls, term);
 }
@@ -3370,7 +3491,7 @@ function formatAttendanceDate(dateString) {
 
 function getAttendanceStudentsForClass(className) {
   const students = enrolledStudents.filter(s => (s.student_class || s.class) === className);
-  return students.length ? students : enrolledStudents.slice(0, 6);
+  return students;
 }
 
 function buildAttendanceSummaryRows() {
@@ -3397,23 +3518,27 @@ function attendanceModule() {
     const selectedClass = window.selectedAttendanceClass;
     const className = assignedClasses.includes(selectedClass) ? selectedClass : (assignedClasses[0] || '');
     const students = className ? getAttendanceStudentsForClass(className) : [];
+    const attendanceDate = window.selectedAttendanceDate || today;
+    const recorded = new Map((window.teacherAttendanceData || []).filter(row => row.attendance_date === attendanceDate).map(row => [String(row.student_id), row]));
     return hdr('Attendance Module', 'Record daily class attendance', 'Attendance') + `
     <div class="card mb20">
       <div class="card-hdr"><span class="card-title"><i class="fas fa-clipboard-list"></i> Class Attendance</span></div>
       <div class="f-row" style="margin-bottom:16px">
-        <div class="f-field"><label>Date</label><input id="attendance-date" type="date" value="${today}"></div>
+        <div class="f-field"><label>Date</label><input id="attendance-date" type="date" value="${escapeAttr(attendanceDate)}" onchange="window.selectedAttendanceDate=this.value;renderMain()"></div>
         <div class="f-field"><label>Class</label><select id="attendance-class" onchange="window.selectedAttendanceClass=this.value;renderMain()">${assignedClasses.map(c => `<option value="${escapeAttr(c)}" ${c === className ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select></div>
       </div>
       ${className ? `
       <table class="tbl">
-        <thead><tr><th>No.</th><th>Student Name</th><th style="text-align:center">Present (P)</th><th style="text-align:center">Absent (A)</th></tr></thead>
+        <thead><tr><th>No.</th><th>Student Name</th><th style="text-align:center">Present</th><th style="text-align:center">Absent</th><th style="text-align:center">Late</th><th style="text-align:center">Excused</th></tr></thead>
         <tbody>
           ${students.map((s, i) => `
-          <tr class="attendance-row" data-student-id="${escapeAttr(s.student_id || '')}" data-student-name="${escapeAttr(s.name)}">
+          <tr class="attendance-row" data-student-id="${escapeAttr(String(s.id || ''))}" data-student-name="${escapeAttr(s.name)}">
             <td>${i + 1}</td>
             <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-${s.avatar_color || 'blue'}">${(s.name || 'S')[0]}</div><strong>${escapeHtml(s.name)}</strong></div></td>
-            <td style="text-align:center"><input type="radio" name="att_${i}" value="P" checked></td>
-            <td style="text-align:center"><input type="radio" name="att_${i}" value="A"></td>
+            <td style="text-align:center"><input type="radio" name="att_${i}" value="Present" ${!recorded.get(String(s.id)) || recorded.get(String(s.id))?.status === 'Present' ? 'checked' : ''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${i}" value="Absent" ${recorded.get(String(s.id))?.status === 'Absent' ? 'checked' : ''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${i}" value="Late" ${recorded.get(String(s.id))?.status === 'Late' ? 'checked' : ''}></td>
+            <td style="text-align:center"><input type="radio" name="att_${i}" value="Excused" ${recorded.get(String(s.id))?.status === 'Excused' ? 'checked' : ''}></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -3423,28 +3548,56 @@ function attendanceModule() {
     </div>`;
   }
 
-  if (currentRole === 'Parent' || currentRole === 'Student') {
-    const visibleStudents = currentRole === 'Student' ? [getCurrentStudentRecord()] : getParentChildren().map(c => ({ name: c.name, student_class: c.class, attendance: c.attendance + '%' }));
-    return hdr('Attendance Tracking', currentRole === 'Student' ? 'View your attendance record' : 'Monitor your children\'s attendance', 'Attendance') + `
-    <div class="g2">
-      ${visibleStudents.map(student => `
-      <div class="card">
-        <div class="card-hdr"><span class="card-title"><i class="fas fa-user-check"></i> ${escapeHtml(student.name)}</span></div>
-        <div class="stats-row" style="grid-template-columns:repeat(2,1fr)">
-          ${statCard('<i class="fas fa-check-circle"></i>', student.attendance || '96%', 'Attendance Rate', student.student_class || student.class || '', 'up', 'si-green')}
-          ${statCard('<i class="fas fa-building"></i>', escapeHtml(student.student_class || student.class || 'Class'), 'Class', 'View only', 'neu', 'si-blue')}
+  if (currentRole === 'Parent') {
+    const overview = window.dashboardReportData?.parent || {};
+    const children = Array.isArray(overview.children) ? overview.children : [];
+    const statusMeta = {
+      Present: { badge: 'b-success', icon: 'fa-check-circle' },
+      Absent: { badge: 'b-danger', icon: 'fa-times-circle' },
+      Late: { badge: 'b-warning', icon: 'fa-clock' },
+      Excused: { badge: 'b-info', icon: 'fa-file-circle-check' }
+    };
+    const cards = children.map(child => {
+      const summary = child.attendance_summary || { total: 0, present: 0, absent: 0, late: 0, excused: 0, rate: null };
+      const history = Array.isArray(child.attendance_history) ? child.attendance_history : [];
+      const rate = summary.rate === null || summary.rate === undefined ? 'N/A' : `${Number(summary.rate).toFixed(1)}%`;
+      const rateClass = summary.rate === null || summary.rate === undefined ? 'neu' : Number(summary.rate) >= 90 ? 'up' : Number(summary.rate) >= 75 ? 'neu' : 'dn';
+      const rateColor = summary.rate === null || summary.rate === undefined ? 'si-blue' : Number(summary.rate) >= 90 ? 'si-green' : Number(summary.rate) >= 75 ? 'si-gold' : 'si-red';
+      const rows = history.map(record => {
+        const meta = statusMeta[record.status] || { badge: 'b-gray', icon: 'fa-circle' };
+        return `<tr>
+          <td>${escapeHtml(formatAttendanceDate(record.attendance_date))}</td>
+          <td><span class="badge ${meta.badge}"><i class="fas ${meta.icon}"></i> ${escapeHtml(record.status)}</span></td>
+          <td>${escapeHtml(record.remarks || '—')}</td>
+          <td>${escapeHtml(record.recorded_by_name || 'School Staff')}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--gray-500);padding:20px">No attendance has been recorded for this student.</td></tr>';
+
+      return `<section class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-user-check"></i> ${escapeHtml(child.name)}</span><span class="card-act">${escapeHtml(child.class_name || 'Not assigned')} · ${escapeHtml(child.student_code || '')}</span></div>
+        <div class="stats-row" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+          ${statCard('<i class="fas fa-chart-pie"></i>', rate, 'Recorded Rate', `${Number(summary.present || 0)} of ${Number(summary.total || 0)} present`, rateClass, rateColor)}
+          ${statCard('<i class="fas fa-check-circle"></i>', Number(summary.present || 0), 'Present', `${Number(summary.late || 0)} late`, 'up', 'si-green')}
+          ${statCard('<i class="fas fa-times-circle"></i>', Number(summary.absent || 0), 'Absent', `${Number(summary.excused || 0)} excused`, Number(summary.absent || 0) ? 'dn' : 'up', Number(summary.absent || 0) ? 'si-red' : 'si-blue')}
         </div>
-        <table class="tbl">
-          <thead><tr><th>Date</th><th>Status</th><th>Class Teacher</th></tr></thead>
-          <tbody>
-            ${getAttendanceBatches().filter(b => b.records?.some(r => r.student === student.name)).slice(0, 5).map(b => {
-              const rec = b.records.find(r => r.student === student.name);
-              return `<tr><td>${formatAttendanceDate(b.date)}</td><td><span class="badge ${rec.status === 'P' ? 'b-success' : 'b-danger'}">${rec.status === 'P' ? 'Present' : 'Absent'}</span></td><td>${escapeHtml(b.teacherName || 'Class Teacher')}</td></tr>`;
-            }).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-500)">No submitted attendance records yet.</td></tr>'}
-          </tbody>
-        </table>
-      </div>`).join('')}
-    </div>`;
+        <div style="overflow-x:auto"><table class="tbl">
+          <thead><tr><th>Date</th><th>Status</th><th>Remarks</th><th>Recorded By</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </section>`;
+    }).join('');
+
+    return hdr('Attendance Tracking', 'View recorded attendance for your linked children', 'Attendance') + `
+      <div style="margin-bottom:16px;padding:12px 14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);font-size:12px;color:var(--blue-dark)"><i class="fas fa-info-circle"></i> Attendance rates on this page are calculated from the dated records shown below.</div>
+      <div style="display:grid;gap:18px">${cards || '<div class="card" style="text-align:center;color:var(--gray-500);padding:36px">No active children are linked to this parent account.</div>'}</div>`;
+  }
+
+  if (currentRole === 'Student') {
+    const student = window.dashboardReportData?.student || getCurrentStudentRecord();
+    const attendance = window.dashboardReportData?.attendance || { rate: Number(student.attendance || 0), records_count: 0, recent: [] };
+    const records = Array.isArray(attendance.recent) ? attendance.recent : [];
+    const statusClass = status => status === 'Present' ? 'b-success' : status === 'Absent' ? 'b-danger' : status === 'Late' ? 'b-warning' : 'b-info';
+    return hdr('My Attendance', 'Your recorded attendance history', 'Attendance') + `<div class="card"><div class="card-hdr"><span class="card-title"><i class="fas fa-user-check"></i> ${escapeHtml(student.name || '')}</span><span class="card-act">${escapeHtml(student.class_name || student.student_class || '')}</span></div><div class="stats-row" style="grid-template-columns:repeat(2,1fr)">${statCard('<i class="fas fa-chart-pie"></i>', `${Number(attendance.rate || 0).toFixed(1)}%`, 'Attendance Rate', `${Number(attendance.records_count || 0)} dated records`, Number(attendance.rate || 0) >= 75 ? 'up' : 'dn', Number(attendance.rate || 0) >= 75 ? 'si-green' : 'si-red')}${statCard('<i class="fas fa-building"></i>', escapeHtml(student.class_name || student.student_class || 'Not assigned'), 'Class', 'Read only', 'neu', 'si-blue')}</div><table class="tbl"><thead><tr><th>Date</th><th>Status</th><th>Remarks</th></tr></thead><tbody>${records.map(record => `<tr><td>${escapeHtml(formatAttendanceDate(record.attendance_date))}</td><td><span class="badge ${statusClass(record.status)}">${escapeHtml(record.status)}</span></td><td>${escapeHtml(record.remarks || '—')}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--gray-500);padding:20px">No attendance records have been entered.</td></tr>'}</tbody></table></div>`;
   }
 
   const rows = buildAttendanceSummaryRows();
@@ -3682,6 +3835,8 @@ function examsModule() {
   const subjectOptions = Object.keys(analytics.subjectPerformance || {});
   const classOptions = classesData.map(c => c.name);
 
+  if (isStudent) return studentExamResultsModule(examRows);
+
   if (isTeacher) {
     return hdr('Exam Schedule', 'View exam schedule information for your permitted classes', 'Exams') + `
     <div class="card">
@@ -3833,6 +3988,15 @@ function examsModule() {
   `;
 }
 
+function studentExamResultsModule(examRows) {
+  const scores = Array.isArray(window.gradesData) ? window.gradesData : [];
+  const periods = [...new Map(scores.map(row => [`${row.term}|${row.academic_year}`, { term: row.term, year: row.academic_year }])).values()];
+  const selected = periods.find(period => `${period.term}|${period.year}` === window.studentExamPeriod) || periods[0] || null;
+  if (selected) window.studentExamPeriod = `${selected.term}|${selected.year}`;
+  const visibleScores = selected ? scores.filter(row => row.term === selected.term && row.academic_year === selected.year) : [];
+  return hdr('Exam Results', 'Your exam schedule and stored results', 'Exams') + `<div class="mod-tabs"><div class="mod-tab active" onclick="switchExamTab(0)">Exam Schedule</div><div class="mod-tab" onclick="switchExamTab(1)">Results</div></div><div id="exam-tab-0" class="exam-tab-content" style="display:block"><div class="card"><div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> My Class Exam Schedule</span></div><table class="tbl"><thead><tr><th>Subject</th><th>Date</th><th>Duration</th><th>Venue</th><th>Invigilator</th><th>Status</th></tr></thead><tbody>${examRows.map(exam => `<tr><td><strong>${escapeHtml(exam.subject)}</strong></td><td>${escapeHtml(formatShortDate(exam.date))}</td><td>${escapeHtml(formatDuration(exam.duration))}</td><td>${escapeHtml(exam.venue || '—')}</td><td>${escapeHtml(exam.invigilator || '—')}</td><td><span class="badge b-info">${escapeHtml(exam.status || 'Scheduled')}</span></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">No exams are scheduled for your class.</td></tr>'}</tbody></table></div></div><div id="exam-tab-1" class="exam-tab-content" style="display:none"><div class="card"><div class="card-hdr"><span class="card-title"><i class="fas fa-chart-line"></i> Stored Results</span>${periods.length ? `<select onchange="window.studentExamPeriod=this.value;renderMain()">${periods.map(period => `<option value="${escapeAttr(`${period.term}|${period.year}`)}" ${selected && period.term === selected.term && period.year === selected.year ? 'selected' : ''}>${escapeHtml(period.term)} · ${escapeHtml(period.year)}</option>`).join('')}</select>` : ''}</div><table class="tbl"><thead><tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Grade</th></tr></thead><tbody>${visibleScores.map(score => `<tr><td><strong>${escapeHtml(score.subject)}</strong></td><td>${Number(score.classScore).toFixed(1)}</td><td>${Number(score.examScore).toFixed(1)}</td><td><strong>${Number(score.totalScore).toFixed(1)}</strong></td><td><span class="badge b-info">${escapeHtml(calculateGrade(Number(score.totalScore)))}</span></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:24px">No results have been entered for this reporting period.</td></tr>'}</tbody></table></div></div>`;
+}
+
 // GRADES ENTRY MODULE
 function gradesModule() {
   const classNames = currentRole === 'Teacher' ? getAssignedClassNamesForTeacher() : classesData.map(c => c.name);
@@ -3943,7 +4107,7 @@ function viewClassTimetable(className) {
   }
 
   window.selectedTimetableClass = className;
-  window.selectedTimetableTerm = 'Term 1, 2025';
+  window.selectedTimetableTerm = Object.keys(timetablesData[className] || {})[0] || '';
   navTo('timetable');
 }
 

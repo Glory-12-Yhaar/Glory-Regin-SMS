@@ -542,99 +542,25 @@ function visitorContact() {
 }
 
 function visitorGallery() {
+  const albums = Array.isArray(window.galleryData)
+    ? window.galleryData.filter(album => (album.status || 'Published') === 'Published')
+    : [];
+
+  const galleryHtml = albums.length ? albums.map(album => `
+    <div class="gal-item" style="background:${escapeAttr(album.bgColor || 'linear-gradient(135deg, #3b82f6, #1e3a5f)')};cursor:pointer" onclick="openModal(${JSON.stringify(`<div style="max-width:780px;padding:8px"><div style="padding:20px;border-radius:12px;background:${album.bgColor || 'linear-gradient(135deg, #3b82f6, #1e3a5f)'};color:white;margin-bottom:14px"><div style="font-size:20px;font-weight:700">${escapeHtml(album.title || 'Gallery Album')}</div><div style="font-size:12px;opacity:.9;margin-top:4px">${escapeHtml(album.category || 'School Events')} · ${escapeHtml(album.year || '')}</div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">${Array.from({ length: Math.max(4, Number(album.itemCount || 6)) }, (_, i) => `<div style="background:var(--gray-100);border-radius:10px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:26px"><i class="fas ${escapeAttr(album.icon || 'fa-images')}"></i></div>`).join('')}</div></div>`)} , true)">
+      <div class="gi-icon"><i class="fas ${escapeAttr(album.icon || 'fa-images')}"></i></div>
+      <div class="gi-label">${escapeHtml(album.title || 'Gallery Album')}</div>
+    </div>`).join('') : '<div style="grid-column:1/-1;text-align:center;color:var(--gray-500);padding:20px">No published gallery albums are available yet.</div>';
+
   return hdr('School Gallery', 'A visual journey through life at Glory Reign Preparatory School', 'Gallery') + `
-  <div class="gal-grid">
-    ${[['<i class="fas fa-running"></i>', 'Sports Day 2024', '#dbeafe'],
-    ['<i class="fas fa-graduation-cap"></i>', 'Prize Giving Ceremony', '#fef3c7'],
-    ['<i class="fas fa-book"></i>', 'School Library', '#ede9fe'],
-    ['<i class="fas fa-theater-masks"></i>', 'Drama & Arts Club', '#e0f2fe'],
-    ['<i class="fas fa-leaf"></i>', 'Beautiful Campus', '#d1fae5'],
-    ['<i class="fas fa-user"></i><i class="fas fa-laptop" style="margin-left:6px"></i>', 'ICT Laboratory', '#dbeafe'],
-    ['<i class="fas fa-palette"></i>', 'Art Exhibition', '#fef3c7'],
-    ['<i class="fas fa-trophy"></i>', 'Champions Cup 2024', '#fef3c7'],
-    ['<i class="fas fa-music"></i>', 'School Choir', '#ede9fe'],
-    ['<i class="fas fa-globe"></i>', 'Field Trip', '#d1fae5']].map(([icon, label, bg]) => `
-    <div class="gal-item" style="background:${bg}">
-      <div class="gi-icon">${icon}</div>
-      <div class="gi-label">${label}</div>
-    </div>`).join('')}
-  </div>`;
-}
-
-// -----------------------------------
-// ALUMNI GALLERY MODULE
-// -----------------------------------
-function galleryModule() {
-  return hdr('Alumni Gallery', 'Relive memories from school events, graduations, and reunions', 'Gallery') + `
-  <div class="toolbar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
-    <div class="search-bar" style="flex:1;min-width:200px"><span><i class="fas fa-search"></i></span><input id="gallery-search" placeholder="Search albums..." ></div>
-    <select class="select-sm"><option>All Categories</option><option>Graduations</option><option>Reunions</option><option>Sports</option><option>School Events</option></select>
-    <select class="select-sm"><option>All Years</option><option>2024</option><option>2023</option><option>2022</option><option>Older</option></select>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px;">
-    ${[
-      { title: 'Class of 2024 Graduation', category: 'Graduations', year: '2024', items: 124, icon: 'fa-graduation-cap', bg: 'linear-gradient(135deg, #3b82f6, #1e3a5f)' },
-      { title: 'Alumni Reunion Dinner', category: 'Reunions', year: '2023', items: 85, icon: 'fa-glass-cheers', bg: 'linear-gradient(135deg, #f59e0b, #d97706)' },
-      { title: 'Inter-House Sports Meet', category: 'Sports', year: '2024', items: 210, icon: 'fa-running', bg: 'linear-gradient(135deg, #10b981, #047857)' },
-      { title: '10th Anniversary Gala', category: 'School Events', year: '2022', items: 150, icon: 'fa-star', bg: 'linear-gradient(135deg, #8b5cf6, #5b21b6)' },
-      { title: 'Class of 2018 Get-together', category: 'Reunions', year: '2023', items: 42, icon: 'fa-users', bg: 'linear-gradient(135deg, #ef4444, #b91c1c)' },
-      { title: 'Science Fair Exhibition', category: 'School Events', year: '2023', items: 68, icon: 'fa-flask', bg: 'linear-gradient(135deg, #06b6d4, #0369a1)' }
-    ].map(album => `
-    <div class="card" style="padding:0;overflow:hidden;transition:transform 0.2s, box-shadow 0.2s;cursor:pointer;" onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 15px 30px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='none';this.style.boxShadow='var(--shadow)'" onclick="openAlbumView('${album.title}', '${album.icon}', '${album.bg}')">
-      <div style="height:160px;background:${album.bg};display:flex;align-items:center;justify-content:center;color:white;font-size:48px;position:relative">
-        <i class="fas ${album.icon}"></i>
-        <div style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.5);padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600"><i class="fas fa-camera"></i> ${album.items}</div>
-      </div>
-      <div style="padding:16px;">
-        <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:700;color:var(--gray-800)">${album.title}</h3>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <span class="badge b-info">${album.category}</span>
-          <span style="font-size:12px;color:var(--gray-500)"><i class="fas fa-calendar"></i> ${album.year}</span>
-        </div>
-      </div>
-    </div>`).join('')}
-  </div>`;
-}
-
-function openAlbumView(title, icon, bg) {
-  let photosHtml = '';
-  // Generate 12 mock photos
-  for(let i=1; i<=12; i++) {
-    let delay = i * 0.05;
-    photosHtml += `
-    <div style="background:var(--gray-100);border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--gray-300);font-size:32px;animation:fade-in 0.3s ease-out ${delay}s both;position:relative;overflow:hidden;cursor:zoom-in" onclick="this.style.transform='scale(1.05)';setTimeout(()=>this.style.transform='scale(1)', 200)">
-      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:${bg};opacity:0.1"></div>
-      <i class="fas ${icon}"></i>
-      <div style="position:absolute;bottom:8px;left:8px;font-size:10px;font-weight:600;color:var(--gray-500);background:rgba(255,255,255,0.8);padding:2px 6px;border-radius:4px">IMG_${1000 + i}.jpg</div>
-    </div>`;
-  }
-  
-  openModal(`
-    <div style="padding:24px;width:900px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid var(--gray-200);padding-bottom:16px">
-        <div>
-          <h2 style="margin:0;font-size:24px;color:var(--blue-dark);display:flex;align-items:center;gap:12px"><i class="fas ${icon}" style="color:var(--gold)"></i> ${title}</h2>
-          <div style="font-size:13px;color:var(--gray-500);margin-top:6px">12 Photos</div>
-        </div>
-        <button class="btn btn-secondary" onclick="closeModal()"><i class="fas fa-arrow-left"></i> Back to Gallery</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:16px;overflow-y:auto;padding-right:8px;padding-bottom:20px">
-        ${photosHtml}
-      </div>
-    </div>
-  `, true);
+  <div class="gal-grid">${galleryHtml}</div>`;
 }
 
 
 // -----------------------------------
 // TRANSPORT TRACKING MODULE (PARENT)
 // -----------------------------------
-const TRANSPORT_DATA = [
-  { id: 1, student: 'Ama Serwaa', bus: 'Bus A1', driver: 'Mr. Mensah', phone: '+233-543-123-456', route: 'East Ridge - Tunga', pickupTime: '7:30 AM', dropoffTime: '3:45 PM', status: 'Active', currentLocation: 'Tunga Junction', gpsTracking: true, stops: 4 },
-  { id: 2, student: 'Kweku Serwaa', bus: 'Bus B2', driver: 'Mr. Kofi Adu', phone: '+233-544-567-890', route: 'West Gate - Town Center', pickupTime: '7:15 AM', dropoffTime: '3:30 PM', status: 'Active', currentLocation: 'Market Street', gpsTracking: true, stops: 5 }
-];
-
-function transportModule() {
+function transportModuleLegacy() {
   const linkedChildNames = new Set(
     (typeof getParentChildren === 'function' ? getParentChildren() : [])
       .map(child => normalizeIdentity(child.name))
@@ -787,6 +713,27 @@ function callDriver(phone) {
   showToast(`<i class="fas fa-phone"></i> Calling ${phone}...`, 'info');
 }
 
+function transportModule() {
+  const assignments = Array.isArray(window.transportData) ? window.transportData : [];
+  const formatTime = value => value ? String(value).slice(0, 5) : 'Not set';
+  const cards = assignments.map(row => `
+    <article class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-bus"></i> ${escapeHtml(row.student_name)}</span><span class="badge ${row.status === 'Active' ? 'b-success' : 'b-warning'}">${escapeHtml(row.status)}</span></div>
+      <div style="font-size:12px;color:var(--gray-500);margin-bottom:14px">${escapeHtml(row.class_name || 'Not assigned')} · ${escapeHtml(row.student_code || '')}</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px">
+        <div style="padding:11px;background:var(--gray-50);border-radius:8px"><small>Bus</small><div style="font-weight:700">${escapeHtml(row.bus_number)}</div></div>
+        <div style="padding:11px;background:var(--gray-50);border-radius:8px"><small>Route</small><div style="font-weight:700">${escapeHtml(row.route_name)}</div></div>
+        <div style="padding:11px;background:var(--gray-50);border-radius:8px"><small>Pickup</small><div style="font-weight:700">${escapeHtml(formatTime(row.pickup_time))}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(row.pickup_point || 'Point not set')}</div></div>
+        <div style="padding:11px;background:var(--gray-50);border-radius:8px"><small>Drop-off</small><div style="font-weight:700">${escapeHtml(formatTime(row.dropoff_time))}</div><div style="font-size:11px;color:var(--gray-500)">${escapeHtml(row.dropoff_point || 'Point not set')}</div></div>
+      </div>
+      <div style="padding:12px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:12px"><div style="font-size:11px;color:var(--gray-500)">Driver</div><strong>${escapeHtml(row.driver_name)}</strong>${row.driver_phone ? `<a class="btn btn-secondary btn-xs" style="float:right" href="tel:${escapeAttr(row.driver_phone)}"><i class="fas fa-phone"></i> Call</a>` : ''}</div>
+      <div style="padding:12px;background:${Number(row.gps_enabled) ? 'var(--green-xpale)' : 'var(--gray-50)'};border-radius:8px"><div style="font-size:11px;color:var(--gray-500)">Latest recorded location</div><strong>${escapeHtml(row.current_location || (Number(row.gps_enabled) ? 'No location update recorded' : 'GPS tracking not enabled'))}</strong>${row.location_recorded_at ? `<div style="font-size:10px;color:var(--gray-500);margin-top:4px">Updated ${escapeHtml(new Date(String(row.location_recorded_at).replace(' ', 'T')).toLocaleString())}</div>` : ''}</div>
+    </article>`).join('');
+  return hdr('Transport Tracking', 'View school-recorded transport assignments and location updates', 'Transport') + `
+    <div style="margin-bottom:16px;padding:12px 14px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:var(--radius);font-size:12px;color:var(--blue-dark)"><i class="fas fa-info-circle"></i> Locations shown here are the latest updates recorded by the school. They are not simulated live GPS positions.</div>
+    <div class="g2">${cards || '<div class="card" style="grid-column:1/-1;text-align:center;color:var(--gray-500);padding:36px"><i class="fas fa-bus" style="display:block;font-size:30px;margin-bottom:10px"></i>No active transport assignment is recorded for your linked children.</div>'}</div>`;
+}
+
 function viewSafetyReport() {
   showToast('<i class="fas fa-file"></i> Safety Report: All buses pass safety inspections. Last inspection: March 10, 2025', 'info');
 }
@@ -875,7 +822,7 @@ function saveForm(message = 'Saved successfully!') {
 }
 
 // Save attendance
-function saveAttendance() {
+async function saveAttendance() {
   if (currentRole !== 'Teacher') {
     showToast('<i class="fas fa-times-circle"></i> Only class teachers can mark attendance', 'error');
     return;
@@ -891,9 +838,9 @@ function saveAttendance() {
   const records = Array.from(document.querySelectorAll('.attendance-row')).map(row => {
     const checked = row.querySelector('input[type="radio"]:checked');
     return {
-      studentId: row.dataset.studentId || '',
+      student_id: parseInt(row.dataset.studentId || 0, 10),
       student: row.dataset.studentName || '',
-      status: checked?.value || 'P'
+      status: checked?.value || 'Present'
     };
   });
 
@@ -902,10 +849,16 @@ function saveAttendance() {
     return;
   }
 
+  const apiRecords = records.map(record => ({ student_id: record.student_id, date, status: record.status }));
+  const result = await API.attendance.record(apiRecords);
+  if (!result?.success) {
+    showToast(result?.message || 'Attendance could not be saved', 'error');
+    return;
+  }
   const teacher = getCurrentTeacherProfile();
-  const teacherName = teacher?.name || getSessionUser()?.name || 'Class Teacher';
-  const present = records.filter(r => r.status === 'P').length;
-  const absent = records.filter(r => r.status === 'A').length;
+  const teacherName = teacher?.name || getSessionUser()?.name || '';
+  const present = records.filter(r => r.status === 'Present').length;
+  const absent = records.filter(r => r.status === 'Absent').length;
   const batch = {
     id: Date.now(),
     date,
@@ -921,6 +874,7 @@ function saveAttendance() {
   const batches = getAttendanceBatches().filter(b => !(b.className === className && b.date === date));
   batches.unshift(batch);
   saveAttendanceBatches(batches);
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-check-circle"></i> Attendance successfully recorded for ' + className + ' on ' + formatAttendanceDate(date) + '.', 'success', 5000);
   renderMain();
 }
@@ -1395,18 +1349,23 @@ function viewReportCard(studentName) {
     return;
   }
 
-  const student = STUDENTS_DATA[studentName];
+  const backendStudent = Array.isArray(enrolledStudents)
+    ? enrolledStudents.find(student => student.name === studentName || student.student_id === studentName)
+    : null;
+  const student = backendStudent || STUDENTS_DATA?.[studentName] || null;
   if (!student) {
     showToast('<i class="fas fa-times-circle"></i> Student not found', 'error');
     return;
   }
 
-  const term = document.getElementById('report-term-selector')?.value || student.term;
+  const term = document.getElementById('report-term-selector')?.value || student.term || '1st Term';
   const subjectScores = getStudentScoresWithGrades(studentName);
-  const totalMarks = calculateTotalMarks(student.scores);
-  const average = calculateAverage(student.scores);
+  const baseScores = student.scores || {};
+  const totalMarks = calculateTotalMarks(baseScores);
+  const average = calculateAverage(baseScores);
   const overallGrade = calculateGrade(average);
-  const { position, totalInClass } = calculateClassPosition(studentName, student.class);
+  const className = student.student_class || student.class || 'Not Assigned';
+  const { position, totalInClass } = calculateClassPosition(studentName, className);
   const remark = generateRemark(average);
 
   const subjectsHTML = Object.entries(subjectScores).map(([subject, scores]) => `
@@ -1459,8 +1418,8 @@ function viewReportCard(studentName) {
           <table style="width:100%;font-size:11px">
             <tbody>
               <tr><td style="padding:4px;font-weight:600;color:var(--gray-600);width:40%">Name:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${studentName}</td></tr>
-              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Student ID:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.id}</td></tr>
-              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Class:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.class}</td></tr>
+              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Student ID:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.id || student.student_id || student.studentCode || ''}</td></tr>
+              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Class:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.student_class || student.class || 'Not Assigned'}</td></tr>
             </tbody>
           </table>
         </div>
@@ -1471,8 +1430,8 @@ function viewReportCard(studentName) {
           <table style="width:100%;font-size:11px">
             <tbody>
               <tr><td style="padding:4px;font-weight:600;color:var(--gray-600);width:40%">Term:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${term}</td></tr>
-              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Academic Year:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.academicYear}</td></tr>
-              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Attendance:</td><td style="padding:4px;color:${student.attendance >= 90 ? 'var(--success)' : student.attendance >= 80 ? 'var(--info)' : 'var(--warning)'};font-weight:700">${student.attendance}%</td></tr>
+              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Academic Year:</td><td style="padding:4px;color:var(--blue-dark);font-weight:700">${student.academicYear || student.academic_year || '2024/2025'}</td></tr>
+              <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Attendance:</td><td style="padding:4px;color:${Number(student.attendance || 0) >= 90 ? 'var(--success)' : Number(student.attendance || 0) >= 80 ? 'var(--info)' : 'var(--warning)'};font-weight:700">${Number(student.attendance || 0)}%</td></tr>
               <tr><td style="padding:4px;font-weight:600;color:var(--gray-600)">Status:</td><td style="padding:4px;color:var(--success);font-weight:700">? Promoted</td></tr>
             </tbody>
           </table>
@@ -1520,7 +1479,7 @@ function viewReportCard(studentName) {
         </div>
         <div style="padding:10px;background:var(--success-light);border-radius:8px;border-left:4px solid var(--success);text-align:center">
           <div style="font-size:9px;color:var(--gray-600);margin-bottom:3px;font-weight:600">ATTENDANCE</div>
-          <div style="font-size:18px;font-weight:700;color:var(--success)">${student.attendance}%</div>
+          <div style="font-size:18px;font-weight:700;color:var(--success)">${Number(student.attendance || 0)}%</div>
           <div style="font-size:8px;color:var(--gray-600);margin-top:2px">Present</div>
         </div>
       </div>
@@ -1537,7 +1496,7 @@ function viewReportCard(studentName) {
           <div style="text-align:center">
             <div style="height:35px;border-bottom:1px solid var(--gray-700);margin-bottom:4px"></div>
             <div style="font-weight:700;color:var(--gray-800);font-size:10px">Class Teacher</div>
-            <div style="color:var(--gray-600);font-size:9px">${student.classTeacher}</div>
+            <div style="color:var(--gray-600);font-size:9px">${student.classTeacher || student.class_teacher || 'Class Teacher'}</div>
           </div>
           <div style="text-align:center">
             <div style="height:35px;border-bottom:1px solid var(--gray-700);margin-bottom:4px"></div>
@@ -1571,20 +1530,24 @@ function onStudentSelected() {
   const previewSection = document.getElementById('selected-report-preview');
   const summarySection = document.getElementById('report-summary-section');
 
-  if (studentName && STUDENTS_DATA[studentName]) {
-    const student = STUDENTS_DATA[studentName];
-    const average = calculateAverage(student.scores);
-    const { position, totalInClass } = calculateClassPosition(studentName, student.class);
+  const backendStudent = Array.isArray(enrolledStudents)
+    ? enrolledStudents.find(student => student.name === studentName || student.student_id === studentName)
+    : null;
+  if (studentName && (backendStudent || STUDENTS_DATA?.[studentName])) {
+    const student = backendStudent || STUDENTS_DATA[studentName];
+    const average = calculateAverage(student.scores || {});
+    const className = student.student_class || student.class || 'Not Assigned';
+    const { position, totalInClass } = calculateClassPosition(studentName, className);
 
     previewSection.innerHTML = `
       <div style="display:flex;gap:20px;align-items:center;padding:15px;background:var(--blue-xpale);border-radius:8px">
         <div style="flex:1">
           <h4 style="margin:0 0 10px 0;color:var(--blue-dark);font-weight:700">${studentName}</h4>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;font-size:12px">
-            <div><span style="color:var(--gray-600)">Class:</span> <span style="font-weight:600;color:var(--blue-dark)">${student.class}</span></div>
+            <div><span style="color:var(--gray-600)">Class:</span> <span style="font-weight:600;color:var(--blue-dark)">${className}</span></div>
             <div><span style="color:var(--gray-600)">Average:</span> <span style="font-weight:600;color:var(--info)">${average}%</span></div>
             <div><span style="color:var(--gray-600)">Position:</span> <span style="font-weight:600;color:var(--warning)">${position} of ${totalInClass}</span></div>
-            <div><span style="color:var(--gray-600)">Attendance:</span> <span style="font-weight:600;color:var(--success)">${student.attendance}%</span></div>
+            <div><span style="color:var(--gray-600)">Attendance:</span> <span style="font-weight:600;color:var(--success)">${Number(student.attendance || 0)}%</span></div>
           </div>
         </div>
         <button class="btn btn-primary" onclick="viewReportCard('${studentName}')" style="padding:12px 24px;white-space:nowrap"><i class="fas fa-file"></i> View Full Report</button>
@@ -1663,7 +1626,7 @@ function printReportCard(studentName) {
   }, 250);
 }
 
-function downloadReportCardPDF(studentName) {
+function downloadLegacyReportCardPDF(studentName) {
   ensureReportCardScores();
   const entry = getReportCardEntriesForRole().find(([id, data]) => id === studentName || data.name === studentName);
   if (!entry) {

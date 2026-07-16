@@ -43,7 +43,7 @@ function getTeacherDashboardProfile(PDO $db, array $user): ?array {
     return $profile ?: null;
 }
 
-if (in_array($role, ['Admin', 'Teacher'])) {
+if ($role === 'Admin') {
     // Student counts per class
     $data['total_students'] = (int)$db->query("SELECT COUNT(*) FROM students WHERE status = 'Active'")->fetchColumn();
     $data['total_staff']    = (int)$db->query("SELECT COUNT(*) FROM staff WHERE status = 'Active'")->fetchColumn();
@@ -113,7 +113,7 @@ if ($role === 'Teacher') {
             'classes_count' => 0,
             'subjects_count' => 0,
             'students_count' => 0,
-            'attendance_average' => 0,
+            'attendance_average' => null,
             'active_assignments' => 0,
         ],
     ];
@@ -166,8 +166,6 @@ if ($role === 'Teacher') {
             $teacherData['students'] = $studentStmt->fetchAll();
         }
 
-        $classFilter = !empty($classIds) ? " OR a.class_id IN (" . implode(',', array_fill(0, count($classIds), '?')) . ")" : "";
-        $assignmentParams = array_merge([$staffId], $classIds);
         $assignmentStmt = $db->prepare(
             "SELECT a.id, a.title, a.subject, a.class_id, a.teacher_id, a.due_date, a.created_date,
                     a.max_score, a.status, a.instructions, a.attachment, c.name AS class_name,
@@ -175,33 +173,30 @@ if ($role === 'Teacher') {
                     (SELECT COUNT(*) FROM students st WHERE st.class_id = a.class_id AND st.status = 'Active') AS total_students
              FROM assignments a
              LEFT JOIN classes c ON c.id = a.class_id
-             WHERE a.teacher_id = ?$classFilter
+             WHERE a.teacher_id = ?
              ORDER BY a.due_date ASC, a.id DESC
              LIMIT 6"
         );
-        $assignmentStmt->execute($assignmentParams);
+        $assignmentStmt->execute([$staffId]);
         $teacherData['assignments'] = $assignmentStmt->fetchAll();
 
-        $scheduleClassFilter = !empty($classIds) ? " OR t.class_id IN (" . implode(',', array_fill(0, count($classIds), '?')) . ")" : "";
-        $scheduleParams = array_merge([$staffId], $classIds);
         $scheduleStmt = $db->prepare(
             "SELECT t.id, t.period_label, t.subject, t.day_of_week, t.start_time, t.end_time,
                     t.room, t.term, c.name AS class_name
              FROM timetable t
              INNER JOIN classes c ON c.id = t.class_id
-             WHERE t.teacher_id = ?$scheduleClassFilter
+             WHERE t.teacher_id = ?
              ORDER BY FIELD(t.day_of_week, 'Monday','Tuesday','Wednesday','Thursday','Friday'),
                       t.start_time ASC, t.id ASC
              LIMIT 8"
         );
-        $scheduleStmt->execute($scheduleParams);
+        $scheduleStmt->execute([$staffId]);
         $teacherData['schedule'] = $scheduleStmt->fetchAll();
 
-        $activeClassFilter = !empty($classIds) ? " OR class_id IN (" . implode(',', array_fill(0, count($classIds), '?')) . ")" : "";
         $activeAssignmentStmt = $db->prepare(
-            "SELECT COUNT(*) FROM assignments WHERE status = 'Active' AND (teacher_id = ?$activeClassFilter)"
+            "SELECT COUNT(*) FROM assignments WHERE status = 'Active' AND teacher_id = ?"
         );
-        $activeAssignmentStmt->execute($assignmentParams);
+        $activeAssignmentStmt->execute([$staffId]);
         $activeAssignmentsCount = (int)$activeAssignmentStmt->fetchColumn();
 
         $noticeStmt = $db->prepare(
@@ -222,7 +217,7 @@ if ($role === 'Teacher') {
             'classes_count' => count($classes),
             'subjects_count' => count($teacherData['subjects']),
             'students_count' => count($teacherData['students']),
-            'attendance_average' => $attendanceValues ? round(array_sum($attendanceValues) / count($attendanceValues), 1) : 0,
+            'attendance_average' => $attendanceValues ? round(array_sum($attendanceValues) / count($attendanceValues), 1) : null,
             'active_assignments' => $activeAssignmentsCount,
         ];
     }
@@ -311,21 +306,351 @@ if ($role === 'Student') {
     $yearStmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'academic_year' LIMIT 1");
     $year     = $yearStmt->fetchColumn() ?: '2024/2025';
 
-    // Get student record linked to this user
-    $stStmt = $db->prepare("SELECT s.id, s.name, s.student_code, s.attendance, c.name AS class_name FROM students s LEFT JOIN classes c ON c.id = s.class_id WHERE s.user_id = ? LIMIT 1");
+    // Build one authenticated, student-only overview payload.
+    $stStmt = $db->prepare(
+        "SELECT s.id, s.name, s.student_code, s.attendance, s.class_id,
+                c.name AS class_name, c.stream, staff.name AS class_teacher
+         FROM students s
+         LEFT JOIN classes c ON c.id = s.class_id
+         LEFT JOIN staff ON staff.id = c.teacher_id
+         WHERE s.user_id = ? AND s.status = 'Active'
+         LIMIT 1"
+    );
     $stStmt->execute([$user['id']]);
     $student = $stStmt->fetch();
     if ($student) {
         $data['student'] = $student;
-        // Latest term scores
-        $scStmt = $db->prepare("SELECT subject, class_score, exam_score, (class_score+exam_score) AS total FROM student_scores WHERE student_id = ? AND term = ? AND academic_year = ?");
+        $data['term'] = $term;
+        $data['academic_year'] = $year;
+
+        $scStmt = $db->prepare(
+            "SELECT subject, class_score, exam_score, (class_score + exam_score) AS total
+             FROM student_scores
+             WHERE student_id = ? AND term = ? AND academic_year = ?
+             ORDER BY subject ASC"
+        );
         $scStmt->execute([$student['id'], $term, $year]);
         $data['scores'] = $scStmt->fetchAll();
-        // Fees
-        $feStmt = $db->prepare("SELECT amount_due, amount_paid, status FROM fees WHERE student_id = ? AND term = ? AND academic_year = ? LIMIT 1");
+
+        $subjectStmt = $db->prepare(
+            "SELECT sub.id, sub.name, sub.type, sub.hours, staff.name AS teacher_name
+             FROM subjects sub
+             LEFT JOIN staff ON staff.id = sub.teacher_id
+             WHERE sub.class_id = ?
+             ORDER BY sub.name ASC"
+        );
+        $subjectStmt->execute([$student['class_id']]);
+        $data['subjects'] = $subjectStmt->fetchAll();
+
+        $attendanceStmt = $db->prepare(
+            "SELECT attendance_date, status, remarks
+             FROM attendance
+             WHERE student_id = ?
+             ORDER BY attendance_date DESC, id DESC"
+        );
+        $attendanceStmt->execute([$student['id']]);
+        $attendance = $attendanceStmt->fetchAll();
+        $attendanceTotal = count($attendance);
+        $attendancePresent = count(array_filter($attendance, fn($row) => in_array($row['status'], ['Present', 'Late'], true)));
+        $data['attendance'] = [
+            'rate' => $attendanceTotal ? round(($attendancePresent / $attendanceTotal) * 100, 1) : (float)$student['attendance'],
+            'records_count' => $attendanceTotal,
+            'recent' => array_slice($attendance, 0, 5),
+        ];
+
+        $assignmentStmt = $db->prepare(
+            "SELECT a.id, a.title, a.subject, a.due_date, a.status,
+                    CASE WHEN sub.id IS NULL THEN 0 ELSE 1 END AS submitted
+             FROM assignments a
+             LEFT JOIN assignment_submissions sub
+               ON sub.assignment_id = a.id AND sub.student_id = ?
+             WHERE a.class_id = ?
+             ORDER BY a.due_date ASC, a.id DESC
+             LIMIT 6"
+        );
+        $assignmentStmt->execute([$student['id'], $student['class_id']]);
+        $data['assignments'] = $assignmentStmt->fetchAll();
+        $data['pending_assignments'] = count(array_filter(
+            $data['assignments'],
+            fn($row) => !(int)$row['submitted'] && in_array($row['status'], ['Active', 'Upcoming'], true)
+        ));
+
+        $scheduleStmt = $db->prepare(
+            "SELECT t.id, t.period_label, t.subject, t.start_time, t.end_time, t.room,
+                    staff.name AS teacher_name
+             FROM timetable t
+             LEFT JOIN staff ON staff.id = t.teacher_id
+             WHERE t.class_id = ? AND t.day_of_week = DAYNAME(CURDATE())
+             ORDER BY t.start_time ASC, t.id ASC"
+        );
+        $scheduleStmt->execute([$student['class_id']]);
+        $data['today_timetable'] = $scheduleStmt->fetchAll();
+
+        $noticeStmt = $db->query(
+            "SELECT id, icon, title, notice_date, priority
+             FROM notices
+             WHERE status = 'Published' AND audience IN ('All', 'Students')
+             ORDER BY notice_date DESC, id DESC
+             LIMIT 3"
+        );
+        $data['notices'] = $noticeStmt->fetchAll();
+
+        $rankStmt = $db->prepare(
+            "SELECT student_id, average_score
+             FROM (
+                 SELECT st.id AS student_id, AVG(ss.class_score + ss.exam_score) AS average_score
+                 FROM students st
+                 JOIN student_scores ss ON ss.student_id = st.id
+                 WHERE st.class_id = ? AND st.status = 'Active'
+                   AND ss.term = ? AND ss.academic_year = ?
+                 GROUP BY st.id
+             ) ranked
+             ORDER BY average_score DESC, student_id ASC"
+        );
+        $rankStmt->execute([$student['class_id'], $term, $year]);
+        $rankedStudents = $rankStmt->fetchAll();
+        $rankIndex = array_search((int)$student['id'], array_map(fn($row) => (int)$row['student_id'], $rankedStudents), true);
+        $data['standing'] = [
+            'position' => $rankIndex === false ? null : $rankIndex + 1,
+            'ranked_students' => count($rankedStudents),
+            'average' => $rankIndex === false ? null : round((float)$rankedStudents[$rankIndex]['average_score'], 1),
+        ];
+
+        $feStmt = $db->prepare(
+            "SELECT amount_due, amount_paid, (amount_due - amount_paid) AS balance, status
+             FROM fees WHERE student_id = ? AND term = ? AND academic_year = ? LIMIT 1"
+        );
         $feStmt->execute([$student['id'], $term, $year]);
         $data['fees'] = $feStmt->fetch();
+        $paymentStmt = $db->prepare(
+            "SELECT payment_date, receipt_no, amount
+             FROM payments WHERE student_id = ?
+             ORDER BY payment_date DESC, id DESC LIMIT 1"
+        );
+        $paymentStmt->execute([$student['id']]);
+        $data['latest_payment'] = $paymentStmt->fetch() ?: null;
     }
+}
+
+if ($role === 'Parent') {
+    $termStmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'current_term' LIMIT 1");
+    $term = $termStmt->fetchColumn() ?: '1st Term';
+    $yearStmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'academic_year' LIMIT 1");
+    $year = $yearStmt->fetchColumn() ?: '2024/2025';
+
+    $parentStmt = $db->prepare(
+        "SELECT id, name, contact_person, phone, email
+         FROM parents
+         WHERE user_id = ?
+         LIMIT 1"
+    );
+    $parentStmt->execute([$user['id']]);
+    $parent = $parentStmt->fetch();
+
+    $parentData = [
+        'profile' => $parent ?: null,
+        'term' => $term,
+        'academic_year' => $year,
+        'children' => [],
+        'teachers' => [],
+        'pending_assignments' => [],
+        'events' => [],
+        'stats' => [
+            'children_count' => 0,
+            'attendance_average' => null,
+            'latest_report_average' => null,
+            'latest_report_grade' => null,
+            'pending_assignments_count' => 0,
+            'fees_pending_count' => 0,
+            'total_fees_due' => 0,
+            'total_fees_paid' => 0,
+            'total_fees_balance' => 0,
+        ],
+    ];
+
+    if ($parent) {
+        $teachersStmt = $db->prepare(
+            "SELECT DISTINCT st.id, st.staff_code, st.name, st.email, st.phone,
+                    st.department, st.position, st.qualifications, st.gender,
+                    st.performance, st.avatar, st.status,
+                    tr.subject, tr.class_assigned, tr.experience, tr.schedule
+             FROM parent_student ps
+             INNER JOIN students child ON child.id = ps.student_id AND child.status = 'Active'
+             INNER JOIN classes child_class ON child_class.id = child.class_id
+             LEFT JOIN subjects child_subject ON child_subject.class_id = child_class.id
+             INNER JOIN staff st ON (st.id = child_class.teacher_id OR st.id = child_subject.teacher_id)
+                                AND st.category = 'Teaching' AND st.status = 'Active'
+             LEFT JOIN teachers tr ON tr.staff_id = st.id
+             WHERE ps.parent_id = ?
+             ORDER BY st.name ASC"
+        );
+        $teachersStmt->execute([$parent['id']]);
+        $parentData['teachers'] = $teachersStmt->fetchAll();
+
+        $childrenStmt = $db->prepare(
+            "SELECT s.id, s.student_code, s.name, s.gender, s.dob, s.photo, s.attendance,
+                    s.status, s.created_at AS enrolled_at,
+                    c.id AS class_id, c.name AS class_name, c.stream, c.class_teacher,
+                    ps.relationship,
+                    COALESCE(f.amount_due, 0) AS amount_due,
+                    COALESCE(f.amount_paid, 0) AS amount_paid,
+                    GREATEST(COALESCE(f.amount_due, 0) - COALESCE(f.amount_paid, 0), 0) AS balance,
+                    COALESCE(f.status, 'Pending') AS fee_status,
+                    scores.report_average, scores.subject_count,
+                    (SELECT COUNT(*)
+                     FROM assignments child_assignment
+                     LEFT JOIN assignment_submissions child_submission
+                            ON child_submission.assignment_id = child_assignment.id
+                           AND child_submission.student_id = s.id
+                     WHERE child_assignment.class_id = s.class_id
+                       AND child_assignment.status IN ('Active', 'Upcoming')
+                       AND child_submission.id IS NULL) AS pending_assignments_count,
+                    (SELECT COUNT(*) FROM attendance child_attendance
+                     WHERE child_attendance.student_id = s.id) AS attendance_records_count,
+                    (SELECT COUNT(*) FROM attendance child_attendance
+                     WHERE child_attendance.student_id = s.id
+                       AND child_attendance.status = 'Present') AS present_records_count,
+                    (SELECT COUNT(*) FROM payments child_payment
+                     WHERE child_payment.student_id = s.id
+                       AND child_payment.term = ?
+                       AND child_payment.academic_year = ?) AS payment_records_count
+             FROM parent_student ps
+             INNER JOIN students s ON s.id = ps.student_id
+             LEFT JOIN classes c ON c.id = s.class_id
+             LEFT JOIN fees f
+                    ON f.student_id = s.id AND f.term = ? AND f.academic_year = ?
+             LEFT JOIN (
+                 SELECT student_id, ROUND(AVG(class_score + exam_score), 1) AS report_average,
+                        COUNT(*) AS subject_count
+                 FROM student_scores
+                 WHERE term = ? AND academic_year = ?
+                 GROUP BY student_id
+             ) scores ON scores.student_id = s.id
+             WHERE ps.parent_id = ? AND s.status = 'Active'
+             ORDER BY s.name ASC"
+        );
+        $childrenStmt->execute([$term, $year, $term, $year, $term, $year, $parent['id']]);
+        $children = $childrenStmt->fetchAll();
+
+        $gradeRangesStmt = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'grading_ranges' LIMIT 1");
+        $gradeRanges = json_decode((string)($gradeRangesStmt->fetchColumn() ?: '[]'), true);
+        $reportScoresStmt = $db->prepare(
+            "SELECT id, subject, class_score, exam_score,
+                    ROUND(class_score + exam_score, 2) AS total
+             FROM student_scores
+             WHERE student_id = ? AND term = ? AND academic_year = ?
+             ORDER BY subject ASC"
+        );
+        foreach ($children as &$child) {
+            $average = $child['report_average'] !== null ? (float)$child['report_average'] : null;
+            $child['report_grade'] = null;
+            if ($average !== null && is_array($gradeRanges)) {
+                foreach ($gradeRanges as $range) {
+                    if ($average >= (float)($range['min'] ?? 0) && $average <= (float)($range['max'] ?? 100)) {
+                        $child['report_grade'] = $range['grade'] ?? null;
+                        break;
+                    }
+                }
+            }
+            $reportScoresStmt->execute([$child['id'], $term, $year]);
+            $child['report_scores'] = $reportScoresStmt->fetchAll();
+            foreach ($child['report_scores'] as &$score) {
+                $score['grade'] = null;
+                $score['remark'] = null;
+                foreach ($gradeRanges as $range) {
+                    if ((float)$score['total'] >= (float)($range['min'] ?? 0) && (float)$score['total'] <= (float)($range['max'] ?? 100)) {
+                        $score['grade'] = $range['grade'] ?? null;
+                        $score['remark'] = $range['remark'] ?? null;
+                        break;
+                    }
+                }
+            }
+            unset($score);
+        }
+        unset($child);
+
+        $attendanceStmt = $db->prepare(
+            "SELECT a.id, a.student_id, a.attendance_date, a.status, a.remarks,
+                    COALESCE(u.name, 'School Staff') AS recorded_by_name
+             FROM parent_student ps
+             INNER JOIN attendance a ON a.student_id = ps.student_id
+             LEFT JOIN users u ON u.id = a.recorded_by
+             WHERE ps.parent_id = ?
+             ORDER BY a.attendance_date DESC, a.id DESC
+             LIMIT 500"
+        );
+        $attendanceStmt->execute([$parent['id']]);
+        $attendanceByStudent = [];
+        foreach ($attendanceStmt->fetchAll() as $record) {
+            $attendanceByStudent[(int)$record['student_id']][] = $record;
+        }
+        foreach ($children as &$child) {
+            $records = $attendanceByStudent[(int)$child['id']] ?? [];
+            $counts = ['Present' => 0, 'Absent' => 0, 'Late' => 0, 'Excused' => 0];
+            foreach ($records as $record) {
+                if (array_key_exists($record['status'], $counts)) {
+                    $counts[$record['status']]++;
+                }
+            }
+            $totalRecords = count($records);
+            $child['attendance_history'] = $records;
+            $child['attendance_summary'] = [
+                'total' => $totalRecords,
+                'present' => $counts['Present'],
+                'absent' => $counts['Absent'],
+                'late' => $counts['Late'],
+                'excused' => $counts['Excused'],
+                'rate' => $totalRecords > 0 ? round(($counts['Present'] / $totalRecords) * 100, 1) : null,
+            ];
+        }
+        unset($child);
+        $parentData['children'] = $children;
+
+        $attendanceValues = array_values(array_filter(
+            array_map(fn($child) => $child['attendance'] !== null ? (float)$child['attendance'] : null, $children),
+            fn($value) => $value !== null
+        ));
+        $reportValues = array_values(array_filter(
+            array_map(fn($child) => $child['report_average'] !== null ? (float)$child['report_average'] : null, $children),
+            fn($value) => $value !== null
+        ));
+        $feePendingCount = count(array_filter($children, fn($child) => ($child['fee_status'] ?? 'Pending') !== 'Paid'));
+        $reportAverage = $reportValues ? round(array_sum($reportValues) / count($reportValues), 1) : null;
+        $reportGrade = null;
+        if ($reportAverage !== null && is_array($gradeRanges)) {
+            foreach ($gradeRanges as $range) {
+                if ($reportAverage >= (float)($range['min'] ?? 0) && $reportAverage <= (float)($range['max'] ?? 100)) {
+                    $reportGrade = $range['grade'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $parentData['stats'] = [
+            'children_count' => count($children),
+            'attendance_average' => $attendanceValues ? round(array_sum($attendanceValues) / count($attendanceValues), 1) : null,
+            'latest_report_average' => $reportAverage,
+            'latest_report_grade' => $reportGrade,
+            'pending_assignments_count' => array_sum(array_map(fn($child) => (int)$child['pending_assignments_count'], $children)),
+            'fees_pending_count' => $feePendingCount,
+            'total_fees_due' => array_sum(array_map(fn($child) => (float)$child['amount_due'], $children)),
+            'total_fees_paid' => array_sum(array_map(fn($child) => (float)$child['amount_paid'], $children)),
+            'total_fees_balance' => array_sum(array_map(fn($child) => (float)$child['balance'], $children)),
+        ];
+    }
+
+    $eventsStmt = $db->prepare(
+        "SELECT id, title, event_date, event_time, all_day, location, audience, description
+         FROM events
+         WHERE status = 'Published'
+           AND audience IN ('All', 'Parents')
+           AND event_date >= CURRENT_DATE
+         ORDER BY event_date ASC, all_day DESC, event_time ASC, id ASC
+         LIMIT 3"
+    );
+    $eventsStmt->execute();
+    $parentData['events'] = $eventsStmt->fetchAll();
+    $data['parent'] = $parentData;
 }
 
 jsonResponse(['success' => true, 'data' => $data]);

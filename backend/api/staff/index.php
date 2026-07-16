@@ -18,6 +18,27 @@ $db->exec("ALTER TABLE staff ADD COLUMN IF NOT EXISTS archived_at DATETIME DEFAU
 $db->exec("UPDATE staff SET archived_at = NOW() WHERE category = 'Teaching' AND status IN ('Inactive','Archived') AND archived_at IS NULL");
 
 if ($method === 'GET') {
+    if (($user['role'] ?? '') === 'Student') {
+        $stmt = $db->prepare(
+            "SELECT DISTINCT s.id, s.staff_code, s.name, s.email, s.phone, s.category,
+                    s.department, s.position, s.status, s.avatar,
+                    t.subject, t.class_assigned, t.experience, t.schedule, t.avatar_color
+             FROM students student
+             INNER JOIN classes c ON c.id = student.class_id
+             INNER JOIN staff s ON s.status = 'Active' AND s.category = 'Teaching'
+                AND (s.id = c.teacher_id OR EXISTS (
+                    SELECT 1 FROM subjects sub
+                    WHERE sub.class_id = student.class_id AND sub.teacher_id = s.id
+                ))
+             LEFT JOIN teachers t ON t.staff_id = s.id
+             WHERE student.user_id = ? AND student.status = 'Active'
+             ORDER BY s.name ASC"
+        );
+        $stmt->execute([$user['id']]);
+        $rows = $stmt->fetchAll();
+        jsonResponse(['success' => true, 'data' => $rows, 'total' => count($rows), 'page' => 1, 'limit' => count($rows), 'totalPages' => 1]);
+    }
+
     $where  = ['1=1'];
     $params = [];
 

@@ -111,6 +111,25 @@ if ($method === 'GET') {
                 GROUP BY c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name
                 ORDER BY c.name ASC";
         $params = [$scope['staff_id'], $scope['class_assigned'], $scope['staff_id']];
+    } elseif (($user['role'] ?? '') === 'Student') {
+        $sql = "SELECT c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name AS teacher_name,
+                       COUNT(DISTINCT s.id) AS student_count,
+                       COALESCE(ROUND(AVG(s.attendance), 1), 0) AS attendance_avg,
+                       COUNT(DISTINCT sb.id) AS subject_count,
+                       GROUP_CONCAT(DISTINCT sb.name ORDER BY sb.name ASC) AS subjects
+                FROM classes c
+                LEFT JOIN staff st ON st.id = c.teacher_id
+                LEFT JOIN students s ON s.class_id = c.id AND s.status = 'Active'
+                LEFT JOIN subjects sb ON sb.class_id = c.id
+                WHERE EXISTS (
+                    SELECT 1 FROM students current_student
+                    WHERE current_student.class_id = c.id
+                      AND current_student.user_id = ?
+                      AND current_student.status = 'Active'
+                )
+                GROUP BY c.id, c.name, c.level, c.teacher_id, c.capacity, c.stream, st.name
+                ORDER BY c.name ASC";
+        $params = [$user['id']];
     }
 
     $stmt = $db->prepare($sql);

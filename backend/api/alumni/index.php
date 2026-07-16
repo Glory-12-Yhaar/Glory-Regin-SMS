@@ -92,9 +92,23 @@ if ($method === 'POST') {
 }
 
 if ($method === 'PUT') {
-    requireRole(['Admin']);
+    requireAuth();
+    $user = getSessionUser();
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) jsonResponse(['success' => false, 'message' => 'id required'], 422);
+
+    if ($user['role'] !== 'Admin') {
+        if ($user['role'] !== 'Alumni') {
+            jsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+        // Verify ownership
+        $check = $db->prepare("SELECT user_id FROM alumni WHERE id = ?");
+        $check->execute([$id]);
+        $row = $check->fetch();
+        if (!$row || (int)$row['user_id'] !== (int)$user['id']) {
+            jsonResponse(['success' => false, 'message' => 'Unauthorized to update this profile'], 403);
+        }
+    }
 
     $body = getRequestBody();
     $fields = [];

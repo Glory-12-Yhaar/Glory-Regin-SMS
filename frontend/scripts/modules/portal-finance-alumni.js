@@ -54,10 +54,18 @@ function renderSbaContent() {
   const classStudents = enrolledStudents.filter(s => (s.student_class || s.class) === selectedClass);
   const sourceStudents = classStudents.length ? classStudents : enrolledStudents.slice(0, 5);
   const sbaRows = sourceStudents.map((student, idx) => {
-    const profileScore = STUDENTS_DATA[student.name]?.scores?.[subjectName] || Object.values(STUDENTS_DATA[student.name]?.scores || {})[0];
-    const exercise = Math.min(20, Math.max(10, Math.round((profileScore?.classScore || 35) * 0.35)));
-    const quiz = Math.min(20, Math.max(10, Math.round((profileScore?.classScore || 35) * 0.32)));
-    const project = Math.min(10, Math.max(5, Math.round((profileScore?.classScore || 35) * 0.18)));
+    const studentScoresForSubject = Array.isArray(gradesData)
+      ? gradesData.filter(entry => String(entry.student_id || '') === String(student.id) || String(entry.studentName || entry.student_name || '') === String(student.name))
+      : [];
+    const subjectEntry = studentScoresForSubject.find(entry => String(entry.subject || entry.subject_name || '').toLowerCase() === String(subjectName).toLowerCase()) || studentScoresForSubject[0];
+    const profileScore = subjectEntry ? {
+      classScore: Number(subjectEntry.classScore ?? subjectEntry.class_score ?? 0),
+      examScore: Number(subjectEntry.examScore ?? subjectEntry.exam_score ?? 0)
+    } : (Array.isArray(STUDENTS_DATA) ? null : (STUDENTS_DATA?.[student.name]?.scores?.[subjectName] || Object.values(STUDENTS_DATA?.[student.name]?.scores || {})[0]));
+    const classScore = Number(profileScore?.classScore || 35);
+    const exercise = Math.min(20, Math.max(10, Math.round(classScore * 0.35)));
+    const quiz = Math.min(20, Math.max(10, Math.round(classScore * 0.32)));
+    const project = Math.min(10, Math.max(5, Math.round(classScore * 0.18)));
     const total = exercise + quiz + project;
     return { student, exercise, quiz, project, total, percentage: Math.round(total / 50 * 100), rank: idx + 1 };
   }).sort((a, b) => b.total - a.total).map((row, idx) => ({ ...row, rank: idx + 1 }));
@@ -775,6 +783,9 @@ function getAlumniAnnouncements(){
 }
 
 function getAlumniCampaigns(){
+  if (Array.isArray(window.donationCampaigns) && window.donationCampaigns.length) {
+    return window.donationCampaigns;
+  }
   return [
     {id:'C001', title:'New Science Lab Equipment', goal:50000, raised:15000, percentage:30, description:'Upgrade our science lab with modern equipment'},
     {id:'C002', title:'2026 Scholarship Fund', goal:20000, raised:18500, percentage:92, description:'Help deserving students with financial aid'},
@@ -797,12 +808,10 @@ function getAlumniEvents(){
 }
 
 function getAlumniDonations(){
-  try{
-    return [];
-  }catch(e){return []}
+  return Array.isArray(window.donationsData) ? window.donationsData : [];
 }
 
-function saveAlumniDonations(list){}
+function saveAlumniDonations(list){ window.donationsData = list; }
 
 function getAlumniEventRegistrations(){
   try{
@@ -919,10 +928,25 @@ function postNewJob(){
   window.scrollTo(0, 0);
 }
 
-function submitJobPosting(){
-  const title = document.getElementById('job-title').value;
-  const company = document.getElementById('job-company').value;
+async function submitJobPosting(){
+  const title = document.getElementById('job-title')?.value?.trim();
+  const company = document.getElementById('job-company')?.value?.trim();
+  const industry = document.getElementById('job-industry')?.value?.trim() || '';
+  const salary = document.getElementById('job-salary')?.value?.trim() || '';
+  const location = document.getElementById('job-location')?.value?.trim() || '';
+  const jobType = document.getElementById('job-type')?.value || 'Full-time';
+  const description = document.getElementById('job-desc')?.value?.trim() || '';
   if(!title || !company) { showToast('<i class="fas fa-exclamation-circle"></i> Please fill in all fields', 'error'); return; }
+
+  const user = getSessionUser();
+  const res = await API.jobs.create({
+    title, company, industry, salary_range: salary, location, job_type: jobType,
+    description, status: 'Open',
+    posted_by_name: user?.name || 'Alumni Member',
+    posted_by_class: ''
+  });
+  if (!res?.success) return showToast(res?.message || 'Failed to post job', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('<i class="fas fa-briefcase"></i> Job posted successfully', 'success');
   openAlumniJobs();
 }
@@ -990,13 +1014,25 @@ function makeDonation(campaignId){
   window.scrollTo(0, 0);
 }
 
-function processDonation(campaignId){
-  const name = document.getElementById('donor-name').value;
-  const amount = parseFloat(document.getElementById('donor-amount').value);
+async function processDonation(campaignId){
+  const name = document.getElementById('donor-name')?.value?.trim();
+  const amount = parseFloat(document.getElementById('donor-amount')?.value || 0);
+  const method = document.getElementById('donor-method')?.value || 'Card';
   if(!name || !amount || amount < 10) { showToast('<i class="fas fa-exclamation-circle"></i> Please enter valid donation details', 'error'); return; }
-  const donations = getAlumniDonations();
-  donations.push({id:'D' + Date.now(), name:name, amount:amount, campaign:getAlumniCampaigns().find(c=>c.id===campaignId)?.title||'', date:new Date().toLocaleDateString(), status:'Completed', method:document.getElementById('donor-method').value});
-  saveAlumniDonations(donations);
+
+  // Resolve numeric campaign id from string like 'C001' or directly numeric
+  const campaigns = getAlumniCampaigns();
+  const campaign = campaigns.find(c => String(c.id) === String(campaignId));
+  const numericCampaignId = campaign?.dbId || (typeof campaignId === 'number' ? campaignId : parseInt(String(campaignId).replace(/\D/g,''), 10) || null);
+
+  const res = await API.donations.donate({
+    campaign_id: numericCampaignId || null,
+    donor_name: name,
+    amount,
+    method
+  });
+  if (!res?.success) return showToast(res?.message || 'Donation failed', 'error');
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast(`<i class="fas fa-heart"></i> Thank you for your donation of GH₵${Number(amount).toLocaleString()}!`, 'success');
   openDonationHub();
 }
@@ -1122,9 +1158,10 @@ function alumniProfileModule() {
     });
 }
 
-function saveAlumniProfile() {
+async function saveAlumniProfile() {
+  const currentProfile = getCurrentAlumniProfile();
   const profile = {
-    ...getCurrentAlumniProfile(),
+    ...currentProfile,
     name: document.getElementById('alumni-profile-name')?.value.trim(),
     studentId: document.getElementById('alumni-profile-student-id')?.value.trim(),
     gender: document.getElementById('alumni-profile-gender')?.value,
@@ -1140,12 +1177,34 @@ function saveAlumniProfile() {
     linkedin: document.getElementById('alumni-profile-linkedin')?.value.trim(),
     social: document.getElementById('alumni-profile-social')?.value.trim()
   };
-  const list = getAlumniList();
-  const index = list.findIndex(item => String(item.id) === String(profile.id));
-  if (index >= 0) list[index] = profile; else list.push(profile);
-  appMemoryStorage.setItem(ALUMNI_LIST_KEY, JSON.stringify(list));
+
+  const dbId = currentProfile.dbId;
+  if (dbId) {
+    const res = await API.alumni.update(dbId, {
+      name: profile.name,
+      class_year: profile.gradYear,
+      profession: profile.profession,
+      location: profile.address ? (profile.address + (profile.country ? ', ' + profile.country : '')) : profile.location,
+      email: profile.email,
+      phone: profile.phone,
+      linkedin: profile.linkedin,
+      facebook: profile.social
+    });
+    if (!res?.success) return showToast(res?.message || 'Could not update profile', 'error');
+  }
+
   const user = getSessionUser();
-  if (user) setSessionUser({ ...user, name: profile.name, email: profile.email, phone: profile.phone, address: profile.address });
+  if (user) {
+    setSessionUser({
+      ...user,
+      name: profile.name,
+      email: profile.email,
+      phone: profile.phone,
+      address: profile.address
+    });
+  }
+
+  if (typeof syncAllDataFromBackend === 'function') await syncAllDataFromBackend();
   showToast('Alumni profile updated.', 'success');
   renderMain();
 }
@@ -2755,60 +2814,201 @@ function alumniDirectory(options = {}) {
 
 // DONATIONS MODULE
 function donationsModule() {
+  const donations = getAlumniDonations();
+  const campaigns = getAlumniCampaigns();
+  const totalRaised = donations.reduce((s, d) => s + parseFloat(d.amount || 0), 0);
+  const activeCampaigns = campaigns.filter(c => (c.status || 'Active') === 'Active').length;
   return hdr('Donations', 'Alumni and external donations to the school', 'Donations') + `
   <div class="stats-row">
-    ${statCard('<i class="fas fa-handshake"></i>', 'GH₵42K', 'Total Donations', 'This year', 'up', 'si-blue')}
-    ${statCard('<i class="fas fa-users"></i>', '48', 'Total Donors', 'Alumni donors', 'up', 'si-gold')}
-    ${statCard('<i class="fas fa-target"></i>', 'GH₵100K', 'Annual Target', '42% achieved', 'neu', 'si-green')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>', '3', 'Active Campaigns', 'Current drives', 'neu', 'si-purple')}
+    ${statCard('<i class="fas fa-handshake"></i>', money(totalRaised), 'Total Donations', 'From database', 'up', 'si-blue')}
+    ${statCard('<i class="fas fa-users"></i>', donations.length, 'Total Donors', 'Individual donations', 'up', 'si-gold')}
+    ${statCard('<i class="fas fa-bullseye"></i>', money(campaigns.reduce((s,c) => s + parseFloat(c.goal||0), 0)), 'Campaign Targets', 'Combined goals', 'neu', 'si-green')}
+    ${statCard('<i class="fas fa-calendar-alt"></i>', activeCampaigns, 'Active Campaigns', 'Current drives', 'neu', 'si-purple')}
   </div>
   <div class="card">
     <div class="card-hdr"><span class="card-title"><i class="fas fa-handshake"></i> Donation Records</span><button class="btn btn-primary btn-sm" onclick="openDonationHub()">Make Donation</button></div>
     <table class="tbl">
-      <thead><tr><th>Donor</th><th>Class</th><th>Amount</th><th>Campaign</th><th>Date</th><th>Status</th></tr></thead>
+      <thead><tr><th>Donor</th><th>Amount</th><th>Campaign</th><th>Date</th><th>Status</th></tr></thead>
       <tbody>
-        ${[['Abena Owusu', 'Class 2018', 'GH₵5,000', 'Library Fund', 'Mar 10', 'Received'], ['Kwabena Asare', 'Class 2016', 'GH₵10,000', 'Scholarship Fund', 'Mar 5', 'Received'], ['Anonymous Alumni', 'â€”', 'GH₵2,000', 'General Fund', 'Feb 28', 'Received'], ['Kofi Antwi', 'Class 2014', 'GH₵3,500', 'ICT Lab', 'Feb 20', 'Received']].map(([n, c, a, camp, d, s]) => `
+        ${donations.length ? donations.map(d => `
         <tr>
-          <td><strong>${n}</strong></td>
-          <td><span class="badge b-info">${c}</span></td>
-          <td style="font-weight:700;color:var(--success)">${a}</td>
-          <td>${camp}</td><td>${d}</td>
-          <td><span class="badge b-success">${s}</span></td>
-        </tr>`).join('')}
+          <td><strong>${escapeHtml(d.name || 'Anonymous')}</strong></td>
+          <td style="font-weight:700;color:var(--success)">${money(d.amount || 0)}</td>
+          <td>${escapeHtml(d.campaign || '—')}</td>
+          <td>${escapeHtml(d.date || '')}</td>
+          <td><span class="badge b-success">${escapeHtml(d.status || 'Completed')}</span></td>
+        </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:18px">No donation records found.</td></tr>'}
       </tbody>
     </table>
   </div>`;
 }
 
+function getGalleryAlbums() {
+  const albums = Array.isArray(window.galleryData) ? window.galleryData : [];
+  return albums
+    .filter(album => (album.status || 'Published') === 'Published')
+    .map(album => ({
+      id: String(album.id || ''),
+      title: album.title || 'Gallery Album',
+      category: album.category || 'School Events',
+      year: album.year || new Date().getFullYear(),
+      itemCount: Number(album.itemCount || album.item_count || 0),
+      icon: album.icon || 'fa-images',
+      bgColor: album.bgColor || album.bg_color || 'linear-gradient(135deg, #3b82f6, #1e3a5f)',
+      status: album.status || 'Published',
+      coverImg: album.coverImg || album.cover_img || ''
+    }));
+}
+
+function galleryModule() {
+  const albums = getGalleryAlbums();
+  const cards = albums.length ? albums.map(album => `
+    <div class="card" style="padding:0;overflow:hidden;cursor:pointer" onclick="openGalleryAlbum('${escapeAttr(album.id)}')">
+      <div style="min-height:132px;padding:16px;background:${escapeAttr(album.bgColor)};display:flex;flex-direction:column;justify-content:space-between;color:white">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="badge" style="background:rgba(255,255,255,.2);color:white">${escapeHtml(album.year)}</span>
+          <i class="fas ${escapeAttr(album.icon || 'fa-images')}" style="font-size:20px"></i>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:700">${escapeHtml(album.title)}</div>
+          <div style="font-size:12px;opacity:.9;margin-top:4px">${escapeHtml(album.category)}</div>
+        </div>
+      </div>
+      <div style="padding:12px 14px;font-size:12px;color:var(--gray-600);display:flex;justify-content:space-between;align-items:center">
+        <span>${album.itemCount} photos</span>
+        <span class="badge b-success">${escapeHtml(album.status)}</span>
+      </div>
+    </div>`).join('') : '<div class="card" style="grid-column:1/-1;text-align:center;color:var(--gray-500);padding:24px">No published gallery albums are available yet.</div>';
+
+  return hdr('Gallery', 'Browse the school gallery albums from the live backend', 'Gallery') + `
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-images"></i> Published Gallery Albums</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">${cards}</div>
+    </div>`;
+}
+
+function openGalleryAlbum(albumId) {
+  const album = getGalleryAlbums().find(item => String(item.id) === String(albumId));
+  if (!album) return;
+  const previewCards = Array.from({ length: Math.max(4, Number(album.itemCount || 6)) }, (_, index) => `
+    <div style="background:var(--gray-100);border-radius:10px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:26px">
+      <i class="fas ${escapeAttr(album.icon || 'fa-images')}"></i>
+    </div>`).join('');
+  openModal(`<div style="max-width:780px;padding:6px">
+    <div style="padding:20px;border-radius:12px;background:${escapeAttr(album.bgColor)};color:white;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-size:20px;font-weight:700">${escapeHtml(album.title)}</div>
+        <div style="font-size:12px;opacity:.9;margin-top:4px">${escapeHtml(album.category)} · ${escapeHtml(album.year)}</div>
+      </div>
+      <span class="badge" style="background:rgba(255,255,255,.2);color:white">${album.itemCount} photos</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">${previewCards}</div>
+  </div>`, true);
+}
+
+function alumniCommunityModule() {
+  const announcements = getAlumniAnnouncements().slice(0, 3);
+  const events = getAlumniEvents().slice(0, 3);
+  const campaigns = getAlumniCampaigns().slice(0, 2);
+  return hdr('Community', 'Stay connected with school updates, alumni events, and giving campaigns', 'Community') + `
+    <div class="g2 mb20">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-bullhorn"></i> Latest Announcements</span><span class="card-act" onclick="navTo('notices')">View All</span></div>
+        ${announcements.length ? announcements.map(item => `
+          <div style="padding:12px;border:1px solid var(--gray-200);border-radius:10px;margin-bottom:10px;background:var(--gray-50)">
+            <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(item.title)}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px">${escapeHtml(item.description)}</div>
+            <div style="font-size:10px;color:var(--gray-400);margin-top:8px">${escapeHtml(item.date)}</div>
+          </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:16px">No announcements yet.</div>'}
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</span><span class="card-act" onclick="navTo('events')">Calendar</span></div>
+        ${events.length ? events.map(item => `
+          <div style="padding:12px;border:1px solid var(--gray-200);border-radius:10px;margin-bottom:10px;background:var(--gray-50)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(item.title)}</div>
+              <button class="btn btn-success btn-xs" onclick="registerForEvent('${escapeAttr(item.id)}','${escapeAttr(item.title)}')">Register</button>
+            </div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:6px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(item.location)}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:2px"><i class="fas fa-clock"></i> ${escapeHtml(item.date)} · ${escapeHtml(item.time)}</div>
+          </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:16px">No upcoming alumni events.</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-hand-holding-heart"></i> Giving Campaigns</span><span class="card-act" onclick="navTo('donations')">Support</span></div>
+      <div style="display:grid;gap:10px">
+        ${campaigns.length ? campaigns.map(c => `
+          <div style="padding:12px;border:1px solid var(--gray-200);border-radius:10px;background:var(--gray-50)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:700;color:var(--gray-800)">${escapeHtml(c.title)}</span>
+              <span class="badge b-success">${c.percentage || 0}%</span>
+            </div>
+            <div style="font-size:11px;color:var(--gray-500);margin-bottom:8px">${escapeHtml(c.description || '')}</div>
+            <button class="btn btn-success btn-sm" style="width:100%" onclick="makeDonation('${escapeAttr(String(c.id || ''))}')">Donate Now</button>
+          </div>`).join('') : '<div style="text-align:center;color:var(--gray-400);padding:16px">No active campaigns right now.</div>'}
+      </div>
+    </div>`;
+}
+
 // JOB BOARD
 function jobBoardModule() {
+  const jobs = Array.isArray(window.jobsData) && window.jobsData.length ? window.jobsData : [
+    {id:'j1', title:'Software Developer Intern', company:'TechHub Solutions', location:'Accra · Remote possible', experience:'0–2 years', industry:'Technology', salary:'GH₵1,500/mo', posted:'Today', poster:'Abena Owusu (Class 2018)', description:'Exciting internship for fresh computer science graduates.'},
+    {id:'j2', title:'Medical Resident', company:'Korle-Bu Hospital', location:'Korle Bu Teaching Hospital, Accra', experience:'Graduate', industry:'Healthcare', salary:'Competitive', posted:'2 days ago', poster:'Kwabena Asare (Class 2016)', description:'Resident role in pediatrics department.'},
+    {id:'j3', title:'Junior Secondary School Teacher', company:'Education Plus', location:'Kumasi · Full Time', experience:'PGDE required', industry:'Education', salary:'GH₵2,800/mo', posted:'1 week ago', poster:'Esi Mensah (Class 2020)', description:'Teach JHS 1-3 science students.'},
+    {id:'j4', title:'Civil Engineering Graduate Trainee', company:'BuildCo Ghana', location:'Takoradi · Full Time', experience:'0–2 years', industry:'Engineering', salary:'GH₵4,000/mo', posted:'2 weeks ago', poster:'Kofi Antwi (Class 2014)', description:'Graduate trainee role on coastal road projects.'}
+  ];
+  const industries = [...new Set(jobs.map(j => j.industry).filter(Boolean))];
   return hdr('Job Board', 'Career opportunities from the alumni network', 'Job Board') + `
   <div class="toolbar">
     <button class="btn btn-primary" onclick="postNewJob()">+ Post Job</button>
     <div class="search-bar"><span><i class="fas fa-search"></i></span><input id="job-board-search" placeholder="Search jobs..." oninput="filterJobBoard()"></div>
-    <select class="select-sm"><option>All Industries</option><option>Tech</option><option>Health</option><option>Education</option></select>
+    <select class="select-sm" id="job-industry-filter" onchange="filterJobBoard()">
+      <option value="">All Industries</option>
+      ${industries.map(ind => `<option value="${escapeAttr(ind)}">${escapeHtml(ind)}</option>`).join('')}
+    </select>
   </div>
-  <div style="display:flex;flex-direction:column;gap:14px">
-    ${[['Software Developer Intern', 'Accra · Remote possible', '0â€“2 years', 'Technology', 'GH₵1,500/mo', 'Today', 'Abena Owusu (Class 2018)'], ['Medical Resident', 'Korle Bu Teaching Hospital, Accra', 'Graduate', 'Healthcare', 'Competitive', '2 days ago', 'Kwabena Asare (Class 2016)'], ['Junior Secondary School Teacher', 'Kumasi · Full Time', 'PGDE required', 'Education', 'GH₵2,800/mo', '1 week ago', 'Esi Mensah (Class 2020)'], ['Civil Engineering Graduate Trainee', 'Takoradi · Full Time', '0â€“2 years', 'Engineering', 'GH₵4,000/mo', '2 weeks ago', 'Kofi Antwi (Class 2014)']].map(([t, l, exp, ind, sal, d, poster]) => `
-    <div class="card alumni-job-card" data-search="${escapeAttr((t + ' ' + l + ' ' + ind + ' ' + poster).toLowerCase())}">
+  <div style="display:flex;flex-direction:column;gap:14px" id="job-board-list">
+    ${jobs.map(j => `
+    <div class="card alumni-job-card" data-search="${escapeAttr((j.title + ' ' + j.location + ' ' + j.industry + ' ' + j.poster).toLowerCase())}" data-industry="${escapeAttr(j.industry || '')}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:800;color:var(--blue-dark);margin-bottom:8px">${t}</div>
+          <div style="font-size:15px;font-weight:800;color:var(--blue-dark);margin-bottom:4px">${escapeHtml(j.title)}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:8px">${escapeHtml(j.company || '')}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-            <span class="badge b-info"><i class="fas fa-map-pin"></i> ${l}</span>
-            <span class="badge b-gray"><i class="fas fa-stopwatch"></i> ${exp}</span>
-            <span class="badge b-success"><i class="fas fa-money-bill"></i> ${sal}</span>
-            <span class="badge b-warning">${ind}</span>
+            <span class="badge b-info"><i class="fas fa-map-pin"></i> ${escapeHtml(j.location || '')}</span>
+            <span class="badge b-gray"><i class="fas fa-stopwatch"></i> ${escapeHtml(j.experience || '')}</span>
+            <span class="badge b-success"><i class="fas fa-money-bill"></i> ${escapeHtml(j.salary || '')}</span>
+            <span class="badge b-warning">${escapeHtml(j.industry || '')}</span>
           </div>
-          <div style="font-size:11px;color:var(--gray-400)">Posted by ${poster} · ${d}</div>
+          <div style="font-size:11px;color:var(--gray-400)">Posted by ${escapeHtml(j.poster || '')} · ${escapeHtml(String(j.posted || ''))}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button class="btn btn-secondary btn-sm" onclick="showToast('${escapeAttr(t)} - ${escapeAttr(l)} - ${escapeAttr(exp)}', 'info')">Details</button>
+          <button class="btn btn-secondary btn-sm" onclick="openJobDetails('${escapeAttr(String(j.id || ''))}')">Details</button>
           <button class="btn btn-primary btn-sm" onclick="applyJob(this)">Apply</button>
         </div>
       </div>
     </div>`).join('')}
   </div>`;
+}
+
+function openJobDetails(jobId) {
+  const jobs = Array.isArray(window.jobsData) && window.jobsData.length ? window.jobsData : [];
+  const job = jobs.find(item => String(item.id) === String(jobId));
+  if (!job) return;
+  openModal(`<div style="max-width:680px;padding:6px">
+    <div style="padding:22px;border-radius:12px;background:var(--blue-xpale);border:1px solid var(--blue-light)">
+      <div style="font-size:18px;font-weight:800;color:var(--blue-dark);margin-bottom:8px">${escapeHtml(job.title || '')}</div>
+      <div style="font-size:13px;color:var(--gray-600);margin-bottom:10px">${escapeHtml(job.company || '')} · ${escapeHtml(job.location || '')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <span class="badge b-info">${escapeHtml(job.type || job.industry || '')}</span>
+        <span class="badge b-gray">${escapeHtml(job.experience || '')}</span>
+        <span class="badge b-success">${escapeHtml(job.salary || '')}</span>
+      </div>
+      <div style="font-size:13px;color:var(--gray-700);line-height:1.7">${escapeHtml(job.description || '')}</div>
+      <div style="font-size:11px;color:var(--gray-500);margin-top:12px">Posted by ${escapeHtml(job.poster || '')} · ${escapeHtml(job.posted || '')}</div>
+    </div>
+  </div>`, true);
 }
 
 function applyJob(btn) {
@@ -2875,8 +3075,8 @@ function alumniPubModule() {
     <h1><i class="fas fa-medal"></i> Our Distinguished Alumni</h1>
     <p>Glory Reign Preparatory School alumni are making their mark across Ghana and around the world. Browse ${count} published alumni profiles from the school database.</p>
     <div class="hero-btns">
-    <button class="hero-btn-gold" onclick="document.getElementById('alumni-search')?.focus()">Browse Alumni</button>
-      <button class="hero-btn-outline" onclick="showToast('<i class=\\'fas fa-check-circle\\'></i> Alumni association details opened', 'success')">Alumni Association</button>
+      <button class="hero-btn-gold" onclick="document.getElementById('alumni-search')?.focus()">Browse Alumni</button>
+      <button class="hero-btn-outline" onclick="navTo('directory')">Alumni Association</button>
     </div>
   </div>`+ alumniDirectory({ publicView: true });
 }

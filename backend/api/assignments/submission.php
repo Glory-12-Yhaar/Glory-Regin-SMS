@@ -14,11 +14,13 @@ $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
 function getAssignmentForSubmission(PDO $db, int $assignmentId): ?array {
-    $stmt = $db->prepare("SELECT id, class_id, max_score FROM assignments WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, class_id, teacher_id, max_score FROM assignments WHERE id = ?");
     $stmt->execute([$assignmentId]);
     $assignment = $stmt->fetch();
     return $assignment ?: null;
 }
+function submissionTeacherId(PDO $db,array $user):int{$s=$db->prepare("SELECT id FROM staff WHERE category='Teaching' AND (user_id=? OR LOWER(email)=LOWER(?) OR LOWER(name)=LOWER(?)) ORDER BY user_id=? DESC LIMIT 1");$s->execute([$user['id'],$user['email']??'',$user['name']??'',$user['id']]);return(int)($s->fetchColumn()?:0);}
+function requireSubmissionOwner(PDO $db,array $user,array $assignment):void{if(($user['role']??'')==='Teacher'&&(int)$assignment['teacher_id']!==submissionTeacherId($db,$user))jsonResponse(['success'=>false,'message'=>'Assignment not found'],404);}
 
 function studentBelongsToAssignment(PDO $db, int $studentId, array $assignment): bool {
     $stmt = $db->prepare("SELECT COUNT(*) FROM students WHERE id = ? AND class_id = ? AND status = 'Active'");
@@ -31,6 +33,7 @@ if ($method === 'GET') {
     if (!$assignmentId) jsonResponse(['success' => false, 'message' => 'assignment_id required'], 422);
     $assignment = getAssignmentForSubmission($db, $assignmentId);
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Assignment not found'], 404);
+    requireSubmissionOwner($db,$user,$assignment);
 
     $stmt = $db->prepare(
         "SELECT sub.id, st.id AS student_id, sub.submitted_at, sub.score, sub.feedback,
@@ -57,6 +60,7 @@ if ($method === 'POST') {
     $studentId = (int)$body['student_id'];
     $assignment = getAssignmentForSubmission($db, $assignmentId);
     if (!$assignment) jsonResponse(['success' => false, 'message' => 'Assignment not found'], 404);
+    requireSubmissionOwner($db,$user,$assignment);
     if (!studentBelongsToAssignment($db, $studentId, $assignment)) {
         jsonResponse(['success' => false, 'message' => 'Student is not enrolled in the assignment class'], 422);
     }

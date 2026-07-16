@@ -161,14 +161,6 @@ const API = {
         grade:       (data)         => apiRequest('/assignments/submission.php', 'POST', data),
     },
 
-    // ── Alumni ───────────────────────────────────────────────
-    alumni: {
-        list:   (params = {}) => apiRequest('/alumni/index.php?' + new URLSearchParams(params)),
-        create: (data)        => apiRequest('/alumni/index.php',  'POST', data),
-        update: (id, data)    => apiRequest('/alumni/index.php?id=' + id, 'PUT',    data),
-        delete: (id)          => apiRequest('/alumni/index.php?id=' + id, 'DELETE'),
-    },
-
     // ── Attendance ───────────────────────────────────────────
     attendance: {
         list:   (params = {}) => apiRequest('/attendance/index.php?' + new URLSearchParams(params)),
@@ -277,6 +269,60 @@ const API = {
         list:   (params = {}) => apiRequest('/yearbook/index.php?' + new URLSearchParams(params)),
         save:   (data)      => apiRequest('/yearbook/index.php', 'POST', data),
         delete: (year)      => apiRequest('/yearbook/index.php?' + new URLSearchParams({ year }), 'DELETE'),
+    },
+
+    // ── Salary / Payroll ─────────────────────────────────────
+    salary: {
+        list:   (params = {}) => apiRequest('/salary/index.php?' + new URLSearchParams(params)),
+        record: (data)        => apiRequest('/salary/index.php', 'POST', data),
+    },
+
+    // ── Scholarships / Discounts ─────────────────────────────
+    scholarships: {
+        list:   (params = {}) => apiRequest('/scholarships/index.php?' + new URLSearchParams(params)),
+        create: (data)        => apiRequest('/scholarships/index.php', 'POST', data),
+    },
+
+    // ── Alumni ───────────────────────────────────────────────
+    alumni: {
+        list:   (params = {}) => apiRequest('/alumni/index.php?' + new URLSearchParams(params)),
+        create: (data)        => apiRequest('/alumni/index.php', 'POST', data),
+        update: (id, data)    => apiRequest('/alumni/index.php?id=' + id, 'PUT', data),
+        delete: (id)          => apiRequest('/alumni/index.php?id=' + id, 'DELETE'),
+    },
+
+    // ── Donations / Fundraising ──────────────────────────────
+    donations: {
+        campaigns:      ()     => apiRequest('/donations/index.php?type=campaigns'),
+        list:           ()     => apiRequest('/donations/index.php?type=donations'),
+        donate:         (data) => apiRequest('/donations/index.php', 'POST', { action: 'donate', ...data }),
+        createCampaign: (data) => apiRequest('/donations/index.php', 'POST', { action: 'campaign', ...data }),
+    },
+
+    // ── Jobs Board ───────────────────────────────────────────
+    jobs: {
+        list:   (params = {}) => apiRequest('/jobs/index.php?' + new URLSearchParams(params)),
+        create: (data)        => apiRequest('/jobs/index.php', 'POST', data),
+        update: (id, data)    => apiRequest('/jobs/index.php?id=' + id, 'PUT', data),
+        delete: (id)          => apiRequest('/jobs/index.php?id=' + id, 'DELETE'),
+    },
+
+    // ── Gallery ──────────────────────────────────────────────
+    gallery: {
+        list:        (params = {}) => apiRequest('/gallery/index.php?' + new URLSearchParams(params)),
+        create:      (data)        => apiRequest('/gallery/index.php', 'POST', data),
+        delete:      (id)          => apiRequest('/gallery/index.php?id=' + id, 'DELETE'),
+        // Gallery items (photos within an album)
+        items:       (albumId)     => apiRequest('/gallery/items.php?album_id=' + albumId),
+        addItem:     (data)        => apiRequest('/gallery/items.php', 'POST', data),
+        deleteItem:  (id)          => apiRequest('/gallery/items.php?id=' + id, 'DELETE'),
+    },
+
+    // ── Report Cards ─────────────────────────────────────────
+    reportCards: {
+        list:      (params = {}) => apiRequest('/grades/report_cards.php?' + new URLSearchParams(params)),
+        generate:  (data)        => apiRequest('/grades/report_cards.php', 'POST', data),
+        get:       (studentId, term, year) => apiRequest('/grades/report_cards.php?' + new URLSearchParams({ student_id: studentId, term, academic_year: year })),
     },
 };
 
@@ -929,6 +975,128 @@ async function syncAllDataFromBackend() {
             window.cachedHeroSlides = res.data;
         }
     } catch (e) { console.error("Error syncing hero slides:", e); }
+
+    // 11. Salary / Payroll records
+    window.salaryData = Array.isArray(window.salaryData) ? window.salaryData : [];
+    if (['Admin', 'Accountant'].includes(window.currentRole || currentRole)) {
+        try {
+            const res = await API.salary.list();
+            if (res && res.success && Array.isArray(res.data)) {
+                window.salaryData.splice(0, window.salaryData.length, ...res.data.map(s => ({
+                    id: parseInt(s.id, 10),
+                    staff_id: parseInt(s.staff_id, 10),
+                    staff_name: s.staff_name || '',
+                    staff_code: s.staff_code || '',
+                    position: s.position || '',
+                    category: s.category || '',
+                    grade: s.grade || '',
+                    base_salary: parseFloat(s.base_salary || 0),
+                    allowances: parseFloat(s.allowances || 0),
+                    deductions: parseFloat(s.deductions || 0),
+                    net_salary: parseFloat(s.net_salary || 0),
+                    pay_date: s.pay_date || '',
+                    term: s.term || '',
+                    academic_year: s.academic_year || ''
+                })));
+            }
+        } catch (e) { console.error('Error syncing salary data:', e); }
+    }
+
+    // 12. Scholarships / Discounts
+    window.scholarshipsData = Array.isArray(window.scholarshipsData) ? window.scholarshipsData : [];
+    try {
+        const res = await API.scholarships.list();
+        if (res && res.success && Array.isArray(res.data)) {
+            window.scholarshipsData.splice(0, window.scholarshipsData.length, ...res.data.map(s => ({
+                id: parseInt(s.id, 10),
+                student_id: parseInt(s.student_id, 10),
+                student_name: s.student_name || '',
+                student_code: s.student_code || '',
+                class_name: s.class_name || '',
+                grant_type: s.grant_type || '',
+                discount_value: s.discount_value || '',
+                status: s.status || 'Active',
+                remarks: s.remarks || '',
+                created_at: s.created_at || ''
+            })));
+        }
+    } catch (e) { console.error('Error syncing scholarships data:', e); }
+
+    // 14. Donations / Campaigns
+    window.donationCampaigns = [];
+    try {
+        const res = await API.donations.campaigns();
+        if (res && res.success && Array.isArray(res.data)) {
+            window.donationCampaigns = res.data.map(c => ({
+                id: String(c.id),
+                title: c.title,
+                description: c.description || '',
+                goal: parseFloat(c.goal || 0),
+                raised: parseFloat(c.raised || 0),
+                percentage: parseFloat(c.percentage || 0),
+                status: c.status || 'Active'
+            }));
+        }
+    } catch (e) { console.error("Error syncing donation campaigns:", e); }
+
+    window.donationsData = [];
+    if (['Admin', 'Accountant', 'Alumni'].includes(window.currentRole || currentRole)) {
+        try {
+            const res = await API.donations.list();
+            if (res && res.success && Array.isArray(res.data)) {
+                window.donationsData = res.data.map(d => ({
+                    id: String(d.id),
+                    name: d.donor_name || 'Anonymous',
+                    amount: parseFloat(d.amount || 0),
+                    method: d.method || 'Card',
+                    status: d.status || 'Completed',
+                    campaign: d.campaign || 'General Fund',
+                    date: d.created_at ? d.created_at.split(' ')[0] : ''
+                }));
+            }
+        } catch (e) { console.error("Error syncing donations data:", e); }
+    }
+
+    // 15. Jobs board
+    window.jobsData = [];
+    try {
+        const res = await API.jobs.list({ status: 'Open' });
+        if (res && res.success && Array.isArray(res.data)) {
+            window.jobsData = res.data.map(j => ({
+                id: String(j.id),
+                title: j.title || '',
+                company: j.company || '',
+                location: j.location || '',
+                type: j.job_type || 'Full-time',
+                industry: j.industry || '',
+                salary: j.salary_range || '',
+                experience: j.experience || '',
+                description: j.description || '',
+                status: j.status || 'Open',
+                posted: j.created_at ? j.created_at.split(' ')[0] : '',
+                poster: j.posted_by_name + (j.posted_by_class ? ` (${j.posted_by_class})` : '')
+            }));
+        }
+    } catch (e) { console.error("Error syncing jobs data:", e); }
+
+    // 16. Gallery Albums
+    window.galleryData = [];
+    try {
+        const res = await API.gallery.list();
+        if (res && res.success && Array.isArray(res.data)) {
+            window.galleryData = res.data.map(ga => ({
+                id: String(ga.id),
+                title: ga.title || '',
+                category: ga.category || '',
+                year: ga.year || '',
+                itemCount: parseInt(ga.item_count || 0, 10),
+                icon: ga.icon || 'fa-images',
+                bgColor: ga.bg_color || 'linear-gradient(135deg, #3b82f6, #1e3a5f)',
+                coverImg: ga.cover_img || null,
+                status: ga.status || 'Published'
+            }));
+        }
+    } catch (e) { console.error("Error syncing gallery data:", e); }
 
     if (typeof renderSidebar === 'function') {
         renderSidebar();

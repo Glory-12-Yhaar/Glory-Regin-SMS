@@ -10,7 +10,7 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-requireAuth();
+$user   = requireAuth();
 $db     = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -58,13 +58,54 @@ function parseTimetablePeriodTimes(string $label): array {
     return ['00:00:00', '00:00:00'];
 }
 
+function getTeacherTimetableClassIds(PDO $db, array $user): array {
+    $stmt = $db->prepare(
+        "SELECT s.id AS staff_id, t.class_assigned
+         FROM staff s
+         LEFT JOIN teachers t ON t.staff_id = s.id
+         WHERE s.category = 'Teaching'
+           AND (s.user_id = ? OR LOWER(s.email) = LOWER(?) OR LOWER(s.name) = LOWER(?))
+         ORDER BY s.user_id = ? DESC, s.id ASC
+         LIMIT 1"
+    );
+    $stmt->execute([$user['id'] ?? 0, $user['email'] ?? '', $user['name'] ?? '', $user['id'] ?? 0]);
+    $teacher = $stmt->fetch();
+    if (!$teacher) return [];
+
+    $classStmt = $db->prepare(
+        "SELECT DISTINCT c.id
+         FROM classes c
+         WHERE c.teacher_id = ? OR c.name = ?
+            OR EXISTS (SELECT 1 FROM subjects sub WHERE sub.class_id = c.id AND sub.teacher_id = ?)"
+    );
+    $classStmt->execute([(int)$teacher['staff_id'], $teacher['class_assigned'] ?? '', (int)$teacher['staff_id']]);
+    return array_map('intval', $classStmt->fetchAll(PDO::FETCH_COLUMN));
+}
+
 if ($method === 'GET') {
-    $stmt = $db->query(
+    $where = '';
+    $params = [];
+    if (($user['role'] ?? '') === 'Teacher') {
+        $classIds = getTeacherTimetableClassIds($db, $user);
+        if (!$classIds) jsonResponse(['success' => true, 'data' => []]);
+        $where = 'WHERE t.class_id IN (' . implode(',', array_fill(0, count($classIds), '?')) . ')';
+        $params = $classIds;
+    } elseif (($user['role'] ?? '') === 'Student') {
+        $studentStmt = $db->prepare("SELECT class_id FROM students WHERE user_id = ? AND status = 'Active' LIMIT 1");
+        $studentStmt->execute([$user['id']]);
+        $studentClassId = (int)($studentStmt->fetchColumn() ?: 0);
+        if (!$studentClassId) jsonResponse(['success' => true, 'data' => []]);
+        $where = 'WHERE t.class_id = ?';
+        $params = [$studentClassId];
+    }
+    $stmt = $db->prepare(
         "SELECT t.*, c.name AS class_name
          FROM timetable t
          INNER JOIN classes c ON c.id = t.class_id
+         $where
          ORDER BY c.name ASC, t.term ASC, t.start_time ASC, t.id ASC"
     );
+    $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
     $timetables = [];

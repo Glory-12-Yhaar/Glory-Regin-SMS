@@ -13,6 +13,7 @@ require_once __DIR__ . '/../middleware/auth.php';
 
 $db = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
+$db->exec("ALTER TABLE notices ADD COLUMN IF NOT EXISTS created_by INT DEFAULT NULL");
 
 function validateNoticeEnum(?string $value, array $allowed, string $field): void {
     if ($value !== null && !in_array($value, $allowed, true)) {
@@ -24,6 +25,20 @@ if ($method === 'GET') {
     $where = ['1=1'];
     $params = [];
     $viewer = currentUser();
+
+    if (($viewer['role'] ?? '') === 'Teacher') {
+        $where[] = "((status = 'Published' AND audience IN ('All','Teachers','Staff')) OR created_by = ?)";
+        $params[] = (int)$viewer['id'];
+    }
+
+    if ($viewer && !in_array($viewer['role'] ?? '', ['Admin', 'Teacher'], true)) {
+        $audienceByRole = ['Parent' => 'Parents', 'Student' => 'Students', 'Alumni' => 'Alumni', 'Accountant' => 'Staff'];
+        $roleAudience = $audienceByRole[$viewer['role']] ?? 'Public';
+        $where[] = "audience IN ('All', ?, 'Public')";
+        $params[] = $roleAudience;
+    } elseif (!$viewer) {
+        $where[] = "audience IN ('All', 'Public')";
+    }
 
     if (!empty($_GET['audience'])) {
         $where[] = "(audience = ? OR audience = 'All')";
@@ -42,14 +57,14 @@ if ($method === 'GET') {
 
     $limit = max(1, min(500, (int)($_GET['limit'] ?? 200)));
     $stmt = $db->prepare(
-        "SELECT id, icon, title, audience, posted_by, notice_date, message, priority, status, attachment, created_at, updated_at
+        "SELECT id, icon, title, audience, posted_by, notice_date, message, priority, status, attachment, created_by, created_at, updated_at
          FROM notices
          WHERE " . implode(' AND ', $where) . "
          ORDER BY notice_date DESC, id DESC
          LIMIT $limit"
     );
     $stmt->execute($params);
-    jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
+    $rows=$stmt->fetchAll();foreach($rows as &$row){$row['can_edit']=($viewer['role']??'')==='Admin'||(int)($row['created_by']??0)===(int)($viewer['id']??0);}unset($row);jsonResponse(['success' => true, 'data' => $rows]);
 }
 
 if ($method === 'POST') {
@@ -63,8 +78,8 @@ if ($method === 'POST') {
     validateNoticeEnum($body['status'] ?? null, ['Published', 'Draft', 'Archived'], 'status');
 
     $stmt = $db->prepare(
-        "INSERT INTO notices (icon, title, audience, posted_by, notice_date, message, priority, status, attachment)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO notices (icon, title, audience, posted_by, notice_date, message, priority, status, attachment, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $stmt->execute([
         $body['icon'] ?? null,
@@ -76,14 +91,16 @@ if ($method === 'POST') {
         $body['priority'] ?? 'Normal',
         $body['status'] ?? 'Published',
         $body['attachment'] ?? null,
+        $user['id'],
     ]);
     jsonResponse(['success' => true, 'message' => 'Notice created', 'id' => (int)$db->lastInsertId()], 201);
 }
 
 if ($method === 'PUT') {
-    requireRole(['Admin', 'Teacher']);
+    $user=requireRole(['Admin', 'Teacher']);
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) jsonResponse(['success' => false, 'message' => 'id required'], 422);
+    if(($user['role']??'')==='Teacher'){$own=$db->prepare('SELECT COUNT(*) FROM notices WHERE id=? AND created_by=?');$own->execute([$id,$user['id']]);if(!(int)$own->fetchColumn())jsonResponse(['success'=>false,'message'=>'Notice not found'],404);}
     $body = getRequestBody();
 
     validateNoticeEnum($body['priority'] ?? null, ['Normal', 'Important', 'Urgent'], 'priority');
@@ -107,9 +124,10 @@ if ($method === 'PUT') {
 }
 
 if ($method === 'DELETE') {
-    requireRole(['Admin', 'Teacher']);
+    $user=requireRole(['Admin', 'Teacher']);
     $id = (int)($_GET['id'] ?? 0);
     if (!$id) jsonResponse(['success' => false, 'message' => 'id required'], 422);
+    if(($user['role']??'')==='Teacher'){$own=$db->prepare('SELECT COUNT(*) FROM notices WHERE id=? AND created_by=?');$own->execute([$id,$user['id']]);if(!(int)$own->fetchColumn())jsonResponse(['success'=>false,'message'=>'Notice not found'],404);}
 
     $db->prepare("DELETE FROM notices WHERE id = ?")->execute([$id]);
     jsonResponse(['success' => true, 'message' => 'Notice deleted']);
