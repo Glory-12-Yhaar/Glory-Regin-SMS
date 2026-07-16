@@ -3305,7 +3305,10 @@ async function saveNewTimetable() {
       window.selectedTimetableClass = cls;
       window.selectedTimetableTerm = term;
       await syncAllDataFromBackend();
-      renderMain();
+      // Navigate back to the timetable view — do NOT call renderMain() here
+      // because the create form is rendered in main-content, not in a modal.
+      // navTo resets currentMod and renders timetableModule() cleanly.
+      navTo('timetable');
       showToast('<i class="fas fa-check-circle"></i> Timetable created successfully', 'success');
     } else {
       showToast(res?.message || 'Failed to create timetable', 'error');

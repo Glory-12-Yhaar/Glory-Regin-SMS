@@ -910,7 +910,7 @@ function alumniDash() {
     statCard('<i class="fas fa-medal"></i>', alumni.length, 'Total Alumni', 'Database records', 'up', 'si-blue'),
     statCard('<i class="fas fa-calendar-alt"></i>', String(alumniEvents.length), 'Upcoming Events', 'From calendar', 'neu', 'si-gold'),
     statCard('<i class="fas fa-briefcase"></i>', 'Jobs', 'Job Listings', 'Alumni portal', 'neu', 'si-green'),
-    statCard('<i class="fas fa-hand-holding-heart"></i>', 'GHâ‚µ' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
+    statCard('<i class="fas fa-hand-holding-heart"></i>', 'GH₵' + Number(totalDonated).toLocaleString(), 'Total Donations', 'This year', 'up', 'si-purple')
   ].join('');
   const announcementRows = getAlumniAnnouncements().slice(0,2).map(a => `
       <div style="display:flex;gap:12px;padding:12px;background:var(--gray-50);border-radius:10px;margin-bottom:10px;border-left:4px solid var(--${a.color||'blue'})">

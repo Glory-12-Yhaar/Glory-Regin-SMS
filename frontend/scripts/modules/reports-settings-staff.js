@@ -735,7 +735,7 @@ function viewAssignment(assignmentId) {
     <div style="background:var(--blue-main);color:white;padding:40px 20px;margin-bottom:30px;border-radius:8px">
       <div style="max-width:1200px;margin:0 auto">
         <h1 style="margin:0 0 12px 0;font-size:32px">${assignment.title}</h1>
-        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} â€¢ ${assignment.class}</p>
+        <p style="margin:0;font-size:16px;opacity:0.9"><i class="fas fa-book"></i> ${assignment.subject} • ${assignment.class}</p>
       </div>
     </div>
     
@@ -1808,7 +1808,7 @@ function contactMessagesModule() {
     </div>
   `).join('');
 
-  return hdr('Contact Messages', `${contactMessages.length} total â€¢ ${unreadCount} unread`, 'Contact Messages') + `
+  return hdr('Contact Messages', `${contactMessages.length} total • ${unreadCount} unread`, 'Contact Messages') + `
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <div style="display:flex;gap:8px">
       <button class="btn btn-secondary btn-sm" onclick="markAllAsRead()">Mark All Read</button>
@@ -2039,46 +2039,64 @@ function buildEnrollmentReportRows() {
 
 function teacherDatabaseReportCardsModule() {
   const records = Array.isArray(window.gradesData) ? window.gradesData : [];
+  const assignedClasses = getAssignedClassNamesForTeacher();
   const periods = [...new Map(records.map(row => [`${row.term}|${row.academic_year}`, { term: row.term, year: row.academic_year }])).values()];
   const selectedKey = periods.some(p => `${p.term}|${p.year}` === window.teacherReportPeriod) ? window.teacherReportPeriod : (periods[0] ? `${periods[0].term}|${periods[0].year}` : '');
   window.teacherReportPeriod = selectedKey;
   const [term, year] = selectedKey.split('|');
-  const periodRows = records.filter(row => !selectedKey || (row.term === term && row.academic_year === year));
-  const grouped = new Map();
-  periodRows.forEach(row => { const key=String(row.student_id);if(!grouped.has(key))grouped.set(key,{id:key,name:row.studentName,className:row.className,scores:[]});grouped.get(key).scores.push(row); });
-  const reports=[...grouped.values()].map(report=>{const total=report.scores.reduce((sum,row)=>sum+Number(row.totalScore||0),0);return{...report,total,average:report.scores.length?total/report.scores.length:null};}).sort((a,b)=>(b.average??-1)-(a.average??-1));
-  reports.forEach((report,index)=>report.position=index+1);
-  window.teacherReportRows=reports;
-  const rows=reports.map(report=>`<tr><td><strong>${escapeHtml(report.name)}</strong></td><td>${escapeHtml(report.className)}</td><td>${report.scores.length}</td><td>${report.average===null?'N/A':report.average.toFixed(1)+'%'}</td><td>${report.average===null?'N/A':escapeHtml(calculateReportGrade(report.average))}</td><td>${report.position}</td><td><button class="btn btn-primary btn-xs" onclick="viewTeacherDatabaseReport('${escapeAttr(report.id)}')">View</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gray-500)">No stored scores are available for this reporting period.</td></tr>';
-  return hdr('Report Cards','Stored results for students in your assigned classes','Report Cards')+`<div style="margin-bottom:16px;padding:12px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:8px;color:var(--blue-dark);font-size:12px"><i class="fas fa-lock"></i> Only database scores from your permitted classes are included. Missing subjects are not generated.</div><div class="card"><div class="card-hdr"><span class="card-title">Student Results</span><select onchange="window.teacherReportPeriod=this.value;renderMain()">${periods.map(p=>`<option value="${escapeAttr(`${p.term}|${p.year}`)}" ${`${p.term}|${p.year}`===selectedKey?'selected':''}>${escapeHtml(p.term)} · ${escapeHtml(p.year)}</option>`).join('')||'<option>No reporting periods</option>'}</select></div><table class="tbl"><thead><tr><th>Student</th><th>Class</th><th>Subjects</th><th>Average</th><th>Grade</th><th>Position</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+  // Build student list from enrolled students in teacher's classes
+  const classStudents = enrolledStudents.filter(s => assignedClasses.includes(s.student_class));
+  const visibleScores = getReportCardEntriesForRole();
+
+  return hdr('Report Cards', 'Student report cards for your assigned classes', 'Report Cards') + `
+  <div class="g21 mb20">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title"><i class="fas fa-clipboard-list"></i> Select Student</span>
+        ${periods.length ? `<select onchange="window.teacherReportPeriod=this.value;renderMain()" style="padding:6px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px">
+          ${periods.map(p => `<option value="${escapeAttr(`${p.term}|${p.year}`)}" ${`${p.term}|${p.year}` === selectedKey ? 'selected' : ''}>${escapeHtml(p.term)} · ${escapeHtml(p.year)}</option>`).join('')}
+        </select>` : ''}
+      </div>
+      <div class="f-field" style="margin-bottom:12px">
+        <label>Choose a student to view full report card</label>
+        <select id="student-select" onchange="if(this.value) showReportCard(this.value)" style="padding:10px;border:1px solid var(--gray-200);border-radius:6px;font-family:Poppins,sans-serif;width:100%">
+          <option value="">Choose a student...</option>
+          ${visibleScores.map(([id, data]) => `<option value="${escapeAttr(id)}">${escapeHtml(data.name)} (${escapeHtml(data.class)})</option>`).join('')}
+        </select>
+      </div>
+      <div style="padding:12px;background:var(--blue-xpale);border-radius:6px">
+        <p style="margin:0;font-size:12px;color:var(--blue-dark)"><strong><i class="fas fa-info-circle"></i> Note:</strong> Only students from your assigned classes are visible.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title"><i class="fas fa-chart-bar"></i> Class Summary</span></div>
+      <table class="tbl">
+        <thead><tr><th>Student</th><th>Class</th><th>Average</th><th>Grade</th><th>Action</th></tr></thead>
+        <tbody>
+          ${visibleScores.length ? visibleScores.map(([id, data]) => {
+            const p = processStudentScores(id);
+            return `<tr>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="av av-sm av-blue">${escapeHtml(data.picture || '')}</div><strong>${escapeHtml(data.name)}</strong></div></td>
+              <td>${escapeHtml(data.class)}</td>
+              <td><strong>${p ? p.average : '—'}%</strong></td>
+              <td>${p ? `<span class="badge ${p.grade === 'A' ? 'b-success' : p.grade === 'B' ? 'b-info' : 'b-warning'}">${p.grade}</span>` : '—'}</td>
+              <td><button class="btn btn-primary btn-xs" onclick="showReportCard('${escapeAttr(id)}')"><i class="fas fa-file"></i> View</button></td>
+            </tr>`;
+          }).join('') : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gray-400)">No students in your assigned classes.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="student-report-container"></div>`;
 }
 
 function studentDatabaseReportCardModule() {
-  const student = window.dashboardReportData?.student || getCurrentStudentRecord();
-  const records = Array.isArray(window.gradesData) ? window.gradesData : [];
-  const periods = [...new Map(records.map(row => [`${row.term}|${row.academic_year}`, { term: row.term, year: row.academic_year }])).values()];
-  const selected = periods.find(period => `${period.term}|${period.year}` === window.studentReportPeriod) || periods[0] || null;
-  if (selected) window.studentReportPeriod = `${selected.term}|${selected.year}`;
-  const scores = selected ? records.filter(row => row.term === selected.term && row.academic_year === selected.year) : [];
-  const average = scores.length ? scores.reduce((sum, row) => sum + Number(row.totalScore || 0), 0) / scores.length : null;
-  const standing = window.dashboardReportData?.standing || {};
-  const attendance = window.dashboardReportData?.attendance || {};
-  const grade = average === null ? 'N/A' : calculateGrade(average);
-  const rows = scores.map(score => `<tr><td><strong>${escapeHtml(score.subject)}</strong></td><td>${Number(score.classScore || 0).toFixed(1)}</td><td>${Number(score.examScore || 0).toFixed(1)}</td><td><strong>${Number(score.totalScore || 0).toFixed(1)}</strong></td><td><span class="badge b-info">${escapeHtml(calculateGrade(Number(score.totalScore || 0)))}</span></td><td>${escapeHtml(getReportRemark(calculateGrade(Number(score.totalScore || 0))))}</td></tr>`).join('');
-  return hdr('My Report Card', 'Your stored academic results', 'Report Cards') + `
-    <div style="margin-bottom:16px;padding:12px;background:var(--blue-xpale);border:1px solid var(--blue-light);border-radius:8px;color:var(--blue-dark);font-size:12px"><i class="fas fa-lock"></i> This report contains only scores stored for your authenticated Student account.</div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-certificate"></i> ${escapeHtml(student.name || '')}</span>${periods.length ? `<select onchange="window.studentReportPeriod=this.value;renderMain()">${periods.map(period => `<option value="${escapeAttr(`${period.term}|${period.year}`)}" ${selected && period.term === selected.term && period.year === selected.year ? 'selected' : ''}>${escapeHtml(period.term)} · ${escapeHtml(period.year)}</option>`).join('')}</select>` : ''}</div>
-      <div style="font-size:12px;color:var(--gray-500);margin-bottom:14px">${escapeHtml(student.class_name || student.student_class || 'Not assigned')} · ${escapeHtml(student.student_code || student.student_id || '')}</div>
-      <div class="stats-row" style="grid-template-columns:repeat(4,minmax(0,1fr))">
-        ${statCard('<i class="fas fa-chart-line"></i>', average === null ? 'N/A' : `${average.toFixed(1)}%`, 'Average', `${scores.length} stored subject${scores.length === 1 ? '' : 's'}`, average === null ? 'neu' : average >= 50 ? 'up' : 'dn', 'si-blue')}
-        ${statCard('<i class="fas fa-award"></i>', grade, 'Overall Grade', selected ? selected.term : 'No period', grade === 'N/A' ? 'neu' : 'up', 'si-gold')}
-        ${statCard('<i class="fas fa-ranking-star"></i>', standing.position ? `${standing.position} of ${standing.ranked_students}` : 'N/A', 'Class Position', 'Students with stored results', standing.position ? 'up' : 'neu', 'si-purple')}
-        ${statCard('<i class="fas fa-user-check"></i>', `${Number(attendance.rate || 0).toFixed(1)}%`, 'Attendance', `${Number(attendance.records_count || 0)} dated records`, Number(attendance.rate || 0) >= 75 ? 'up' : 'dn', 'si-green')}
-      </div>
-      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">No scores have been entered for this reporting period.</td></tr>'}</tbody></table></div>
-      ${scores.length ? '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn btn-secondary btn-sm" onclick="printDocument()"><i class="fas fa-print"></i> Print Report</button></div>' : ''}
-    </div>`;
+  // Student sees their own full paper-style report card — same as admin
+  const visibleScores = getReportCardEntriesForRole();
+  const studentId = visibleScores[0]?.[0];
+  return hdr('My Report Card', 'Your academic report card', 'Report Cards') +
+    `<div id="student-report-container">${studentId ? generateReportCard(studentId) : '<div class="card" style="text-align:center;color:var(--gray-500);padding:40px"><i class="fas fa-file-alt" style="font-size:48px;margin-bottom:16px;display:block;opacity:.3"></i>No report card is available for your account yet.</div>'}</div>`;
 }
 
 function viewTeacherDatabaseReport(studentId) {
@@ -2087,33 +2105,22 @@ function viewTeacherDatabaseReport(studentId) {
 }
 
 function parentDatabaseReportCardsModule() {
-  const overview = window.dashboardReportData?.parent || {};
-  const children = Array.isArray(overview.children) ? overview.children : [];
-  const period = [overview.term, overview.academic_year].filter(Boolean).join(' · ') || 'Current reporting period';
-  const reports = children.map(child => {
-    const scores = Array.isArray(child.report_scores) ? child.report_scores : [];
-    const rows = scores.map(score => `<tr>
-      <td><strong>${escapeHtml(score.subject)}</strong></td>
-      <td>${Number(score.class_score || 0).toFixed(1)}</td>
-      <td>${Number(score.exam_score || 0).toFixed(1)}</td>
-      <td><strong>${Number(score.total || 0).toFixed(1)}</strong></td>
-      <td><span class="badge b-info">${escapeHtml(score.grade || 'N/A')}</span></td>
-      <td>${escapeHtml(score.remark || '—')}</td>
-    </tr>`).join('');
-    const average = child.report_average === null || child.report_average === undefined ? 'N/A' : `${Number(child.report_average).toFixed(1)}%`;
-    return `<section class="card" style="margin-bottom:18px">
-      <div class="card-hdr"><span class="card-title"><i class="fas fa-certificate"></i> ${escapeHtml(child.name)}</span><span class="card-act">${escapeHtml(child.class_name || 'Not assigned')} · ${escapeHtml(child.student_code || '')}</span></div>
-      <div class="stats-row" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-        ${statCard('<i class="fas fa-chart-line"></i>', average, 'Average', period, child.report_average !== null && child.report_average !== undefined ? 'up' : 'neu', 'si-blue')}
-        ${statCard('<i class="fas fa-award"></i>', child.report_grade || 'N/A', 'Overall Grade', `${scores.length} subject${scores.length === 1 ? '' : 's'}`, child.report_grade ? 'up' : 'neu', 'si-gold')}
-        ${statCard('<i class="fas fa-user-check"></i>', `${Number(child.attendance || 0).toFixed(1)}%`, 'Attendance', 'Student record', 'up', 'si-green')}
-      </div>
-      <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">No scores have been entered for this reporting period.</td></tr>'}</tbody></table></div>
-      ${scores.length ? '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn btn-secondary btn-sm" onclick="printDocument()"><i class="fas fa-print"></i> Print Report</button></div>' : ''}
-    </section>`;
-  }).join('');
-  return hdr('Report Cards / Results', `Stored academic results for ${period}`, 'Report Cards') +
-    (reports || '<div class="card" style="text-align:center;color:var(--gray-500);padding:36px">No active children are linked to this parent account.</div>');
+  // Parent sees full paper-style report cards for each of their children — same as admin
+  const visibleScores = getReportCardEntriesForRole();
+  if (!visibleScores.length) {
+    return hdr('Report Cards / Results', 'Your children\'s academic report cards', 'Report Cards') +
+      '<div class="card" style="text-align:center;color:var(--gray-500);padding:40px"><i class="fas fa-file-alt" style="font-size:48px;margin-bottom:16px;display:block;opacity:.3"></i>No children are linked to this parent account.</div>';
+  }
+  return hdr('Report Cards / Results', 'Your children\'s academic report cards', 'Report Cards') +
+    visibleScores.map(([id, data]) => {
+      return `<div style="margin-bottom:32px">
+        <div style="padding:12px 16px;background:var(--blue-main);color:white;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;font-size:15px"><i class="fas fa-graduation-cap"></i> ${escapeHtml(data.name)}</span>
+          <span style="font-size:12px;opacity:.85">${escapeHtml(data.class)}</span>
+        </div>
+        ${generateReportCard(id)}
+      </div>`;
+    }).join('');
 }
 
 function getReportsMonthlyTrend() {

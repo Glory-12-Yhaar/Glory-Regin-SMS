@@ -1054,11 +1054,16 @@ function logout() {
   if (currentRole === 'Visitor') {
     showStaffLoginModal();
   } else {
+    // Destroy PHP session — this is the single source of truth for auth state
+    if (typeof API !== 'undefined' && API.logout) {
+      API.logout().catch(() => {});
+    }
     setSessionUser(null);
-    document.getElementById('app-shell').classList.remove('active');
-    document.getElementById('login-page').style.display = 'flex';
     document.getElementById('role-fab')?.style.setProperty('display', 'none');
     document.getElementById('role-switcher')?.classList.remove('open');
+    // Navigate back to the Visitor public page
+    loginRole = 'Visitor';
+    switchRole('Visitor', 'dashboard');
   }
 }
 function showStaffLoginModal() {
@@ -1773,8 +1778,9 @@ function renderSidebar() {
 // -----------------------------------
 function renderMain() {
   const el = document.getElementById('main-content');
-  const sessionRole = normalizeRoleName(getSessionUser()?.role);
-  if (sessionRole && sessionRole !== 'Visitor') currentRole = sessionRole;
+  // Do NOT auto-set currentRole from session here — role is set explicitly
+  // by switchRole() at startup and login. This prevents a stale PHP session
+  // cookie from hijacking the Visitor page on launch.
   const r = currentRole, m = currentMod;
   if (!canAccessModule(m, r)) {
     el.innerHTML = accessDeniedModule(m);

@@ -211,10 +211,52 @@ function startHeroCarousel() {
   heroCarouselTimer = setInterval(() => setHeroCarouselSlide(heroCarouselIndex + 1), 6500);
 }
 
+// ── Homepage stats loader — fetches real numbers from the backend ──
+async function loadHomeStatsCards() {
+  function setEl(id, val) {
+    const el = document.getElementById(id);
+    if (el && val !== null && val !== undefined && val !== '' && val !== 0) {
+      el.textContent = val;
+    }
+  }
+
+  // Try in-memory first (already synced for logged-in users)
+  const alumniCount  = Object.values(ALUMNI_DATA || {}).filter(a => (a.status || 'Published') === 'Published').length;
+  const teacherCount = (Array.isArray(teachersData) && teachersData.filter(t => (t.status || 'Active') === 'Active').length)
+                    || (Array.isArray(window.staffData) && window.staffData.filter(s => s.category === 'Teaching' && (s.status || 'Active') === 'Active').length)
+                    || 0;
+  const studentCount = (Array.isArray(enrolledStudents) && enrolledStudents.filter(s => (s.status || 'Active') === 'Active').length)
+                    || window.dashboardReportData?.total_students
+                    || 0;
+
+  if (alumniCount)  setEl('home-stat-alumni',   alumniCount);
+  if (teacherCount) setEl('home-stat-teachers',  teacherCount);
+  if (studentCount) setEl('home-stat-students',  studentCount);
+
+  // Always fetch from public endpoint — no auth needed, returns live DB counts
+  try {
+    const res = await API.publicStats();
+    if (res && res.success && res.data) {
+      const d = res.data;
+      if (d.alumni   > 0) setEl('home-stat-alumni',   d.alumni);
+      if (d.teachers > 0) setEl('home-stat-teachers',  d.teachers);
+      if (d.students > 0) setEl('home-stat-students',  d.students);
+      // Years of excellence is already set at render time but update if setting exists
+      if (d.years_excellence > 0) setEl('home-stat-years', d.years_excellence);
+    }
+  } catch (e) {
+    // Silently fall back to whatever is already shown
+  }
+}
+
 function visitorHome() {
   if (!Array.isArray(window.newsArticles)) window.newsArticles = [];
   if (!Array.isArray(window.eventsData)) window.eventsData = [];
   if (!Array.isArray(window.noticesData)) window.noticesData = [];
+
+  // Async-populate the homepage stats cards from the backend
+  loadHomeStatsCards();
+
   if ((!window.cachedHeroSlides || !Object.values(window.cachedHeroSlides).length) && typeof API !== 'undefined' && API.heroSlides) {
     API.heroSlides.list().then(res => {
       if (res && res.success && Array.isArray(res.data)) {
@@ -356,11 +398,31 @@ function visitorHome() {
     <div class="hero-carousel-dots">${carouselSlides.map((_, index) => `<button class="hero-carousel-dot ${index === 0 ? 'active' : ''}" onclick="goToHeroSlide(${index})" aria-label="Go to slide ${index + 1}"></button>`).join('')}</div>` : ''}
   </div>
   </section>
-  <div class="stats-row mb24">
-    ${statCard('<i class="fas fa-graduation-cap"></i>', Object.values(ALUMNI_DATA || {}).filter(a => (a.status || 'Published') === 'Published').length, 'Published Alumni', 'From database', 'up', 'si-blue')}
-    ${statCard('<i class="fas fa-chalkboard-user"></i>', '64', 'Expert Teachers', 'Dedicated faculty', 'neu', 'si-gold')}
-    ${statCard('<i class="fas fa-trophy"></i>', '98%', 'Pass Rate', 'Consistent excellence', 'up', 'si-green')}
-    ${statCard('<i class="fas fa-calendar-alt"></i>', '40', 'Years of Excellence', 'Since 1985', 'neu', 'si-purple')}
+  <div class="stats-row mb24" id="home-stats-row">
+    <div class="stat-card si-blue">
+      <div class="si-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div class="stat-value" id="home-stat-alumni">—</div>
+      <div class="stat-label">Published Alumni</div>
+      <div class="stat-sub up">From database</div>
+    </div>
+    <div class="stat-card si-gold">
+      <div class="si-icon"><i class="fas fa-chalkboard-user"></i></div>
+      <div class="stat-value" id="home-stat-teachers">—</div>
+      <div class="stat-label">Expert Teachers</div>
+      <div class="stat-sub neu">Dedicated faculty</div>
+    </div>
+    <div class="stat-card si-green">
+      <div class="si-icon"><i class="fas fa-users"></i></div>
+      <div class="stat-value" id="home-stat-students">—</div>
+      <div class="stat-label">Enrolled Students</div>
+      <div class="stat-sub up">Active learners</div>
+    </div>
+    <div class="stat-card si-purple">
+      <div class="si-icon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="stat-value" id="home-stat-years">${new Date().getFullYear() - 1985}</div>
+      <div class="stat-label">Years of Excellence</div>
+      <div class="stat-sub neu">Since 1985</div>
+    </div>
   </div>
   <section id="about-section" class="public-section">
     <div class="section-title"><h2>About Our School</h2><p>Our mission, vision, values and story in one place.</p></div>

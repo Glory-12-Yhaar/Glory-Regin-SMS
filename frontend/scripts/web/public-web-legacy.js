@@ -2158,19 +2158,50 @@ function initButtonHandlers() {
 // -----------------------------------
 document.getElementById('role-fab')?.style.setProperty('display', 'none');
 
-// Initialize page
+// Initialize page — role is determined purely from the PHP session via me.php
+// No localStorage is used for role/session state.
 document.addEventListener('DOMContentLoaded', async function () {
   try {
     if (typeof loadPersistentRecords === 'function') loadPersistentRecords();
-    if (typeof restoreSessionFromBackend === 'function') await restoreSessionFromBackend();
-    const savedNav = typeof getSavedNavigationState === 'function' ? getSavedNavigationState() : null;
-    const sessionUser = getSessionUser();
-    const activeRole = sessionUser?.role || 'Visitor';
-    const savedModule = savedNav?.role === activeRole ? savedNav.mod : 'dashboard';
-    switchRole(activeRole, savedModule);
+
+    // Ask the server: is there a valid session right now?
+    let sessionUser = null;
+    try {
+      const res = await fetch(
+        (typeof API_BASE !== 'undefined' ? API_BASE : '/SCH/backend/api') + '/auth/me.php',
+        { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && data.user?.role && data.user.role !== 'Visitor') {
+          sessionUser = data.user;
+        }
+      }
+    } catch (e) {
+      // Network error or server down — treat as not logged in
+    }
+
+    if (sessionUser) {
+      // Valid PHP session exists → restore authenticated user
+      if (typeof setSessionUser === 'function') setSessionUser(sessionUser);
+      switchRole(sessionUser.role, 'dashboard');
+      window.__appReady = true;
+      if (typeof syncAllDataFromBackend === 'function') {
+        syncAllDataFromBackend().then(() => {
+          if (typeof renderMain === 'function') renderMain();
+        });
+      }
+    } else {
+      // No session → always Visitor, always public homepage
+      if (typeof setSessionUser === 'function') setSessionUser(null);
+      switchRole('Visitor', 'dashboard');
+      window.__appReady = true;
+    }
+
   } catch (error) {
     console.error('Application startup failed', error);
     switchRole('Visitor', 'dashboard');
+    window.__appReady = true;
   }
   initButtonHandlers();
   initMobileSidebarHandlers();

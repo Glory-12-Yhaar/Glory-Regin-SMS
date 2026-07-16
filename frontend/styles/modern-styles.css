@@ -489,11 +489,11 @@
 }
 
 .toast-warning {
-  border-left-color: var(--warning);
+  border-left-color: var(--gold);
 }
 
 .toast-info {
-  border-left-color: var(--info);
+  border-left-color: var(--blue-light);
 }
 
 .toast-icon {
@@ -517,11 +517,11 @@
 }
 
 .toast-warning .toast-icon {
-  background: var(--warning);
+  background: var(--gold);
 }
 
 .toast-info .toast-icon {
-  background: var(--info);
+  background: var(--blue-light);
 }
 
 .toast-message {

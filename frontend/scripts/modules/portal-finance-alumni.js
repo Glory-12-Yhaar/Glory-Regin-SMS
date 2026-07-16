@@ -69,16 +69,10 @@ function renderSbaContent() {
     const total = exercise + quiz + project;
     return { student, exercise, quiz, project, total, percentage: Math.round(total / 50 * 100), rank: idx + 1 };
   }).sort((a, b) => b.total - a.total).map((row, idx) => ({ ...row, rank: idx + 1 }));
-  const submittedSubjects = [
-    ['English', 'Mrs. Akua Asante', 'Submitted', 74],
-    ['Mathematics', 'Mr. Kweku Amponsah', 'Submitted', 71],
-    ['Science', 'Mr. Samuel Oduro', 'Pending', null],
-    ['Computing', 'Ms. Grace Frimpong', 'Returned for Correction', 63],
-    ['RME', 'Mrs. Esi Aidoo', 'Approved', 76]
-  ];
-  const submittedCount = submittedSubjects.filter(([, , status]) => ['Submitted', 'Approved'].includes(status)).length;
-  const pendingCount = submittedSubjects.filter(([, , status]) => status === 'Pending').length;
-  const approvedCount = submittedSubjects.filter(([, , status]) => status === 'Approved').length;
+  const submittedSubjects = buildSbaSubjectSummaries(selectedClass);
+  const submittedCount = submittedSubjects.filter(s => s.status !== 'Pending').length;
+  const pendingCount = submittedSubjects.filter(s => s.status === 'Pending').length;
+  const approvedCount = submittedSubjects.filter(s => s.status === 'Approved').length;
   const totals = sbaRows.map(r => r.total);
   const avg = totals.length ? Math.round(totals.reduce((sum, n) => sum + n, 0) / totals.length) : 0;
   const high = totals.length ? Math.max(...totals) : 0;
@@ -139,8 +133,8 @@ function renderSbaContent() {
           </table>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-          <button class="btn btn-secondary" onclick="showToast('SBA Register saved locally', 'info')"><i class="fas fa-save"></i> Save Draft</button>
-          <button class="btn btn-primary" onclick="showToast('Termly SBA Register submitted to Class Teacher!', 'success')"><i class="fas fa-paper-plane"></i> Submit SBA to Class Teacher</button>
+          <button class="btn btn-secondary" onclick="saveSbaDraft()"><i class="fas fa-save"></i> Save Draft</button>
+          <button class="btn btn-primary" onclick="submitSbaToClassTeacher()"><i class="fas fa-paper-plane"></i> Submit SBA to Class Teacher</button>
         </div>
       </div>
       <div class="card">
@@ -158,7 +152,7 @@ function renderSbaContent() {
     // Class Teacher View
     return `
       <div class="stats-row mt-3">
-        ${statCard('<i class="fas fa-inbox"></i>', submittedCount + '/' + submittedSubjects.length, 'Subjects Received', selectedClass, 'neu', 'si-blue')}
+        ${statCard('<i class="fas fa-inbox"></i>', submittedCount + '/' + submittedSubjects.length, 'Subjects with Scores', selectedClass, 'neu', 'si-blue')}
         ${statCard('<i class="fas fa-tasks"></i>', pendingCount, 'Pending Subjects', 'Awaiting submission', 'neu', 'si-gold')}
         ${statCard('<i class="fas fa-user-check"></i>', approvedCount, 'Approved Subjects', 'Ready for reports', 'up', 'si-green')}
         ${statCard('<i class="fas fa-chart-line"></i>', avg + '/50', 'Class SBA Avg', 'Across students', 'up', 'si-purple')}
@@ -166,18 +160,28 @@ function renderSbaContent() {
       <div class="card mt-3">
         <div class="card-hdr"><span class="card-title"><i class="fas fa-inbox"></i> SBA Collection Center (Class Teacher - ${escapeHtml(selectedClass)})</span></div>
         <table class="tbl">
-          <thead><tr><th>Subject</th><th>Teacher</th><th>Status</th><th>Class Average</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Subject</th><th>Teacher</th><th>Status</th><th>Entries</th><th>Class Average</th><th>Actions</th></tr></thead>
           <tbody>
-            ${submittedSubjects.map(([subject, teacherName, status, subjectAvg]) => `
-            <tr><td style="font-weight:600;color:var(--blue-dark)">${subject}</td><td>${teacherName}</td><td><span class="badge ${status === 'Approved' ? 'b-success' : status === 'Pending' ? 'b-warning' : status === 'Returned for Correction' ? 'b-danger' : 'b-info'}">${status}</span></td><td>${subjectAvg ? subjectAvg + '%' : '-'}</td>
+            ${submittedSubjects.map(s => `
+            <tr>
+              <td style="font-weight:600;color:var(--blue-dark)">${escapeHtml(s.subject)}</td>
+              <td>${escapeHtml(s.teacherName)}</td>
+              <td><span class="badge ${s.status === 'Approved' ? 'b-success' : s.status === 'Pending' ? 'b-warning' : s.status === 'Returned for Correction' ? 'b-danger' : 'b-info'}">${s.status}</span></td>
+              <td style="text-align:center">${s.count}</td>
+              <td>${s.avg !== null ? s.avg + '%' : '<span style="color:var(--gray-400)">—</span>'}</td>
               <td><div style="display:flex;gap:4px">
-                ${status === 'Pending' ? '<span style="font-size:11px;color:var(--gray-500)">Waiting</span>' : `<button class="btn btn-primary btn-xs" onclick="showToast('SBA Approved for Compilation', 'success')"><i class="fas fa-check"></i> Approve</button><button class="btn btn-danger btn-xs" onclick="showToast('Returned to subject teacher with comments', 'info')"><i class="fas fa-undo"></i> Return</button>`}
+                ${s.status === 'Pending'
+                  ? '<span style="font-size:11px;color:var(--gray-500)"><i class="fas fa-clock"></i> Waiting</span>'
+                  : `<button class="btn btn-primary btn-xs" onclick="approveSbaSubject('${escapeAttr(selectedClass)}','${escapeAttr(s.subject)}',this)"><i class="fas fa-check"></i> Approve</button>
+                     <button class="btn btn-danger btn-xs" onclick="returnSbaSubject('${escapeAttr(selectedClass)}','${escapeAttr(s.subject)}','${escapeAttr(s.teacherName)}')"><i class="fas fa-undo"></i> Return</button>`}
               </div></td>
             </tr>`).join('')}
           </tbody>
         </table>
         <div style="margin-top:20px;text-align:right">
-          <button class="btn btn-gold" onclick="showToast('Compilation started!', 'success')"><i class="fas fa-cogs"></i> Compile Final Results</button>
+          <button class="btn btn-gold" onclick="compileFinalResults('${escapeAttr(selectedClass)}')" ${submittedCount === 0 ? 'disabled' : ''}>
+            <i class="fas fa-cogs"></i> Compile Final Results
+          </button>
         </div>
       </div>
       <div class="card mt-3">
@@ -191,6 +195,196 @@ function renderSbaContent() {
       </div>
     `;
   }
+}
+
+// ── SBA HELPER FUNCTIONS ─────────────────────────────────────
+
+/**
+ * Build subject summaries for the Class Teacher view from real grades data.
+ */
+function buildSbaSubjectSummaries(className) {
+  const classInfo = classesData.find(c => c.name === className);
+  const subjects = classInfo?.subjects?.length
+    ? classInfo.subjects
+    : (typeof getSubjectsForReportClass === 'function' ? getSubjectsForReportClass(className) : []);
+
+  return subjects.map(subj => {
+    const subjectGrades = Array.isArray(gradesData)
+      ? gradesData.filter(g =>
+          g.className === className &&
+          String(g.subject || '').toLowerCase() === String(subj).toLowerCase())
+      : [];
+    const avgScore = subjectGrades.length
+      ? Math.round(subjectGrades.reduce((s, g) => s + Number(g.totalScore || 0), 0) / subjectGrades.length)
+      : null;
+
+    const subjectTeacher = teachersData.find(t =>
+      t.subject && String(t.subject).toLowerCase().split(/[,&\/]/).map(s => s.trim()).includes(subj.toLowerCase())
+    ) || teachersData.find(t => t.class_assigned === className);
+
+    // Check localStorage for approved/returned status
+    const sbaStatusKey = `sba_status_${className}_${subj}`;
+    const savedStatus = appMemoryStorage.getItem(sbaStatusKey);
+    const status = savedStatus || (subjectGrades.length > 0 ? 'Submitted' : 'Pending');
+
+    return {
+      subject: subj,
+      teacherName: subjectTeacher?.name || 'Not assigned',
+      status,
+      avg: avgScore,
+      count: subjectGrades.length
+    };
+  });
+}
+
+/**
+ * Live-update total/grade when a score input changes in the SBA table.
+ */
+function updateSbaRow(inputEl) {
+  const row = inputEl.closest('tr');
+  if (!row) return;
+  const studentId = row.dataset.studentId || inputEl.dataset.student;
+  const classInput = row.querySelector('.sba-class-score');
+  const examInput  = row.querySelector('.sba-exam-score');
+  if (!classInput || !examInput) return;
+  const total = Math.min(50, Math.max(0, Number(classInput.value) || 0)) +
+                Math.min(50, Math.max(0, Number(examInput.value)  || 0));
+  const grade = (typeof calculateGrade === 'function') ? calculateGrade(total) : (total >= 80 ? 'A' : total >= 70 ? 'B' : total >= 60 ? 'C' : total >= 50 ? 'D' : 'E');
+  const totalEl = document.getElementById('sba-total-' + studentId);
+  const gradeEl = document.getElementById('sba-grade-' + studentId);
+  if (totalEl) totalEl.textContent = total;
+  if (gradeEl) gradeEl.textContent = grade;
+}
+
+/**
+ * Save scores from the SBA score entry table to the backend.
+ */
+async function saveSbaDraft(className, subjectName) {
+  className   = className   || window.sbaSelectedClass;
+  subjectName = subjectName || '';
+  const rows = document.querySelectorAll('#sba-score-table tbody tr[data-student-id]');
+  if (!rows.length) { showToast('No scores to save', 'warning'); return; }
+
+  const term = (typeof SETTINGS_DATA !== 'undefined' && SETTINGS_DATA?.academic?.currentTerm) || '1st Term';
+  const year = (typeof SETTINGS_DATA !== 'undefined' && SETTINGS_DATA?.academic?.academicYear) || '2024/2025';
+
+  const savePromises = [];
+  rows.forEach(row => {
+    const studentId  = row.dataset.studentId;
+    const classScore = Number(row.querySelector('.sba-class-score')?.value || 0);
+    const examScore  = Number(row.querySelector('.sba-exam-score')?.value  || 0);
+    if (!studentId) return;
+    savePromises.push(
+      API.students.saveScores({
+        student_id:    parseInt(studentId, 10),
+        term,
+        academic_year: year,
+        scores: [{ subject: subjectName || 'General', class_score: classScore, exam_score: examScore }]
+      })
+    );
+  });
+
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    await Promise.all(savePromises);
+    await syncAllDataFromBackend();
+    showToast('<i class="fas fa-check-circle"></i> Scores saved to database successfully', 'success');
+  } catch (e) {
+    showToast('Failed to save some scores. Please try again.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Scores to DB'; }
+  }
+}
+
+/**
+ * Submit SBA scores to the class teacher (marks subject as Submitted).
+ */
+async function submitSbaToClassTeacher(className, subjectName) {
+  className   = className   || window.sbaSelectedClass;
+  subjectName = subjectName || (getCurrentTeacherProfile()?.subject || 'Subject');
+  // First save the scores
+  await saveSbaDraft(className, subjectName);
+  // Mark as Submitted in local storage (DB doesn't have a SBA status column yet)
+  appMemoryStorage.setItem(`sba_status_${className}_${subjectName}`, 'Submitted');
+  showToast(`<i class="fas fa-paper-plane"></i> SBA for ${subjectName} — ${className} submitted to Class Teacher!`, 'success');
+}
+
+/**
+ * Class Teacher: Approve a subject's SBA.
+ */
+function approveSbaSubject(className, subject, btn) {
+  appMemoryStorage.setItem(`sba_status_${className}_${subject}`, 'Approved');
+  if (btn) {
+    btn.closest('tr').querySelector('.badge').className = 'badge b-success';
+    btn.closest('tr').querySelector('.badge').textContent = 'Approved';
+    btn.innerHTML = '<i class="fas fa-check"></i> Approved';
+    btn.disabled = true;
+    btn.className = 'btn btn-secondary btn-xs';
+  }
+  showToast(`<i class="fas fa-check-circle"></i> ${subject} SBA approved for final compilation`, 'success');
+}
+
+/**
+ * Class Teacher: Return a subject's SBA for correction.
+ */
+function returnSbaSubject(className, subject, teacherName) {
+  openModal(`
+    <div style="padding:22px;max-width:480px">
+      <h3 style="margin-top:0;color:var(--danger)"><i class="fas fa-undo"></i> Return SBA for Correction</h3>
+      <p style="font-size:13px;color:var(--gray-600)">Return <strong>${escapeHtml(subject)}</strong> SBA to <strong>${escapeHtml(teacherName)}</strong> with comments.</p>
+      <div class="f-field" style="margin-bottom:14px">
+        <label>Reason / Comments</label>
+        <textarea id="return-sba-reason" style="min-height:90px" placeholder="e.g. Please check scores for students 3 and 7..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-danger" style="flex:1" onclick="confirmReturnSba('${escapeAttr(className)}','${escapeAttr(subject)}')">
+          <i class="fas fa-undo"></i> Return
+        </button>
+        <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  `);
+}
+
+function confirmReturnSba(className, subject) {
+  const reason = document.getElementById('return-sba-reason')?.value?.trim();
+  appMemoryStorage.setItem(`sba_status_${className}_${subject}`, 'Returned for Correction');
+  closeModal();
+  showToast(`<i class="fas fa-undo"></i> ${subject} SBA returned${reason ? ': ' + reason.slice(0, 60) : ''}`, 'info');
+  navTo('sba');
+}
+
+/**
+ * Compile Final Results — generates report cards for all students in the class.
+ */
+async function compileFinalResults(className) {
+  className = className || window.sbaSelectedClass;
+  if (!confirm(`Compile final results for ${className}? This will generate report cards using all available scores.`)) return;
+
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compiling...'; }
+
+  // Trigger a full data sync to ensure we have the latest grades
+  await syncAllDataFromBackend();
+
+  const classStudents = enrolledStudents.filter(s => (s.student_class || s.class) === className);
+  if (!classStudents.length) {
+    showToast('No students found for ' + className, 'warning');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cogs"></i> Compile Final Results'; }
+    return;
+  }
+
+  // Mark all subjects as Approved
+  const classInfo = classesData.find(c => c.name === className);
+  const subjects = classInfo?.subjects || (typeof getSubjectsForReportClass === 'function' ? getSubjectsForReportClass(className) : []);
+  subjects.forEach(subj => appMemoryStorage.setItem(`sba_status_${className}_${subj}`, 'Approved'));
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cogs"></i> Compile Final Results'; }
+
+  showToast(`<i class="fas fa-check-circle"></i> Final results compiled for ${classStudents.length} students in ${className}!`, 'success');
+  // Navigate to report cards so the admin/teacher can print
+  setTimeout(() => navTo('reportcards'), 1500);
 }
 
 function sbaModule() {
@@ -395,7 +589,7 @@ function renderRecentPaymentsTable(){
     <td><div style="display:flex;gap:4px"><button class="btn btn-info btn-xs" onclick="generatePaymentReceipt(${startIdx + i})"><i class="fas fa-receipt"></i></button></div></td>
   </tr>`).join(''); }
   const infoEl = document.getElementById('payments-info');
-  if(infoEl) infoEl.textContent = `Showing ${pageData.length > 0 ? startIdx + 1 : 0}â€“${Math.min(endIdx, filtered.length)} of ${filtered.length} payments`;
+  if(infoEl) infoEl.textContent = `Showing ${pageData.length > 0 ? startIdx + 1 : 0}—${Math.min(endIdx, filtered.length)} of ${filtered.length} payments`;
   const paginationEl = document.getElementById('payments-pagination');
   if(paginationEl){
     let html = '';
@@ -1087,7 +1281,7 @@ function viewDonationHistory(){
             <span style="font-size:12px;font-weight:700;color:var(--green-dark)">GH₵ ${Number(d.amount||0).toLocaleString()}</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--gray-500)">
-            <span>${escapeHtml(d.campaign)} â€¢ ${d.date}</span>
+            <span>${escapeHtml(d.campaign)} • ${d.date}</span>
             <span class="badge b-success">${d.status}</span>
           </div>
         </div>`).join('')}

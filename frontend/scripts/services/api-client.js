@@ -15,17 +15,18 @@ function handleExpiredSession() {
     if (typeof setSessionUser === 'function') setSessionUser(null);
     else window.SESSION_USER = null;
 
-    currentRole = 'Visitor';
-    currentMod = 'dashboard';
-
-    const appShell = document.getElementById('app-shell');
-    const loginPage = document.getElementById('login-page');
     const roleLoginPage = document.getElementById('role-login-page');
-    if (appShell) appShell.classList.remove('active');
-    if (loginPage) loginPage.style.display = 'flex';
     if (roleLoginPage) roleLoginPage.remove();
     document.getElementById('role-fab')?.style.setProperty('display', 'none');
     document.getElementById('role-switcher')?.classList.remove('open');
+
+    // Navigate to the Visitor public page instead of the login page
+    if (typeof switchRole === 'function') {
+        switchRole('Visitor', 'dashboard');
+    } else {
+        currentRole = 'Visitor';
+        currentMod = 'dashboard';
+    }
 
     if (!sessionExpiryHandled) {
         sessionExpiryHandled = true;
@@ -194,6 +195,7 @@ const API = {
     dashboard: () => apiRequest('/reports/dashboard.php'),
     analytics: (params = {}) => apiRequest('/reports/analytics.php?' + new URLSearchParams(params)),
     financeReport: (params = {}) => apiRequest('/reports/finance.php?' + new URLSearchParams(params)),
+    publicStats: () => apiRequest('/reports/public_stats.php'),
     expenses: {
         list:   ()     => apiRequest('/expenses/index.php'),
         create: (data) => apiRequest('/expenses/index.php', 'POST', data),
@@ -1223,7 +1225,7 @@ apiOverrides.saveNewTimetable = async function() {
         window.selectedTimetableClass = cls;
         window.selectedTimetableTerm = term;
         await syncAllDataFromBackend();
-        renderMain();
+        navTo('timetable');
         showToast('<i class="fas fa-check-circle"></i> Timetable created successfully', 'success');
     } else {
         showToast(res?.message || 'Failed to create timetable', 'error');
@@ -2213,11 +2215,16 @@ apiOverrides.viewArchivedTeachers = async function() {
 // Run overrides immediately as script is loaded after script.js
 window.applyApiClientOverrides();
 
+// __appReady is set to true by the DOMContentLoaded init in public-web-legacy.js
+// after the session check completes. This prevents premature renderMain() calls.
+window.__appReady = false;
+
 if (API.settings && typeof applySettingsFromBackend === 'function') {
     API.settings.get().then(res => {
         if (res && res.success && res.data) {
             applySettingsFromBackend(res.data);
-            if (typeof renderMain === 'function') renderMain();
+            // Only re-render if the app has fully initialised
+            if (window.__appReady && typeof renderMain === 'function') renderMain();
         }
     }).catch(e => console.error('Error syncing public settings:', e));
 }
@@ -2235,7 +2242,7 @@ if (currentRole === 'Visitor' && API.news && Array.isArray(window.newsArticles))
                 content: a.content || '',
                 status: a.status || 'Published'
             })));
-            if (typeof renderMain === 'function') renderMain();
+            if (window.__appReady && typeof renderMain === 'function') renderMain();
         }
     }).catch(e => console.error('Error syncing public news:', e));
 }
@@ -2257,7 +2264,7 @@ if (currentRole === 'Visitor' && API.events && Array.isArray(window.eventsData))
                 description: ev.description || '',
                 status: ev.status || 'Published'
             })));
-            if (typeof renderMain === 'function') renderMain();
+            if (window.__appReady && typeof renderMain === 'function') renderMain();
         }
     }).catch(e => console.error('Error syncing public events:', e));
 }
@@ -2279,7 +2286,7 @@ if (currentRole === 'Visitor' && API.notices && Array.isArray(window.noticesData
                 status: n.status || 'Published',
                 attachment: n.attachment || ''
             })));
-            if (typeof renderMain === 'function') renderMain();
+            if (window.__appReady && typeof renderMain === 'function') renderMain();
         }
     }).catch(e => console.error('Error syncing public notices:', e));
 }
